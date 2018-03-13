@@ -1,0 +1,7 @@
+node_modules/
+dist
+.idea
+/npm-debug.log
+.DS_Store
+coverage/
+package-lock.json
