@@ -1,6 +1,6 @@
 {
   "name": "@thundra/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
