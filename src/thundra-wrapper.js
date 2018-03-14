@@ -51,7 +51,6 @@ class ThundraWrapper {
 
 
     wrappedCallback = (error, result) => {
-
         this.report(error, result, () => {
                 if (typeof this.originalCallback === "function") {
                     this.originalCallback(error, result);
@@ -80,9 +79,6 @@ class ThundraWrapper {
                     this.report(error, null);
                     return error;
                 }
-            })
-            .catch(error => {
-                console.log(error);
             });
     }
 

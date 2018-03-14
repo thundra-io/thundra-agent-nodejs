@@ -35,10 +35,26 @@ exports.handler = thundra((event, context) => {
 });
 ```
 
+You can also pass your api key using environment variables. By doing so, you won't need to make any changes in code if you want to change the api key.
+
+If you set environment variable `thundra_apiKey`, you can wrap your function without passing an api key:
+
+```js
+const thundra = require("@thundra/core")();
+
+exports.handler = thundra((event, context,callback) => {
+    callback(null, "Hello Thundra!");
+});
+```
+
+Note that environment variable `thundra_apiKey` overrides the api key passed.
+
 ## Async Monitoring with Zero Overhead
 By default, Thundra agent reports by making an HTTPS request. This adds an overhead to your lambda function.
 
 Instead, you can [setup async monitoring](https://docs.thundra.io/docs/how-to-setup-async-monitoring) in **2 minutes** and monitor your lambda functions with **zero overhead**!
+
+Check out our async monitoring example at our [example projects](https://github.com/thundra-io/thundra-examples-lambda-nodejs)  for a quick start.
 
 ## How to build
 [Webpack](https://webpack.js.org/) is used as a module bundler.
@@ -52,7 +68,7 @@ To build the project,
 ## How to test
 Tests are written using [Jest](https://facebook.github.io/jest/).
 
-After running test, you can inspect the detailed coverage report by opening `coverage/lcov-report/index.html` with a browser.
+After running tests, you can inspect the detailed coverage report by opening `coverage/lcov-report/index.html` with a browser.
 
 To run tests,
  ```bash
