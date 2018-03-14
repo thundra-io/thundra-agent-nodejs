@@ -34,6 +34,19 @@ describe("ThundraWrapper", () => {
         });
     });
 
+    describe("original function throws an error", () => {
+        const thrownError = "err";
+        const originalCallback = jest.fn();
+        const originalFunction = jest.fn(() => {throw(thrownError)});
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+        thundraWrapper.report = jest.fn();
+        thundraWrapper.invoke();
+        it("should call original function and report", () => {
+            expect(originalFunction.mock.calls.length).toBe(1);
+            expect(thundraWrapper.report).toBeCalledWith(thrownError, null);
+        });
+    });
+
     describe("constructor", () => {
         const originalCallback = jest.fn();
         const originalFunction = jest.fn();
@@ -88,6 +101,7 @@ describe("ThundraWrapper", () => {
                 expect(originalCallback.mock.calls.length).toBe(1);
             });
         });
+
     });
 
     describe("originalFunction calls succeed/done/fail", () => {
