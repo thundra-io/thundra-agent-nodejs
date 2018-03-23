@@ -9,6 +9,7 @@ describe("ThundraWrapper", () => {
     const apiKey = "12345";
 
     describe("report", async () => {
+        process.env.thundra_lambda_publish_cloudwatch_enable = "false";
         const originalCallback = jest.fn();
         const originalFunction = jest.fn(() => originalCallback());
         const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);

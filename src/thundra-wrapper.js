@@ -100,7 +100,7 @@ class ThundraWrapper {
                 response: result
             };
             await this.executeHook("after-invocation", afterInvocationData);
-            if (!process.env.thundra_lambda_publish_cloudwatch_enable) {
+            if (process.env.thundra_lambda_publish_cloudwatch_enable !== "true") {
                 await this.reporter.sendReports();
             }
             if (typeof callback === "function") {
