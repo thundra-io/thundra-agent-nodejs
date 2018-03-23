@@ -1,4 +1,4 @@
-import Tracer from "../../src/plugins/tracer";
+import Trace from "../../src/plugins/trace";
 import globals from "../../src/globals";
 import {createMockWrapperInstance, createMockReporterInstance} from "../mocks/mocks";
 
@@ -7,17 +7,17 @@ process.env.thundra_applicationProfile = "test";
 process.env.AWS_REGION = "us-west2";
 process.env.AWS_LAMBDA_FUNCTION_VERSION = "$LATEST";
 
-describe("Tracer", () => {
+describe("Trace", () => {
 
     it("should export a function", () => {
-        expect(typeof Tracer).toEqual("function");
+        expect(typeof Trace).toEqual("function");
     });
 
     describe("constructor", () => {
         const options = {opt1: "opt1", opt2: "opt2"};
-        const tracerWithOptions = Tracer(options);
-        const tracerWithoutOptions = Tracer();
-        const tracer = Tracer();
+        const tracerWithOptions = Trace(options);
+        const tracerWithoutOptions = Trace();
+        const tracer = Trace();
 
         it("should create an instance with options", () => {
             expect(tracerWithOptions.options).toEqual(options);
@@ -45,7 +45,7 @@ describe("Tracer", () => {
 
     describe("report", () => {
         const mockWrapperInstance = createMockWrapperInstance();
-        const tracer = Tracer();
+        const tracer = Trace();
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
@@ -68,7 +68,7 @@ describe("Tracer", () => {
 
     describe("beforeInvocation", () => {
         const mockWrapperInstance = createMockWrapperInstance();
-        const tracer = Tracer();
+        const tracer = Trace();
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
@@ -128,7 +128,7 @@ describe("Tracer", () => {
 
     describe("afterInvocation without error data", () => {
         const mockWrapperInstance = createMockWrapperInstance();
-        const tracer = Tracer();
+        const tracer = Trace();
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
@@ -172,7 +172,7 @@ describe("Tracer", () => {
 
         describe("Error typed error data", () => {
             const mockWrapperInstance = createMockWrapperInstance();
-            const tracer = Tracer();
+            const tracer = Trace();
             const beforeInvocationData = {
                 originalContext: mockWrapperInstance.originalContext,
                 originalEvent: mockWrapperInstance.originalEvent,
@@ -220,7 +220,7 @@ describe("Tracer", () => {
 
         describe("string error data", () => {
             const mockWrapperInstance = createMockWrapperInstance();
-            const tracer = Tracer();
+            const tracer = Trace();
             const beforeInvocationData = {
                 originalContext: mockWrapperInstance.originalContext,
                 originalEvent: mockWrapperInstance.originalEvent,
@@ -268,7 +268,7 @@ describe("Tracer", () => {
 
         describe("object error data", () => {
             const mockWrapperInstance = createMockWrapperInstance();
-            const tracer = Tracer();
+            const tracer = Trace();
             const beforeInvocationData = {
                 originalContext: mockWrapperInstance.originalContext,
                 originalEvent: mockWrapperInstance.originalEvent,

@@ -1,14 +1,34 @@
 import ThundraWrapper from "./src/thundra-wrapper";
-import Tracer from "./src/plugins/tracer";
+import Trace from "./src/plugins/trace";
+import Metric from "./src/plugins/metric";
+
+const shouldEnablePlugin = (disableByEnv, disableByParameter) => {
+    if (disableByEnv === "true")
+        return false;
+    else if (disableByEnv === "false")
+        return true;
+    else
+        return !disableByParameter;
+};
 
 module.exports = (config) => {
-    let apiKey, plugins;
+    let apiKey, disableTrace, disableMetric, disableThundra;
     if (config) {
         apiKey = config.apiKey;
-        plugins = config.plugins;
+        disableTrace = config.disableTrace ? config.disableTrace : false;
+        disableMetric = config.disableMetric ? config.disableMetric : false;
+        disableThundra = config.disableThundra ? config.disableThundra : false;
     }
-    plugins = plugins instanceof Array ? [...plugins, Tracer()] : [Tracer()];
+
     apiKey = process.env.thundra_apiKey ? process.env.thundra_apiKey : apiKey;
+
+    if (process.env.thundra_disable === "true" || disableThundra || !apiKey)
+        return originalFunc => originalFunc;
+
+    let plugins = [];
+    plugins = shouldEnablePlugin(process.env.thundra_trace_disable, disableTrace) ? [...plugins, Trace()] : plugins;
+    plugins = shouldEnablePlugin(process.env.thundra_metric_disable, disableMetric) ? [...plugins, Metric()] : plugins;
+
     return originalFunc => {
         return (originalEvent, originalContext, originalCallback) => {
             const originalThis = this;

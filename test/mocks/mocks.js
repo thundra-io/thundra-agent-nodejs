@@ -4,15 +4,15 @@ const createMockContext = () => {
         done: jest.fn(),
         succeed: jest.fn(),
         fail: jest.fn(),
-        logGroupName: '/aws/lambda/test',
-        logStreamName: '2018/03/07/[$LATEST]test',
-        functionName: 'test',
-        memoryLimitInMB: '128',
-        functionVersion: '$LATEST',
+        logGroupName: "/aws/lambda/test",
+        logStreamName: "2018/03/07/[$LATEST]test",
+        functionName: "test",
+        memoryLimitInMB: "128",
+        functionVersion: "$LATEST",
         getRemainingTimeInMillis: jest.fn(),
-        invokeid: 'invokeId',
-        awsRequestId: 'awsRequestId',
-        invokedFunctionArn: 'arn:aws:lambda:us-west-2:123456789123:function:test'
+        invokeid: "invokeId",
+        awsRequestId: "awsRequestId",
+        invokedFunctionArn: "arn:aws:lambda:us-west-2:123456789123:function:test"
     };
 };
 
@@ -30,7 +30,7 @@ const createMockWrapperInstance = () => {
         originalContext: createMockContext(),
         originalEvent: {key: "data"},
         coldStart: "false",
-        reporter: jest.fn()
+        reporter: createMockReporterInstance()
     };
 };
 
