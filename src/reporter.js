@@ -16,7 +16,7 @@ class Reporter {
     }
 
     addReport = (report) => {
-        if (process.env.thundra_lambda_publish_cloudwatch_enable) {
+        if (process.env.thundra_lambda_publish_cloudwatch_enable === "true") {
             let jsonStringReport = "\n" + JSON.stringify(report).replace(/\r?\n|\r/g, "") + "\n";
             process.stdout.write(jsonStringReport);
         }
