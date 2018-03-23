@@ -15,8 +15,7 @@ npm install @thundra/core --save
 
 ## Usage
 
-Just require this module, pass your api key to it and wrap your handler. Thundra will monitor your AWS lambda function and report automatically!
-
+Just require this module, pass your api key to it and wrap your handler:
 
 ```js
 const thundra = require("@thundra/core")({ apiKey: "MY_APIKEY" });
@@ -26,7 +25,10 @@ exports.handler = thundra((event, context,callback) => {
 });
 ```
 
+Thundra will monitor your AWS lambda function and report automatically!
+
 `context.done`, `context.succeed` and `context.fail` are also supported:
+
 ```js
 const thundra = require("@thundra/core")({ apiKey: "MY_APIKEY" });
 
@@ -35,19 +37,33 @@ exports.handler = thundra((event, context) => {
 });
 ```
 
-You can also pass your api key using environment variables. By doing so, you won't need to make any changes in code if you want to change the api key.
+## Configuration
+You can configure Thundra using **environment variables** or **module initialization parameters**.
 
-If you set environment variable `thundra_apiKey`, you can wrap your function without passing an api key:
+Environment variables have **higher precedence** over initialization parameters.
 
-```js
-const thundra = require("@thundra/core")();
+Check out the [configuration part](https://thundra.readme.io/docs/configuration-1) of our docs for more detailed information.
 
-exports.handler = thundra((event, context,callback) => {
-    callback(null, "Hello Thundra!");
-});
-```
+#### 1. Environment variables
 
-Note that environment variable `thundra_apiKey` overrides the api key passed.
+| Name                                     | Type   | Default Value |
+|:-----------------------------------------|:------:|:-------------:|
+| thundra_apiKey                           | string |       -       |
+| thundra_applicationProfile               | string |    default    |
+| thundra_disable                          |  bool  |     false     |
+| thundra_disable_trace                    |  bool  |     false     |
+| thundra_disable_metric                   |  bool  |     false     |
+| thundra_lambda_publish_cloudwatch_enable |  bool  |     false     |
+
+#### 2. Module initialization parameters
+
+| Name           | Type   | Default Value |
+|:---------------|:------:|:-------------:|
+| apiKey         | string |       -       |
+| disableThundra |  bool  |     false     |
+| disableTrace   |  bool  |     false     |
+| disableMetric  |  bool  |     false     |
+
 
 ## Async Monitoring with Zero Overhead
 By default, Thundra agent reports by making an HTTPS request. This adds an overhead to your lambda function.
@@ -67,8 +83,6 @@ To build the project,
 
 ## How to test
 Tests are written using [Jest](https://facebook.github.io/jest/).
-
-After running tests, you can inspect the detailed coverage report by opening `coverage/lcov-report/index.html` with a browser.
 
 To run tests,
  ```bash

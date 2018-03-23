@@ -20,7 +20,7 @@ import {
 } from "./utils";
 
 
-class Tracer {
+class Trace {
     constructor(options) {
         this.hooks = {
             "before-invocation": this.beforeInvocation,
@@ -115,7 +115,6 @@ class Tracer {
 }
 
 
-export default function createTracer(options) {
-    return new Tracer(options);
-
+export default function instantiateTracePlugin(options) {
+    return new Trace(options);
 };
