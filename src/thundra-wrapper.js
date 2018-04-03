@@ -16,16 +16,18 @@
 * 
 */
 
+import uuidv4 from "uuid/v4";
 import Reporter from "./reporter";
 
 class ThundraWrapper {
-    constructor(self, event, context, callback, func, plugins, apiKey) {
+    constructor(self, event, context, callback, func, plugins, pluginContext, apiKey) {
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
         this.originalCallback = callback;
         this.originalFunction = func;
         this.plugins = plugins;
+        this.pluginContext = pluginContext;
         this.apiKey = apiKey;
         this.reported = false;
         this.reporter = new Reporter(apiKey);
@@ -64,10 +66,12 @@ class ThundraWrapper {
             originalContext: this.originalContext,
             originalEvent: this.originalEvent,
             reporter: this.reporter,
-            apiKey: this.apiKey
+            contextId: uuidv4()
         };
+
         this.executeHook("before-invocation", beforeInvocationData)
             .then(() => {
+                this.pluginContext.requestCount += 1;
                 try {
                     return this.originalFunction.call(
                         this.originalThis,

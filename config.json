@@ -2,5 +2,5 @@
   "testMatch": ["<rootDir>/test/*.js", "<rootDir>/test/plugins/*.js"],
   "transform": {".*": "<rootDir>/node_modules/babel-jest"},
   "moduleFileExtensions": ["js"],
-  "collectCoverageFrom": ["src/*.js"]
+  "collectCoverageFrom": ["src/*.js", "src/plugins/*.js", "index.js"]
 }

@@ -2,32 +2,45 @@ import ThundraWrapper from "./src/thundra-wrapper";
 import Trace from "./src/plugins/trace";
 import Metric from "./src/plugins/metric";
 
-const shouldEnablePlugin = (disableByEnv, disableByParameter) => {
+const shouldDisable = (disableByEnv, disableByParameter) => {
     if (disableByEnv === "true")
-        return false;
-    else if (disableByEnv === "false")
         return true;
+    else if (disableByEnv === "false")
+        return false;
     else
-        return !disableByParameter;
+        return disableByParameter;
 };
 
 module.exports = (config) => {
-    let apiKey, disableTrace, disableMetric, disableThundra;
+    let apiKey, disableTrace, disableMetric, disableThundra, plugins = [];
     if (config) {
         apiKey = config.apiKey;
         disableTrace = config.disableTrace ? config.disableTrace : false;
         disableMetric = config.disableMetric ? config.disableMetric : false;
         disableThundra = config.disableThundra ? config.disableThundra : false;
+        plugins = config.plugins && Array.isArray(config.plugins) ? config.plugins : plugins;
     }
 
     apiKey = process.env.thundra_apiKey ? process.env.thundra_apiKey : apiKey;
 
-    if (process.env.thundra_disable === "true" || disableThundra || !apiKey)
+    if (!apiKey || shouldDisable(process.env.thundra_disable, disableThundra))
         return originalFunc => originalFunc;
 
-    let plugins = [];
-    plugins = shouldEnablePlugin(process.env.thundra_trace_disable, disableTrace) ? [...plugins, Trace()] : plugins;
-    plugins = shouldEnablePlugin(process.env.thundra_metric_disable, disableMetric) ? [...plugins, Metric()] : plugins;
+    plugins = shouldDisable(process.env.thundra_trace_disable, disableTrace) ? plugins : [...plugins, Trace()];
+    plugins = shouldDisable(process.env.thundra_metric_disable, disableMetric) ? plugins : [...plugins, Metric()];
+
+    const pluginContext = {
+        applicationId: process.env.AWS_LAMBDA_LOG_STREAM_NAME.split("]").pop(),
+        applicationProfile: process.env.thundra_applicationProfile ? process.env.thundra_applicationProfile : "default",
+        applicationRegion: process.env.AWS_REGION,
+        applicationVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
+        requestCount: 0,
+        apiKey: apiKey
+    };
+
+    plugins.forEach(plugin => {
+        plugin.setPluginContext(pluginContext);
+    });
 
     return originalFunc => {
         return (originalEvent, originalContext, originalCallback) => {
@@ -39,6 +52,7 @@ module.exports = (config) => {
                 originalCallback,
                 originalFunc,
                 plugins,
+                pluginContext,
                 apiKey
             );
             return thundraWrapper.invoke();

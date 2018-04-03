@@ -7,13 +7,11 @@
     "build": "webpack",
     "start": "npm-run-all --parallel watch:server watch:build",
     "test": "jest --coverage",
-    "test-ci": "jest --config config.json --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "watch:build": "webpack --watch",
-    "watch:server": "nodemon --inspect=\"5858\" \"./build/bundle.js\" --watch \"./build\" "
+    "test-ci": "jest --config config.json --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/thundra-io/thundra-lambda-agent-nodejs.git"
+    "url": "git+https://github.com/thundra-io/thundra-lambda-agent-nodejs.git"
   },
   "files": [
     "dist/"
@@ -30,20 +28,22 @@
   ],
   "author": "Thundra <info@thundra.com>",
   "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/thundra-io/thundra-lambda-agent-nodejs/issues"
+  },
+  "homepage": "https://github.com/thundra-io/thundra-lambda-agent-nodejs#readme",
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
-    "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "babel-runtime": "^6.26.0",
     "coveralls": "^3.0.0",
-    "eslint": "^4.18.0",
+    "eslint": "^4.19.1",
     "i": "^0.3.6",
     "jest": "^22.4.2",
-    "nodemon": "^1.12.1",
     "npm-run-all": "^4.1.1",
     "uglifyjs-webpack-plugin": "^1.2.0",
     "webpack": "^3.8.1"

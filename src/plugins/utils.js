@@ -1,5 +1,4 @@
 import uuidv4 from "uuid/v4";
-import {execSync} from "child_process";
 import {readFile} from "fs";
 import os from "os";
 import {PROC_IO_PATH, PROC_STAT_PATH} from "../constants";
@@ -26,23 +25,6 @@ const formatDate = (date) => {
 
 const generateId = () => {
     return uuidv4();
-};
-
-const getApplicationId = () => {
-    let arr = process.env.AWS_LAMBDA_LOG_STREAM_NAME.split("]");
-    return arr[arr.length - 1];
-};
-
-const getApplicationProfile = () => {
-    return process.env.thundra_applicationProfile ? process.env.thundra_applicationProfile : "";
-};
-
-const getApplicationRegion = () => {
-    return process.env.AWS_REGION;
-};
-
-const getApplicationVersion = () => {
-    return process.env.AWS_LAMBDA_FUNCTION_VERSION;
 };
 
 
@@ -115,10 +97,6 @@ const readProcIoPromise = () => {
 module.exports = {
     formatDate,
     generateId,
-    getApplicationId,
-    getApplicationProfile,
-    getApplicationRegion,
-    getApplicationVersion,
     getCpuUsage,
     getCpuLoad,
     readProcStatPromise,

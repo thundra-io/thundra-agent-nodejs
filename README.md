@@ -63,6 +63,7 @@ Check out the [configuration part](https://thundra.readme.io/docs/configuration-
 | disableThundra |  bool  |     false     |
 | disableTrace   |  bool  |     false     |
 | disableMetric  |  bool  |     false     |
+| plugins        |  array |      [ ]      |
 
 
 ## Async Monitoring with Zero Overhead
@@ -71,6 +72,13 @@ By default, Thundra agent reports by making an HTTPS request. This adds an overh
 Instead, you can [setup async monitoring](https://docs.thundra.io/docs/how-to-setup-async-monitoring) in **2 minutes** and monitor your lambda functions with **zero overhead**!
 
 Check out our async monitoring example at our [example projects](https://github.com/thundra-io/thundra-examples-lambda-nodejs)  for a quick start.
+
+
+## Log support
+You can monitor your logs using Thundra and enjoy the three pillars of observability in one place!
+
+Check out our [log module](https://github.com/thundra-io/thundra-lambda-agent-nodejs-log/tree/initial-log-module).
+
 
 ## How to build
 [Webpack](https://webpack.js.org/) is used as a module bundler.

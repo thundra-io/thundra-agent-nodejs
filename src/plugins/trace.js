@@ -9,14 +9,9 @@
 *
 */
 
-import globals from "./../globals";
 import {
     formatDate,
     generateId,
-    getApplicationId,
-    getApplicationProfile,
-    getApplicationVersion,
-    getApplicationRegion,
 } from "./utils";
 
 
@@ -29,20 +24,27 @@ class Trace {
         this.options = options;
     }
 
+    report = (data) => {
+        this.reporter.addReport(data);
+    };
+
+    setPluginContext =  (pluginContext) => {
+        this.pluginContext = pluginContext;
+        this.apiKey = pluginContext.apiKey;
+    };
+
     beforeInvocation = (data) => {
-        const contextId = generateId();
-        const {originalContext, originalEvent, reporter, apiKey} = data;
+        const {originalContext, originalEvent, reporter, contextId} = data;
         this.reporter = reporter;
-        this.apiKey = apiKey;
         this.endTime = null;
         this.startTime = new Date();
         const formattedStartTime = formatDate(this.startTime);
         this.traceData = {
             id: generateId(),
             applicationName: originalContext.functionName,
-            applicationId: getApplicationId(),
-            applicationVersion: getApplicationVersion(),
-            applicationProfile: getApplicationProfile(),
+            applicationId: this.pluginContext.applicationId,
+            applicationVersion: this.pluginContext.applicationVersion,
+            applicationProfile: this.pluginContext.applicationProfile,
             applicationType: "node",
             duration: null,
             startTime: formattedStartTime,
@@ -61,15 +63,13 @@ class Trace {
                 thrownError: null,
             },
             properties: {
-                coldStart: globals.requestCount > 0 ? "false" : "true",
+                coldStart: this.pluginContext.requestCount > 0 ? "false" : "true",
                 functionMemoryLimitInMB: originalContext.memoryLimitInMB,
-                functionRegion: getApplicationRegion(),
+                functionRegion: this.pluginContext.applicationRegion,
                 request: originalEvent,
                 response: {},
             }
         };
-
-        globals.requestCount += 1;
     };
 
     afterInvocation = (data) => {
@@ -106,12 +106,7 @@ class Trace {
             dataFormatVersion: "1.0"
         };
         this.report(reportData);
-
     };
-
-    report = (data) => {
-        this.reporter.addReport(data);
-    }
 }
 
 

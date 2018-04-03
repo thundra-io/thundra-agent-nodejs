@@ -63,7 +63,7 @@ describe("Thundra library", () => {
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
-            const ThundraWrapper = Thundra({apiKey: "apiKey", disableThundra: true});
+            const ThundraWrapper = Thundra({apiKey: "apiKey", disableThundra: true, plugins: []});
             const wrappedFunction = ThundraWrapper(originalFunction);
             wrappedFunction(originalEvent,originalContext,originalCallback);
             it("Should not wrap", () => {
@@ -110,6 +110,7 @@ describe("Thundra library", () => {
         describe("Using true env variables",() => {
             delete process.env.thundra_disable;
             delete process.env.thundra_apiKey;
+            process.env.thundra_applicationProfile = "dev";
             process.env.thundra_trace_disable = "true";
             process.env.thundra_metric_disable = "true";
             const originalEvent = {};
