@@ -1,12 +1,7 @@
 import Trace from "../../src/plugins/trace";
-import globals from "../../src/globals";
-import {createMockWrapperInstance, createMockReporterInstance} from "../mocks/mocks";
+import {createMockWrapperInstance, createMockReporterInstance,createMockPluginContext} from "../mocks/mocks";
 
-process.env.AWS_LAMBDA_LOG_STREAM_NAME = "2018/03/02/[$LATEST]applicationId";
-process.env.thundra_applicationProfile = "test";
-process.env.AWS_REGION = "us-west2";
-process.env.AWS_LAMBDA_FUNCTION_VERSION = "$LATEST";
-
+const pluginContext = createMockPluginContext();
 describe("Trace", () => {
 
     it("should export a function", () => {
@@ -18,7 +13,7 @@ describe("Trace", () => {
         const tracerWithOptions = Trace(options);
         const tracerWithoutOptions = Trace();
         const tracer = Trace();
-
+        tracer.setPluginContext(pluginContext);
         it("should create an instance with options", () => {
             expect(tracerWithOptions.options).toEqual(options);
         });
@@ -46,11 +41,12 @@ describe("Trace", () => {
     describe("report", () => {
         const mockWrapperInstance = createMockWrapperInstance();
         const tracer = Trace();
+        tracer.setPluginContext({...pluginContext,requestCount:5});
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
             reporter: createMockReporterInstance(),
-            apiKey: mockWrapperInstance.apiKey
+            contextId: "contextId"
         };
         const afterInvocationData = {response: {key: "data"}};
         tracer.beforeInvocation(beforeInvocationData);
@@ -69,11 +65,12 @@ describe("Trace", () => {
     describe("beforeInvocation", () => {
         const mockWrapperInstance = createMockWrapperInstance();
         const tracer = Trace();
+        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
             reporter: mockWrapperInstance.reporter,
-            apiKey: mockWrapperInstance.apiKey
+            contextId: "contextId"
         };
         tracer.beforeInvocation(beforeInvocationData);
 
@@ -114,9 +111,9 @@ describe("Trace", () => {
                 thrownError: null,
             });
             expect(tracer.traceData.properties).toEqual({
-                coldStart: globals.requestCount > 0 ? "false" : "true",
+                coldStart: pluginContext.requestCount > 0 ? "false" : "true",
                 functionMemoryLimitInMB: mockWrapperInstance.originalContext.memoryLimitInMB,
-                functionRegion: process.env.AWS_REGION,
+                functionRegion: pluginContext.applicationRegion,
                 request: mockWrapperInstance.originalEvent,
                 response: {},
             });
@@ -129,11 +126,12 @@ describe("Trace", () => {
     describe("afterInvocation without error data", () => {
         const mockWrapperInstance = createMockWrapperInstance();
         const tracer = Trace();
+        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
             reporter: mockWrapperInstance.reporter,
-            apiKey: mockWrapperInstance.apiKey
+            contextId: "contextId"
         };
         const afterInvocationData = {
             response: {key: "data"}
@@ -173,11 +171,12 @@ describe("Trace", () => {
         describe("Error typed error data", () => {
             const mockWrapperInstance = createMockWrapperInstance();
             const tracer = Trace();
+            tracer.setPluginContext(pluginContext);
             const beforeInvocationData = {
                 originalContext: mockWrapperInstance.originalContext,
                 originalEvent: mockWrapperInstance.originalEvent,
                 reporter: mockWrapperInstance.reporter,
-                apiKey: mockWrapperInstance.apiKey
+                contextId: "contextId"
             };
             const afterInvocationData = {
                 error: Error("error message"),
@@ -221,11 +220,12 @@ describe("Trace", () => {
         describe("string error data", () => {
             const mockWrapperInstance = createMockWrapperInstance();
             const tracer = Trace();
+            tracer.setPluginContext(pluginContext);
             const beforeInvocationData = {
                 originalContext: mockWrapperInstance.originalContext,
                 originalEvent: mockWrapperInstance.originalEvent,
                 reporter: mockWrapperInstance.reporter,
-                apiKey: mockWrapperInstance.apiKey
+                contextId: "contextId"
             };
             const afterInvocationData = {
                 error: "stringError",
@@ -269,11 +269,12 @@ describe("Trace", () => {
         describe("object error data", () => {
             const mockWrapperInstance = createMockWrapperInstance();
             const tracer = Trace();
+            tracer.setPluginContext(pluginContext);
             const beforeInvocationData = {
                 originalContext: mockWrapperInstance.originalContext,
                 originalEvent: mockWrapperInstance.originalEvent,
                 reporter: mockWrapperInstance.reporter,
-                apiKey: mockWrapperInstance.apiKey
+                contextId: "contextId"
             };
             const errorObject = {err: "err", msg: "msg"};
             const afterInvocationData = {

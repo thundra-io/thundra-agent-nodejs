@@ -30,7 +30,8 @@ const createMockWrapperInstance = () => {
         originalContext: createMockContext(),
         originalEvent: {key: "data"},
         coldStart: "false",
-        reporter: createMockReporterInstance()
+        reporter: createMockReporterInstance(),
+        pluginContext: createMockPluginContext()
     };
 };
 
@@ -40,9 +41,21 @@ const createMockPlugin = () => {
     };
 };
 
+const createMockPluginContext = () => {
+    return {
+        applicationId: "applicationId",
+        applicationProfile: "default",
+        applicationRegion: "region",
+        applicationVersion: "version",
+        requestCount: 0,
+        apiKey: "apiKey"
+    };
+};
+
 module.exports = {
     createMockContext,
     createMockReporterInstance,
     createMockWrapperInstance,
+    createMockPluginContext,
     createMockPlugin
 };

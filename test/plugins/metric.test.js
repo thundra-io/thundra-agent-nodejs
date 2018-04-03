@@ -1,5 +1,5 @@
 import Metric from "../../src/plugins/metric";
-import {createMockWrapperInstance} from "../mocks/mocks";
+import {createMockWrapperInstance,createMockPluginContext} from "../mocks/mocks";
 
 const utils = require("../../src/plugins/utils");
 
@@ -15,17 +15,13 @@ utils.readProcStatPromise = jest.fn(() => {
     });
 });
 
-process.env.AWS_LAMBDA_LOG_STREAM_NAME = "2018/03/02/[$LATEST]applicationId";
-process.env.thundra_applicationProfile = "test";
-process.env.AWS_REGION = "us-west2";
-process.env.AWS_LAMBDA_FUNCTION_VERSION = "$LATEST";
-
-
+const pluginContext = createMockPluginContext();
 describe("Metrics", () => {
     
     describe("Export function", () => {
         const options = {opt1: "opt1", opt2: "opt2"};
         const metric = Metric(options);
+        metric.setPluginContext(pluginContext);
         it("should export a function which returns an object", () => {
             expect(typeof Metric).toEqual("function");
             expect(typeof metric).toEqual("object");
@@ -38,6 +34,7 @@ describe("Metrics", () => {
     describe("Constructor", () => {
         const options = {op1t: "opt1", opt2: "opt2"};
         const metric =  Metric();
+        metric.setPluginContext(pluginContext);
         const metricWithOptions = new Metric(options);
         it("Should have the same hooks", () => {
             expect(metric.hooks).toEqual({
@@ -66,12 +63,13 @@ describe("Metrics", () => {
 
     describe("beforeInvocation", () => {
         const metric = Metric();
+        metric.setPluginContext(pluginContext);
         const mockWrapperInstance = createMockWrapperInstance();
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
             reporter: mockWrapperInstance.reporter,
-            apiKey: mockWrapperInstance.apiKey
+            contextId: "contextId"
         };
 
         it("Should set variables to their initial value", async () => {
@@ -81,17 +79,17 @@ describe("Metrics", () => {
             expect(metric.initialProcStat).toEqual({threadCount: 10});
             expect(metric.initialProcIo).toEqual({readBytes: 1024, writeBytes: 4096});
             expect(metric.reporter).toBe(beforeInvocationData.reporter);
-            expect(metric.apiKey).toBe(beforeInvocationData.apiKey);
+            expect(metric.apiKey).toBe(pluginContext.apiKey);
             expect(metric.reports).toEqual([]);
             expect(metric.startCpuUsage).toBeDefined();
             expect(metric.statData.statTime).toBeDefined();
             expect(metric.statData).toEqual({
-                applicationId: "applicationId",
+                applicationId: pluginContext.applicationId,
                 applicationName: "test",
-                applicationProfile: "test",
-                applicationVersion: "$LATEST",
+                applicationProfile: pluginContext.applicationProfile,
+                applicationVersion: pluginContext.applicationVersion,
                 applicationType: "node",
-                functionRegion: "us-west2",
+                functionRegion: pluginContext.applicationRegion,
                 statTime: metric.statData.statTime
             })
 
@@ -101,6 +99,7 @@ describe("Metrics", () => {
 
     describe("afterInvocation", () => {
         const metric = Metric();
+        metric.setPluginContext(pluginContext);
         metric.addCpuStatReport = jest.fn(async () => null);
         metric.addMemoryStatReport = jest.fn(async () => null);
         metric.addIoStatReport = jest.fn(async () => null);
@@ -121,12 +120,13 @@ describe("Metrics", () => {
 
     describe("beforeInvocation + afterInvocation", () => {
         const metric = Metric();
+        metric.setPluginContext(pluginContext);
         const mockWrapperInstance = createMockWrapperInstance();
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
             reporter: mockWrapperInstance.reporter,
-            apiKey: mockWrapperInstance.apiKey
+            contextId: "contextId"
         };
 
         it("Should set variables to their initial value", async () => {
@@ -140,12 +140,13 @@ describe("Metrics", () => {
 
     describe("addThreadStatReport", () => {
         const metric = Metric();
+        metric.setPluginContext(pluginContext);
         const mockWrapperInstance = createMockWrapperInstance();
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
             reporter: mockWrapperInstance.reporter,
-            apiKey: mockWrapperInstance.apiKey
+            contextId: "contextId"
         };
 
         it("Should set variables to their initial value", async () => {
@@ -171,12 +172,13 @@ describe("Metrics", () => {
 
     describe("addMemoryStatReport", () => {
         const metric = Metric();
+        metric.setPluginContext(pluginContext);
         const mockWrapperInstance = createMockWrapperInstance();
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
             reporter: mockWrapperInstance.reporter,
-            apiKey: mockWrapperInstance.apiKey
+            contextId: "contextId"
         };
 
         it("Should set variables to their initial value", async () => {
@@ -199,12 +201,13 @@ describe("Metrics", () => {
 
     describe("addCpuStatReport", () => {
         const metric = Metric();
+        metric.setPluginContext(pluginContext);
         const mockWrapperInstance = createMockWrapperInstance();
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
             reporter: mockWrapperInstance.reporter,
-            apiKey: mockWrapperInstance.apiKey
+            contextId: "contextId"
         };
 
         it("Should set variables to their initial value", async () => {
@@ -222,12 +225,13 @@ describe("Metrics", () => {
 
     describe("addIoStatReport", () => {
         const metric = Metric();
+        metric.setPluginContext(pluginContext);
         const mockWrapperInstance = createMockWrapperInstance();
         const beforeInvocationData = {
             originalContext: mockWrapperInstance.originalContext,
             originalEvent: mockWrapperInstance.originalEvent,
             reporter: mockWrapperInstance.reporter,
-            apiKey: mockWrapperInstance.apiKey
+            contextId: "contextId"
         };
 
         it("Should set variables to their initial value", async () => {

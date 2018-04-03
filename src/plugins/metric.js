@@ -3,10 +3,6 @@ import {execSync} from "child_process";
 import {
     formatDate,
     generateId,
-    getApplicationId,
-    getApplicationProfile,
-    getApplicationVersion,
-    getApplicationRegion,
     getCpuUsage,
     getCpuLoad,
     readProcStatPromise,
@@ -26,19 +22,27 @@ class Metric {
         this.clockTick = parseInt(execSync("getconf CLK_TCK").toString());
     }
 
+    report = (data) => {
+        this.reporter.addReport(data);
+    };
+
+    setPluginContext =  (pluginContext) => {
+        this.pluginContext = pluginContext;
+        this.apiKey = pluginContext.apiKey;
+    };
+
     beforeInvocation = async (data) => {
         const [procStat, procIo] = await Promise.all([readProcStatPromise(), readProcIoPromise()]);
         this.initialProcStat = procStat;
         this.initialProcIo = procIo;
         this.reporter = data.reporter;
-        this.apiKey = data.apiKey;
         this.statData = {
-            applicationId: getApplicationId(),
+            applicationId: this.pluginContext.applicationId,
             applicationName: data.originalContext.functionName,
-            applicationProfile: getApplicationProfile(),
-            applicationVersion: getApplicationVersion(),
+            applicationProfile: this.pluginContext.applicationProfile,
+            applicationVersion: this.pluginContext.applicationVersion,
             applicationType: "node",
-            functionRegion: getApplicationRegion(),
+            functionRegion: this.pluginContext.applicationRegion,
             statTime: formatDate(new Date())
         };
         this.startCpuUsage = getCpuUsage();
@@ -137,9 +141,6 @@ class Metric {
         this.reports = [...this.reports, ioStatReport];
     };
 
-    report = (data) => {
-        this.reporter.addReport(data);
-    }
 }
 
 export default function instantiateMetricPlugin(options) {

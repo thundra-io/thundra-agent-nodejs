@@ -1,6 +1,7 @@
 import ThundraWrapper from "../src/thundra-wrapper";
-import {createMockContext, createMockReporterInstance, createMockPlugin} from "./mocks/mocks";
+import {createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext} from "./mocks/mocks";
 
+const pluginContext = createMockPluginContext();
 describe("ThundraWrapper", () => {
     const originalThis = this;
     const originalEvent = {key1: "value2", key2: "value2"};
@@ -12,7 +13,7 @@ describe("ThundraWrapper", () => {
         process.env.thundra_lambda_publish_cloudwatch_enable = "false";
         const originalCallback = jest.fn();
         const originalFunction = jest.fn(() => originalCallback());
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
         thundraWrapper.reporter = createMockReporterInstance();
         await thundraWrapper.report(null, {result: "result"}, thundraWrapper.originalCallback);
         it("should send reports", () => {
@@ -27,7 +28,7 @@ describe("ThundraWrapper", () => {
     describe("report with empty callback", async () => {
         const originalCallback = jest.fn();
         const originalFunction = jest.fn(() => originalCallback());
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
         thundraWrapper.reporter = createMockReporterInstance();
         await thundraWrapper.report(null, null, null);
         it("should not fail", () => {
@@ -38,8 +39,10 @@ describe("ThundraWrapper", () => {
     describe("original function throws an error", () => {
         const thrownError = "err";
         const originalCallback = jest.fn();
-        const originalFunction = jest.fn(() => {throw(thrownError)});
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+        const originalFunction = jest.fn(() => {
+            throw(thrownError)
+        });
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
         thundraWrapper.report = jest.fn();
         thundraWrapper.invoke();
         it("should call original function and report", () => {
@@ -51,7 +54,7 @@ describe("ThundraWrapper", () => {
     describe("constructor", () => {
         const originalCallback = jest.fn();
         const originalFunction = jest.fn();
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
         it("should set variables", () => {
             expect(thundraWrapper.originalThis).toBe(originalThis);
             expect(thundraWrapper.originalEvent).toBe(originalEvent);
@@ -67,7 +70,7 @@ describe("ThundraWrapper", () => {
         describe("wrappedCallback", () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
             thundraWrapper.report = jest.fn();
             thundraWrapper.wrappedCallback();
             it("should call report", () => {
@@ -79,7 +82,7 @@ describe("ThundraWrapper", () => {
         describe("report once", async () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
             thundraWrapper.reported = true;
             thundraWrapper.reporter = createMockReporterInstance();
             await thundraWrapper.report(null, {result: "result"}, thundraWrapper.originalCallback);
@@ -94,7 +97,7 @@ describe("ThundraWrapper", () => {
         describe("invoke", () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
             thundraWrapper.reporter = createMockReporterInstance();
             thundraWrapper.invoke();
             it("should call original function and callback once", () => {
@@ -111,7 +114,7 @@ describe("ThundraWrapper", () => {
             const originalFunction = jest.fn();
             const originalCallback = null;
             const originalContext = createMockContext();
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
             thundraWrapper.reporter = createMockReporterInstance();
 
             describe("succeed", () => {
@@ -144,8 +147,8 @@ describe("ThundraWrapper", () => {
         describe("invoke", () => {
             const originalContext = createMockContext();
             const originalCallback = null;
-            const originalFunction = jest.fn((event,context) => context.succeed());
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, apiKey);
+            const originalFunction = jest.fn((event, context) => context.succeed());
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
             thundraWrapper.wrappedContext.succeed = jest.fn();
             thundraWrapper.report = jest.fn();
             thundraWrapper.invoke();
