@@ -77,7 +77,7 @@ Check out our async monitoring example at our [example projects](https://github.
 ## Log support
 You can monitor your logs using Thundra and enjoy the three pillars of observability in one place!
 
-Check out our [log module](https://github.com/thundra-io/thundra-lambda-agent-nodejs-log/tree/initial-log-module).
+Check out our [log module](https://github.com/thundra-io/thundra-lambda-agent-nodejs-log).
 
 
 ## How to build
