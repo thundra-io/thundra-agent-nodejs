@@ -1,4 +1,4 @@
-const Thundra = require("../index");
+const Thundra = require("../src/index");
 const utils = require("../src/plugins/utils");
 
 utils.readProcIoPromise = jest.fn(() => {
@@ -24,7 +24,7 @@ describe("Thundra library", () => {
     describe("With env apiKey",() => {
         delete process.env.thundra_disable;
         process.env.thundra_apiKey="apiKey";
-        const originalEvent = {};
+        const originalEvent = {key: "value"};
         const originalContext = {};
         const originalCallback = jest.fn();
         const originalFunction = jest.fn(() => originalCallback());
@@ -45,7 +45,7 @@ describe("Thundra library", () => {
         describe("By no apiKey", () => {
             delete process.env.thundra_disable;
             delete process.env.thundra_apiKey;
-            const originalEvent = {};
+            const originalEvent = {key: "value"};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
@@ -59,7 +59,7 @@ describe("Thundra library", () => {
 
         describe("By parameter", () => {
             delete process.env.thundra_disable;
-            const originalEvent = {};
+            const originalEvent = {key: "value"};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
@@ -73,7 +73,7 @@ describe("Thundra library", () => {
 
         describe("By env variable", () => {
             process.env.thundra_disable = "true";
-            const originalEvent = {};
+            const originalEvent = {key: "value"};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
@@ -92,7 +92,7 @@ describe("Thundra library", () => {
             delete process.env.thundra_metric_disable;
             delete process.env.thundra_disable;
             delete process.env.thundra_apiKey;
-            const originalEvent = {};
+            const originalEvent = {key: "value"};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
@@ -113,7 +113,7 @@ describe("Thundra library", () => {
             process.env.thundra_applicationProfile = "dev";
             process.env.thundra_trace_disable = "true";
             process.env.thundra_metric_disable = "true";
-            const originalEvent = {};
+            const originalEvent = {key: "value"};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
@@ -133,7 +133,7 @@ describe("Thundra library", () => {
             delete process.env.thundra_apiKey;
             process.env.thundra_trace_disable = "false";
             process.env.thundra_metric_disable = "ignore";
-            const originalEvent = {};
+            const originalEvent = {key: "value"};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
@@ -147,6 +147,23 @@ describe("Thundra library", () => {
                 expect(originalCallback).toBeCalled();
             });
         });
+    });
+
+    describe("when it is a warmup",  () => {
+        const originalEvent = {};
+        const originalContext = {};
+        const originalCallback = jest.fn();
+        const originalFunction = jest.fn(() => originalCallback());
+        const ThundraWrapper = Thundra({apiKey: "apiKey"});
+        const wrappedFunction = ThundraWrapper(originalFunction);
+        console["log"] = jest.fn();
+        jest.useFakeTimers();
+        wrappedFunction(originalEvent,originalContext,originalCallback);
+        jest.runAllTimers();
+        it("should not invoke the function",  () => {
+            expect(originalFunction).not.toBeCalled();
+        });
+
     });
 
 });

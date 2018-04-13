@@ -1,6 +1,8 @@
-import ThundraWrapper from "./src/thundra-wrapper";
-import Trace from "./src/plugins/trace";
-import Metric from "./src/plugins/metric";
+import ThundraWarmup from "@thundra/warmup";
+import ThundraWrapper from "./thundra-wrapper";
+import Trace from "./plugins/trace";
+import Metric from "./plugins/metric";
+
 
 const shouldDisable = (disableByEnv, disableByParameter) => {
     if (disableByEnv === "true")
@@ -42,8 +44,13 @@ module.exports = (config) => {
         plugin.setPluginContext(pluginContext);
     });
 
+    const increaseRequestCount = () => pluginContext.requestCount += 1;
+
+    const warmupWrapper = ThundraWarmup(increaseRequestCount);
+
     return originalFunc => {
-        return (originalEvent, originalContext, originalCallback) => {
+
+        const thundraWrappedHandler = (originalEvent, originalContext, originalCallback) => {
             const originalThis = this;
             const thundraWrapper = new ThundraWrapper(
                 originalThis,
@@ -57,6 +64,10 @@ module.exports = (config) => {
             );
             return thundraWrapper.invoke();
         };
+
+        const warmupWrappedHandler = warmupWrapper(thundraWrappedHandler);
+
+        return warmupWrappedHandler;
     };
 };
 

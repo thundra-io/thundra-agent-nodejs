@@ -68,13 +68,25 @@ describe("ThundraWrapper", () => {
 
     describe("originalFunction calls callback", () => {
         describe("wrappedCallback", () => {
-            const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
-            thundraWrapper.report = jest.fn();
-            thundraWrapper.wrappedCallback();
-            it("should call report", () => {
-                expect(thundraWrapper.report).toBeCalled();
+            describe("with mock report function", () => {
+                const originalCallback = jest.fn();
+                const originalFunction = jest.fn(() => originalCallback());
+                const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
+                thundraWrapper.report = jest.fn();
+                thundraWrapper.wrappedCallback();
+                it("should call report", () => {
+                    expect(thundraWrapper.report).toBeCalled();
+                });
+            });
+            describe("with real report function", () => {
+                const originalCallback = jest.fn();
+                const originalFunction = jest.fn(() => originalCallback());
+                const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins,pluginContext, apiKey);
+                thundraWrapper.reporter = createMockReporterInstance();
+                thundraWrapper.wrappedCallback();
+                it("should call reporter.sendReports", () => {
+                    expect(thundraWrapper.reporter.sendReports).toBeCalled();
+                });
             });
         });
 

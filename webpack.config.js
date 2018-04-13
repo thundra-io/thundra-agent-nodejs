@@ -1,15 +1,15 @@
-const webpack = require('webpack');
+const webpack = require("webpack");
 const path = require("path");
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 module.exports = {
-    entry: "./index.js",
+    entry: "./src/index.js",
     target: "node",
     output: {
         path: path.resolve(__dirname, "dist"),
         filename: "./thundra.js",
-        libraryTarget: 'commonjs2',
-        library: 'thundra'
+        libraryTarget: "commonjs2",
+        library: "thundra"
     },
     module: {
         rules: [

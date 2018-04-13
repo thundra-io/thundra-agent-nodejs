@@ -1,4 +1,4 @@
-# Thundra.io Lambda Node.js Agent
+# Thundra Lambda Node.js Agent
 
 [![Coverage Status](https://coveralls.io/repos/github/thundra-io/thundra-lambda-agent-nodejs/badge.svg?branch=master)](https://coveralls.io/github/thundra-io/thundra-lambda-agent-nodejs?branch=master)
 [![CircleCI](https://circleci.com/gh/thundra-io/thundra-lambda-agent-nodejs.svg?style=svg)](https://circleci.com/gh/thundra-io/thundra-lambda-agent-nodejs)
@@ -54,6 +54,7 @@ Check out the [configuration part](https://thundra.readme.io/docs/configuration-
 | thundra_disable_trace                    |  bool  |     false     |
 | thundra_disable_metric                   |  bool  |     false     |
 | thundra_lambda_publish_cloudwatch_enable |  bool  |     false     |
+| thundra_lambda_warmup_warmupAware        |  bool  |     false     |
 
 #### 2. Module initialization parameters
 
@@ -74,11 +75,19 @@ Instead, you can [setup async monitoring](https://docs.thundra.io/docs/how-to-se
 Check out our async monitoring example at our [example projects](https://github.com/thundra-io/thundra-examples-lambda-nodejs)  for a quick start.
 
 
-## Log support
+## Log Support
 You can monitor your logs using Thundra and enjoy the three pillars of observability in one place!
 
 Check out our [log module](https://github.com/thundra-io/thundra-lambda-agent-nodejs-log).
 
+## Warmup Support
+You can cut down cold starts easily by deploying our lambda function `thundra-lambda-warmup`.
+
+Our agent handles warmup requests automatically so you don't need add more code.
+
+You only need to deploy `thundra-lambda-warmup` only once, then you can enable warming up for your lambda by setting its environment variable `thundra_lambda_warmup_warmupAware` **true** or adding its name to `thundra-lambda-warmup`'s environment variable `thundra_lambda_warmup_function`.
+
+Check out our [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs for more information.
 
 ## How to build
 [Webpack](https://webpack.js.org/) is used as a module bundler.
