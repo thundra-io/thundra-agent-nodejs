@@ -6,6 +6,8 @@ test("httpsRequest unauthorized apiKey", async () => {
     const mockReport2 = {data: "data2"};
     reporter.addReport(mockReport1);
     reporter.addReport(mockReport2);
+    jest.useFakeTimers();
     let res = await reporter.httpsRequest();
+    jest.runAllTimers();
     expect(res.status).toBe(401);
 });
