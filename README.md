@@ -81,13 +81,15 @@ You can monitor your logs using Thundra and enjoy the three pillars of observabi
 Check out our [log module](https://github.com/thundra-io/thundra-lambda-agent-nodejs-log).
 
 ## Warmup Support
-You can cut down cold starts easily by deploying our lambda function `thundra-lambda-warmup`.
+You can cut down cold starts easily by deploying our lambda function [`thundra-lambda-warmup`](https://github.com/thundra-io/thundra-lambda-warmup).
 
-Our agent handles warmup requests automatically so you don't need add more code.
+Our agent handles warmup requests automatically so you don't need to make any code changes.
 
-You only need to deploy `thundra-lambda-warmup` only once, then you can enable warming up for your lambda by setting its environment variable `thundra_lambda_warmup_warmupAware` **true** or adding its name to `thundra-lambda-warmup`'s environment variable `thundra_lambda_warmup_function`.
+You just need to deploy `thundra-lambda-warmup` once, then you can enable warming up for your lambda by 
+* setting its environment variable `thundra_lambda_warmup_warmupAware` **true** OR
+* adding its name to `thundra-lambda-warmup`'s environment variable `thundra_lambda_warmup_function`.
 
-Check out our [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs for more information.
+Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs for more information.
 
 ## How to build
 [Webpack](https://webpack.js.org/) is used as a module bundler.
