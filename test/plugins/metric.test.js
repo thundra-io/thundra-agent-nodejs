@@ -82,7 +82,7 @@ describe("Metrics", () => {
             expect(metric.apiKey).toBe(pluginContext.apiKey);
             expect(metric.reports).toEqual([]);
             expect(metric.startCpuUsage).toBeDefined();
-            expect(metric.statData.statTime).toBeDefined();
+            expect(metric.statData.statTimestamp).toBeDefined();
             expect(metric.statData).toEqual({
                 applicationId: pluginContext.applicationId,
                 applicationName: "test",
@@ -90,7 +90,7 @@ describe("Metrics", () => {
                 applicationVersion: pluginContext.applicationVersion,
                 applicationType: "node",
                 functionRegion: pluginContext.applicationRegion,
-                statTime: metric.statData.statTime
+                statTimestamp: metric.statData.statTimestamp
             })
 
         });

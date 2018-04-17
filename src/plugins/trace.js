@@ -9,11 +9,7 @@
 *
 */
 
-import {
-    formatDate,
-    generateId,
-} from "./utils";
-
+import {generateId} from "./utils";
 
 class Trace {
     constructor(options) {
@@ -36,9 +32,8 @@ class Trace {
     beforeInvocation = (data) => {
         const {originalContext, originalEvent, reporter, contextId} = data;
         this.reporter = reporter;
-        this.endTime = null;
-        this.startTime = new Date();
-        const formattedStartTime = formatDate(this.startTime);
+        this.endTimestamp = null;
+        this.startTimestamp = Date.now();
         this.traceData = {
             id: generateId(),
             applicationName: originalContext.functionName,
@@ -47,8 +42,8 @@ class Trace {
             applicationProfile: this.pluginContext.applicationProfile,
             applicationType: "node",
             duration: null,
-            startTime: formattedStartTime,
-            endTime: null,
+            startTimestamp: this.startTimestamp,
+            endTimestamp: null,
             errors: [],
             thrownError: null,
             contextType: "ExecutionContext",
@@ -57,8 +52,8 @@ class Trace {
             auditInfo: {
                 contextName: originalContext.functionName,
                 id: contextId,
-                openTime: formattedStartTime,
-                closeTime: null,
+                openTimestamp: this.startTimestamp,
+                closeTimestamp: null,
                 errors: [],
                 thrownError: null,
             },
@@ -96,9 +91,9 @@ class Trace {
         }
 
         this.traceData.properties.response = data.response;
-        this.endTime = new Date();
-        this.traceData.endTime = this.traceData.auditInfo.closeTime = formatDate(this.endTime);
-        this.traceData.duration = this.endTime - this.startTime;
+        this.endTimestamp = Date.now();
+        this.traceData.endTimestamp = this.traceData.auditInfo.closeTimestamp = this.endTimestamp;
+        this.traceData.duration = this.endTimestamp - this.startTimestamp;
         const reportData = {
             data: this.traceData,
             type: "AuditData",

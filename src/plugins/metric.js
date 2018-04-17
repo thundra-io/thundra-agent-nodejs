@@ -43,7 +43,7 @@ class Metric {
             applicationVersion: this.pluginContext.applicationVersion,
             applicationType: "node",
             functionRegion: this.pluginContext.applicationRegion,
-            statTime: formatDate(new Date())
+            statTimestamp: Date.now()
         };
         this.startCpuUsage = getCpuUsage();
         this.reports = [];

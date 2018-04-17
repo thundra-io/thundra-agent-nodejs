@@ -74,8 +74,8 @@ describe("Trace", () => {
         };
         tracer.beforeInvocation(beforeInvocationData);
 
-        it("should set startTime", () => {
-            expect(tracer.startTime instanceof Date).toBeTruthy();
+        it("should set startTimestamp", () => {
+            expect(tracer.startTimestamp).toBeTruthy();
         });
 
         it("should set apiKey", () => {
@@ -95,8 +95,8 @@ describe("Trace", () => {
             expect(tracer.traceData.applicationProfile).toBeTruthy();
             expect(tracer.traceData.applicationType).toEqual("node");
             expect(tracer.traceData.duration).toEqual(null);
-            expect(tracer.traceData.startTime).toBeTruthy();
-            expect(tracer.traceData.endTime).toEqual(null);
+            expect(tracer.traceData.startTimestamp).toBeTruthy();
+            expect(tracer.traceData.endTimestamp).toEqual(null);
             expect(tracer.traceData.errors).toEqual([]);
             expect(tracer.traceData.thrownError).toEqual(null);
             expect(tracer.traceData.contextType).toEqual("ExecutionContext");
@@ -105,8 +105,8 @@ describe("Trace", () => {
             expect(tracer.traceData.auditInfo).toEqual({
                 contextName: mockWrapperInstance.originalContext.functionName,
                 id: tracer.traceData.contextId,
-                openTime: tracer.traceData.startTime,
-                closeTime: null,
+                openTimestamp: tracer.traceData.startTimestamp,
+                closeTimestamp: null,
                 errors: [],
                 thrownError: null,
             });
@@ -140,8 +140,8 @@ describe("Trace", () => {
         tracer.beforeInvocation(beforeInvocationData);
         tracer.afterInvocation(afterInvocationData);
 
-        it("should set endTime", () => {
-            expect(tracer.endTime instanceof Date).toBeTruthy();
+        it("should set endTimestamp", () => {
+            expect(tracer.endTimestamp).toBeTruthy();
         });
 
         it("should set traceData", () => {
@@ -150,9 +150,9 @@ describe("Trace", () => {
             expect(tracer.traceData.auditInfo.errors).toEqual([]);
             expect(tracer.traceData.auditInfo.thrownError).toEqual(null);
             expect(tracer.traceData.properties.response).toEqual({key: "data"});
-            expect(tracer.traceData.endTime).toBeTruthy();
-            expect(tracer.traceData.endTime).toEqual(tracer.traceData.auditInfo.closeTime);
-            expect(tracer.traceData.duration).toEqual(tracer.endTime - tracer.startTime);
+            expect(tracer.traceData.endTimestamp).toBeTruthy();
+            expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
+            expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
         });
 
         it("should call report", () => {
@@ -186,8 +186,8 @@ describe("Trace", () => {
             tracer.beforeInvocation(beforeInvocationData);
             tracer.afterInvocation(afterInvocationData);
 
-            it("should set endTime", () => {
-                expect(tracer.endTime instanceof Date).toBeTruthy();
+            it("should set endTimestamp", () => {
+                expect(tracer.endTimestamp).toBeTruthy();
             });
 
             it("should set traceData", () => {
@@ -202,9 +202,9 @@ describe("Trace", () => {
                     errorType: "Error"
                 });
                 expect(tracer.traceData.properties.response).toEqual({key: "data"});
-                expect(tracer.traceData.endTime).toBeTruthy();
-                expect(tracer.traceData.endTime).toEqual(tracer.traceData.auditInfo.closeTime);
-                expect(tracer.traceData.duration).toEqual(tracer.endTime - tracer.startTime);
+                expect(tracer.traceData.endTimestamp).toBeTruthy();
+                expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
+                expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
             });
 
             it("should call report", () => {
@@ -235,8 +235,8 @@ describe("Trace", () => {
             tracer.beforeInvocation(beforeInvocationData);
             tracer.afterInvocation(afterInvocationData);
 
-            it("should set endTime", () => {
-                expect(tracer.endTime instanceof Date).toBeTruthy();
+            it("should set endTimestamp", () => {
+                expect(tracer.endTimestamp).toBeTruthy();
             });
 
             it("should set traceData", () => {
@@ -251,9 +251,9 @@ describe("Trace", () => {
                     errorType: "Unknown Error"
                 });
                 expect(tracer.traceData.properties.response).toEqual({key: "data"});
-                expect(tracer.traceData.endTime).toBeTruthy();
-                expect(tracer.traceData.endTime).toEqual(tracer.traceData.auditInfo.closeTime);
-                expect(tracer.traceData.duration).toEqual(tracer.endTime - tracer.startTime);
+                expect(tracer.traceData.endTimestamp).toBeTruthy();
+                expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
+                expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
             });
 
             it("should call report", () => {
@@ -285,8 +285,8 @@ describe("Trace", () => {
             tracer.beforeInvocation(beforeInvocationData);
             tracer.afterInvocation(afterInvocationData);
 
-            it("should set endTime", () => {
-                expect(tracer.endTime instanceof Date).toBeTruthy();
+            it("should set endTimestamp", () => {
+                expect(tracer.endTimestamp).toBeTruthy();
             });
 
             it("should set traceData", () => {
@@ -301,9 +301,9 @@ describe("Trace", () => {
                     errorType: "Unknown Error"
                 });
                 expect(tracer.traceData.properties.response).toEqual({key: "data"});
-                expect(tracer.traceData.endTime).toBeTruthy();
-                expect(tracer.traceData.endTime).toEqual(tracer.traceData.auditInfo.closeTime);
-                expect(tracer.traceData.duration).toEqual(tracer.endTime - tracer.startTime);
+                expect(tracer.traceData.endTimestamp).toBeTruthy();
+                expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
+                expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
             });
 
             it("should call report", () => {
@@ -314,6 +314,10 @@ describe("Trace", () => {
                     dataFormatVersion: "1.0"
                 });
             });
+        });
+
+        describe("", () => {
+
         });
 
     });
