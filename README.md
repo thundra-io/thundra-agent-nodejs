@@ -108,3 +108,6 @@ To run tests,
  npm run test
  ```
 
+## Changelog
+
+Please see the [CHANGELOG](CHANGELOG.md) file.
