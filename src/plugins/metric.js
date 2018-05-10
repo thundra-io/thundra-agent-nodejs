@@ -1,5 +1,5 @@
-import os from "os";
-import {execSync} from "child_process";
+import os from 'os';
+import {execSync} from 'child_process';
 import {
     formatDate,
     generateId,
@@ -7,26 +7,26 @@ import {
     getCpuLoad,
     readProcStatPromise,
     readProcIoPromise,
-} from "./utils";
+} from './utils';
 
 
 class Metric {
     constructor(options) {
         this.hooks = {
-            "before-invocation": this.beforeInvocation,
-            "after-invocation": this.afterInvocation
+            'before-invocation': this.beforeInvocation,
+            'after-invocation': this.afterInvocation
         };
         this.options = options;
         this.statData = {};
         this.reports = [];
-        this.clockTick = parseInt(execSync("getconf CLK_TCK").toString());
+        this.clockTick = parseInt(execSync('getconf CLK_TCK').toString());
     }
 
     report = (data) => {
         this.reporter.addReport(data);
     };
 
-    setPluginContext =  (pluginContext) => {
+    setPluginContext = (pluginContext) => {
         this.pluginContext = pluginContext;
         this.apiKey = pluginContext.apiKey;
     };
@@ -41,7 +41,7 @@ class Metric {
             applicationName: data.originalContext.functionName,
             applicationProfile: this.pluginContext.applicationProfile,
             applicationVersion: this.pluginContext.applicationVersion,
-            applicationType: "node",
+            applicationType: 'node',
             functionRegion: this.pluginContext.applicationRegion,
             statTimestamp: Date.now()
         };
@@ -66,14 +66,14 @@ class Metric {
         const threadStat = {
             ...this.statData,
             id: generateId(),
-            statName: "ThreadStat",
+            statName: 'ThreadStat',
             threadCount: threadCount,
         };
         const threadStatReport = {
             data: threadStat,
-            type: "StatData",
+            type: 'StatData',
             apiKey: this.apiKey,
-            dataFormatVersion: "1.0"
+            dataFormatVersion: '1.0'
         };
         this.reports = [...this.reports, threadStatReport];
     };
@@ -85,20 +85,20 @@ class Metric {
         const memoryStat = {
             ...this.statData,
             id: generateId(),
-            statName: "MemoryStat",
-            "proc.rss": rss,
-            "proc.heapTotal": heapTotal,
-            "proc.heapUsed": heapUsed,
-            "proc.external": external,
-            "os.totalMemory": totalMemory,
-            "os.freeMemory": freeMemory,
-            "os.usedMemory": totalMemory - freeMemory
+            statName: 'MemoryStat',
+            'proc.rss': rss,
+            'proc.heapTotal': heapTotal,
+            'proc.heapUsed': heapUsed,
+            'proc.external': external,
+            'os.totalMemory': totalMemory,
+            'os.freeMemory': freeMemory,
+            'os.usedMemory': totalMemory - freeMemory
         };
         const memoryStatReport = {
             data: memoryStat,
-            type: "StatData",
+            type: 'StatData',
             apiKey: this.apiKey,
-            dataFormatVersion: "1.0"
+            dataFormatVersion: '1.0'
         };
         this.reports = [...this.reports, memoryStatReport];
     };
@@ -109,15 +109,15 @@ class Metric {
         const cpuStat = {
             ...this.statData,
             id: generateId(),
-            statName: "CpuStat",
-            "processCpuLoad": cpuLoad.procCpuLoad,
-            "systemCpuLoad": cpuLoad.sysCpuLoad,
+            statName: 'CpuStat',
+            'processCpuLoad': cpuLoad.procCpuLoad,
+            'systemCpuLoad': cpuLoad.sysCpuLoad,
         };
         const cpuStatReport = {
             data: cpuStat,
-            type: "StatData",
+            type: 'StatData',
             apiKey: this.apiKey,
-            dataFormatVersion: "1.0"
+            dataFormatVersion: '1.0'
         };
         this.reports = [...this.reports, cpuStatReport];
     };
@@ -127,16 +127,16 @@ class Metric {
         const endProcIo = await readProcIoPromise();
         const ioStat = {
             ...this.statData,
-            statName: "IoStat",
+            statName: 'IoStat',
             id: generateId(),
-            "proc.diskReadBytes": endProcIo.readBytes - startProcIo.readBytes,
-            "proc.diskWriteBytes": endProcIo.writeBytes - startProcIo.writeBytes
+            'proc.diskReadBytes': endProcIo.readBytes - startProcIo.readBytes,
+            'proc.diskWriteBytes': endProcIo.writeBytes - startProcIo.writeBytes
         };
         const ioStatReport = {
             data: ioStat,
-            type: "StatData",
+            type: 'StatData',
             apiKey: this.apiKey,
-            dataFormatVersion: "1.0"
+            dataFormatVersion: '1.0'
         };
         this.reports = [...this.reports, ioStatReport];
     };

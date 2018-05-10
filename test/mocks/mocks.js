@@ -4,15 +4,15 @@ const createMockContext = () => {
         done: jest.fn(),
         succeed: jest.fn(),
         fail: jest.fn(),
-        logGroupName: "/aws/lambda/test",
-        logStreamName: "2018/03/07/[$LATEST]test",
-        functionName: "test",
-        memoryLimitInMB: "128",
-        functionVersion: "$LATEST",
+        logGroupName: '/aws/lambda/test',
+        logStreamName: '2018/03/07/[$LATEST]test',
+        functionName: 'test',
+        memoryLimitInMB: '128',
+        functionVersion: '$LATEST',
         getRemainingTimeInMillis: jest.fn(),
-        invokeid: "invokeId",
-        awsRequestId: "awsRequestId",
-        invokedFunctionArn: "arn:aws:lambda:us-west-2:123456789123:function:test"
+        invokeid: 'invokeId',
+        awsRequestId: 'awsRequestId',
+        invokedFunctionArn: 'arn:aws:lambda:us-west-2:123456789123:function:test'
     };
 };
 
@@ -26,10 +26,10 @@ const createMockReporterInstance = () => {
 
 const createMockWrapperInstance = () => {
     return {
-        apiKey: "apiKey",
+        apiKey: 'apiKey',
         originalContext: createMockContext(),
-        originalEvent: {key: "data"},
-        coldStart: "false",
+        originalEvent: {key: 'data'},
+        coldStart: 'false',
         reporter: createMockReporterInstance(),
         pluginContext: createMockPluginContext()
     };
@@ -37,18 +37,18 @@ const createMockWrapperInstance = () => {
 
 const createMockPlugin = () => {
     return {
-        hooks: {"not-a-real-hook": jest.fn()}
+        hooks: {'not-a-real-hook': jest.fn()}
     };
 };
 
 const createMockPluginContext = () => {
     return {
-        applicationId: "applicationId",
-        applicationProfile: "default",
-        applicationRegion: "region",
-        applicationVersion: "version",
+        applicationId: 'applicationId',
+        applicationProfile: 'default',
+        applicationRegion: 'region',
+        applicationVersion: 'version',
         requestCount: 0,
-        apiKey: "apiKey"
+        apiKey: 'apiKey'
     };
 };
 

@@ -1,5 +1,5 @@
-const Thundra = require("../src/index");
-const utils = require("../src/plugins/utils");
+const Thundra = require('../src/index');
+const utils = require('../src/plugins/utils');
 
 utils.readProcIoPromise = jest.fn(() => {
     return new Promise((resolve, reject) => {
@@ -13,154 +13,153 @@ utils.readProcStatPromise = jest.fn(() => {
     });
 });
 
-process.env.AWS_LAMBDA_LOG_STREAM_NAME = "2018/03/02/[$LATEST]applicationId";
+process.env.AWS_LAMBDA_LOG_STREAM_NAME = '2018/03/02/[$LATEST]applicationId';
 delete process.env.thundra_trace_disable;
 delete process.env.thundra_metric_disable;
 delete process.env.thundra_disable;
 delete process.env.thundra_apiKey;
 
-describe("Thundra library", () => {
+describe('Thundra library', () => {
 
-    describe("With env apiKey",() => {
+    describe('With env apiKey', () => {
         delete process.env.thundra_disable;
-        process.env.thundra_apiKey="apiKey";
-        const originalEvent = {key: "value"};
+        process.env.thundra_apiKey = 'apiKey';
+        const originalEvent = {key: 'value'};
         const originalContext = {};
         const originalCallback = jest.fn();
         const originalFunction = jest.fn(() => originalCallback());
         const ThundraWrapper = Thundra();
         const wrappedFunction = ThundraWrapper(originalFunction);
-        wrappedFunction(originalEvent,originalContext,originalCallback);
-        it("should invoke the function", () => {
+        wrappedFunction(originalEvent, originalContext, originalCallback);
+        it('should invoke the function', () => {
             expect(originalFunction).toBeCalled();
         });
-        it("should invoke the callback", () => {
+        it('should invoke the callback', () => {
             expect(originalCallback).toBeCalled();
         });
     });
 
 
-
-    describe("Thundra disabled", () => {
-        describe("By no apiKey", () => {
+    describe('Thundra disabled', () => {
+        describe('By no apiKey', () => {
             delete process.env.thundra_disable;
             delete process.env.thundra_apiKey;
-            const originalEvent = {key: "value"};
+            const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
             const ThundraWrapper = Thundra();
             const wrappedFunction = ThundraWrapper(originalFunction);
-            wrappedFunction(originalEvent,originalContext,originalCallback);
-            it("Should not wrap", () => {
+            wrappedFunction(originalEvent, originalContext, originalCallback);
+            it('Should not wrap', () => {
                 expect(wrappedFunction).toBe(originalFunction);
             });
         });
 
-        describe("By parameter", () => {
+        describe('By parameter', () => {
             delete process.env.thundra_disable;
-            const originalEvent = {key: "value"};
+            const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
-            const ThundraWrapper = Thundra({apiKey: "apiKey", disableThundra: true, plugins: []});
+            const ThundraWrapper = Thundra({apiKey: 'apiKey', disableThundra: true, plugins: []});
             const wrappedFunction = ThundraWrapper(originalFunction);
-            wrappedFunction(originalEvent,originalContext,originalCallback);
-            it("Should not wrap", () => {
+            wrappedFunction(originalEvent, originalContext, originalCallback);
+            it('Should not wrap', () => {
                 expect(wrappedFunction).toBe(originalFunction);
             });
         });
 
-        describe("By env variable", () => {
-            process.env.thundra_disable = "true";
-            const originalEvent = {key: "value"};
+        describe('By env variable', () => {
+            process.env.thundra_disable = 'true';
+            const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
-            const ThundraWrapper = Thundra({apiKey: "apiKey"});
+            const ThundraWrapper = Thundra({apiKey: 'apiKey'});
             const wrappedFunction = ThundraWrapper(originalFunction);
-            wrappedFunction(originalEvent,originalContext,originalCallback);
-            it("Should not wrap", () => {
+            wrappedFunction(originalEvent, originalContext, originalCallback);
+            it('Should not wrap', () => {
                 expect(wrappedFunction).toBe(originalFunction);
             });
         });
     });
 
-    describe("Without plugins", () => {
-        describe("Using parameters",() => {
+    describe('Without plugins', () => {
+        describe('Using parameters', () => {
             delete process.env.thundra_trace_disable;
             delete process.env.thundra_metric_disable;
             delete process.env.thundra_disable;
             delete process.env.thundra_apiKey;
-            const originalEvent = {key: "value"};
+            const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
-            const ThundraWrapper = Thundra({apiKey: "apiKey", disableTrace: true, disableMetric: true});
+            const ThundraWrapper = Thundra({apiKey: 'apiKey', disableTrace: true, disableMetric: true});
             const wrappedFunction = ThundraWrapper(originalFunction);
-            wrappedFunction(originalEvent,originalContext,originalCallback);
-            it("should invoke the function", () => {
+            wrappedFunction(originalEvent, originalContext, originalCallback);
+            it('should invoke the function', () => {
                 expect(originalFunction).toBeCalled();
             });
-            it("should invoke the callback", () => {
+            it('should invoke the callback', () => {
                 expect(originalCallback).toBeCalled();
             });
         });
 
-        describe("Using true env variables",() => {
+        describe('Using true env variables', () => {
             delete process.env.thundra_disable;
             delete process.env.thundra_apiKey;
-            process.env.thundra_applicationProfile = "dev";
-            process.env.thundra_trace_disable = "true";
-            process.env.thundra_metric_disable = "true";
-            const originalEvent = {key: "value"};
+            process.env.thundra_applicationProfile = 'dev';
+            process.env.thundra_trace_disable = 'true';
+            process.env.thundra_metric_disable = 'true';
+            const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
-            const ThundraWrapper = Thundra({apiKey: "apiKey"});
+            const ThundraWrapper = Thundra({apiKey: 'apiKey'});
             const wrappedFunction = ThundraWrapper(originalFunction);
-            wrappedFunction(originalEvent,originalContext,originalCallback);
-            it("should invoke the function", () => {
+            wrappedFunction(originalEvent, originalContext, originalCallback);
+            it('should invoke the function', () => {
                 expect(originalFunction).toBeCalled();
             });
-            it("should invoke the callback", () => {
+            it('should invoke the callback', () => {
                 expect(originalCallback).toBeCalled();
             });
         });
 
-        describe("Using false env variables",() => {
+        describe('Using false env variables', () => {
             delete process.env.thundra_disable;
             delete process.env.thundra_apiKey;
-            process.env.thundra_trace_disable = "false";
-            process.env.thundra_metric_disable = "ignore";
-            const originalEvent = {key: "value"};
+            process.env.thundra_trace_disable = 'false';
+            process.env.thundra_metric_disable = 'ignore';
+            const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn(() => originalCallback());
-            const ThundraWrapper = Thundra({apiKey: "apiKey"});
+            const ThundraWrapper = Thundra({apiKey: 'apiKey'});
             const wrappedFunction = ThundraWrapper(originalFunction);
-            wrappedFunction(originalEvent,originalContext,originalCallback);
-            it("should invoke the function", () => {
+            wrappedFunction(originalEvent, originalContext, originalCallback);
+            it('should invoke the function', () => {
                 expect(originalFunction).toBeCalled();
             });
-            it("should invoke the callback", () => {
+            it('should invoke the callback', () => {
                 expect(originalCallback).toBeCalled();
             });
         });
     });
 
-    describe("when it is a warmup",  () => {
+    describe('when it is a warmup', () => {
         const originalEvent = {};
         const originalContext = {};
         const originalCallback = jest.fn();
         const originalFunction = jest.fn(() => originalCallback());
-        const ThundraWrapper = Thundra({apiKey: "apiKey"});
+        const ThundraWrapper = Thundra({apiKey: 'apiKey'});
         const wrappedFunction = ThundraWrapper(originalFunction);
-        console["log"] = jest.fn();
+        console['log'] = jest.fn();
         jest.useFakeTimers();
-        wrappedFunction(originalEvent,originalContext,originalCallback);
+        wrappedFunction(originalEvent, originalContext, originalCallback);
         jest.runAllTimers();
-        it("should not invoke the function",  () => {
+        it('should not invoke the function', () => {
             expect(originalFunction).not.toBeCalled();
         });
 

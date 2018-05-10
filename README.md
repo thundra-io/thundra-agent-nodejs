@@ -42,7 +42,7 @@ You can configure Thundra using **environment variables** or **module initializa
 
 Environment variables have **higher precedence** over initialization parameters.
 
-Check out the [configuration part](https://thundra.readme.io/docs/configuration-1) of our docs for more detailed information.
+Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configuration) of our docs for more detailed information.
 
 #### 1. Environment variables
 
@@ -55,6 +55,7 @@ Check out the [configuration part](https://thundra.readme.io/docs/configuration-
 | thundra_disable_metric                   |  bool  |     false     |
 | thundra_lambda_publish_cloudwatch_enable |  bool  |     false     |
 | thundra_lambda_warmup_warmupAware        |  bool  |     false     |
+| thundra_lambda_publish_rest_baseUrl      | string |  https<nolink>://collector.thundra.io/api  |
 
 #### 2. Module initialization parameters
 

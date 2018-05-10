@@ -1,7 +1,7 @@
-import uuidv4 from "uuid/v4";
-import {readFile} from "fs";
-import os from "os";
-import {PROC_IO_PATH, PROC_STAT_PATH} from "../constants";
+import uuidv4 from 'uuid/v4';
+import {readFile} from 'fs';
+import os from 'os';
+import {PROC_IO_PATH, PROC_STAT_PATH} from '../constants';
 
 const generateId = () => {
     return uuidv4();
@@ -45,7 +45,7 @@ const readProcStatPromise = () => {
                 return reject(err);
             }
             else {
-                let procStatArray = file.toString().split(" ");
+                let procStatArray = file.toString().split(' ');
                 const procStatData = {
                     threadCount: parseInt(procStatArray[19]),
                 };
@@ -62,10 +62,10 @@ const readProcIoPromise = () => {
                 return reject(err);
             }
             else {
-                let procIoArray = file.toString().split("\n");
+                let procIoArray = file.toString().split('\n');
                 const procIoData = {
-                    readBytes: parseInt(procIoArray[4].substr(procIoArray[4].indexOf(" ") + 1)),
-                    writeBytes: parseInt(procIoArray[5].substr(procIoArray[5].indexOf(" ") + 1))
+                    readBytes: parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1)),
+                    writeBytes: parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1))
                 };
                 return resolve(procIoData);
             }
