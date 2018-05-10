@@ -1,13 +1,13 @@
-import ThundraWarmup from "@thundra/warmup";
-import ThundraWrapper from "./thundra-wrapper";
-import Trace from "./plugins/trace";
-import Metric from "./plugins/metric";
+import ThundraWarmup from '@thundra/warmup';
+import ThundraWrapper from './thundra-wrapper';
+import Trace from './plugins/trace';
+import Metric from './plugins/metric';
 
 
 const shouldDisable = (disableByEnv, disableByParameter) => {
-    if (disableByEnv === "true")
+    if (disableByEnv === 'true')
         return true;
-    else if (disableByEnv === "false")
+    else if (disableByEnv === 'false')
         return false;
     else
         return disableByParameter;
@@ -32,8 +32,8 @@ module.exports = (config) => {
     plugins = shouldDisable(process.env.thundra_metric_disable, disableMetric) ? plugins : [...plugins, Metric()];
 
     const pluginContext = {
-        applicationId: process.env.AWS_LAMBDA_LOG_STREAM_NAME.split("]").pop(),
-        applicationProfile: process.env.thundra_applicationProfile ? process.env.thundra_applicationProfile : "default",
+        applicationId: process.env.AWS_LAMBDA_LOG_STREAM_NAME.split(']').pop(),
+        applicationProfile: process.env.thundra_applicationProfile ? process.env.thundra_applicationProfile : 'default',
         applicationRegion: process.env.AWS_REGION,
         applicationVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
         requestCount: 0,

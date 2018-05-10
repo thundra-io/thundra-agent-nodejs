@@ -10,14 +10,14 @@
 * 
 * Wrapped context methods (done, succeed, fail) and callback call report function.
 * 
-* report function uses the Reporter instance to make a single HTTPS request to send reports if async monitoring is
+* report function uses the Reporter instance to make a single request to send reports if async monitoring is
 * not enabled (environment variable thundra_lambda_publish_cloudwatch_enable is not set). After reporting it calls
 * original callback/succeed/done/fail.
 * 
 */
 
-import uuidv4 from "uuid/v4";
-import Reporter from "./reporter";
+import uuidv4 from 'uuid/v4';
+import Reporter from './reporter';
 
 class ThundraWrapper {
     constructor(self, event, context, callback, func, plugins, pluginContext, apiKey) {
@@ -54,7 +54,7 @@ class ThundraWrapper {
 
     wrappedCallback = (error, result) => {
         this.report(error, result, () => {
-                if (typeof this.originalCallback === "function") {
+                if (typeof this.originalCallback === 'function') {
                     this.originalCallback(error, result);
                 }
             }
@@ -69,7 +69,7 @@ class ThundraWrapper {
             contextId: uuidv4()
         };
 
-        this.executeHook("before-invocation", beforeInvocationData)
+        this.executeHook('before-invocation', beforeInvocationData)
             .then(() => {
                 this.pluginContext.requestCount += 1;
                 try {
@@ -103,11 +103,11 @@ class ThundraWrapper {
                 error: error,
                 response: result
             };
-            await this.executeHook("after-invocation", afterInvocationData);
-            if (process.env.thundra_lambda_publish_cloudwatch_enable !== "true") {
+            await this.executeHook('after-invocation', afterInvocationData);
+            if (process.env.thundra_lambda_publish_cloudwatch_enable !== 'true') {
                 await this.reporter.sendReports();
             }
-            if (typeof callback === "function") {
+            if (typeof callback === 'function') {
                 callback();
             }
         }
