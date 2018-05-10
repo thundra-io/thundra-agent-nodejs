@@ -5,7 +5,7 @@ export const HOOKS = [
     'after-invocation',
 ];
 
-export const URL = new url.URL(
+export const URL = url.parse(
     // istanbul ignore next
     process.env.thundra_lambda_publish_rest_baseUrl
         ? process.env.thundra_lambda_publish_rest_baseUrl
