@@ -28,8 +28,19 @@ module.exports = (config) => {
     if (!apiKey || shouldDisable(process.env.thundra_disable, disableThundra))
         return originalFunc => originalFunc;
 
-    plugins = shouldDisable(process.env.thundra_trace_disable, disableTrace) ? plugins : [...plugins, Trace()];
-    plugins = shouldDisable(process.env.thundra_metric_disable, disableMetric) ? plugins : [...plugins, Metric()];
+    if(!shouldDisable(process.env.thundra_trace_disable, disableTrace)){
+        const traceOptions = {
+            disableRequest: shouldDisable(process.env.thundra_lambda_trace_request_skip, false),
+            disableResponse: shouldDisable(process.env.thundra_lambda_trace_response_skip, false)
+        };
+        const tracePlugin = Trace(traceOptions);
+        plugins.push(tracePlugin);
+    }
+
+    if(!shouldDisable(process.env.thundra_metric_disable, disableMetric)){
+        const metricPlugin = Metric();
+        plugins.push(metricPlugin);
+    }
 
     const pluginContext = {
         applicationId: process.env.AWS_LAMBDA_LOG_STREAM_NAME.split(']').pop(),
@@ -65,9 +76,7 @@ module.exports = (config) => {
             return thundraWrapper.invoke();
         };
 
-        const warmupWrappedHandler = warmupWrapper(thundraWrappedHandler);
-
-        return warmupWrappedHandler;
+        return warmupWrapper(thundraWrappedHandler);
     };
 };
 

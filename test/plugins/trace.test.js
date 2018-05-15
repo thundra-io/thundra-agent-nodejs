@@ -38,6 +38,31 @@ describe('Trace', () => {
 
     });
 
+    describe('disable request and response', () => {
+        const mockWrapperInstance = createMockWrapperInstance();
+        const tracer = Trace({
+            disableRequest: true,
+            disableResponse: true
+        });
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = {
+            originalContext: mockWrapperInstance.originalContext,
+            originalEvent: mockWrapperInstance.originalEvent,
+            reporter: mockWrapperInstance.reporter,
+            contextId: 'contextId'
+        };
+        const afterInvocationData = {
+            response: {key: 'data'}
+        };
+        tracer.report = jest.fn();
+        tracer.beforeInvocation(beforeInvocationData);
+        tracer.afterInvocation(afterInvocationData);
+        it('should not add request and response to traceData', () => {
+            expect(tracer.traceData.properties.request).toBe(null);
+            expect(tracer.traceData.properties.response).toBe(null);
+        });
+    });
+
     describe('report', () => {
         const mockWrapperInstance = createMockWrapperInstance();
         const tracer = Trace();
@@ -115,7 +140,7 @@ describe('Trace', () => {
                 functionMemoryLimitInMB: mockWrapperInstance.originalContext.memoryLimitInMB,
                 functionRegion: pluginContext.applicationRegion,
                 request: mockWrapperInstance.originalEvent,
-                response: {},
+                response: null,
             });
 
         });
