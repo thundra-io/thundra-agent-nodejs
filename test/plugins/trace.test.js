@@ -226,7 +226,10 @@ describe('Trace', () => {
                     errorMessage: 'error message',
                     errorType: 'Error'
                 });
-                expect(tracer.traceData.properties.response).toEqual({key: 'data'});
+                expect(tracer.traceData.properties.response).toEqual({
+                    errorMessage: 'error message',
+                    errorType: 'Error'
+                });
                 expect(tracer.traceData.endTimestamp).toBeTruthy();
                 expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
                 expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
@@ -275,7 +278,10 @@ describe('Trace', () => {
                     errorMessage: 'stringError',
                     errorType: 'Unknown Error'
                 });
-                expect(tracer.traceData.properties.response).toEqual({key: 'data'});
+                expect(tracer.traceData.properties.response).toEqual({
+                    errorMessage: 'stringError',
+                    errorType: 'Unknown Error'
+                });
                 expect(tracer.traceData.endTimestamp).toBeTruthy();
                 expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
                 expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
@@ -325,7 +331,10 @@ describe('Trace', () => {
                     errorMessage: JSON.stringify(errorObject),
                     errorType: 'Unknown Error'
                 });
-                expect(tracer.traceData.properties.response).toEqual({key: 'data'});
+                expect(tracer.traceData.properties.response).toEqual({
+                    errorMessage: JSON.stringify(errorObject),
+                    errorType: 'Unknown Error'
+                });
                 expect(tracer.traceData.endTimestamp).toBeTruthy();
                 expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
                 expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
@@ -340,11 +349,6 @@ describe('Trace', () => {
                 });
             });
         });
-
-        describe('', () => {
-
-        });
-
     });
 });
 

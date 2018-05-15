@@ -84,6 +84,7 @@ class Trace {
                     error.errorMessage = '';
                 }
             }
+            data.response = error;
             this.traceData.errors = [...this.traceData.errors, error.errorType];
             this.traceData.thrownError = error.errorType;
             this.traceData.auditInfo.errors = [...this.traceData.auditInfo.errors, error];
