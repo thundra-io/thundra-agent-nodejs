@@ -61,8 +61,8 @@ class Trace {
                 coldStart: this.pluginContext.requestCount > 0 ? 'false' : 'true',
                 functionMemoryLimitInMB: originalContext.memoryLimitInMB,
                 functionRegion: this.pluginContext.applicationRegion,
-                request: originalEvent,
-                response: {},
+                request: this.options && this.options.disableRequest ? null : originalEvent,
+                response: null,
             }
         };
     };
@@ -84,13 +84,14 @@ class Trace {
                     error.errorMessage = '';
                 }
             }
+            data.response = error;
             this.traceData.errors = [...this.traceData.errors, error.errorType];
             this.traceData.thrownError = error.errorType;
             this.traceData.auditInfo.errors = [...this.traceData.auditInfo.errors, error];
             this.traceData.auditInfo.thrownError = error;
         }
 
-        this.traceData.properties.response = data.response;
+        this.traceData.properties.response = this.options && this.options.disableResponse ? null : data.response;
         this.endTimestamp = Date.now();
         this.traceData.endTimestamp = this.traceData.auditInfo.closeTimestamp = this.endTimestamp;
         this.traceData.duration = this.endTimestamp - this.startTimestamp;
