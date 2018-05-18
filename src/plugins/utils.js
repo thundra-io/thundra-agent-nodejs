@@ -1,12 +1,20 @@
 import uuidv4 from 'uuid/v4';
 import {readFile} from 'fs';
 import os from 'os';
-import {PROC_IO_PATH, PROC_STAT_PATH} from '../constants';
+import {DATA_FORMAT_VERSION, PROC_IO_PATH, PROC_STAT_PATH} from '../constants';
 
 const generateId = () => {
     return uuidv4();
 };
 
+const generateReport = (data, type, apiKey) => {
+    return {
+        data: data,
+        type: type,
+        apiKey: apiKey,
+        dataFormatVersion: DATA_FORMAT_VERSION
+    };
+};
 
 const getCpuUsage = () => {
     const cpus = os.cpus();
@@ -37,6 +45,26 @@ const getCpuLoad = (start, end, clockTick) => {
     };
 };
 
+const parseError = (err) => {
+    let error = {errorMessage: '', errorType: 'Unknown Error'};
+    if (err instanceof Error) {
+        error.errorType = err.name;
+        error.errorMessage = err.message;
+    }
+    else if (typeof err === 'string') {
+        error.errorMessage = err.toString();
+    }
+    else {
+        try {
+            error.errorMessage = JSON.stringify(err);
+        } catch (e) {
+            // the comment below is for ignoring in unit tests, do not remove it
+            // istanbul ignore next
+            error.errorMessage = '';
+        }
+    }
+    return error;
+};
 
 const readProcStatPromise = () => {
     return new Promise((resolve, reject) => {
@@ -76,8 +104,10 @@ const readProcIoPromise = () => {
 
 module.exports = {
     generateId,
+    generateReport,
     getCpuUsage,
     getCpuLoad,
     readProcStatPromise,
     readProcIoPromise,
+    parseError
 };

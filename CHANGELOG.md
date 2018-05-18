@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 1.5.0 - May 18, 2018
+#### Added
+- Disable request/response via environment variables
+- Invocation plugin and data type
+#### Fixed
+- Response is set wrong when there is an error
 
 ## 1.4.1 - May 10, 2018
 #### Fixed

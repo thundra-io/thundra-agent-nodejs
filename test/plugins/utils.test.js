@@ -1,9 +1,11 @@
 import {
+    generateReport,
     getCpuUsage,
     getCpuLoad,
     readProcStatPromise,
-    readProcIoPromise,
+    readProcIoPromise, parseError,
 } from '../../src/plugins/utils';
+import {DATA_FORMAT_VERSION} from '../../src/constants';
 
 jest.mock('os', () => ({
     cpus: () => {
@@ -76,5 +78,52 @@ describe('readProcIoPromise', () => {
     it('Should read proc io file correctly', async () => {
         const procIoData = await readProcIoPromise();
         expect(procIoData).toEqual({readBytes: 5453, writeBytes: 323932160});
+    });
+});
+
+describe('generateReport', () => {
+    const exampleReport = generateReport('data', 'type', 'apiKey');
+    it('Should generate report with correct fields', () => {
+        expect(exampleReport).toEqual({
+            data: 'data',
+            type: 'type',
+            apiKey: 'apiKey',
+            dataFormatVersion: DATA_FORMAT_VERSION
+        });
+    });
+});
+
+describe('parseError', () => {
+    describe('Error typed error data', () => {
+        const error = Error('error message');
+        const parsedError = parseError(error);
+        it('should set error message correctly', () => {
+            expect(parsedError.errorMessage).toEqual('error message');
+        });
+        it('should set error type correctly', () => {
+            expect(parsedError.errorType).toEqual('Error');
+        });
+    });
+
+    describe('string error data', () => {
+        const error = 'string error';
+        const parsedError = parseError(error);
+        it('should set error message correctly', () => {
+            expect(parsedError.errorMessage).toEqual('string error');
+        });
+        it('should set error type correctly', () => {
+            expect(parsedError.errorType).toEqual('Unknown Error');
+        });
+    });
+
+    describe('object error data', () => {
+        const error = {err: 'err', msg: 'msg'};
+        const parsedError = parseError(error);
+        it('should set error message correctly', () => {
+            expect(parsedError.errorMessage).toEqual(JSON.stringify(error));
+        });
+        it('should set error type correctly', () => {
+            expect(parsedError.errorType).toEqual('Unknown Error');
+        });
     });
 });

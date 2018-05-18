@@ -66,7 +66,8 @@ class ThundraWrapper {
             originalContext: this.originalContext,
             originalEvent: this.originalEvent,
             reporter: this.reporter,
-            contextId: uuidv4()
+            contextId: uuidv4(),
+            transactionId: uuidv4()
         };
 
         this.executeHook('before-invocation', beforeInvocationData)
