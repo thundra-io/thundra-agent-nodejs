@@ -1,5 +1,6 @@
 import Trace from '../../src/plugins/trace';
-import {createMockWrapperInstance, createMockReporterInstance, createMockPluginContext} from '../mocks/mocks';
+import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
+import {DATA_FORMAT_VERSION} from '../../src/constants';
 
 const pluginContext = createMockPluginContext();
 describe('Trace', () => {
@@ -17,37 +18,56 @@ describe('Trace', () => {
         it('should create an instance with options', () => {
             expect(tracerWithOptions.options).toEqual(options);
         });
-
         it('should create an instance without options', () => {
             expect(tracerWithoutOptions.options).toBeUndefined();
 
         });
-
         it('should set variables', () => {
             expect(tracer.hooks).toBeTruthy();
-
         });
-
         it('should not have new HOOKS', () => {
             expect(tracer.hooks).toEqual({
                 'before-invocation': tracer.beforeInvocation,
                 'after-invocation': tracer.afterInvocation
             });
-
         });
+        it('Should set dataType correctly', () => {
+            expect(tracer.dataType).toEqual('AuditData');
+        });
+    });
 
+    describe('setPluginContext', () => {
+        const trace = Trace();
+        trace.setPluginContext(pluginContext);
+        it('Should set apiKey and pluginContext', () => {
+            expect(trace.apiKey).toEqual(pluginContext.apiKey);
+            expect(trace.pluginContext).toEqual(pluginContext);
+        });
+    });
+
+    describe('disable request and response', () => {
+        const tracer = Trace({
+            disableRequest: true,
+            disableResponse: true
+        });
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        const afterInvocationData = {
+            response: {key: 'data'}
+        };
+        tracer.report = jest.fn();
+        tracer.beforeInvocation(beforeInvocationData);
+        tracer.afterInvocation(afterInvocationData);
+        it('should not add request and response to traceData', () => {
+            expect(tracer.traceData.properties.request).toBe(null);
+            expect(tracer.traceData.properties.response).toBe(null);
+        });
     });
 
     describe('report', () => {
-        const mockWrapperInstance = createMockWrapperInstance();
         const tracer = Trace();
         tracer.setPluginContext({...pluginContext, requestCount: 5});
-        const beforeInvocationData = {
-            originalContext: mockWrapperInstance.originalContext,
-            originalEvent: mockWrapperInstance.originalEvent,
-            reporter: createMockReporterInstance(),
-            contextId: 'contextId'
-        };
+        const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {response: {key: 'data'}};
         tracer.beforeInvocation(beforeInvocationData);
         tracer.afterInvocation(afterInvocationData);
@@ -57,21 +77,15 @@ describe('Trace', () => {
                 data: tracer.traceData,
                 type: 'AuditData',
                 apiKey: tracer.apiKey,
-                dataFormatVersion: '1.0'
+                dataFormatVersion: DATA_FORMAT_VERSION
             });
         });
     });
 
     describe('beforeInvocation', () => {
-        const mockWrapperInstance = createMockWrapperInstance();
         const tracer = Trace();
         tracer.setPluginContext(pluginContext);
-        const beforeInvocationData = {
-            originalContext: mockWrapperInstance.originalContext,
-            originalEvent: mockWrapperInstance.originalEvent,
-            reporter: mockWrapperInstance.reporter,
-            contextId: 'contextId'
-        };
+        const beforeInvocationData = createMockBeforeInvocationData();
         tracer.beforeInvocation(beforeInvocationData);
 
         it('should set startTimestamp', () => {
@@ -79,17 +93,18 @@ describe('Trace', () => {
         });
 
         it('should set apiKey', () => {
-            expect(tracer.apiKey).toBe(mockWrapperInstance.apiKey);
+            expect(tracer.apiKey).toBe(pluginContext.apiKey);
         });
 
         it('should set reporter', () => {
-            expect(tracer.reporter).toBe(mockWrapperInstance.reporter);
+            expect(tracer.reporter).toBe(beforeInvocationData.reporter);
         });
 
         it('should initialize traceData', () => {
             expect(tracer.traceData).toBeTruthy();
             expect(tracer.traceData.id).toBeTruthy();
-            expect(tracer.traceData.applicationName).toEqual(mockWrapperInstance.originalContext.functionName);
+            expect(tracer.traceData.transactionId).toBeTruthy();
+            expect(tracer.traceData.applicationName).toEqual(beforeInvocationData.originalContext.functionName);
             expect(tracer.traceData.applicationId).toBeTruthy();
             expect(tracer.traceData.applicationVersion).toBeTruthy();
             expect(tracer.traceData.applicationProfile).toBeTruthy();
@@ -100,10 +115,10 @@ describe('Trace', () => {
             expect(tracer.traceData.errors).toEqual([]);
             expect(tracer.traceData.thrownError).toEqual(null);
             expect(tracer.traceData.contextType).toEqual('ExecutionContext');
-            expect(tracer.traceData.contextName).toEqual(mockWrapperInstance.originalContext.functionName);
+            expect(tracer.traceData.contextName).toEqual(beforeInvocationData.originalContext.functionName);
             expect(tracer.traceData.contextId).toBeTruthy();
             expect(tracer.traceData.auditInfo).toEqual({
-                contextName: mockWrapperInstance.originalContext.functionName,
+                contextName: beforeInvocationData.originalContext.functionName,
                 id: tracer.traceData.contextId,
                 openTimestamp: tracer.traceData.startTimestamp,
                 closeTimestamp: null,
@@ -112,10 +127,10 @@ describe('Trace', () => {
             });
             expect(tracer.traceData.properties).toEqual({
                 coldStart: pluginContext.requestCount > 0 ? 'false' : 'true',
-                functionMemoryLimitInMB: mockWrapperInstance.originalContext.memoryLimitInMB,
+                functionMemoryLimitInMB: beforeInvocationData.originalContext.memoryLimitInMB,
                 functionRegion: pluginContext.applicationRegion,
-                request: mockWrapperInstance.originalEvent,
-                response: {},
+                request: beforeInvocationData.originalEvent,
+                response: null,
             });
 
         });
@@ -123,22 +138,16 @@ describe('Trace', () => {
 
     });
 
-    describe('afterInvocation without error data', () => {
-        const mockWrapperInstance = createMockWrapperInstance();
+    describe('afterInvocation without error data', async () => {
         const tracer = Trace();
         tracer.setPluginContext(pluginContext);
-        const beforeInvocationData = {
-            originalContext: mockWrapperInstance.originalContext,
-            originalEvent: mockWrapperInstance.originalEvent,
-            reporter: mockWrapperInstance.reporter,
-            contextId: 'contextId'
-        };
+        const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {
             response: {key: 'data'}
         };
         tracer.report = jest.fn();
-        tracer.beforeInvocation(beforeInvocationData);
-        tracer.afterInvocation(afterInvocationData);
+        await tracer.beforeInvocation(beforeInvocationData);
+        await tracer.afterInvocation(afterInvocationData);
 
         it('should set endTimestamp', () => {
             expect(tracer.endTimestamp).toBeTruthy();
@@ -160,164 +169,55 @@ describe('Trace', () => {
                 data: tracer.traceData,
                 type: 'AuditData',
                 apiKey: tracer.apiKey,
-                dataFormatVersion: '1.0'
+                dataFormatVersion: DATA_FORMAT_VERSION
             });
         });
 
     });
 
     describe('afterInvocation with error data', () => {
+        const tracer = Trace();
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        const afterInvocationData = {
+            error: Error('error message'),
+            response: {key: 'data'}
+        };
+        tracer.report = jest.fn();
+        tracer.beforeInvocation(beforeInvocationData);
+        tracer.afterInvocation(afterInvocationData);
 
-        describe('Error typed error data', () => {
-            const mockWrapperInstance = createMockWrapperInstance();
-            const tracer = Trace();
-            tracer.setPluginContext(pluginContext);
-            const beforeInvocationData = {
-                originalContext: mockWrapperInstance.originalContext,
-                originalEvent: mockWrapperInstance.originalEvent,
-                reporter: mockWrapperInstance.reporter,
-                contextId: 'contextId'
-            };
-            const afterInvocationData = {
-                error: Error('error message'),
-                response: {key: 'data'}
-            };
-            tracer.report = jest.fn();
-            tracer.beforeInvocation(beforeInvocationData);
-            tracer.afterInvocation(afterInvocationData);
-
-            it('should set endTimestamp', () => {
-                expect(tracer.endTimestamp).toBeTruthy();
-            });
-
-            it('should set traceData', () => {
-                expect(tracer.traceData.errors).toEqual(['Error']);
-                expect(tracer.traceData.thrownError).toEqual('Error');
-                expect(tracer.traceData.auditInfo.errors).toEqual([{
-                    errorMessage: 'error message',
-                    errorType: 'Error'
-                }]);
-                expect(tracer.traceData.auditInfo.thrownError).toEqual({
-                    errorMessage: 'error message',
-                    errorType: 'Error'
-                });
-                expect(tracer.traceData.properties.response).toEqual({key: 'data'});
-                expect(tracer.traceData.endTimestamp).toBeTruthy();
-                expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
-                expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
-            });
-
-            it('should call report', () => {
-                expect(tracer.report).toBeCalledWith({
-                    data: tracer.traceData,
-                    type: 'AuditData',
-                    apiKey: tracer.apiKey,
-                    dataFormatVersion: '1.0'
-                });
-            });
+        it('should set endTimestamp', () => {
+            expect(tracer.endTimestamp).toBeTruthy();
         });
 
-        describe('string error data', () => {
-            const mockWrapperInstance = createMockWrapperInstance();
-            const tracer = Trace();
-            tracer.setPluginContext(pluginContext);
-            const beforeInvocationData = {
-                originalContext: mockWrapperInstance.originalContext,
-                originalEvent: mockWrapperInstance.originalEvent,
-                reporter: mockWrapperInstance.reporter,
-                contextId: 'contextId'
-            };
-            const afterInvocationData = {
-                error: 'stringError',
-                response: {key: 'data'}
-            };
-            tracer.report = jest.fn();
-            tracer.beforeInvocation(beforeInvocationData);
-            tracer.afterInvocation(afterInvocationData);
-
-            it('should set endTimestamp', () => {
-                expect(tracer.endTimestamp).toBeTruthy();
+        it('should set traceData', () => {
+            expect(tracer.traceData.errors).toEqual(['Error']);
+            expect(tracer.traceData.thrownError).toEqual('Error');
+            expect(tracer.traceData.auditInfo.errors).toEqual([{
+                errorMessage: 'error message',
+                errorType: 'Error'
+            }]);
+            expect(tracer.traceData.auditInfo.thrownError).toEqual({
+                errorMessage: 'error message',
+                errorType: 'Error'
             });
-
-            it('should set traceData', () => {
-                expect(tracer.traceData.errors).toEqual(['Unknown Error']);
-                expect(tracer.traceData.thrownError).toEqual('Unknown Error');
-                expect(tracer.traceData.auditInfo.errors).toEqual([{
-                    errorMessage: 'stringError',
-                    errorType: 'Unknown Error'
-                }]);
-                expect(tracer.traceData.auditInfo.thrownError).toEqual({
-                    errorMessage: 'stringError',
-                    errorType: 'Unknown Error'
-                });
-                expect(tracer.traceData.properties.response).toEqual({key: 'data'});
-                expect(tracer.traceData.endTimestamp).toBeTruthy();
-                expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
-                expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
+            expect(tracer.traceData.properties.response).toEqual({
+                errorMessage: 'error message',
+                errorType: 'Error'
             });
-
-            it('should call report', () => {
-                expect(tracer.report).toBeCalledWith({
-                    data: tracer.traceData,
-                    type: 'AuditData',
-                    apiKey: tracer.apiKey,
-                    dataFormatVersion: '1.0'
-                });
-            });
+            expect(tracer.traceData.endTimestamp).toBeTruthy();
+            expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
+            expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
         });
 
-        describe('object error data', () => {
-            const mockWrapperInstance = createMockWrapperInstance();
-            const tracer = Trace();
-            tracer.setPluginContext(pluginContext);
-            const beforeInvocationData = {
-                originalContext: mockWrapperInstance.originalContext,
-                originalEvent: mockWrapperInstance.originalEvent,
-                reporter: mockWrapperInstance.reporter,
-                contextId: 'contextId'
-            };
-            const errorObject = {err: 'err', msg: 'msg'};
-            const afterInvocationData = {
-                error: errorObject,
-                response: {key: 'data'}
-            };
-            tracer.report = jest.fn();
-            tracer.beforeInvocation(beforeInvocationData);
-            tracer.afterInvocation(afterInvocationData);
-
-            it('should set endTimestamp', () => {
-                expect(tracer.endTimestamp).toBeTruthy();
+        it('should call report', () => {
+            expect(tracer.report).toBeCalledWith({
+                data: tracer.traceData,
+                type: 'AuditData',
+                apiKey: tracer.apiKey,
+                dataFormatVersion: DATA_FORMAT_VERSION
             });
-
-            it('should set traceData', () => {
-                expect(tracer.traceData.errors).toEqual(['Unknown Error']);
-                expect(tracer.traceData.thrownError).toEqual('Unknown Error');
-                expect(tracer.traceData.auditInfo.errors).toEqual([{
-                    errorMessage: JSON.stringify(errorObject),
-                    errorType: 'Unknown Error'
-                }]);
-                expect(tracer.traceData.auditInfo.thrownError).toEqual({
-                    errorMessage: JSON.stringify(errorObject),
-                    errorType: 'Unknown Error'
-                });
-                expect(tracer.traceData.properties.response).toEqual({key: 'data'});
-                expect(tracer.traceData.endTimestamp).toBeTruthy();
-                expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
-                expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
-            });
-
-            it('should call report', () => {
-                expect(tracer.report).toBeCalledWith({
-                    data: tracer.traceData,
-                    type: 'AuditData',
-                    apiKey: tracer.apiKey,
-                    dataFormatVersion: '1.0'
-                });
-            });
-        });
-
-        describe('', () => {
-
         });
 
     });

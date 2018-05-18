@@ -51,10 +51,12 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 | thundra_apiKey                           | string |       -       |
 | thundra_applicationProfile               | string |    default    |
 | thundra_disable                          |  bool  |     false     |
-| thundra_disable_trace                    |  bool  |     false     |
-| thundra_disable_metric                   |  bool  |     false     |
+| thundra_trace_disable                    |  bool  |     false     |
+| thundra_metric_disable                   |  bool  |     false     |
 | thundra_lambda_publish_cloudwatch_enable |  bool  |     false     |
 | thundra_lambda_warmup_warmupAware        |  bool  |     false     |
+| thundra_lambda_trace_request_skip        |  bool  |     false     |
+| thundra_lambda_trace_response_skip       |  bool  |     false     |
 | thundra_lambda_publish_rest_baseUrl      | string |  https<nolink>://collector.thundra.io/api  |
 
 #### 2. Module initialization parameters
@@ -111,4 +113,4 @@ To run tests,
 
 ## Changelog
 
-Please see the [CHANGELOG](CHANGELOG.md) file.
+Please see the [CHANGELOG](https://github.com/thundra-io/thundra-lambda-agent-nodejs/blob/master/CHANGELOG.md) file.

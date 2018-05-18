@@ -1,5 +1,6 @@
 import Metric from '../../src/plugins/metric';
-import {createMockWrapperInstance, createMockPluginContext} from '../mocks/mocks';
+import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
+import {DATA_FORMAT_VERSION} from '../../src/constants';
 
 const utils = require('../../src/plugins/utils');
 
@@ -34,8 +35,7 @@ describe('Metrics', () => {
     describe('Constructor', () => {
         const options = {op1t: 'opt1', opt2: 'opt2'};
         const metric = Metric();
-        metric.setPluginContext(pluginContext);
-        const metricWithOptions = new Metric(options);
+        const metricWithOptions = Metric(options);
         it('Should have the same HOOKS', () => {
             expect(metric.hooks).toEqual({
                 'before-invocation': metric.beforeInvocation,
@@ -53,6 +53,9 @@ describe('Metrics', () => {
             expect(metricWithOptions.options).toEqual(options);
 
         });
+        it('Should set dataType correctly',()=> {
+            expect(metric.dataType).toEqual('StatData');
+        });
         it('Should get clock tick', () => {
             expect(metric.clockTick).toBeTruthy();
             expect(metricWithOptions.clockTick).toBeTruthy();
@@ -61,16 +64,19 @@ describe('Metrics', () => {
     });
 
 
+    describe('setPluginContext', () => {
+        const metric = Metric();
+        metric.setPluginContext(pluginContext);
+        it('Should set apiKey and pluginContext',() => {
+            expect(metric.apiKey).toEqual(pluginContext.apiKey);
+            expect(metric.pluginContext).toEqual(pluginContext);
+        });
+    });
+
     describe('beforeInvocation', () => {
         const metric = Metric();
         metric.setPluginContext(pluginContext);
-        const mockWrapperInstance = createMockWrapperInstance();
-        const beforeInvocationData = {
-            originalContext: mockWrapperInstance.originalContext,
-            originalEvent: mockWrapperInstance.originalEvent,
-            reporter: mockWrapperInstance.reporter,
-            contextId: 'contextId'
-        };
+        const beforeInvocationData = createMockBeforeInvocationData();
 
         it('Should set variables to their initial value', async () => {
             await metric.beforeInvocation(beforeInvocationData);
@@ -85,6 +91,8 @@ describe('Metrics', () => {
             expect(metric.statData.statTimestamp).toBeDefined();
             expect(metric.statData).toEqual({
                 applicationId: pluginContext.applicationId,
+                transactionId: beforeInvocationData.transactionId,
+                rootExecutionAuditContextId: beforeInvocationData.contextId,
                 applicationName: 'test',
                 applicationProfile: pluginContext.applicationProfile,
                 applicationVersion: pluginContext.applicationVersion,
@@ -115,19 +123,12 @@ describe('Metrics', () => {
             expect(metric.report).toHaveBeenCalledTimes(4);
 
         });
-
     });
 
     describe('beforeInvocation + afterInvocation', () => {
         const metric = Metric();
         metric.setPluginContext(pluginContext);
-        const mockWrapperInstance = createMockWrapperInstance();
-        const beforeInvocationData = {
-            originalContext: mockWrapperInstance.originalContext,
-            originalEvent: mockWrapperInstance.originalEvent,
-            reporter: mockWrapperInstance.reporter,
-            contextId: 'contextId'
-        };
+        const beforeInvocationData = createMockBeforeInvocationData();
 
         it('Should set variables to their initial value', async () => {
             expect(metric.reports.length).toEqual(0);
@@ -141,13 +142,7 @@ describe('Metrics', () => {
     describe('addThreadStatReport', () => {
         const metric = Metric();
         metric.setPluginContext(pluginContext);
-        const mockWrapperInstance = createMockWrapperInstance();
-        const beforeInvocationData = {
-            originalContext: mockWrapperInstance.originalContext,
-            originalEvent: mockWrapperInstance.originalEvent,
-            reporter: mockWrapperInstance.reporter,
-            contextId: 'contextId'
-        };
+        const beforeInvocationData = createMockBeforeInvocationData();
 
         it('Should set variables to their initial value', async () => {
             expect(metric.reports).toEqual([]);
@@ -162,7 +157,7 @@ describe('Metrics', () => {
                 },
                 type: 'StatData',
                 apiKey: metric.apiKey,
-                dataFormatVersion: '1.0'
+                dataFormatVersion: DATA_FORMAT_VERSION
             };
             expect(metric.reports[0].data.id).toBeDefined();
             expect(metric.reports).toEqual([reportToGenerate]);
@@ -173,13 +168,7 @@ describe('Metrics', () => {
     describe('addMemoryStatReport', () => {
         const metric = Metric();
         metric.setPluginContext(pluginContext);
-        const mockWrapperInstance = createMockWrapperInstance();
-        const beforeInvocationData = {
-            originalContext: mockWrapperInstance.originalContext,
-            originalEvent: mockWrapperInstance.originalEvent,
-            reporter: mockWrapperInstance.reporter,
-            contextId: 'contextId'
-        };
+        const beforeInvocationData = createMockBeforeInvocationData();
 
         it('Should set variables to their initial value', async () => {
             expect(metric.reports.length).toEqual(0);
@@ -202,13 +191,7 @@ describe('Metrics', () => {
     describe('addCpuStatReport', () => {
         const metric = Metric();
         metric.setPluginContext(pluginContext);
-        const mockWrapperInstance = createMockWrapperInstance();
-        const beforeInvocationData = {
-            originalContext: mockWrapperInstance.originalContext,
-            originalEvent: mockWrapperInstance.originalEvent,
-            reporter: mockWrapperInstance.reporter,
-            contextId: 'contextId'
-        };
+        const beforeInvocationData = createMockBeforeInvocationData();
 
         it('Should set variables to their initial value', async () => {
             expect(metric.reports.length).toEqual(0);
@@ -226,13 +209,7 @@ describe('Metrics', () => {
     describe('addIoStatReport', () => {
         const metric = Metric();
         metric.setPluginContext(pluginContext);
-        const mockWrapperInstance = createMockWrapperInstance();
-        const beforeInvocationData = {
-            originalContext: mockWrapperInstance.originalContext,
-            originalEvent: mockWrapperInstance.originalEvent,
-            reporter: mockWrapperInstance.reporter,
-            contextId: 'contextId'
-        };
+        const beforeInvocationData = createMockBeforeInvocationData();
 
         it('Should set variables to their initial value', async () => {
             expect(metric.reports.length).toEqual(0);

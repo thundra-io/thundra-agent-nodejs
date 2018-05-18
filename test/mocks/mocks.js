@@ -52,10 +52,22 @@ const createMockPluginContext = () => {
     };
 };
 
+const createMockBeforeInvocationData = () => {
+    const mockWrapperInstance = createMockWrapperInstance();
+    return {
+        originalContext: mockWrapperInstance.originalContext,
+        originalEvent: mockWrapperInstance.originalEvent,
+        reporter: mockWrapperInstance.reporter,
+        contextId: 'contextId',
+        transactionId: 'transactionId'
+    }
+};
+
 module.exports = {
     createMockContext,
     createMockReporterInstance,
     createMockWrapperInstance,
     createMockPluginContext,
-    createMockPlugin
+    createMockPlugin,
+    createMockBeforeInvocationData
 };

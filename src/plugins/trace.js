@@ -9,7 +9,7 @@
 *
 */
 
-import {generateId} from './utils';
+import {generateId, generateReport, parseError} from './utils';
 
 class Trace {
     constructor(options) {
@@ -18,6 +18,8 @@ class Trace {
             'after-invocation': this.afterInvocation
         };
         this.options = options;
+        this.dataType = 'AuditData';
+        this.traceData = {};
     }
 
     report = (data) => {
@@ -30,12 +32,13 @@ class Trace {
     };
 
     beforeInvocation = (data) => {
-        const {originalContext, originalEvent, reporter, contextId} = data;
+        const {originalContext, originalEvent, reporter, contextId, transactionId} = data;
         this.reporter = reporter;
         this.endTimestamp = null;
         this.startTimestamp = Date.now();
         this.traceData = {
             id: generateId(),
+            transactionId: transactionId,
             applicationName: originalContext.functionName,
             applicationId: this.pluginContext.applicationId,
             applicationVersion: this.pluginContext.applicationVersion,
@@ -61,45 +64,27 @@ class Trace {
                 coldStart: this.pluginContext.requestCount > 0 ? 'false' : 'true',
                 functionMemoryLimitInMB: originalContext.memoryLimitInMB,
                 functionRegion: this.pluginContext.applicationRegion,
-                request: originalEvent,
-                response: {},
+                request: this.options && this.options.disableRequest ? null : originalEvent,
+                response: null,
             }
         };
     };
 
     afterInvocation = (data) => {
+        let response = data.response;
         if (data.error) {
-            let error = {errorMessage: '', errorType: 'Unknown Error'};
-            if (data.error instanceof Error) {
-                error.errorType = data.error.name;
-                error.errorMessage = data.error.message;
-            }
-            else if (typeof data.error === 'string') {
-                error.errorMessage = data.error.toString();
-            }
-            else {
-                try {
-                    error.errorMessage = JSON.stringify(data.error);
-                } catch (e) {
-                    error.errorMessage = '';
-                }
-            }
+            let error = parseError(data.error);
+            response = error;
             this.traceData.errors = [...this.traceData.errors, error.errorType];
             this.traceData.thrownError = error.errorType;
             this.traceData.auditInfo.errors = [...this.traceData.auditInfo.errors, error];
             this.traceData.auditInfo.thrownError = error;
         }
-
-        this.traceData.properties.response = data.response;
+        this.traceData.properties.response = this.options && this.options.disableResponse ? null : response;
         this.endTimestamp = Date.now();
         this.traceData.endTimestamp = this.traceData.auditInfo.closeTimestamp = this.endTimestamp;
         this.traceData.duration = this.endTimestamp - this.startTimestamp;
-        const reportData = {
-            data: this.traceData,
-            type: 'AuditData',
-            apiKey: this.apiKey,
-            dataFormatVersion: '1.0'
-        };
+        const reportData = generateReport(this.traceData, this.dataType, this.apiKey);
         this.report(reportData);
     };
 }
