@@ -16,8 +16,10 @@ export const URL = url.parse(
 );
 
 export class TimeoutError extends Error {
-    constructor(args) {
-        super(...args);
+    constructor(message) {
+        super();
+        this.message = message;
+        this.name = 'TimeoutError';
         Error.captureStackTrace(this, TimeoutError);
         Object.setPrototypeOf(this, TimeoutError.prototype);
     }

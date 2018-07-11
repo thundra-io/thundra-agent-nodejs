@@ -50,8 +50,7 @@ const parseError = (err) => {
     if (err instanceof Error) {
         error.errorType = err.name;
         error.errorMessage = err.message;
-    }
-    else if (typeof err === 'string') {
+    } else if (typeof err === 'string') {
         error.errorMessage = err.toString();
     }
     else {

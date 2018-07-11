@@ -81,7 +81,7 @@ describe('ThundraWrapper', () => {
         thundraWrapper.report = jest.fn();
         jest.runAllTimers();
         it('setupTimeoutHandler calls set timeout.', () => {
-            expect(thundraWrapper.report).toBeCalledWith(new TimeoutError(99, 'Lambda Timeout Exceeded.'), null, null);
+            expect(thundraWrapper.report).toBeCalledWith(new TimeoutError('Lambda is timed out.'), null, null);
         });
     });
 
@@ -137,6 +137,21 @@ describe('ThundraWrapper', () => {
                     response: null   
                 }
                 expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
+            });
+            
+        });
+
+        describe('AWS Lambda Proxy Response', async () => {
+            const originalCallback = jest.fn();
+            const originalFunction = jest.fn(() => originalCallback());
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
+            thundraWrapper.executeHook = jest.fn();
+            thundraWrapper.isErrorResponse = jest.fn();
+            process.env.thundra_lambda_skip_parse_response = 'true';
+            thundraWrapper.wrappedCallback(null, {statusCode: 500, body:'{\"message\":\"I have failed\"}'});
+            process.env.thundra_lambda_skip_parse_response = null;
+            it('should isErrorResponse disabled', () => {
+                expect(thundraWrapper.isErrorResponse).not.toHaveBeenCalled();
             });
             
         });

@@ -109,7 +109,10 @@ class ThundraWrapper {
                 response: result
             };
 
-            if (this.isErrorResponse(result)) {
+            const skipParseResponse = process.
+                env.thundra_lambda_skip_parse_response === 'true' ? true : false;
+
+            if (skipParseResponse || this.isErrorResponse(result)) {
                 afterInvocationData = {
                     error: new Error("Lambda returned with error response."),
                     response: null
@@ -166,7 +169,7 @@ class ThundraWrapper {
     
         const endTime = Math.min(configEndTime, maxEndTime);
         return setTimeout(() => {
-          wrapperInstance.report(new TimeoutError(99, 'Lambda Timeout Exceeded.'), null, null);
+          wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
         }, endTime);
     }
 }
