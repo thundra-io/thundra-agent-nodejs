@@ -1,4 +1,5 @@
 import {generateId, generateReport, parseError} from './utils';
+import {TimeoutError} from '../constants';
 
 class Invocation {
     constructor(options) {
@@ -50,8 +51,14 @@ class Invocation {
         if (data.error) {
             const {errorType, errorMessage} = parseError(data.error);
             this.invocationData.erroneous = true;
-            this.invocationData.errorType = errorType;
-            this.invocationData.errorMessage = errorMessage;
+            if (data.error instanceof TimeoutError) {
+                this.invocationData.timeout = true;
+                this.invocationData.errorType = 'TimeoutError';
+                this.invocationData.errorMessage = errorMessage;
+            } else {
+                this.invocationData.errorType = errorType;
+                this.invocationData.errorMessage = errorMessage;
+            }
         }
         this.endTimestamp = Date.now();
         this.invocationData.endTimestamp = this.endTimestamp;

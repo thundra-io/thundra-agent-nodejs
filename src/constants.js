@@ -15,5 +15,13 @@ export const URL = url.parse(
         : 'https://collector.thundra.io/api'
 );
 
+export class TimeoutError extends Error {
+    constructor(args) {
+        super(...args);
+        Error.captureStackTrace(this, TimeoutError);
+        Object.setPrototypeOf(this, TimeoutError.prototype);
+    }
+}
+
 export const PROC_STAT_PATH = '/proc/self/stat';
 export const PROC_IO_PATH = '/proc/self/io';

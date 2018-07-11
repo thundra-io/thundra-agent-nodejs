@@ -1,15 +1,19 @@
 import ThundraWrapper from '../src/thundra-wrapper';
 import {createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext} from './mocks/mocks';
+import {TimeoutError} from '../src/constants';
 
 const pluginContext = createMockPluginContext();
 describe('ThundraWrapper', () => {
     const originalThis = this;
     const originalEvent = {key1: 'value2', key2: 'value2'};
     const originalContext = createMockContext();
+    originalContext.getRemainingTimeInMillis = () => 10000;
     const plugins = [createMockPlugin()];
     const apiKey = '12345';
+    pluginContext.timeoutMargin = 200;
 
     describe('report', async () => {
+        jest.useFakeTimers();
         process.env.thundra_lambda_publish_cloudwatch_enable = 'false';
         const originalCallback = jest.fn();
         const originalFunction = jest.fn(() => originalCallback());
@@ -22,6 +26,9 @@ describe('ThundraWrapper', () => {
         });
         it('should call callback', () => {
             expect(originalCallback.mock.call.length).toBe(1);
+        });
+        it('should call clearTimeout', () => {
+            expect(clearTimeout).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -66,6 +73,18 @@ describe('ThundraWrapper', () => {
         });
     });
 
+    describe('timeout', () => {
+        const originalCallback = jest.fn();
+        const originalFunction = jest.fn();
+        jest.useFakeTimers();
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
+        thundraWrapper.report = jest.fn();
+        jest.runAllTimers();
+        it('setupTimeoutHandler calls set timeout.', () => {
+            expect(thundraWrapper.report).toBeCalledWith(new TimeoutError(99, 'Lambda Timeout Exceeded.'), null, null);
+        });
+    });
+
     describe('originalFunction calls callback', () => {
         describe('wrappedCallback', () => {
             describe('with mock report function', () => {
@@ -104,6 +123,53 @@ describe('ThundraWrapper', () => {
             it('should not call callback', () => {
                 expect(originalCallback.mock.call.length).toBe(0);
             });
+        });
+
+        describe('AWS Lambda Proxy Response', async () => {
+            const originalCallback = jest.fn();
+            const originalFunction = jest.fn(() => originalCallback());
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
+            thundraWrapper.executeHook = jest.fn();
+            thundraWrapper.wrappedCallback(null, {statusCode: 500, body:'{\"message\":\"I have failed\"}'});
+            it('should extract error from response with valid error response', () => {
+                const expectedAfterInvocationData = {
+                    error: new Error("Lambda returned with error response."),
+                    response: null   
+                }
+                expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
+            });
+            
+        });
+
+        describe('AWS Lambda Proxy Response', async () => {
+            const originalCallback = jest.fn();
+            const originalFunction = jest.fn(() => originalCallback());
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
+            thundraWrapper.executeHook = jest.fn();
+            thundraWrapper.wrappedCallback(null, {statusCode: 500, body:{ message: 'I have failed'}});
+            it('should extract error from response with invalid body', () => {   
+                const expectedAfterInvocationData = {
+                    error: new Error("Lambda returned with error response."),
+                    response: null   
+                }
+                expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
+            });   
+        });
+
+        describe('AWS Lambda Proxy Response', async () => {
+            const originalCallback = jest.fn();
+            const originalFunction = jest.fn(() => originalCallback());
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
+            thundraWrapper.executeHook = jest.fn();
+            thundraWrapper.wrappedCallback(null, {statusCode: 200, body:'{\"message\":\"I have failed\"}'});
+            it('should extract error from response with success status', () => {   
+                const expectedAfterInvocationData = {
+                    error: null,
+                    response: {statusCode: 200, body:'{\"message\":\"I have failed\"}'}  
+                }
+                expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
+            });
+            
         });
 
         describe('invoke', () => {

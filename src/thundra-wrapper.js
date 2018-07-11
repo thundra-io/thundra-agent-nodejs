@@ -18,6 +18,7 @@
 
 import uuidv4 from 'uuid/v4';
 import Reporter from './reporter';
+import {TimeoutError} from './constants';
 
 class ThundraWrapper {
     constructor(self, event, context, callback, func, plugins, pluginContext, apiKey) {
@@ -49,6 +50,8 @@ class ThundraWrapper {
                 });
             }
         };
+
+           this.timeout = this.setupTimeoutHandler(this);
     }
 
 
@@ -100,18 +103,71 @@ class ThundraWrapper {
     async report(error, result, callback) {
         if (!this.reported) {
             this.reported = true;
-            const afterInvocationData = {
+
+            let afterInvocationData = {
                 error: error,
                 response: result
             };
+
+            if (this.isErrorResponse(result)) {
+                afterInvocationData = {
+                    error: new Error("Lambda returned with error response."),
+                    response: null
+                };
+            }
+
             await this.executeHook('after-invocation', afterInvocationData);
             if (process.env.thundra_lambda_publish_cloudwatch_enable !== 'true') {
                 await this.reporter.sendReports();
             }
+            
+            if (this.timeout) {
+                clearTimeout(this.timeout);
+            }
+
             if (typeof callback === 'function') {
                 callback();
             }
         }
+    }
+
+    isErrorResponse(result) {
+        let isError = false;
+        if (this.isValidResponse(result) && typeof result['body'] === 'string') {
+            const statusCode = result.statusCode.toString();
+            if (statusCode.startsWith('4') || statusCode.startsWith('5')) {
+                isError = true;
+            } 
+        } else if (this.isValidResponse(result)) {
+            isError = true;
+        }
+        return isError;
+    }
+
+    isValidResponse(response) {
+        if (!response) {
+            return false;
+        }
+        return response['statusCode'] && typeof response['statusCode']  == 'number' && response['body'] ;
+    }
+
+    setupTimeoutHandler(wrapperInstance) {
+        const { originalContext, pluginContext } = wrapperInstance;
+        const { getRemainingTimeInMillis = () => 0 } = originalContext;
+    
+        if (pluginContext.timeoutMargin < 1 || getRemainingTimeInMillis() < 10) {
+          return undefined;
+        }
+        const maxEndTime = 299900;
+        const configEndTime = Math.max(
+          0,
+          getRemainingTimeInMillis() - pluginContext.timeoutMargin,
+        );
+    
+        const endTime = Math.min(configEndTime, maxEndTime);
+        return setTimeout(() => {
+          wrapperInstance.report(new TimeoutError(99, 'Lambda Timeout Exceeded.'), null, null);
+        }, endTime);
     }
 }
 

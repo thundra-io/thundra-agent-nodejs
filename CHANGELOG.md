@@ -1,5 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 1.5.1 - July 11, 2018
+#### Added
+- Timeout detection support
+- Parse Lambda Proxy Integration response for error detection for 5xx and 4xx responses
 
 ## 1.5.0 - May 18, 2018
 #### Added
