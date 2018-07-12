@@ -16,6 +16,7 @@ const shouldDisable = (disableByEnv, disableByParameter) => {
 
 module.exports = (config) => {
     let apiKey, disableTrace, disableMetric, disableThundra, plugins = [];
+    let timeoutMargin = 200;
     if (config) {
         apiKey = config.apiKey;
         disableTrace = config.disableTrace ? config.disableTrace : false;
@@ -25,6 +26,9 @@ module.exports = (config) => {
     }
 
     apiKey = process.env.thundra_apiKey ? process.env.thundra_apiKey : apiKey;
+
+    timeoutMargin = process.env.thundra_lambda_timeout_margin
+        ? parseInt(process.env.thundra_lambda_timeout_margin, 0) : timeoutMargin;
 
     if (!apiKey || shouldDisable(process.env.thundra_disable, disableThundra))
         return originalFunc => originalFunc;
@@ -52,7 +56,9 @@ module.exports = (config) => {
         applicationRegion: process.env.AWS_REGION,
         applicationVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
         requestCount: 0,
-        apiKey: apiKey
+        apiKey: apiKey,
+        timeoutMargin,
+        skipHttpResponseCheck :process.env.thundra_lambda_http_responseCheck_skip === 'true' ? true : false,
     };
 
     plugins.forEach(plugin => {

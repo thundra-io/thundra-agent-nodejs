@@ -1,6 +1,6 @@
 {
   "name": "@thundra/core",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
@@ -46,7 +46,8 @@
     "jest": "^22.4.3",
     "npm-run-all": "^4.1.1",
     "uglifyjs-webpack-plugin": "^1.2.5",
-    "webpack": "^3.8.1"
+    "webpack": "^4.14.0",
+    "webpack-cli": "^3.0.8"
   },
   "dependencies": {
     "@thundra/warmup": "^1.0.0",

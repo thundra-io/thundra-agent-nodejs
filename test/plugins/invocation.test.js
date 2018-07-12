@@ -1,6 +1,6 @@
 import Invocation from '../../src/plugins/invocation';
 import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
-import {DATA_FORMAT_VERSION} from '../../src/constants';
+import {DATA_FORMAT_VERSION, TimeoutError} from '../../src/constants';
 
 const pluginContext = createMockPluginContext();
 
@@ -112,6 +112,19 @@ describe('Invocation', () => {
             expect(invocation.invocationData.errorMessage).toEqual('error message');
             expect(invocation.invocationData.duration).toEqual(invocation.endTimestamp - invocation.startTimestamp);
             expect(invocation.report).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('beforeInvocation + afterInvocation with timeouterror', () => {
+        const invocation = Invocation();
+        invocation.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        const afterInvocationData = {error: new TimeoutError('Timeout errror')};
+        invocation.report = jest.fn();
+        it('Should call report method', async () => {
+            await invocation.beforeInvocation(beforeInvocationData);
+            await invocation.afterInvocation(afterInvocationData);
+            expect(invocation.invocationData.timeout).toBeTruthy();
         });
     });
 
