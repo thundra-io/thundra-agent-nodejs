@@ -53,10 +53,10 @@ class Invocation {
             this.invocationData.erroneous = true;
             if (data.error instanceof TimeoutError) {
                 this.invocationData.timeout = true;
-            } else {
-                this.invocationData.errorType = errorType;
-                this.invocationData.errorMessage = errorMessage;
-            }
+            } 
+            this.invocationData.errorType = errorType;
+            this.invocationData.errorMessage = errorMessage;
+        
         }
         this.endTimestamp = Date.now();
         this.invocationData.endTimestamp = this.endTimestamp;
