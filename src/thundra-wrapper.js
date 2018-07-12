@@ -18,7 +18,7 @@
 
 import uuidv4 from 'uuid/v4';
 import Reporter from './reporter';
-import {TimeoutError} from './constants';
+import {TimeoutError,HttpError} from './constants';
 
 class ThundraWrapper {
     constructor(self, event, context, callback, func, plugins, pluginContext, apiKey) {
@@ -109,13 +109,10 @@ class ThundraWrapper {
                 response: result
             };
 
-            const skipParseResponse = process.
-                env.thundra_lambda_skip_parse_response === 'true' ? true : false;
-
-            if (skipParseResponse || this.isErrorResponse(result)) {
+            if (this.pluginContext.skipParseResponse || this.isErrorResponse(result)) {
                 afterInvocationData = {
-                    error: new Error("Lambda returned with error response."),
-                    response: null
+                    error: new HttpError("Lambda returned with error response."),
+                    response: result
                 };
             }
 

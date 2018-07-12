@@ -1,6 +1,6 @@
 import ThundraWrapper from '../src/thundra-wrapper';
 import {createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext} from './mocks/mocks';
-import {TimeoutError} from '../src/constants';
+import {TimeoutError, HttpError} from '../src/constants';
 
 const pluginContext = createMockPluginContext();
 describe('ThundraWrapper', () => {
@@ -130,11 +130,12 @@ describe('ThundraWrapper', () => {
             const originalFunction = jest.fn(() => originalCallback());
             const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
             thundraWrapper.executeHook = jest.fn();
-            thundraWrapper.wrappedCallback(null, {statusCode: 500, body:'{\"message\":\"I have failed\"}'});
+            const response = {statusCode: 500, body:'{\"message\":\"I have failed\"}'};
+            thundraWrapper.wrappedCallback(null, response);
             it('should extract error from response with valid error response', () => {
                 const expectedAfterInvocationData = {
-                    error: new Error("Lambda returned with error response."),
-                    response: null   
+                    error: new HttpError("Lambda returned with error response."),
+                    response: response   
                 }
                 expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
             });
@@ -147,9 +148,9 @@ describe('ThundraWrapper', () => {
             const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
             thundraWrapper.executeHook = jest.fn();
             thundraWrapper.isErrorResponse = jest.fn();
-            process.env.thundra_lambda_skip_parse_response = 'true';
+            pluginContext.skipParseResponse = true;
             thundraWrapper.wrappedCallback(null, {statusCode: 500, body:'{\"message\":\"I have failed\"}'});
-            process.env.thundra_lambda_skip_parse_response = null;
+            pluginContext.skipParseResponse = false;
             it('should isErrorResponse disabled', () => {
                 expect(thundraWrapper.isErrorResponse).not.toHaveBeenCalled();
             });
@@ -161,11 +162,12 @@ describe('ThundraWrapper', () => {
             const originalFunction = jest.fn(() => originalCallback());
             const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
             thundraWrapper.executeHook = jest.fn();
-            thundraWrapper.wrappedCallback(null, {statusCode: 500, body:{ message: 'I have failed'}});
+            const response = {statusCode: 500, body:{ message: 'I have failed'}};
+            thundraWrapper.wrappedCallback(null, response);
             it('should extract error from response with invalid body', () => {   
                 const expectedAfterInvocationData = {
-                    error: new Error("Lambda returned with error response."),
-                    response: null   
+                    error: new HttpError("Lambda returned with error response."),
+                    response: response   
                 }
                 expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
             });   
