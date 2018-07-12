@@ -148,9 +148,9 @@ describe('ThundraWrapper', () => {
             const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
             thundraWrapper.executeHook = jest.fn();
             thundraWrapper.isErrorResponse = jest.fn();
-            pluginContext.skipParseResponse = true;
+            pluginContext.skipHttpResponseCheck = true;
             thundraWrapper.wrappedCallback(null, {statusCode: 500, body:'{\"message\":\"I have failed\"}'});
-            pluginContext.skipParseResponse = false;
+            pluginContext.skipHttpResponseCheck = false;
             it('should isErrorResponse disabled', () => {
                 expect(thundraWrapper.isErrorResponse).not.toHaveBeenCalled();
             });

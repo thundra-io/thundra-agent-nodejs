@@ -109,7 +109,7 @@ class ThundraWrapper {
                 response: result
             };
 
-            if (this.pluginContext.skipParseResponse || this.isErrorResponse(result)) {
+            if (this.pluginContext.skipHttpResponseCheck || this.isErrorResponse(result)) {
                 afterInvocationData = {
                     error: new HttpError("Lambda returned with error response."),
                     response: result

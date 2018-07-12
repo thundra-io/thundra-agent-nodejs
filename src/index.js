@@ -58,7 +58,7 @@ module.exports = (config) => {
         requestCount: 0,
         apiKey: apiKey,
         timeoutMargin,
-        skipParseResponse :process.env.thundra_lambda_skip_parse_response === 'true' ? true : false,
+        skipHttpResponseCheck :process.env.thundra_lambda_http_responseCheck_skip === 'true' ? true : false,
     };
 
     plugins.forEach(plugin => {
