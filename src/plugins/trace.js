@@ -10,6 +10,7 @@
 */
 
 import {generateId, generateReport, parseError} from './utils';
+import { HttpError } from '../constants';
 
 class Trace {
     constructor(options) {
@@ -59,11 +60,15 @@ class Trace {
                 closeTimestamp: null,
                 errors: [],
                 thrownError: null,
-            },
+            },     
             properties: {
                 coldStart: this.pluginContext.requestCount > 0 ? 'false' : 'true',
                 functionMemoryLimitInMB: originalContext.memoryLimitInMB,
                 functionRegion: this.pluginContext.applicationRegion,
+                functionARN: originalContext.invokedFunctionArn,
+                logGroupName: originalContext.logGroupName,
+                logStreamName: originalContext.logStreamName,
+                requestId: originalContext.awsRequestId,
                 request: this.options && this.options.disableRequest ? null : originalEvent,
                 response: null,
             }
@@ -74,7 +79,9 @@ class Trace {
         let response = data.response;
         if (data.error) {
             let error = parseError(data.error);
-            response = error;
+            if (!(data.error instanceof HttpError)) {
+                response = error;
+            }
             this.traceData.errors = [...this.traceData.errors, error.errorType];
             this.traceData.thrownError = error.errorType;
             this.traceData.auditInfo.errors = [...this.traceData.auditInfo.errors, error];

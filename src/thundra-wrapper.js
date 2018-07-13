@@ -50,8 +50,8 @@ class ThundraWrapper {
                 });
             }
         };
-
-           this.timeout = this.setupTimeoutHandler(this);
+        
+        this.timeout = this.setupTimeoutHandler(this);
     }
 
 
