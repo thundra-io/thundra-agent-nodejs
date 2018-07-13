@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
-## 1.5.1 - July 11, 2018
+## 1.5.3 - July 13, 2018
+#### Added
+- `functionARN`,`logGroupName`,`logStreamName`,`requestId` fields are added to trace properites
+#### Fixed
+- Trace data should show response if error type is HTTP error.
+
+## 1.5.2 - July 11, 2018
 #### Added
 - Timeout detection support
 - Parse Lambda Proxy Integration response for error detection for 5xx and 4xx responses

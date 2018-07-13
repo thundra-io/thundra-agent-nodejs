@@ -131,6 +131,10 @@ describe('Trace', () => {
                 functionRegion: pluginContext.applicationRegion,
                 request: beforeInvocationData.originalEvent,
                 response: null,
+                functionARN:beforeInvocationData.originalContext.invokedFunctionArn,
+                requestId:beforeInvocationData.originalContext.awsRequestId,
+                logGroupName:beforeInvocationData.originalContext.logGroupName,
+                logStreamName:beforeInvocationData.originalContext.logStreamName,
             });
 
         });
