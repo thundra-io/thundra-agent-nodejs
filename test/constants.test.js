@@ -1,4 +1,4 @@
-import {HOOKS, URL, PROC_STAT_PATH, PROC_IO_PATH, DATA_FORMAT_VERSION} from '../src/constants';
+import {HOOKS, URL, PROC_STAT_PATH, PROC_IO_PATH, DATA_FORMAT_VERSION} from '../dist/Constants';
 
 test('DATA_FORMAT_VERSION did not change', () => {
     expect(DATA_FORMAT_VERSION).toEqual('1.2');

@@ -1,13 +1,13 @@
-const Thundra = require('../src/index');
-const utils = require('../src/plugins/utils');
+const Thundra = require('../dist/index');
+import Utils from '../dist/plugins/Utils.js';
 
-utils.readProcIoPromise = jest.fn(() => {
+Utils.readProcIoPromise = jest.fn(() => {
     return new Promise((resolve, reject) => {
         return resolve({readBytes: 1024, writeBytes: 4096});
     });
 });
 
-utils.readProcStatPromise = jest.fn(() => {
+Utils.readProcStatPromise = jest.fn(() => {
     return new Promise((resolve, reject) => {
         return resolve({threadCount: 10});
     });

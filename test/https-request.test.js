@@ -1,4 +1,4 @@
-import Reporter from '../src/reporter';
+import Reporter from '../dist/Reporter';
 
 test('request unauthorized apiKey', async () => {
     const reporter = new Reporter('apiKey');

@@ -1,22 +1,27 @@
-import ThundraWarmup from '@thundra/warmup';
-import ThundraWrapper from './thundra-wrapper';
-import TracePlugin from './plugins/trace';
-import MetricPlugin from './plugins/metric';
-import InvocationPlugin from './plugins/invocation';
+import ThundraWrapper from './ThundraWrapper';
+import TracePlugin, { Trace } from './plugins/Trace';
+import MetricPlugin from './plugins/Metric';
+import InvocationPlugin from './plugins/Invocation';
+const ThundraWarmup = require('@thundra/warmup');
 
-
-const shouldDisable = (disableByEnv, disableByParameter) => {
-    if (disableByEnv === 'true')
+const shouldDisable = (disableByEnv: any, disableByParameter: any) => {
+    if (disableByEnv === 'true') {
         return true;
-    else if (disableByEnv === 'false')
+    } else if (disableByEnv === 'false') {
         return false;
-    else
+    } else {
         return disableByParameter;
+    }
 };
 
-module.exports = (config) => {
-    let apiKey, disableTrace, disableMetric, disableThundra, plugins = [];
-    let timeoutMargin = 200;
+let tracePlugin: Trace = null;
+
+module.exports = (config: any) => {
+    let apiKey: string = '';
+    let timeoutMargin: number = 200;
+
+    // tslint:disable-next-line:one-variable-per-declaration
+    let disableTrace, disableMetric, disableThundra, plugins: any = [];
     if (config) {
         apiKey = config.apiKey;
         disableTrace = config.disableTrace ? config.disableTrace : false;
@@ -30,23 +35,24 @@ module.exports = (config) => {
     timeoutMargin = process.env.thundra_lambda_timeout_margin
         ? parseInt(process.env.thundra_lambda_timeout_margin, 0) : timeoutMargin;
 
-    if (!apiKey || shouldDisable(process.env.thundra_disable, disableThundra))
-        return originalFunc => originalFunc;
+    if (!apiKey || shouldDisable(process.env.thundra_disable, disableThundra)) {
+        return (originalFunc: any) => originalFunc;
+    }
 
-    const invocationPlugin = InvocationPlugin();
+    const invocationPlugin = InvocationPlugin({});
     plugins.push(invocationPlugin);
 
     if (!shouldDisable(process.env.thundra_trace_disable, disableTrace)) {
         const traceOptions = {
             disableRequest: shouldDisable(process.env.thundra_lambda_trace_request_skip, false),
-            disableResponse: shouldDisable(process.env.thundra_lambda_trace_response_skip, false)
+            disableResponse: shouldDisable(process.env.thundra_lambda_trace_response_skip, false),
         };
-        const tracePlugin = TracePlugin(traceOptions);
+        tracePlugin = TracePlugin(traceOptions);
         plugins.push(tracePlugin);
     }
 
     if (!shouldDisable(process.env.thundra_metric_disable, disableMetric)) {
-        const metricPlugin = MetricPlugin();
+        const metricPlugin = MetricPlugin({});
         plugins.push(metricPlugin);
     }
 
@@ -56,22 +62,21 @@ module.exports = (config) => {
         applicationRegion: process.env.AWS_REGION,
         applicationVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
         requestCount: 0,
-        apiKey: apiKey,
+        apiKey,
         timeoutMargin,
-        skipHttpResponseCheck :process.env.thundra_lambda_http_responseCheck_skip === 'true' ? true : false,
+        skipHttpResponseCheck: process.env.thundra_lambda_http_responseCheck_skip === 'true' ? true : false,
     };
 
-    plugins.forEach(plugin => {
+    plugins.forEach((plugin: any) => {
         plugin.setPluginContext(pluginContext);
     });
 
     const increaseRequestCount = () => pluginContext.requestCount += 1;
-
     const warmupWrapper = ThundraWarmup(increaseRequestCount);
 
-    return originalFunc => {
+    return (originalFunc: any) => {
 
-        const thundraWrappedHandler = (originalEvent, originalContext, originalCallback) => {
+        const thundraWrappedHandler = (originalEvent: any, originalContext: any, originalCallback: any) => {
             const originalThis = this;
             const thundraWrapper = new ThundraWrapper(
                 originalThis,
@@ -81,7 +86,7 @@ module.exports = (config) => {
                 originalFunc,
                 plugins,
                 pluginContext,
-                apiKey
+                apiKey,
             );
             return thundraWrapper.invoke();
         };
@@ -90,3 +95,10 @@ module.exports = (config) => {
     };
 };
 
+module.exports.tracer = function getTracer() {
+    if (tracePlugin) {
+        return tracePlugin.tracer;
+    } else {
+        throw new Error('Trace plugin is not enabled.');
+    }
+};

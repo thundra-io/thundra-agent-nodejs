@@ -1,5 +1,5 @@
-import Reporter from '../src/reporter';
-import * as constants from '../src/constants';
+import Reporter from '../dist/Reporter';
+import * as constants from '../dist/Constants';
 import url from 'url';
 
 let httpRequestCalled = false;
@@ -27,7 +27,7 @@ jest.mock('http', () => ({
                 httpSentData = data;
             }),
             end: jest.fn(() => httpRequestEndCalled = true)
-        }
+        };
     }
 }));
 
@@ -41,10 +41,23 @@ jest.mock('https', () => ({
                 httpsSentData = data;
             }),
             end: jest.fn(() => httpsRequestEndCalled = true)
-        }
+        };
     }
 }));
 
+describe('constructor', () => {
+
+    const reporter = new Reporter('apiKey');
+
+    it('should set api key', () => {
+        expect(reporter.apiKey).toEqual('apiKey');
+    });
+
+    it('should set reports to empty array', () => {
+        expect(reporter.reports).toEqual([]);
+    });
+
+});
 
 describe('Reporter', () => {
     describe('constructor', () => {
@@ -87,12 +100,10 @@ describe('Reporter', () => {
                 expect(httpsRequestOnCalled).toEqual(true);
                 expect(httpsRequestWriteCalled).toEqual(true);
                 expect(httpsRequestEndCalled).toEqual(true);
-
             });
 
             it('should JSON.stringify reports on https.request', () => {
                 expect(httpsSentData).toEqual(JSON.stringify(reporter.reports));
-
             });
         });
 
@@ -130,7 +141,7 @@ describe('Reporter', () => {
         const mockReport2 = {data: 'data2'};
 
         reporter.request = jest.fn(async () => {
-            return {status: 200}
+            return {status: 200};
         });
 
         reporter.addReport(mockReport1);
@@ -153,7 +164,7 @@ describe('Reporter', () => {
         console['log'] = jest.fn(input => (consoleOutput = input));
 
         reporter.request = jest.fn(async () => {
-            return {status: 400}
+            return {status: 400};
         });
 
         reporter.addReport(mockReport1);

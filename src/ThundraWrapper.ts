@@ -5,72 +5,87 @@
 * Implemented in Hook & Plugin structure. Runs plugins' related functions by executing hooks.
 *
 * Wraps the original callback and context.
-* 
+*
 * invoke function calls the original lambda handler with original event, wrapped context and wrapped callback.
-* 
+*
 * Wrapped context methods (done, succeed, fail) and callback call report function.
-* 
+*
 * report function uses the Reporter instance to make a single request to send reports if async monitoring is
 * not enabled (environment variable thundra_lambda_publish_cloudwatch_enable is not set). After reporting it calls
 * original callback/succeed/done/fail.
-* 
+*
 */
 
-import uuidv4 from 'uuid/v4';
-import Reporter from './reporter';
-import {TimeoutError,HttpError} from './constants';
+import * as uuidv4 from 'uuid/v4';
+import Reporter from './Reporter';
+import TimeoutError from './plugins/error/TimeoutError';
+import HttpError from './plugins/error/HttpError';
 
 class ThundraWrapper {
-    constructor(self, event, context, callback, func, plugins, pluginContext, apiKey) {
+    private originalThis: any;
+    private originalEvent: any;
+    private originalContext: any;
+    private originalCallback: any;
+    private originalFunction: any;
+    private plugins: any;
+    private pluginContext: any;
+    private reported: boolean;
+    private reporter: Reporter;
+    private wrappedContext: any;
+    private timeout: NodeJS.Timer;
+    private apiKey: string;
+
+    constructor(self: any, event: any, context: any, callback: any,
+                originalFunction: any, plugins: any, pluginContext: any, apiKey: any) {
+
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
         this.originalCallback = callback;
-        this.originalFunction = func;
+        this.originalFunction = originalFunction;
         this.plugins = plugins;
         this.pluginContext = pluginContext;
-        this.apiKey = apiKey;
         this.reported = false;
+        this.apiKey = apiKey;
         this.reporter = new Reporter(apiKey);
         this.wrappedContext = {
             ...context,
-            done: (error, result) => {
+            done: (error: any, result: any) => {
                 this.report(error, result, () => {
-                    this.originalContext.done(error, result)
+                    this.originalContext.done(error, result);
                 });
             },
-            succeed: (result) => {
+            succeed: (result: any) => {
                 this.report(null, result, () => {
-                    this.originalContext.succeed(result)
+                    this.originalContext.succeed(result);
                 });
             },
-            fail: (error) => {
+            fail: (error: any) => {
                 this.report(error, null, () => {
-                    this.originalContext.fail(error)
+                    this.originalContext.fail(error);
                 });
-            }
+            },
         };
-        
+
         this.timeout = this.setupTimeoutHandler(this);
     }
 
-
-    wrappedCallback = (error, result) => {
+    wrappedCallback = (error: any, result: any) => {
         this.report(error, result, () => {
                 if (typeof this.originalCallback === 'function') {
                     this.originalCallback(error, result);
                 }
-            }
+            },
         );
-    };
+    }
 
-    invoke() {
+    invoke(): void {
         const beforeInvocationData = {
             originalContext: this.originalContext,
             originalEvent: this.originalEvent,
             reporter: this.reporter,
             contextId: uuidv4(),
-            transactionId: uuidv4()
+            transactionId: uuidv4(),
         };
 
         this.executeHook('before-invocation', beforeInvocationData)
@@ -81,38 +96,38 @@ class ThundraWrapper {
                         this.originalThis,
                         this.originalEvent,
                         this.wrappedContext,
-                        this.wrappedCallback
+                        this.wrappedCallback,
                     );
                 } catch (error) {
-                    this.report(error, null);
+                    this.report(error, null, null);
                     return error;
                 }
-            });
+        });
     }
 
-    async executeHook(hook, data) {
+    async executeHook(hook: any, data: any) {
         await Promise.all(
-            this.plugins.map(async plugin => {
+            this.plugins.map(async (plugin: any) => {
                 if (plugin.hooks && plugin.hooks[hook]) {
                     return plugin.hooks[hook](data);
                 }
-            })
+            }),
         );
     }
 
-    async report(error, result, callback) {
+     async report(error: any, result: any, callback: any) {
         if (!this.reported) {
             this.reported = true;
 
             let afterInvocationData = {
-                error: error,
-                response: result
+                error,
+                response: result,
             };
 
             if (this.pluginContext.skipHttpResponseCheck || this.isErrorResponse(result)) {
                 afterInvocationData = {
-                    error: new HttpError("Lambda returned with error response."),
-                    response: result
+                    error: new HttpError('Lambda returned with error response.'),
+                    response: result,
                 };
             }
 
@@ -120,7 +135,7 @@ class ThundraWrapper {
             if (process.env.thundra_lambda_publish_cloudwatch_enable !== 'true') {
                 await this.reporter.sendReports();
             }
-            
+
             if (this.timeout) {
                 clearTimeout(this.timeout);
             }
@@ -131,30 +146,30 @@ class ThundraWrapper {
         }
     }
 
-    isErrorResponse(result) {
+    isErrorResponse(result: any) {
         let isError = false;
-        if (this.isValidResponse(result) && typeof result['body'] === 'string') {
+        if (this.isValidResponse(result) && typeof result.body === 'string') {
             const statusCode = result.statusCode.toString();
             if (statusCode.startsWith('4') || statusCode.startsWith('5')) {
                 isError = true;
-            } 
+            }
         } else if (this.isValidResponse(result)) {
             isError = true;
         }
         return isError;
     }
 
-    isValidResponse(response) {
+    isValidResponse(response: any) {
         if (!response) {
             return false;
         }
-        return response['statusCode'] && typeof response['statusCode']  == 'number' && response['body'] ;
+        return response.statusCode && typeof response.statusCode  === 'number' && response.body ;
     }
 
-    setupTimeoutHandler(wrapperInstance) {
+    setupTimeoutHandler(wrapperInstance: any): NodeJS.Timer | undefined {
         const { originalContext, pluginContext } = wrapperInstance;
         const { getRemainingTimeInMillis = () => 0 } = originalContext;
-    
+
         if (pluginContext.timeoutMargin < 1 || getRemainingTimeInMillis() < 10) {
           return undefined;
         }
@@ -163,8 +178,9 @@ class ThundraWrapper {
           0,
           getRemainingTimeInMillis() - pluginContext.timeoutMargin,
         );
-    
+
         const endTime = Math.min(configEndTime, maxEndTime);
+
         return setTimeout(() => {
           wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
         }, endTime);
@@ -172,5 +188,3 @@ class ThundraWrapper {
 }
 
 export default ThundraWrapper;
-
-
