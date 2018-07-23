@@ -10,7 +10,7 @@
 */
 
 import {generateId, generateReport, parseError} from './utils';
-import { HttpError } from '../constants';
+import { HttpError, TimeoutError } from '../constants';
 
 class Trace {
     constructor(options) {
@@ -63,6 +63,7 @@ class Trace {
             },     
             properties: {
                 coldStart: this.pluginContext.requestCount > 0 ? 'false' : 'true',
+                timeout: 'false',
                 functionMemoryLimitInMB: originalContext.memoryLimitInMB,
                 functionRegion: this.pluginContext.applicationRegion,
                 functionARN: originalContext.invokedFunctionArn,
@@ -82,6 +83,11 @@ class Trace {
             if (!(data.error instanceof HttpError)) {
                 response = error;
             }
+
+            if (data.error instanceof TimeoutError) {
+                this.traceData.properties.timeout = 'true';
+            }
+            
             this.traceData.errors = [...this.traceData.errors, error.errorType];
             this.traceData.thrownError = error.errorType;
             this.traceData.auditInfo.errors = [...this.traceData.auditInfo.errors, error];
