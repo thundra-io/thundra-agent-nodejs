@@ -41,15 +41,18 @@ class ThundraTracer extends Tracer {
   }
 
   wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
+    const activeSpan = this.getActiveSpan();
+    let span: ThundraSpan;
     // tslint:disable-next-line:no-angle-bracket-type-assertion
     return <T> ((...args: any[]) => {
       try {
-        this.startSpan(spanName);
+        span = this.startSpan(spanName, {childOf: activeSpan}) as ThundraSpan;
         const returnValue = func(...args);
-        this.finishSpan();
+        span.finish();
         return returnValue;
       } catch (error) {
-        this.finishSpan();
+        span.finish();
+        throw error;
       }
     });
   }
@@ -68,7 +71,7 @@ class ThundraTracer extends Tracer {
     if (fields) {
       span = new ThundraSpan(this, {
         operationName: fields.operationName || name,
-        parent: getParent(fields.references),
+        parent: parentContext,
         tags: Object.assign(tags, this.tags, fields.tags),
         startTime: fields.startTime,
         rootTraceId,
@@ -78,7 +81,7 @@ class ThundraTracer extends Tracer {
     } else {
       span = new ThundraSpan(this, {
         operationName: name,
-        parent: this.getActiveSpan(),
+        parent: this.getActiveSpan().spanContext,
         tags: this.tags,
         startTime: Date.now(),
         className: fields.className,
