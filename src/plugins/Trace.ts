@@ -19,6 +19,7 @@ import TraceDataProperties from './data/trace/TraceProperties';
 import {initGlobalTracer} from 'opentracing';
 import HttpError from './error/HttpError';
 import { LOG_TAG_NAME } from '../Constants';
+import TimeoutError from './error/TimeoutError';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -85,6 +86,7 @@ export class Trace {
         this.traceData.auditInfo.errors = [];
 
         this.traceData.properties = new TraceDataProperties();
+        this.traceData.properties.timeout = 'false';
         this.traceData.properties.coldStart = this.pluginContext.requestCount > 0 ? 'false' : 'true',
         this.traceData.properties.functionMemoryLimitInMB =  originalContext.memoryLimitInMB;
         this.traceData.properties.functionRegion = this.pluginContext.applicationRegion;
@@ -103,7 +105,11 @@ export class Trace {
             if (!(data.error instanceof HttpError)) {
                 response = error;
             }
-            response = error;
+
+            if (data.error instanceof TimeoutError) {
+                this.traceData.properties.timeout = 'true';
+            }
+
             this.traceData.errors = [...this.traceData.errors, error.errorType];
             this.traceData.thrownError = error.errorType;
             this.traceData.auditInfo.errors = [...this.traceData.auditInfo.errors, error];

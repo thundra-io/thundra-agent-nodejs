@@ -1,5 +1,6 @@
 class TraceDataProperties {
     coldStart: string;
+    timeout: string;
     functionMemoryLimitInMB: number;
     functionRegion: string;
     functionARN: string;
