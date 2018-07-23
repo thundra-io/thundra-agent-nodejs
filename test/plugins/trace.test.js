@@ -1,6 +1,6 @@
 import Trace from '../../src/plugins/trace';
 import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
-import {DATA_FORMAT_VERSION} from '../../src/constants';
+import {DATA_FORMAT_VERSION, TimeoutError} from '../../src/constants';
 
 const pluginContext = createMockPluginContext();
 describe('Trace', () => {
@@ -126,6 +126,7 @@ describe('Trace', () => {
                 thrownError: null,
             });
             expect(tracer.traceData.properties).toEqual({
+                timeout: 'false',
                 coldStart: pluginContext.requestCount > 0 ? 'false' : 'true',
                 functionMemoryLimitInMB: beforeInvocationData.originalContext.memoryLimitInMB,
                 functionRegion: pluginContext.applicationRegion,
@@ -224,6 +225,23 @@ describe('Trace', () => {
             });
         });
 
+    });
+
+    describe('afterInvocation with TimeoutError', () => {
+        const tracer = Trace();
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        const afterInvocationData = {
+            error: new TimeoutError('error message'),
+            response: null
+        };
+        tracer.report = jest.fn();
+        tracer.beforeInvocation(beforeInvocationData);
+        tracer.afterInvocation(afterInvocationData);
+
+        it('should set Timeout true', () => {
+            expect(tracer.traceData.properties.timeout).toBeTruthy();
+        });
     });
 });
 

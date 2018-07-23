@@ -1,10 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 1.5.4 - July 23, 2018
+#### Added
+- `timeout` field is added to trace properites
+
 ## 1.5.3 - July 13, 2018
 #### Added
 - `functionARN`,`logGroupName`,`logStreamName`,`requestId` fields are added to trace properites
 #### Fixed
-- Trace data should show response if error type is HTTP error.
+- Trace data should show response if error type is HTTP error
 
 ## 1.5.2 - July 11, 2018
 #### Added
