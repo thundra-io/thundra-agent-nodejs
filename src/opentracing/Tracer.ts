@@ -10,6 +10,7 @@ class ThundraTracer extends Tracer {
   tags: any;
   recorder: ThundraRecorder;
   sampler: ThundraSampler;
+  activeSpans: Map<string, ThundraSpan>;
 
   constructor(config: any = {}) {
     super();
@@ -17,6 +18,7 @@ class ThundraTracer extends Tracer {
     this.tags = config.tags;
     this.recorder = config.recorder ? config.recorder : new ThundraRecorder();
     this.sampler = config.sampler ? config.sampler : new ThundraSampler(1);
+    this.activeSpans = new Map<string, ThundraSpan>();
   }
 
   getActiveSpan(): ThundraSpan {
@@ -35,6 +37,7 @@ class ThundraTracer extends Tracer {
 
   destroy() {
     this.recorder.destroy();
+    this.activeSpans = null;
   }
 
   wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
@@ -55,6 +58,13 @@ class ThundraTracer extends Tracer {
     const tags: any = {};
     let span;
     const rootTraceId = fields.rootTraceId ? fields.rootTraceId : Utils.generateId();
+
+    const parentContext = getParent(fields.references);
+
+    if (parentContext && !this.activeSpans.get(parentContext.spanId)) {
+        throw new Error('Invalid spanId : ' + parentContext.spanId);
+    }
+
     if (fields) {
       span = new ThundraSpan(this, {
         operationName: fields.operationName || name,
@@ -77,11 +87,13 @@ class ThundraTracer extends Tracer {
     }
 
     this.recorder.record(span, SpanEvent.SPAN_START);
+    this.activeSpans.set(span.spanContext.spanId, span);
     return span;
   }
 
   _record(span: ThundraSpan) {
     this.recorder.record(span, SpanEvent.SPAN_FINISH);
+    this.activeSpans.delete(span.spanContext.spanId);
   }
 
   _inject(spanContext: any, format: any, carrier: any) {
@@ -99,8 +111,8 @@ class ThundraTracer extends Tracer {
   }
 }
 
-function getParent(references: any): opentracing.SpanContext {
-  let parent: opentracing.SpanContext = null;
+function getParent(references: any): ThundraSpanContext {
+  let parent: ThundraSpanContext = null;
   if (references) {
     for (const ref of references) {
       if (!(ref instanceof Reference)) {
@@ -115,11 +127,11 @@ function getParent(references: any): opentracing.SpanContext {
       }
 
       if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
-        parent = ref.referencedContext();
+        parent = ref.referencedContext() as ThundraSpanContext;
         break;
       } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
         if (!parent) {
-          parent = ref.referencedContext();
+          parent = ref.referencedContext() as ThundraSpanContext;
         }
       }
     }
