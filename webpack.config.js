@@ -3,7 +3,8 @@ const path = require("path");
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 module.exports = {
-    entry: "./src/index.js",
+    mode : "production" ,
+    entry: "./src/index.ts",
     target: "node",
     output: {
         path: path.resolve(__dirname, "dist"),
@@ -11,12 +12,16 @@ module.exports = {
         libraryTarget: "commonjs2",
         library: "thundra"
     },
+    devtool: 'inline-source-map',
+    resolve: {
+        extensions: [ '.tsx', '.ts', '.js' ]
+    },
     module: {
         rules: [
             {
-                use: "babel-loader",
+                use: "ts-loader",
                 exclude: /(node_modules)/,
-                test: /\.js$/,
+                test: /\.ts?$/,
             },
         ],
     },

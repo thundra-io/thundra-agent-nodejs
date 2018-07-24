@@ -1,11 +1,5 @@
-import {
-    generateReport,
-    getCpuUsage,
-    getCpuLoad,
-    readProcStatPromise,
-    readProcIoPromise, parseError,
-} from '../../src/plugins/utils';
-import {DATA_FORMAT_VERSION} from '../../src/constants';
+import Utils from '../../dist/plugins/Utils';
+import {DATA_FORMAT_VERSION} from '../../dist/Constants';
 
 jest.mock('os', () => ({
     cpus: () => {
@@ -24,13 +18,13 @@ jest.mock('os', () => ({
     }
 }));
 
-jest.mock('../../src/constants', () => ({
+jest.mock('../../dist/Constants', () => ({
     PROC_STAT_PATH: './test/mocks/mock-proc-stat',
     PROC_IO_PATH: './test/mocks/mock-proc-io',
 }));
 
 describe('getCpuUsage', () => {
-    const result = getCpuUsage();
+    const result = Utils.getCpuUsage();
     it('Should calculate system cpu usage', () => {
         expect(result.sysCpuUsed).toEqual(160000);
         expect(result.sysCpuTotal).toEqual(18160000);
@@ -53,8 +47,8 @@ describe('getCpuLoad', () => {
         sysCpuUsed: NaN,
         sysCpuTotal: NaN
     };
-    const result = getCpuLoad(start, end, 100);
-    const resultNaN = getCpuLoad(startNaN, end, 100);
+    const result = Utils.getCpuLoad(start, end, 100);
+    const resultNaN = Utils.getCpuLoad(startNaN, end, 100);
     it('Should calculate process cpu load', () => {
         expect(result.procCpuLoad).toBeCloseTo(0.00001);
         expect(resultNaN.procCpuLoad).toBe(0);
@@ -69,20 +63,20 @@ describe('getCpuLoad', () => {
 
 describe('readProcStatPromise', () => {
     it('Should read proc stat file correctly', async () => {
-        const procStatData = await readProcStatPromise();
+        const procStatData = await Utils.readProcStatPromise();
         expect(procStatData).toEqual({threadCount: 20});
     });
 });
 
 describe('readProcIoPromise', () => {
     it('Should read proc io file correctly', async () => {
-        const procIoData = await readProcIoPromise();
+        const procIoData = await Utils.readProcIoPromise();
         expect(procIoData).toEqual({readBytes: 5453, writeBytes: 323932160});
     });
 });
 
 describe('generateReport', () => {
-    const exampleReport = generateReport('data', 'type', 'apiKey');
+    const exampleReport = Utils.generateReport('data', 'type', 'apiKey');
     it('Should generate report with correct fields', () => {
         expect(exampleReport).toEqual({
             data: 'data',
@@ -96,7 +90,7 @@ describe('generateReport', () => {
 describe('parseError', () => {
     describe('Error typed error data', () => {
         const error = Error('error message');
-        const parsedError = parseError(error);
+        const parsedError = Utils.parseError(error);
         it('should set error message correctly', () => {
             expect(parsedError.errorMessage).toEqual('error message');
         });
@@ -107,7 +101,7 @@ describe('parseError', () => {
 
     describe('string error data', () => {
         const error = 'string error';
-        const parsedError = parseError(error);
+        const parsedError = Utils.parseError(error);
         it('should set error message correctly', () => {
             expect(parsedError.errorMessage).toEqual('string error');
         });
@@ -118,7 +112,7 @@ describe('parseError', () => {
 
     describe('object error data', () => {
         const error = {err: 'err', msg: 'msg'};
-        const parsedError = parseError(error);
+        const parsedError = Utils.parseError(error);
         it('should set error message correctly', () => {
             expect(parsedError.errorMessage).toEqual(JSON.stringify(error));
         });

@@ -1,6 +1,8 @@
-import Invocation from '../../src/plugins/invocation';
+import Invocation from '../../dist/plugins/Invocation';
 import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
-import {DATA_FORMAT_VERSION, TimeoutError} from '../../src/constants';
+import TimeoutError from '../../dist/plugins/error/TimeoutError';
+import {DATA_FORMAT_VERSION} from '../../dist/Constants';
+
 
 const pluginContext = createMockPluginContext();
 
@@ -57,9 +59,9 @@ describe('Invocation', () => {
             expect(invocation.invocationData.applicationVersion).toEqual(pluginContext.applicationVersion);
             expect(invocation.invocationData.applicationProfile).toEqual(pluginContext.applicationProfile);
             expect(invocation.invocationData.applicationType).toEqual('node');
-            expect(invocation.invocationData.duration).toEqual(null);
+            expect(invocation.invocationData.duration).toEqual(0);
             expect(invocation.invocationData.startTimestamp).toEqual(invocation.startTimestamp);
-            expect(invocation.invocationData.endTimestamp).toEqual(null);
+            expect(invocation.invocationData.endTimestamp).toEqual(0);
             expect(invocation.invocationData.erroneous).toEqual(false);
             expect(invocation.invocationData.errorType).toEqual('');
             expect(invocation.invocationData.errorMessage).toEqual('');
@@ -145,7 +147,4 @@ describe('Invocation', () => {
             });
         });
     });
-
-
 });
-

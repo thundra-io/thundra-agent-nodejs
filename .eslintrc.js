@@ -8,6 +8,7 @@ module.exports = {
     'parserOptions': {
         'sourceType': 'module'
     },
+    'parser' : 'babel-eslint',
     'rules': {
         'indent': ['error', 4],
         'linebreak-style': ['error', 'unix'],

@@ -60,7 +60,7 @@ const createMockBeforeInvocationData = () => {
         reporter: mockWrapperInstance.reporter,
         contextId: 'contextId',
         transactionId: 'transactionId'
-    }
+    };
 };
 
 module.exports = {

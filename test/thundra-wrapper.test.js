@@ -1,16 +1,15 @@
-import ThundraWrapper from '../src/thundra-wrapper';
+import ThundraWrapper from '../dist/ThundraWrapper';
 import {createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext} from './mocks/mocks';
-import {TimeoutError, HttpError} from '../src/constants';
+import HttpError from '../dist/plugins/error/HttpError';
+import TimeoutError from '../dist/plugins/error/TimeoutError';
 
 const pluginContext = createMockPluginContext();
 describe('ThundraWrapper', () => {
     const originalThis = this;
     const originalEvent = {key1: 'value2', key2: 'value2'};
     const originalContext = createMockContext();
-    originalContext.getRemainingTimeInMillis = () => 10000;
     const plugins = [createMockPlugin()];
     const apiKey = '12345';
-    pluginContext.timeoutMargin = 200;
 
     describe('report', async () => {
         jest.useFakeTimers();
@@ -47,14 +46,14 @@ describe('ThundraWrapper', () => {
         const thrownError = 'err';
         const originalCallback = jest.fn();
         const originalFunction = jest.fn(() => {
-            throw(thrownError)
+            throw(thrownError);
         });
         const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
         thundraWrapper.report = jest.fn();
         thundraWrapper.invoke();
         it('should call original function and report', () => {
             expect(originalFunction.mock.calls.length).toBe(1);
-            expect(thundraWrapper.report).toBeCalledWith(thrownError, null);
+            expect(thundraWrapper.report).toBeCalledWith(thrownError, null, null);
         });
     });
 
@@ -77,9 +76,13 @@ describe('ThundraWrapper', () => {
         const originalCallback = jest.fn();
         const originalFunction = jest.fn();
         jest.useFakeTimers();
+        originalContext.getRemainingTimeInMillis = () => 5000;
+        pluginContext.timeoutMargin = 200;
         const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
         thundraWrapper.report = jest.fn();
         jest.runAllTimers();
+        originalContext.getRemainingTimeInMillis = null;
+        pluginContext.timeoutMargin = null;
         it('setupTimeoutHandler calls set timeout.', () => {
             expect(thundraWrapper.report).toBeCalledWith(new TimeoutError('Lambda is timed out.'), null, null);
         });
@@ -130,13 +133,13 @@ describe('ThundraWrapper', () => {
             const originalFunction = jest.fn(() => originalCallback());
             const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
             thundraWrapper.executeHook = jest.fn();
-            const response = {statusCode: 500, body:'{\"message\":\"I have failed\"}'};
+            const response = {statusCode: 500, body:'{\'message\':\'I have failed\'}'};
             thundraWrapper.wrappedCallback(null, response);
             it('should extract error from response with valid error response', () => {
                 const expectedAfterInvocationData = {
-                    error: new HttpError("Lambda returned with error response."),
+                    error: new HttpError('Lambda returned with error response.'),
                     response: response   
-                }
+                };
                 expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
             });
             
@@ -149,7 +152,7 @@ describe('ThundraWrapper', () => {
             thundraWrapper.executeHook = jest.fn();
             thundraWrapper.isErrorResponse = jest.fn();
             pluginContext.skipHttpResponseCheck = true;
-            thundraWrapper.wrappedCallback(null, {statusCode: 500, body:'{\"message\":\"I have failed\"}'});
+            thundraWrapper.wrappedCallback(null, {statusCode: 500, body:'{\'message\':\'I have failed\'}'});
             pluginContext.skipHttpResponseCheck = false;
             it('should isErrorResponse disabled', () => {
                 expect(thundraWrapper.isErrorResponse).not.toHaveBeenCalled();
@@ -166,9 +169,9 @@ describe('ThundraWrapper', () => {
             thundraWrapper.wrappedCallback(null, response);
             it('should extract error from response with invalid body', () => {   
                 const expectedAfterInvocationData = {
-                    error: new HttpError("Lambda returned with error response."),
+                    error: new HttpError('Lambda returned with error response.'),
                     response: response   
-                }
+                };
                 expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
             });   
         });
@@ -178,12 +181,12 @@ describe('ThundraWrapper', () => {
             const originalFunction = jest.fn(() => originalCallback());
             const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
             thundraWrapper.executeHook = jest.fn();
-            thundraWrapper.wrappedCallback(null, {statusCode: 200, body:'{\"message\":\"I have failed\"}'});
+            thundraWrapper.wrappedCallback(null, {statusCode: 200, body:'{\'message\':\'I have failed\'}'});
             it('should extract error from response with success status', () => {   
                 const expectedAfterInvocationData = {
                     error: null,
-                    response: {statusCode: 200, body:'{\"message\":\"I have failed\"}'}  
-                }
+                    response: {statusCode: 200, body:'{\'message\':\'I have failed\'}'}  
+                };
                 expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
             });
             
@@ -257,7 +260,3 @@ describe('ThundraWrapper', () => {
     });
 
 });
-
-
-
-

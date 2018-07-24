@@ -4,10 +4,12 @@
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
+    "compile": "tsc",
     "build": "webpack",
     "start": "npm-run-all --parallel watch:server watch:build",
-    "test": "jest --coverage",
-    "test-ci": "jest --config config.json --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+    "test": "npm run compile; jest --coverage",
+    "test-ci": "npm run compile;  jest --config config.json --coverage; cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "lint": "tslint --project tsconfig.json -t stylish"
   },
   "repository": {
     "type": "git",
@@ -33,7 +35,9 @@
   },
   "homepage": "https://github.com/thundra-io/thundra-lambda-agent-nodejs#readme",
   "devDependencies": {
+    "@types/node": "^10.5.0",
     "babel-core": "^6.26.3",
+    "babel-eslint": "^8.2.3",
     "babel-loader": "^7.1.2",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-polyfill": "^6.26.0",
@@ -42,15 +46,23 @@
     "babel-runtime": "^6.26.0",
     "coveralls": "^3.0.1",
     "eslint": "^4.19.1",
+    "eslint-plugin-babel": "^5.1.0",
     "i": "^0.3.6",
-    "jest": "^22.4.3",
+    "jest": "^22.4.4",
     "npm-run-all": "^4.1.1",
+    "opentracing": "0.14.1",
+    "ts-loader": "^4.4.1",
+    "ts-node": "^7.0.0",
+    "tslint": "5.7.0",
+    "typescript": "^2.9.2",
     "uglifyjs-webpack-plugin": "^1.2.5",
     "webpack": "^4.14.0",
-    "webpack-cli": "^3.0.8"
+    "webpack-cli": "^3.0.8",
+    "babel-jest": "^23.4.0"
   },
   "dependencies": {
     "@thundra/warmup": "^1.0.0",
+    "@types/uuid": "^3.4.3",
     "uuid": "^3.2.1"
   }
 }

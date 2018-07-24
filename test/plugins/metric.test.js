@@ -1,16 +1,16 @@
-import Metric from '../../src/plugins/metric';
+import Metric from '../../dist/plugins/Metric';
 import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
-import {DATA_FORMAT_VERSION} from '../../src/constants';
+import {DATA_FORMAT_VERSION} from '../../dist/Constants';
 
-const utils = require('../../src/plugins/utils');
+import Utils from '../../dist/plugins/Utils';
 
-utils.readProcIoPromise = jest.fn(() => {
+Utils.readProcIoPromise = jest.fn(() => {
     return new Promise((resolve, reject) => {
         return resolve({readBytes: 1024, writeBytes: 4096});
     });
 });
 
-utils.readProcStatPromise = jest.fn(() => {
+Utils.readProcStatPromise = jest.fn(() => {
     return new Promise((resolve, reject) => {
         return resolve({threadCount: 10});
     });
@@ -43,12 +43,12 @@ describe('Metrics', () => {
             });
         });
         it('Should be able to initialize variables without options', () => {
-            expect(metric.statData).toEqual({});
+            expect(metric.statData).toEqual({'applicationType': 'node'});
             expect(metric.reports).toEqual([]);
             expect(metric.options).toEqual(undefined);
         });
         it('Should be able to initialize variables with options', () => {
-            expect(metricWithOptions.statData).toEqual({});
+            expect(metricWithOptions.statData).toEqual({'applicationType': 'node'});
             expect(metricWithOptions.reports).toEqual([]);
             expect(metricWithOptions.options).toEqual(options);
 
@@ -80,8 +80,8 @@ describe('Metrics', () => {
 
         it('Should set variables to their initial value', async () => {
             await metric.beforeInvocation(beforeInvocationData);
-            expect(utils.readProcIoPromise).toBeCalled();
-            expect(utils.readProcStatPromise).toBeCalled();
+            expect(Utils.readProcIoPromise).toBeCalled();
+            expect(Utils.readProcStatPromise).toBeCalled();
             expect(metric.initialProcStat).toEqual({threadCount: 10});
             expect(metric.initialProcIo).toEqual({readBytes: 1024, writeBytes: 4096});
             expect(metric.reporter).toBe(beforeInvocationData.reporter);
@@ -99,7 +99,7 @@ describe('Metrics', () => {
                 applicationType: 'node',
                 functionRegion: pluginContext.applicationRegion,
                 statTimestamp: metric.statData.statTimestamp
-            })
+            });
 
         });
 

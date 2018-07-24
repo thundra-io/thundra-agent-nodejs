@@ -1,6 +1,8 @@
-import Trace from '../../src/plugins/trace';
-import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
-import {DATA_FORMAT_VERSION, TimeoutError} from '../../src/constants';
+import Trace from '../../dist/plugins/trace';
+import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
+import { DATA_FORMAT_VERSION} from '../../dist/constants';
+import TimeoutError from '../../dist/plugins/error/TimeoutError';
+import ThundraTracer from '../../dist/opentracing/Tracer';
 
 const pluginContext = createMockPluginContext();
 describe('Trace', () => {
@@ -10,7 +12,7 @@ describe('Trace', () => {
     });
 
     describe('constructor', () => {
-        const options = {opt1: 'opt1', opt2: 'opt2'};
+        const options = { opt1: 'opt1', opt2: 'opt2' };
         const tracerWithOptions = Trace(options);
         const tracerWithoutOptions = Trace();
         const tracer = Trace();
@@ -34,6 +36,9 @@ describe('Trace', () => {
         it('Should set dataType correctly', () => {
             expect(tracer.dataType).toEqual('AuditData');
         });
+        it('Should set tracer correctly', () => {
+            expect(tracer.tracer instanceof ThundraTracer).toBeTruthy();
+        });
     });
 
     describe('setPluginContext', () => {
@@ -53,7 +58,7 @@ describe('Trace', () => {
         tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {
-            response: {key: 'data'}
+            response: { key: 'data' }
         };
         tracer.report = jest.fn();
         tracer.beforeInvocation(beforeInvocationData);
@@ -66,9 +71,9 @@ describe('Trace', () => {
 
     describe('report', () => {
         const tracer = Trace();
-        tracer.setPluginContext({...pluginContext, requestCount: 5});
+        tracer.setPluginContext({ ...pluginContext, requestCount: 5 });
         const beforeInvocationData = createMockBeforeInvocationData();
-        const afterInvocationData = {response: {key: 'data'}};
+        const afterInvocationData = { response: { key: 'data' } };
         tracer.beforeInvocation(beforeInvocationData);
         tracer.afterInvocation(afterInvocationData);
 
@@ -121,9 +126,12 @@ describe('Trace', () => {
                 contextName: beforeInvocationData.originalContext.functionName,
                 id: tracer.traceData.contextId,
                 openTimestamp: tracer.traceData.startTimestamp,
-                closeTimestamp: null,
+                closeTimestamp: 0,
                 errors: [],
                 thrownError: null,
+                children: [],
+                duration: 0,
+                props: {}
             });
             expect(tracer.traceData.properties).toEqual({
                 timeout: 'false',
@@ -132,10 +140,10 @@ describe('Trace', () => {
                 functionRegion: pluginContext.applicationRegion,
                 request: beforeInvocationData.originalEvent,
                 response: null,
-                functionARN:beforeInvocationData.originalContext.invokedFunctionArn,
-                requestId:beforeInvocationData.originalContext.awsRequestId,
-                logGroupName:beforeInvocationData.originalContext.logGroupName,
-                logStreamName:beforeInvocationData.originalContext.logStreamName,
+                functionARN: beforeInvocationData.originalContext.invokedFunctionArn,
+                requestId: beforeInvocationData.originalContext.awsRequestId,
+                logGroupName: beforeInvocationData.originalContext.logGroupName,
+                logStreamName: beforeInvocationData.originalContext.logStreamName,
             });
 
         });
@@ -143,16 +151,17 @@ describe('Trace', () => {
 
     });
 
-    describe('afterInvocation without error data', async () => {
+    describe('afterInvocation without error data', () => {
         const tracer = Trace();
+        tracer.generateAuditInfoFromTraces = jest.fn();
         tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {
-            response: {key: 'data'}
+            response: { key: 'data' }
         };
         tracer.report = jest.fn();
-        await tracer.beforeInvocation(beforeInvocationData);
-        await tracer.afterInvocation(afterInvocationData);
+        tracer.beforeInvocation(beforeInvocationData);
+        tracer.afterInvocation(afterInvocationData);
 
         it('should set endTimestamp', () => {
             expect(tracer.endTimestamp).toBeTruthy();
@@ -163,10 +172,14 @@ describe('Trace', () => {
             expect(tracer.traceData.thrownError).toEqual(null);
             expect(tracer.traceData.auditInfo.errors).toEqual([]);
             expect(tracer.traceData.auditInfo.thrownError).toEqual(null);
-            expect(tracer.traceData.properties.response).toEqual({key: 'data'});
+            expect(tracer.traceData.properties.response).toEqual({ key: 'data' });
             expect(tracer.traceData.endTimestamp).toBeTruthy();
             expect(tracer.traceData.endTimestamp).toEqual(tracer.traceData.auditInfo.closeTimestamp);
             expect(tracer.traceData.duration).toEqual(tracer.endTimestamp - tracer.startTimestamp);
+        });
+
+        it('should call generateAuditInfoFromTraces', () => {
+            expect(tracer.generateAuditInfoFromTraces.mock.calls.length).toBe(1);
         });
 
         it('should call report', () => {
@@ -186,7 +199,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {
             error: Error('error message'),
-            response: {key: 'data'}
+            response: { key: 'data' }
         };
         tracer.report = jest.fn();
         tracer.beforeInvocation(beforeInvocationData);
@@ -227,6 +240,27 @@ describe('Trace', () => {
 
     });
 
+    describe('afterInvocation with error data', () => {
+        const tracer = new ThundraTracer({});
+        const tracePlugin = Trace();
+
+        const parentSpan = tracer.startSpan('parent');
+        parentSpan.setTag('tag-key', 'tagValue');
+        parentSpan.log({ 'test-log': 'logValue' });
+
+        const childSpan = tracer.startSpan('child', { childOf: parentSpan });
+
+        childSpan.finish();
+        parentSpan.finish();
+
+        const auditInfos = tracePlugin.generateAuditInfoFromTraces(tracer.recorder.spanTree);
+
+        it('should set log and tag relations', () => {
+            expect(auditInfos[0].children.length).toBe(1);
+            expect(auditInfos[0].props).toEqual({ 'LOGS': [parentSpan.logs[0]], 'tag-key': 'tagValue' });
+        });
+    });
+
     describe('afterInvocation with TimeoutError', () => {
         const tracer = Trace();
         tracer.setPluginContext(pluginContext);
@@ -244,4 +278,3 @@ describe('Trace', () => {
         });
     });
 });
-

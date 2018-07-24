@@ -1,9 +1,6 @@
-import {
-    readProcStatPromise,
-    readProcIoPromise,
-} from '../../src/plugins/utils';
+import Utils from '../../dist/plugins/Utils';
 
-jest.mock('../../src/constants', () => ({
+jest.mock('../../dist/Constants', () => ({
     PROC_STAT_PATH: 'does-not-exist',
     PROC_IO_PATH: 'does-not-exist'
 }));
@@ -11,7 +8,7 @@ jest.mock('../../src/constants', () => ({
 describe('readProcStatPromise', () => {
     it('Should reject on error', async () => {
         try {
-            await readProcStatPromise();
+            await Utils.readProcStatPromise();
         } catch (e) {
             expect(e).toBeTruthy();
 
@@ -22,7 +19,7 @@ describe('readProcStatPromise', () => {
 describe('readProcIoPromise', () => {
     it('Should reject on error', async () => {
         try {
-            await readProcIoPromise();
+            await Utils.readProcIoPromise();
         } catch (e) {
             expect(e).toBeTruthy();
         }
