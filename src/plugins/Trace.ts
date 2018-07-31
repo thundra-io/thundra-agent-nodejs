@@ -101,7 +101,7 @@ export class Trace {
         this.traceData.properties.logGroupName = originalContext.logGroupName;
         this.traceData.properties.logStreamName = originalContext.logStreamName;
         this.traceData.properties.requestId = originalContext.awsRequestId;
-        this.traceData.properties.request = this.config && this.config.disableRequest ? null : originalEvent;
+        this.traceData.properties.request = this.getRequest(originalEvent);
         this.traceData.properties.response = null;
     }
 
@@ -126,7 +126,7 @@ export class Trace {
         const spanTree: SpanTreeNode = recorder.getSpanTree();
         this.traceData.auditInfo.children = this.generateAuditInfoFromTraces(spanTree);
 
-        this.traceData.properties.response = this.config && this.config.disableResponse ? null : response;
+        this.traceData.properties.response = this.getResponse(response);
         this.endTimestamp = Date.now();
         this.traceData.endTimestamp = this.traceData.auditInfo.closeTimestamp = this.endTimestamp;
         this.traceData.duration = this.endTimestamp - this.startTimestamp;
@@ -172,6 +172,34 @@ export class Trace {
             auditInfo.children.push(this.spanTreeToAuditInfo(node));
         }
         return auditInfo;
+    }
+
+    private getRequest(originalEvent: any): any {
+        const conf = this.config;
+
+        if (conf && conf.disableRequest) {
+            return null;
+        }
+
+        if (conf && conf.maskRequest && typeof conf.maskRequest === 'function') {
+            return conf.maskRequest.call(this, originalEvent);
+        }
+
+        return originalEvent;
+    }
+
+    private getResponse(response: any): any {
+        const conf = this.config;
+
+        if (conf && conf.disableResponse) {
+            return null;
+        }
+
+        if (conf && conf.maskResponse && typeof conf.maskResponse === 'function') {
+            return conf.maskResponse.call(this, response);
+        }
+
+        return response;
     }
 }
 

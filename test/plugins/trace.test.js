@@ -95,6 +95,37 @@ describe('Trace', () => {
         });
     });
 
+    describe('mask request and response', () => {
+        const value =  {
+            'expected' : null
+        };
+
+        const tracer = Trace({
+            maskRequest: (request) => {
+                value.expected = request;
+                return value;
+            },
+
+            maskResponse: (response) => {
+                value.expected = response;
+                return value;
+            }
+        });
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        const afterInvocationData = {
+            response: { key: 'data' }
+        };
+        tracer.report = jest.fn();
+        tracer.beforeInvocation(beforeInvocationData);
+        tracer.afterInvocation(afterInvocationData);
+        it('should not add request and response to traceData', () => {
+            expect(tracer.traceData.properties.request).toEqual({'expected': {'key': 'data'}});
+            expect(tracer.traceData.properties.response).toEqual({'expected': {'key': 'data'}});
+        });
+    });
+
     describe('report', () => {
         const tracer = Trace();
         tracer.setPluginContext({ ...pluginContext, requestCount: 5 });
