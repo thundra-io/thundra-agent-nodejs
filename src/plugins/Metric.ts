@@ -6,6 +6,7 @@ import ThreadMetric from './data/metric/ThreadMetric';
 import MemoryMetric from './data/metric/MemoryMetric';
 import IOMetric from './data/metric/IOMetric';
 import CPUMetric from './data/metric/CPUMetric';
+import MetricConfig from './config/MetricConfig';
 
 class Metric {
     public hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
@@ -145,6 +146,6 @@ class Metric {
     }
 }
 
-export default function instantiateMetricPlugin(options: any) {
-    return new Metric(options);
+export default function instantiateMetricPlugin(config: MetricConfig) {
+    return new Metric(config);
 }

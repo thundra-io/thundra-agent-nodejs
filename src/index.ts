@@ -2,58 +2,29 @@ import ThundraWrapper from './ThundraWrapper';
 import TracePlugin, { Trace } from './plugins/Trace';
 import MetricPlugin from './plugins/Metric';
 import InvocationPlugin from './plugins/Invocation';
+import ThundraConfig from './plugins/config/ThundraConfig';
 const ThundraWarmup = require('@thundra/warmup');
-
-const shouldDisable = (disableByEnv: any, disableByParameter: any) => {
-    if (disableByEnv === 'true') {
-        return true;
-    } else if (disableByEnv === 'false') {
-        return false;
-    } else {
-        return disableByParameter;
-    }
-};
 
 let tracePlugin: Trace = null;
 
-module.exports = (config: any) => {
-    let apiKey: string = '';
-    let timeoutMargin: number = 200;
+module.exports = (options: any) => {
+    const config = new ThundraConfig(options);
 
-    // tslint:disable-next-line:one-variable-per-declaration
-    let disableTrace, disableMetric, disableThundra, plugins: any = [];
-    if (config) {
-        apiKey = config.apiKey;
-        disableTrace = config.disableTrace ? config.disableTrace : false;
-        disableMetric = config.disableMetric ? config.disableMetric : false;
-        disableThundra = config.disableThundra ? config.disableThundra : false;
-        plugins = config.plugins && Array.isArray(config.plugins) ? config.plugins : plugins;
-    }
-
-    apiKey = process.env.thundra_apiKey ? process.env.thundra_apiKey : apiKey;
-
-    timeoutMargin = process.env.thundra_lambda_timeout_margin
-        ? parseInt(process.env.thundra_lambda_timeout_margin, 0) : timeoutMargin;
-
-    if (!apiKey || shouldDisable(process.env.thundra_disable, disableThundra)) {
+    if (!config.apiKey || config.disableThundra) {
         return (originalFunc: any) => originalFunc;
     }
 
-    const invocationPlugin = InvocationPlugin({});
-    plugins.push(invocationPlugin);
+    const invocationPlugin = InvocationPlugin(config.invocationConfig);
+    config.plugins.push(invocationPlugin);
 
-    if (!shouldDisable(process.env.thundra_trace_disable, disableTrace)) {
-        const traceOptions = {
-            disableRequest: shouldDisable(process.env.thundra_lambda_trace_request_skip, false),
-            disableResponse: shouldDisable(process.env.thundra_lambda_trace_response_skip, false),
-        };
-        tracePlugin = TracePlugin(traceOptions);
-        plugins.push(tracePlugin);
+    if (config.traceConfig.enabled) {
+        tracePlugin = TracePlugin(config.traceConfig);
+        config.plugins.push(tracePlugin);
     }
 
-    if (!shouldDisable(process.env.thundra_metric_disable, disableMetric)) {
-        const metricPlugin = MetricPlugin({});
-        plugins.push(metricPlugin);
+    if (config.metricConfig.enabled) {
+        const metricPlugin = MetricPlugin(config.metricConfig);
+        config.plugins.push(metricPlugin);
     }
 
     const pluginContext = {
@@ -62,12 +33,12 @@ module.exports = (config: any) => {
         applicationRegion: process.env.AWS_REGION,
         applicationVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
         requestCount: 0,
-        apiKey,
-        timeoutMargin,
+        apiKey: config.apiKey,
+        timeoutMargin: config.timeoutMargin,
         skipHttpResponseCheck: process.env.thundra_lambda_http_responseCheck_skip === 'true' ? true : false,
     };
 
-    plugins.forEach((plugin: any) => {
+    config.plugins.forEach((plugin: any) => {
         plugin.setPluginContext(pluginContext);
     });
 
@@ -84,9 +55,9 @@ module.exports = (config: any) => {
                 originalContext,
                 originalCallback,
                 originalFunc,
-                plugins,
+                config.plugins,
                 pluginContext,
-                apiKey,
+                config.apiKey,
             );
             return thundraWrapper.invoke();
         };

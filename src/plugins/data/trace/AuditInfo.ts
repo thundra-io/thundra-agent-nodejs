@@ -3,6 +3,7 @@ class AuditInfo {
     contextName: string;
     openTimestamp: number;
     closeTimestamp: number;
+    aliveTime: number;
     errors: any;
     thrownError: string;
     duration: number;

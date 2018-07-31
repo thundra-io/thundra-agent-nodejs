@@ -1,16 +1,16 @@
-const webpack = require("webpack");
-const path = require("path");
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const webpack = require('webpack');
+const path = require('path');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
-    mode : "production" ,
-    entry: "./src/index.ts",
-    target: "node",
+    mode : 'production' ,
+    entry: './src/index.ts',
+    target: 'node',
     output: {
-        path: path.resolve(__dirname, "dist"),
-        filename: "./thundra.js",
-        libraryTarget: "commonjs2",
-        library: "thundra"
+        path: path.resolve(__dirname, 'dist'),
+        filename: './thundra.js',
+        libraryTarget: 'commonjs2',
+        library: 'thundra'
     },
     devtool: 'inline-source-map',
     resolve: {
@@ -19,7 +19,7 @@ module.exports = {
     module: {
         rules: [
             {
-                use: "ts-loader",
+                use: 'ts-loader',
                 exclude: /(node_modules)/,
                 test: /\.ts?$/,
             },

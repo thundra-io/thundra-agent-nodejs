@@ -2,10 +2,11 @@
 import InvocationData from './data/invocation/InvacationData';
 import Utils from './Utils';
 import TimeoutError from './error/TimeoutError';
+import InvocationConfig from './config/InvocationConfig';
 
 class Invocation {
     public hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
-    public options: any;
+    public options: InvocationConfig;
     public dataType: string;
     public invocationData: InvocationData;
     public reporter: any;
@@ -77,6 +78,6 @@ class Invocation {
     }
 }
 
-export default function instantiateInvocationPlugin(options: any) {
-    return new Invocation(options);
+export default function instantiateInvocationPlugin(config: InvocationConfig) {
+    return new Invocation(config);
 }

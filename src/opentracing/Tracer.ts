@@ -37,7 +37,7 @@ class ThundraTracer extends Tracer {
 
   destroy() {
     this.recorder.destroy();
-    this.activeSpans = null;
+    this.activeSpans.clear();
   }
 
   wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
@@ -68,7 +68,7 @@ class ThundraTracer extends Tracer {
         throw new Error('Invalid spanId : ' + parentContext.spanId);
     }
 
-    if (fields) {
+    if (parentContext) {
       span = new ThundraSpan(this, {
         operationName: fields.operationName || name,
         parent: parentContext,
@@ -81,7 +81,7 @@ class ThundraTracer extends Tracer {
     } else {
       span = new ThundraSpan(this, {
         operationName: name,
-        parent: this.getActiveSpan().spanContext,
+        parent: this.getActiveSpan() ? this.getActiveSpan().spanContext : null,
         tags: this.tags,
         startTime: Date.now(),
         className: fields.className,

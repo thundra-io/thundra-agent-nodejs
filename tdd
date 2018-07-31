@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+
+var gaze_run_interrupt = require('gaze-run-interrupt');
+
+gaze_run_interrupt(['src/**/*.ts', 'test/**/*.js'], [{
+    command: 'node_modules/.bin/tsc'
+}, {
+    command: 'node_modules/.bin/jest',
+    args: ['--config', 'config.json', '--coverage']
+}]);

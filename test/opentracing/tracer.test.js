@@ -1,5 +1,6 @@
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import {Reference} from 'opentracing';
+import { Trace } from '../../dist/plugins/trace';
 
 describe('Recorder', () => {
     describe('constructor', () => {
@@ -105,6 +106,32 @@ describe('Recorder', () => {
         it('should wrap users code with start and finish span', () => {
             expect(tracer.recorder.spanTree.value.getOperationName()).toEqual('userFunction');
             expect(tracer.recorder.spanTree.children.length).toEqual(0);
+        });
+    
+    });
+
+    describe('Span tree with more than dept 2', () => {
+        const tracer = new ThundraTracer({}); 
+
+        tracer.startSpan('f1');
+        tracer.startSpan('f2');
+        tracer.startSpan('f3');
+        tracer.finishSpan();
+        tracer.finishSpan();
+        tracer.finishSpan();
+
+        const tracePlugin = new Trace({});
+        const recorder = tracer.getRecorder();
+        const spanTree = recorder.getSpanTree();
+        const rootAuditInfos = tracePlugin.generateAuditInfoFromTraces(spanTree);
+
+        it('should have dept 2', () => {
+            expect(rootAuditInfos[0].children.length).toEqual(1);
+            expect(tracer.recorder.spanTree.value.getOperationName()).toEqual('f1');
+            expect(tracer.recorder.spanTree.children[0].value.getOperationName()).toEqual('f2');
+            expect(tracer.recorder.spanTree.children[0].children[0].value.getOperationName()).toEqual('f3');
+            expect(tracer.recorder.spanTree.children.length).toEqual(1);
+            expect(tracer.recorder.spanTree.children[0].children.length).toEqual(1);
         });
     
     });

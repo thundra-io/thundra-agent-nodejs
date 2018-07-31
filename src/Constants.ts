@@ -19,3 +19,7 @@ export const URL: url.UrlWithStringQuery = url.parse(
 export const PROC_STAT_PATH: string = '/proc/self/stat';
 export const PROC_IO_PATH: string = '/proc/self/io';
 export const LOG_TAG_NAME: string =  'LOGS';
+export const ARGS_TAG_NAME: string = 'ARGS';
+export const RETURN_VALUE_TAG_NAME: string = 'RETURN_VALUE';
+export const TRACE_DEF_KEY_PREFIX: string = 'thundra_trace_def';
+export const TRACE_DEF_SEPERATOR: string = '.';
