@@ -21,7 +21,7 @@ import { LOG_TAG_NAME } from '../Constants';
 import TimeoutError from './error/TimeoutError';
 import Reporter from '../Reporter';
 import TraceConfig from './config/TraceConfig';
-import ModuleHack from '../opentracing/instrument/ModuleHack';
+import Instrumenter from '../opentracing/instrument/Instrumenter';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -34,6 +34,7 @@ export class Trace {
     endTimestamp: number;
     startTimestamp: number;
     tracer: ThundraTracer;
+    instrumenter: Instrumenter;
 
     constructor(config: TraceConfig) {
         this.hooks = {
@@ -44,10 +45,12 @@ export class Trace {
         this.dataType = 'AuditData';
         this.traceData = new TraceData();
         const tracerConfig = config ? config.tracerConfig : {};
+
         this.tracer = new ThundraTracer(tracerConfig);
         initGlobalTracer(this.tracer);
-        const moduleHack = new ModuleHack(this.tracer, config);
-        moduleHack.hijackCompile();
+
+        this.instrumenter = new Instrumenter(this.tracer, config);
+        this.instrumenter.hookModuleCompile();
     }
 
     report(data: any): void {
@@ -129,7 +132,9 @@ export class Trace {
         this.traceData.duration = this.endTimestamp - this.startTimestamp;
         const reportData = Utils.generateReport(this.traceData, this.dataType, this.apiKey);
         this.report(reportData);
+
         this.tracer.destroy();
+        this.instrumenter.unhookModuleCompile();
     }
 
     private generateAuditInfoFromTraces(spanTree: SpanTreeNode): AuditInfo[] {

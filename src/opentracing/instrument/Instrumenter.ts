@@ -3,22 +3,22 @@ const falafel = require('falafel');
 const util = require('util');
 const path = require('path');
 
-const TRACE_ENTRY = 'var __njsEntryData__ = __njsTraceEntry__({file: %s, name: %s, line: %s, args: %s, argNames:%s});';
-// tslint:disable-next-line:max-line-length
-const TRACE_EXIT = '__njsTraceExit__({entryData: __njsEntryData__, exception: %s, line: %s, returnValue: %s, exceptionValue:%s});';
-const ON_CATCH = 'if (__njsOnCatchClause__) {\n__njsOnCatchClause__({entryData: __njsEntryData__});\n}';
+const TRACE_ENTRY = 'var __thundraEntryData__ = __thundraTraceEntry__({name: %s, args: %s, argNames:%s});';
+const TRACE_EXIT = '__thundraTraceExit__({entryData: __thundraEntryData__, exception: %s,returnValue: %s, exceptionValue:%s});';
+const ON_CATCH = 'if (__thundraOnCatchClause__) {\n__thundraOnCatchClause__({entryData: __thundraEntryData__});\n}';
 
 import ThundraTracer from '../Tracer';
 import TraceConfig from '../../plugins/config/TraceConfig';
 import TraceOption from '../../plugins/config/TraceOption';
-import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
+import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, Syntax } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/Utils';
 
-class ModuleHack {
+class Instrumenter {
     tracer: ThundraTracer;
     traceConfig: TraceConfig;
+    origCompile: any;
 
     constructor(tracer: ThundraTracer, traceConfig: TraceConfig) {
         this.tracer = tracer;
@@ -43,8 +43,13 @@ class ModuleHack {
         }
     }
 
-    hijackCompile() {
-        const origCompile = Module.prototype._compile;
+    unhookModuleCompile() {
+        Module.prototype._compile = this.origCompile;
+    }
+
+    hookModuleCompile() {
+        this.origCompile = Module.prototype._compile;
+
         const self = this;
         self.setGlobalFunction();
 
@@ -61,7 +66,7 @@ class ModuleHack {
                 }
 
                 try {
-                    content = self.injectTracing(filename, content, true, instrumentOption, wrapped);
+                    content = self.addTraceHooks(content, true, instrumentOption, wrapped);
                     if (Module.wrapper.length === 2) {
                         content = content.substring(Module.wrapper[0].length, content.length - Module.wrapper[1].length);
                     }
@@ -69,18 +74,27 @@ class ModuleHack {
                     console.log(ex);
                 }
             }
-            origCompile.call(this, content, filename);
+
+            self.origCompile.call(this, content, filename);
         };
     }
 
-    injectTracing(filename: any, code: any, wrapFunctions: any, instrumentOption: TraceOption, wrappedFile: any) {
+    addTraceHooks(code: any, wrapFunctions: any, instrumentOption: TraceOption, wrappedFile: any) {
         let traceExit;
         const self = this;
+        const patterns = instrumentOption.pattern.split(TRACE_DEF_SEPERATOR);
+        const regStr = patterns[patterns.length - 1];
+        const regExp = new RegExp(regStr);
+
         const output = falafel(code, { ranges: true, locations: true, ecmaVersion: 8 }, function processASTNode(node: any) {
             const startLine = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
-            const retLine = wrappedFile ? node.loc.end.line - 1 : node.loc.end.line;
             const name = self.getFunctionName(node);
-            if (name && node.body.type === self.syntax.BlockStatement) {
+
+            if (name && node.body.type === Syntax.BlockStatement) {
+                if (!regExp.test(name)) {
+                    return;
+                }
+
                 const funcDec = node.source().slice(0, node.body.range[0] - node.range[0]);
                 let origFuncBody = node.body.source();
                 origFuncBody = origFuncBody.slice(1, origFuncBody.length - 1);
@@ -94,35 +108,37 @@ class ModuleHack {
                     argNames = '[' + node.params.map((p: any) => '\'' + p.name + '\'').join(',') + ']';
                 }
 
-                const traceEntry = util.format(TRACE_ENTRY, JSON.stringify(filename), JSON.stringify(name),
-                                                startLine, args, argNames);
-
-                traceExit = util.format(TRACE_EXIT, 'false', retLine, 'null', 'null');
+                const traceEntry = util.format(TRACE_ENTRY, JSON.stringify(name), args, argNames);
+                traceExit = util.format(TRACE_EXIT, 'false', 'null', 'null');
 
                 const newFuncBody = '\n' + traceEntry + '\n' + origFuncBody + '\n' + traceExit + '\n';
 
                 if (wrapFunctions) {
                     const traceEX = util.format(TRACE_EXIT, 'true', startLine, 'null',
-                                                instrumentOption.traceError ? '__njsEX__' : 'null');
+                                                instrumentOption.traceError ? '__thundraEX__' : 'null');
 
-                    // tslint:disable-next-line:max-line-length
-                    node.update(funcDec + '{\ntry {' + newFuncBody + '} catch(__njsEX__) {\n' + traceEX + '\nthrow __njsEX__;\n}\n}');
+                    node.update(funcDec + '{\ntry {' + newFuncBody + '} catch(__thundraEX__) {\n' +
+                                traceEX + '\nthrow __thundraEX__;\n}\n}');
+
                 } else {
                     node.update(funcDec + '{' + newFuncBody + '}');
                 }
-            } else if (node.type === self.syntax.ReturnStatement) {
+            } else if (node.type === Syntax.ReturnStatement) {
+                const functionName = node.parent.parent.id.name;
+                if (!regExp.test(functionName)) {
+                    return;
+                }
                 if (node.argument) {
-                    const tmpVar = '__njsTmp' + Math.floor(Math.random() * 10000) + '__';
-                    traceExit = util.format(TRACE_EXIT, 'false', startLine,
-                                instrumentOption.traceReturnValue ? tmpVar : 'null', 'null');
+                    const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
+                    traceExit = util.format(TRACE_EXIT, 'false', instrumentOption.traceReturnValue ? tmpVar : 'null', 'null');
 
-                    // tslint:disable-next-line:max-line-length
-                    node.update('{\nvar ' + tmpVar + ' = ' + node.argument.source() + ';\n' + traceExit + '\nreturn ' + tmpVar + ';\n}');
+                    node.update('{\nvar ' + tmpVar + ' = ' + node.argument.source() + ';\n' +
+                                traceExit + '\nreturn ' + tmpVar + ';\n}');
                 } else {
                     traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
                     node.update('{' + traceExit + node.source() + '}');
                 }
-            } else if (node.type === self.syntax.CatchClause) {
+            } else if (node.type === Syntax.CatchClause) {
                 let origCatch = node.body.source();
                 origCatch = origCatch.slice(1, origCatch.length - 1);
                 node.body.update('{\n' + ON_CATCH + '\n' + origCatch + '\n}');
@@ -133,8 +149,8 @@ class ModuleHack {
     }
 
     isFunctionNode(node: any) {
-        return (node.type === this.syntax.FunctionDeclaration ||
-            node.type === this.syntax.FunctionExpression || node.type === this.syntax.ArrowFunctionExpression) && node.range;
+        return (node.type === Syntax.FunctionDeclaration ||
+            node.type === Syntax.FunctionExpression || node.type === Syntax.ArrowFunctionExpression) && node.range;
     }
 
     getFunctionName(node: any) {
@@ -145,22 +161,22 @@ class ModuleHack {
             return node.id.name;
         }
 
-        if (node.type === this.syntax.FunctionDeclaration) {
+        if (node.type === Syntax.FunctionDeclaration) {
             return '';
         }
 
         const parent = node.parent;
         switch (parent.type) {
-            case this.syntax.AssignmentExpression:
+            case Syntax.AssignmentExpression:
                 if (parent.left.range) {
                     return parent.left.source().replace(/"/g, '\\"');
                 }
                 break;
 
-            case this.syntax.VariableDeclarator:
+            case Syntax.VariableDeclarator:
                 return parent.id.name;
 
-            case this.syntax.CallExpression:
+            case Syntax.CallExpression:
                 return parent.callee.id ? parent.callee.id.name : '[Anonymous]';
             default:
                 if (typeof parent.length === 'number') {
@@ -175,7 +191,7 @@ class ModuleHack {
 
     setGlobalFunction() {
         const self: any = this;
-        global.__njsTraceEntry__ = function (args: any) {
+        global.__thundraTraceEntry__ = function (args: any) {
             try {
                 const span = self.tracer.startSpan(args.name);
                 const spanArguments: Argument[] = [];
@@ -184,24 +200,23 @@ class ModuleHack {
                         spanArguments.push(new Argument(args.argNames[i], typeof args.args[i], args.args[i]));
                     }
                 }
-
                 span.setTag(ARGS_TAG_NAME, spanArguments);
-
                 return { name: args.name, file: args.file, fnLine: args.line, ts: Date.now()};
             } catch (ex) {
                 console.log(ex);
             }
         };
 
-        global.__njsTraceExit__ = function (args: any) {
+        global.__thundraTraceExit__ = function (args: any) {
             try {
                 const span = self.tracer.getActiveSpan();
-                console.log(args.exceptionValue);
-                if (!args.exception) {
+                if (!args.exception && args.returnValue) {
                     span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, args.returnValue));
                 } else {
-                    span.setTag('error', args.exception);
-                    span.setTag('error.kind', Utils.parseError(args.exceptionValue).errorType);
+                    const err = Utils.parseError(args.exceptionValue);
+                    span.setTag('error', true);
+                    span.setTag('error.kind', err.errorType);
+                    span.setTag('error.message', err.errorMessage);
                 }
                 self.tracer.finishSpan();
             } catch (ex) {
@@ -209,80 +224,10 @@ class ModuleHack {
             }
         };
 
-        global.__njsOnCatchClause__ = function (args: any) {
+        global.__thundraOnCatchClause__ = function (args: any) {
             self.tracer.finishSpan();
         };
     }
-
-    // tslint:disable-next-line:member-ordering
-    syntax = {
-        AssignmentExpression: 'AssignmentExpression',
-        AssignmentPattern: 'AssignmentPattern',
-        ArrayExpression: 'ArrayExpression',
-        ArrayPattern: 'ArrayPattern',
-        ArrowFunctionExpression: 'ArrowFunctionExpression',
-        AwaitExpression: 'AwaitExpression',
-        BlockStatement: 'BlockStatement',
-        BinaryExpression: 'BinaryExpression',
-        BreakStatement: 'BreakStatement',
-        CallExpression: 'CallExpression',
-        CatchClause: 'CatchClause',
-        ClassBody: 'ClassBody',
-        ClassDeclaration: 'ClassDeclaration',
-        ClassExpression: 'ClassExpression',
-        ConditionalExpression: 'ConditionalExpression',
-        ContinueStatement: 'ContinueStatement',
-        DoWhileStatement: 'DoWhileStatement',
-        DebuggerStatement: 'DebuggerStatement',
-        EmptyStatement: 'EmptyStatement',
-        ExportAllDeclaration: 'ExportAllDeclaration',
-        ExportDefaultDeclaration: 'ExportDefaultDeclaration',
-        ExportNamedDeclaration: 'ExportNamedDeclaration',
-        ExportSpecifier: 'ExportSpecifier',
-        ExpressionStatement: 'ExpressionStatement',
-        ForStatement: 'ForStatement',
-        ForOfStatement: 'ForOfStatement',
-        ForInStatement: 'ForInStatement',
-        FunctionDeclaration: 'FunctionDeclaration',
-        FunctionExpression: 'FunctionExpression',
-        Identifier: 'Identifier',
-        IfStatement: 'IfStatement',
-        ImportDeclaration: 'ImportDeclaration',
-        ImportDefaultSpecifier: 'ImportDefaultSpecifier',
-        ImportNamespaceSpecifier: 'ImportNamespaceSpecifier',
-        ImportSpecifier: 'ImportSpecifier',
-        Literal: 'Literal',
-        LabeledStatement: 'LabeledStatement',
-        LogicalExpression: 'LogicalExpression',
-        MemberExpression: 'MemberExpression',
-        MetaProperty: 'MetaProperty',
-        MethodDefinition: 'MethodDefinition',
-        NewExpression: 'NewExpression',
-        ObjectExpression: 'ObjectExpression',
-        ObjectPattern: 'ObjectPattern',
-        Program: 'Program',
-        Property: 'Property',
-        RestElement: 'RestElement',
-        ReturnStatement: 'ReturnStatement',
-        SequenceExpression: 'SequenceExpression',
-        SpreadElement: 'SpreadElement',
-        Super: 'Super',
-        SwitchCase: 'SwitchCase',
-        SwitchStatement: 'SwitchStatement',
-        TaggedTemplateExpression: 'TaggedTemplateExpression',
-        TemplateElement: 'TemplateElement',
-        TemplateLiteral: 'TemplateLiteral',
-        ThisExpression: 'ThisExpression',
-        ThrowStatement: 'ThrowStatement',
-        TryStatement: 'TryStatement',
-        UnaryExpression: 'UnaryExpression',
-        UpdateExpression: 'UpdateExpression',
-        VariableDeclaration: 'VariableDeclaration',
-        VariableDeclarator: 'VariableDeclarator',
-        WhileStatement: 'WhileStatement',
-        WithStatement: 'WithStatement',
-        YieldExpression: 'YieldExpression',
-    };
 }
 
-export default ModuleHack;
+export default Instrumenter;

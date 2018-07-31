@@ -37,16 +37,14 @@ class TraceConfig extends BasePluginConfig {
     }
 
     parseTraceDefEnvVariable(value: string): TraceOption {
-        const args = value.substring(value.indexOf('['), value.indexOf(']')).split(',');
+        const args = value.substring(value.indexOf('[') + 1, value.indexOf(']')).split(',');
         const pattern = value.substring(0, value.indexOf('['));
         const option: any = new TraceOption(pattern);
         for (const arg of args) {
             const tupple = arg.split('=');
             const argKey = tupple[0];
             const argValue = tupple[1];
-            if (option[argKey]) {
-                option[argKey] = (argValue === 'true');
-            }
+            option[argKey] = argValue;
         }
         return option;
     }

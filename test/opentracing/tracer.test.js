@@ -135,4 +135,31 @@ describe('Recorder', () => {
         });
     
     });
+
+    describe('Tracer set/get beggage item', () => {
+        const tracer = new ThundraTracer({}); 
+        const span = tracer.startSpan('f1');
+        span.setBaggageItem('test', 'value');
+
+        it('should store values', () => {
+            expect(span.getBaggageItem('test')).toEqual('value');
+        });
+    
+    });
+
+    describe('Tracer inject/extract', () => {
+        const tracer = new ThundraTracer({}); 
+
+        it('should throw exception', () => {
+            expect(() => {
+                tracer._extract();
+            }).toThrow();
+            
+            expect(() => {
+                tracer._inject();
+            }).toThrow();
+            
+        });
+    
+    });
 });

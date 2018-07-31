@@ -23,3 +23,15 @@ export const ARGS_TAG_NAME: string = 'ARGS';
 export const RETURN_VALUE_TAG_NAME: string = 'RETURN_VALUE';
 export const TRACE_DEF_KEY_PREFIX: string = 'thundra_trace_def';
 export const TRACE_DEF_SEPERATOR: string = '.';
+
+export const Syntax = {
+    FunctionDeclaration: 'FunctionDeclaration',
+    FunctionExpression: 'FunctionExpression',
+    ArrowFunctionExpression: 'ArrowFunctionExpression',
+    AssignmentExpression: 'AssignmentExpression',
+    VariableDeclarator: 'VariableDeclarator',
+    CallExpression: 'CallExpression',
+    CatchClause: 'CatchClause',
+    ReturnStatement: 'ReturnStatement',
+    BlockStatement: 'BlockStatement',
+};
