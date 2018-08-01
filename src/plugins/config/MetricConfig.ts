@@ -1,9 +1,10 @@
 import BasePluginConfig from './BasePluginConfig';
+const koalas = require('koalas');
 
 class MetricConfig extends BasePluginConfig {
     constructor(options: any) {
         options = options ? options : {};
-        super(options.enabled);
+        super(koalas(options.enabled, true));
     }
 }
 

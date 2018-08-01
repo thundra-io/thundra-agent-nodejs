@@ -14,7 +14,7 @@ class TraceConfig extends BasePluginConfig {
 
     constructor(options: any) {
         options = options ? options : {};
-        super(koalas(!options.disableTrace, false));
+        super(koalas(options.enabled, true));
         this.disableRequest = koalas(process.env.thundra_lambda_trace_request_skip, options.disableRequest, false);
         this.disableResponse = koalas(process.env.thundra_lambda_trace_response_skip, options.disableResponse, false);
         this.maskRequest = koalas(options.maskRequest, null);
