@@ -94,7 +94,7 @@ class ThundraSpan extends Span {
         this.tags[key] = keyValuePairs[key];
       });
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 

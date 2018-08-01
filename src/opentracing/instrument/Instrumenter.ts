@@ -5,42 +5,34 @@ const path = require('path');
 
 const TRACE_ENTRY = 'var __thundraEntryData__ = __thundraTraceEntry__({name: %s, args: %s, argNames:%s});';
 const TRACE_EXIT = '__thundraTraceExit__({entryData: __thundraEntryData__, exception: %s,returnValue: %s, exceptionValue:%s});';
-const ON_CATCH = 'if (__thundraOnCatchClause__) {\n__thundraOnCatchClause__({entryData: __thundraEntryData__});\n}';
 
 import ThundraTracer from '../Tracer';
 import TraceConfig from '../../plugins/config/TraceConfig';
-import TraceOption from '../../plugins/config/TraceOption';
-import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, Syntax } from '../../Constants';
+import TraceOption, { TraceOptionCheckLevel } from '../../plugins/config/TraceOption';
+import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, Syntax, TRACE_DEF_FILE_PREFIX_ENV_KEY } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/Utils';
+import Stack from './Stack';
+import NodeWrapper from './NodeWrapper';
 
+/*
+    Most of the code is derived from njsTrace : https://github.com/ValYouW/njsTrace
+*/
 class Instrumenter {
     tracer: ThundraTracer;
     traceConfig: TraceConfig;
     origCompile: any;
+    stack: Stack<NodeWrapper>;
 
     constructor(tracer: ThundraTracer, traceConfig: TraceConfig) {
         this.tracer = tracer;
         this.traceConfig = traceConfig;
+        this.stack = new Stack<NodeWrapper>();
     }
 
-    shouldTrace(relPath: string): TraceOption {
-        try {
-            if (relPath.includes('node_modules')) {
-                return null;
-            }
-            for (const traceOption of this.traceConfig.traceDef) {
-                const patterns = traceOption.pattern.split(TRACE_DEF_SEPERATOR);
-                const regStr = patterns.slice(0, patterns.length - 1).join().replace(TRACE_DEF_SEPERATOR, '/');
-                const regExp = new RegExp(regStr);
-                if (regExp.test(relPath)) {
-                    return traceOption;
-                }
-            }
-        } catch (ex) {
-            return null;
-        }
+    shouldTraceFile(relPath: string): boolean {
+        return this.getThundraTraceOption(relPath + '.*', TraceOptionCheckLevel.FILE) !== null;
     }
 
     unhookModuleCompile() {
@@ -55,9 +47,10 @@ class Instrumenter {
 
         Module.prototype._compile = function (content: any, filename: any) {
             const relPath = path.relative(process.cwd(), filename);
-            const instrumentOption = self.shouldTrace(relPath);
+            let relPathWithDots = relPath.replace('/', TRACE_DEF_SEPERATOR);
+            relPathWithDots = relPathWithDots.replace('.js', '');
 
-            if (instrumentOption) {
+            if (self.shouldTraceFile(relPathWithDots)) {
                 let wrapped = true;
                 if (Module.wrapper.length === 2) {
                     content = Module.wrapper[0] + '\n' + content + Module.wrapper[1];
@@ -66,7 +59,7 @@ class Instrumenter {
                 }
 
                 try {
-                    content = self.addTraceHooks(content, true, instrumentOption, wrapped);
+                    content = self.addTraceHooks(content, true, relPathWithDots, wrapped);
                     if (Module.wrapper.length === 2) {
                         content = content.substring(Module.wrapper[0].length, content.length - Module.wrapper[1].length);
                     }
@@ -74,25 +67,27 @@ class Instrumenter {
                     console.log(ex);
                 }
             }
-
             self.origCompile.call(this, content, filename);
         };
     }
 
-    addTraceHooks(code: any, wrapFunctions: any, instrumentOption: TraceOption, wrappedFile: any) {
-        let traceExit;
+    addTraceHooks(code: any, wrapFunctions: any, relPath: string, wrappedFile: any) {
         const self = this;
-        const patterns = instrumentOption.pattern.split(TRACE_DEF_SEPERATOR);
-        const regStr = patterns[patterns.length - 1];
-        const regExp = new RegExp(regStr);
 
         const output = falafel(code, { ranges: true, locations: true, ecmaVersion: 8 }, function processASTNode(node: any) {
             const startLine = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
             const name = self.getFunctionName(node);
 
             if (name && node.body.type === Syntax.BlockStatement) {
-                if (!regExp.test(name)) {
+                const instrumentOption = self.getThundraTraceOption(relPath + '.' + name, TraceOptionCheckLevel.FUNCTION);
+                if (instrumentOption === null) {
+                    self.stack.store = [];
                     return;
+                }
+
+                while (self.stack.store.length !== 0) {
+                    const wrapper: NodeWrapper = self.stack.pop();
+                    wrapper.instrumentFunction.call(self, instrumentOption, wrapper.node);
                 }
 
                 const funcDec = node.source().slice(0, node.body.range[0] - node.range[0]);
@@ -109,7 +104,7 @@ class Instrumenter {
                 }
 
                 const traceEntry = util.format(TRACE_ENTRY, JSON.stringify(name), args, argNames);
-                traceExit = util.format(TRACE_EXIT, 'false', 'null', 'null');
+                const traceExit = util.format(TRACE_EXIT, 'false', 'null', 'null');
 
                 const newFuncBody = '\n' + traceEntry + '\n' + origFuncBody + '\n' + traceExit + '\n';
 
@@ -123,25 +118,26 @@ class Instrumenter {
                 } else {
                     node.update(funcDec + '{' + newFuncBody + '}');
                 }
-            } else if (node.type === Syntax.ReturnStatement) {
-                const functionName = node.parent.parent.id.name;
-                if (!regExp.test(functionName)) {
-                    return;
-                }
-                if (node.argument) {
-                    const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
-                    traceExit = util.format(TRACE_EXIT, 'false', instrumentOption.traceReturnValue ? tmpVar : 'null', 'null');
 
-                    node.update('{\nvar ' + tmpVar + ' = ' + node.argument.source() + ';\n' +
-                                traceExit + '\nreturn ' + tmpVar + ';\n}');
-                } else {
-                    traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
-                    node.update('{' + traceExit + node.source() + '}');
-                }
-            } else if (node.type === Syntax.CatchClause) {
-                let origCatch = node.body.source();
-                origCatch = origCatch.slice(1, origCatch.length - 1);
-                node.body.update('{\n' + ON_CATCH + '\n' + origCatch + '\n}');
+            } else if (node.type === Syntax.ReturnStatement) {
+
+                const wrapper: NodeWrapper = new NodeWrapper(node,  (traceOption: TraceOption, sourceNode: any) => {
+                    if (sourceNode.argument) {
+                        const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
+
+                        const traceExit = util.format(TRACE_EXIT, 'false',
+                                                traceOption.traceReturnValue ? tmpVar : 'null', 'null');
+
+                        sourceNode.update('{\nvar ' + tmpVar + ' = ' + sourceNode.argument.source() + ';\n' +
+                                    traceExit + '\nreturn ' + tmpVar + ';\n}');
+                    } else {
+                        const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
+                        sourceNode.update('{' + traceExit + sourceNode.source() + '}');
+                    }
+                });
+
+                self.stack.push(wrapper);
+
             }
         });
 
@@ -189,6 +185,40 @@ class Instrumenter {
         return '[Anonymous]';
     }
 
+    getThundraTraceOption(traceDefStr: string, checkLevel: TraceOptionCheckLevel): TraceOption {
+        try {
+            if (traceDefStr.includes('node_modules') || !this.traceConfig || !this.traceConfig.traceDef) {
+                return null;
+            }
+
+            const traceDefPrefix = process.env[TRACE_DEF_FILE_PREFIX_ENV_KEY];
+            if (traceDefPrefix && TraceOptionCheckLevel.FILE) {
+                const prefixes = traceDefPrefix.split(',');
+                for (const prefix of prefixes) {
+                    if (traceDefStr.startsWith(prefix)) {
+                        return new TraceOption(traceDefPrefix);
+                    }
+                }
+            }
+
+            for (const traceOption of this.traceConfig.traceDef) {
+                if (checkLevel === TraceOptionCheckLevel.FILE) {
+                    if (traceOption.shouldTraceFile(traceDefStr)) {
+                        return traceOption;
+                    }
+                } else {
+                    if (traceOption.shouldTraceFunction(traceDefStr)) {
+                        return traceOption;
+                    }
+                }
+            }
+        } catch (e) {
+            return null;
+        }
+
+        return null;
+    }
+
     setGlobalFunction() {
         const self: any = this;
         global.__thundraTraceEntry__ = function (args: any) {
@@ -203,7 +233,7 @@ class Instrumenter {
                 span.setTag(ARGS_TAG_NAME, spanArguments);
                 return { name: args.name, file: args.file, fnLine: args.line, ts: Date.now()};
             } catch (ex) {
-                console.log(ex);
+                self.tracer.finishSpan();
             }
         };
 
@@ -220,12 +250,8 @@ class Instrumenter {
                 }
                 self.tracer.finishSpan();
             } catch (ex) {
-                console.log(ex);
+                self.tracer.finishSpan();
             }
-        };
-
-        global.__thundraOnCatchClause__ = function (args: any) {
-            self.tracer.finishSpan();
         };
     }
 }

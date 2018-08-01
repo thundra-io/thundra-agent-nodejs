@@ -119,13 +119,13 @@ function getParent(references: any): ThundraSpanContext {
   if (references) {
     for (const ref of references) {
       if (!(ref instanceof Reference)) {
-        console.log(`Expected ${ref} to be an instance of opentracing.Reference`);
+        console.error(`Expected ${ref} to be an instance of opentracing.Reference`);
         break;
       }
       const spanContext = ref.referencedContext();
 
       if (!(spanContext instanceof ThundraSpanContext)) {
-        console.log(`Expected ${spanContext} to be an instance of SpanContext`);
+        console.error(`Expected ${spanContext} to be an instance of SpanContext`);
         break;
       }
 
