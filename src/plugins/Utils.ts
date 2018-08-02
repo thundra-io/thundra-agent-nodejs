@@ -2,6 +2,9 @@ import * as uuidv4 from 'uuid/v4';
 import { readFile } from 'fs';
 import * as os from 'os';
 import { DATA_FORMAT_VERSION, PROC_IO_PATH, PROC_STAT_PATH } from '../Constants';
+import ThundraSpanContext from '../opentracing/SpanContext';
+import Reference from '../../node_modules/opentracing/lib/reference';
+import * as opentracing from 'opentracing';
 
 class Utils {
     static generateId() {
@@ -98,6 +101,35 @@ class Utils {
                 }
             });
         });
+    }
+
+    static getParentContext(references: any): ThundraSpanContext {
+        let parent: ThundraSpanContext = null;
+        if (references) {
+            for (const ref of references) {
+                if (!(ref instanceof Reference)) {
+                    console.error(`Expected ${ref} to be an instance of opentracing.Reference`);
+                    break;
+                }
+                const spanContext = ref.referencedContext();
+
+                if (!(spanContext instanceof ThundraSpanContext)) {
+                    console.error(`Expected ${spanContext} to be an instance of SpanContext`);
+                    break;
+                }
+
+                if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
+                    parent = ref.referencedContext() as ThundraSpanContext;
+                    break;
+                } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
+                    if (!parent) {
+                        parent = ref.referencedContext() as ThundraSpanContext;
+                    }
+                }
+            }
+        }
+
+        return parent;
     }
 }
 
