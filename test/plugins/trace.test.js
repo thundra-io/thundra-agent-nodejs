@@ -1,4 +1,4 @@
-import Trace from '../../dist/plugins/trace';
+import Trace from '../../dist/plugins/Trace';
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
 import { DATA_FORMAT_VERSION } from '../../dist/constants';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';

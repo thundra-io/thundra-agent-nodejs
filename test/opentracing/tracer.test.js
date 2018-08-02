@@ -1,6 +1,6 @@
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import {Reference} from 'opentracing';
-import { Trace } from '../../dist/plugins/trace';
+import { Trace } from '../../dist/plugins/Trace';
 
 describe('Recorder', () => {
     describe('constructor', () => {
