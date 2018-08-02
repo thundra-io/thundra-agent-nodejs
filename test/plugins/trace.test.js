@@ -1,6 +1,6 @@
 import Trace from '../../dist/plugins/Trace';
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
-import { DATA_FORMAT_VERSION } from '../../dist/constants';
+import { DATA_FORMAT_VERSION } from '../../dist/Constants';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 
