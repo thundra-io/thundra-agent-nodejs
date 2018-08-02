@@ -1,7 +1,5 @@
 import { Tracer, Reference, Tags } from 'opentracing';
-import * as opentracing from 'opentracing';
 import ThundraSpan, { SpanEvent } from './Span';
-import ThundraSpanContext from './SpanContext';
 import ThundraRecorder from './Recorder';
 import ThundraSampler from './Sampler';
 import Utils from '../plugins/Utils';
@@ -37,7 +35,7 @@ class ThundraTracer extends Tracer {
 
   destroy() {
     this.recorder.destroy();
-    this.activeSpans = null;
+    this.activeSpans.clear();
   }
 
   wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
@@ -62,13 +60,13 @@ class ThundraTracer extends Tracer {
     let span;
     const rootTraceId = fields.rootTraceId ? fields.rootTraceId : Utils.generateId();
 
-    const parentContext = getParent(fields.references);
+    const parentContext = Utils.getParentContext(fields.references);
 
     if (parentContext && !this.activeSpans.get(parentContext.spanId)) {
         throw new Error('Invalid spanId : ' + parentContext.spanId);
     }
 
-    if (fields) {
+    if (parentContext) {
       span = new ThundraSpan(this, {
         operationName: fields.operationName || name,
         parent: parentContext,
@@ -81,7 +79,7 @@ class ThundraTracer extends Tracer {
     } else {
       span = new ThundraSpan(this, {
         operationName: name,
-        parent: this.getActiveSpan().spanContext,
+        parent: this.getActiveSpan() ? this.getActiveSpan().spanContext : null,
         tags: this.tags,
         startTime: Date.now(),
         className: fields.className,
@@ -112,35 +110,6 @@ class ThundraTracer extends Tracer {
   _isSampled(span: ThundraSpan) {
     return this.sampler.isSampled(span);
   }
-}
-
-function getParent(references: any): ThundraSpanContext {
-  let parent: ThundraSpanContext = null;
-  if (references) {
-    for (const ref of references) {
-      if (!(ref instanceof Reference)) {
-        console.log(`Expected ${ref} to be an instance of opentracing.Reference`);
-        break;
-      }
-      const spanContext = ref.referencedContext();
-
-      if (!(spanContext instanceof ThundraSpanContext)) {
-        console.log(`Expected ${spanContext} to be an instance of SpanContext`);
-        break;
-      }
-
-      if (ref.type() === opentracing.REFERENCE_CHILD_OF) {
-        parent = ref.referencedContext() as ThundraSpanContext;
-        break;
-      } else if (ref.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
-        if (!parent) {
-          parent = ref.referencedContext() as ThundraSpanContext;
-        }
-      }
-    }
-  }
-
-  return parent;
 }
 
 export default ThundraTracer;

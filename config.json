@@ -4,5 +4,5 @@
   "moduleFileExtensions": ["js"],
   "collectCoverageFrom": ["dist/*.js", "dist/opentracing/*.js", "dist/plugins/*.js", 
     "dist/plugins/data/base/*.js", "dist/plugins/data/invocation/*.js", "dist/plugins/data/metric/*.js",
-    "dist/plugins/data/trace/*.js", "dist/plugins/error/*.js", "index.js"]
+    "dist/plugins/config/*.js", "dist/plugins/data/trace/*.js", "dist/plugins/error/*.js", "index.js"]
 }

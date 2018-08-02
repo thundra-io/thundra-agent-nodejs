@@ -91,10 +91,10 @@ class ThundraSpan extends Span {
   }) {
     try {
       Object.keys(keyValuePairs).forEach((key) => {
-        this.tags[key] = String(keyValuePairs[key]);
+        this.tags[key] = keyValuePairs[key];
       });
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 

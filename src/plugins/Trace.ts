@@ -11,7 +11,6 @@
 import AuditInfo from './data/trace/AuditInfo';
 import ThundraRecorder from '../opentracing/Recorder';
 import SpanTreeNode from '../opentracing/SpanTree';
-import Queue from '../opentracing/Queue';
 import ThundraTracer from '../opentracing/Tracer';
 import Utils from './Utils';
 import TraceData from './data/trace/TraceData';
@@ -20,30 +19,38 @@ import {initGlobalTracer} from 'opentracing';
 import HttpError from './error/HttpError';
 import { LOG_TAG_NAME } from '../Constants';
 import TimeoutError from './error/TimeoutError';
+import Reporter from '../Reporter';
+import TraceConfig from './config/TraceConfig';
+import Instrumenter from '../opentracing/instrument/Instrumenter';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
-    options: any;
+    config: TraceConfig;
     dataType: string;
     traceData: TraceData;
-    reporter: any;
+    reporter: Reporter;
     pluginContext: any;
-    apiKey: any;
-    endTimestamp: any;
+    apiKey: string;
+    endTimestamp: number;
     startTimestamp: number;
     tracer: ThundraTracer;
+    instrumenter: Instrumenter;
 
-    constructor(options: any) {
+    constructor(config: TraceConfig) {
         this.hooks = {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
         };
-        this.options = options;
+        this.config = config;
         this.dataType = 'AuditData';
         this.traceData = new TraceData();
-        const traceConfig = options ? options.traceConfig : {};
-        this.tracer = new ThundraTracer(traceConfig);
+        const tracerConfig = config ? config.tracerConfig : {};
+
+        this.tracer = new ThundraTracer(tracerConfig);
         initGlobalTracer(this.tracer);
+
+        this.instrumenter = new Instrumenter(this.tracer, config);
+        this.instrumenter.hookModuleCompile();
     }
 
     report(data: any): void {
@@ -94,7 +101,7 @@ export class Trace {
         this.traceData.properties.logGroupName = originalContext.logGroupName;
         this.traceData.properties.logStreamName = originalContext.logStreamName;
         this.traceData.properties.requestId = originalContext.awsRequestId;
-        this.traceData.properties.request = this.options && this.options.disableRequest ? null : originalEvent;
+        this.traceData.properties.request = this.getRequest(originalEvent);
         this.traceData.properties.response = null;
     }
 
@@ -119,13 +126,15 @@ export class Trace {
         const spanTree: SpanTreeNode = recorder.getSpanTree();
         this.traceData.auditInfo.children = this.generateAuditInfoFromTraces(spanTree);
 
-        this.traceData.properties.response = this.options && this.options.disableResponse ? null : response;
+        this.traceData.properties.response = this.getResponse(response);
         this.endTimestamp = Date.now();
         this.traceData.endTimestamp = this.traceData.auditInfo.closeTimestamp = this.endTimestamp;
         this.traceData.duration = this.endTimestamp - this.startTimestamp;
         const reportData = Utils.generateReport(this.traceData, this.dataType, this.apiKey);
         this.report(reportData);
+
         this.tracer.destroy();
+        this.instrumenter.unhookModuleCompile();
     }
 
     private generateAuditInfoFromTraces(spanTree: SpanTreeNode): AuditInfo[] {
@@ -133,28 +142,8 @@ export class Trace {
             return [];
         }
         const auditInfos: AuditInfo[] = [];
-        const queue: Queue<SpanTreeNode> = new Queue();
-
-        let auditInfo: AuditInfo = this.spanTreeToAuditInfo(spanTree);
-        auditInfos.push(auditInfo);
-        auditInfos.push(... this.traverse(spanTree, queue, auditInfo));
-
-        while (queue.store.length !== 0) {
-            const parent = queue.pop();
-            auditInfo = this.spanTreeToAuditInfo(spanTree);
-            auditInfos.push(... this.traverse(parent, queue, auditInfo));
-        }
-
-        return auditInfos;
-    }
-
-    private traverse(parent: SpanTreeNode, queue: Queue<SpanTreeNode>, auditInfo: AuditInfo): AuditInfo[] {
-        const children: SpanTreeNode[] = parent.children;
-        const auditInfos: AuditInfo[] = new Array<AuditInfo>();
-        for (const node of children) {
-            auditInfo.children.push(this.spanTreeToAuditInfo(node));
-            queue.push(node);
-        }
+        const parentAuditInfo: AuditInfo = this.spanTreeToAuditInfo(spanTree);
+        auditInfos.push(parentAuditInfo);
         return auditInfos;
     }
 
@@ -169,19 +158,51 @@ export class Trace {
         } else {
             auditInfo.closeTimestamp = spanTreeNode.value.startTime + spanTreeNode.value.duration;
         }
+        auditInfo.aliveTime = spanTreeNode.value.duration;
         auditInfo.thrownError = spanTreeNode.thrownError;
         auditInfo.duration = spanTreeNode.value.duration;
         auditInfo.contextType = spanTreeNode.value.className;
         auditInfo.contextGroup = spanTreeNode.value.domainName;
 
         Object.keys(spanTreeNode.value.tags).forEach((key) => {
-            auditInfo.props[key] = String(spanTreeNode.value.tags[key]);
+            auditInfo.props[key] = spanTreeNode.value.tags[key];
         });
         auditInfo.props[LOG_TAG_NAME] = spanTreeNode.value.logs;
+        for (const node of spanTreeNode.children) {
+            auditInfo.children.push(this.spanTreeToAuditInfo(node));
+        }
         return auditInfo;
+    }
+
+    private getRequest(originalEvent: any): any {
+        const conf = this.config;
+
+        if (conf && conf.disableRequest) {
+            return null;
+        }
+
+        if (conf && conf.maskRequest && typeof conf.maskRequest === 'function') {
+            return conf.maskRequest.call(this, originalEvent);
+        }
+
+        return originalEvent;
+    }
+
+    private getResponse(response: any): any {
+        const conf = this.config;
+
+        if (conf && conf.disableResponse) {
+            return null;
+        }
+
+        if (conf && conf.maskResponse && typeof conf.maskResponse === 'function') {
+            return conf.maskResponse.call(this, response);
+        }
+
+        return response;
     }
 }
 
-export default function instantiateTracePlugin(options: any) {
-    return new Trace(options);
+export default function instantiateTracePlugin(config: TraceConfig) {
+    return new Trace(config);
 }

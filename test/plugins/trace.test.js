@@ -1,6 +1,6 @@
 import Trace from '../../dist/plugins/trace';
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
-import { DATA_FORMAT_VERSION} from '../../dist/constants';
+import { DATA_FORMAT_VERSION } from '../../dist/constants';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 
@@ -12,13 +12,13 @@ describe('Trace', () => {
     });
 
     describe('constructor', () => {
-        const options = { opt1: 'opt1', opt2: 'opt2' };
-        const tracerWithOptions = Trace(options);
+        const config = { opt1: 'opt1', opt2: 'opt2' };
+        const tracerWithOptions = Trace(config);
         const tracerWithoutOptions = Trace();
         const tracer = Trace();
         tracer.setPluginContext(pluginContext);
         it('should create an instance with options', () => {
-            expect(tracerWithOptions.options).toEqual(options);
+            expect(tracerWithOptions.config).toEqual(config);
         });
         it('should create an instance without options', () => {
             expect(tracerWithoutOptions.options).toBeUndefined();
@@ -39,6 +39,32 @@ describe('Trace', () => {
         it('Should set tracer correctly', () => {
             expect(tracer.tracer instanceof ThundraTracer).toBeTruthy();
         });
+    });
+
+    describe('constructor with trace def', () => {
+        const configs = {
+            traceDef: [{
+                pattern: './libs/business1',
+                traceArgs: true,
+                traceReturnValue: true,
+                traceError: true,
+            }, {
+                pattern: './libs/folder/business2',
+                traceArgs: false,
+                traceReturnValue: false,
+                traceError: false,
+            }]
+        };
+
+        const tracePluginWithOptions = Trace(configs);
+        it('Should set tracer config correctly', () => {
+            expect(tracePluginWithOptions.config.traceDef).toBeTruthy();
+            expect(tracePluginWithOptions.config.traceDef.length).toBe(2);
+            expect(tracePluginWithOptions.config.traceDef[0].pattern).toEqual(configs.traceDef[0].pattern);
+            expect(tracePluginWithOptions.config.traceDef[0].traceArgs).toEqual(configs.traceDef[0].traceArgs);
+            expect(tracePluginWithOptions.config.traceDef[0].traceError).toEqual(configs.traceDef[0].traceError);
+        });
+
     });
 
     describe('setPluginContext', () => {
@@ -66,6 +92,37 @@ describe('Trace', () => {
         it('should not add request and response to traceData', () => {
             expect(tracer.traceData.properties.request).toBe(null);
             expect(tracer.traceData.properties.response).toBe(null);
+        });
+    });
+
+    describe('mask request and response', () => {
+        const value =  {
+            'expected' : null
+        };
+
+        const tracer = Trace({
+            maskRequest: (request) => {
+                value.expected = request;
+                return value;
+            },
+
+            maskResponse: (response) => {
+                value.expected = response;
+                return value;
+            }
+        });
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        const afterInvocationData = {
+            response: { key: 'data' }
+        };
+        tracer.report = jest.fn();
+        tracer.beforeInvocation(beforeInvocationData);
+        tracer.afterInvocation(afterInvocationData);
+        it('should not add request and response to traceData', () => {
+            expect(tracer.traceData.properties.request).toEqual({'expected': {'key': 'data'}});
+            expect(tracer.traceData.properties.response).toEqual({'expected': {'key': 'data'}});
         });
     });
 
