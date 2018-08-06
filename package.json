@@ -1,6 +1,6 @@
 {
   "name": "@thundra/core",
-  "version": "1.5.4",
+  "version": "1.6.0",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
@@ -26,7 +26,8 @@
     "tracing",
     "metrics",
     "analytics",
-    "telemetry"
+    "telemetry",
+    "opentracing"
   ],
   "author": "Thundra <info@thundra.com>",
   "license": "Apache-2.0",

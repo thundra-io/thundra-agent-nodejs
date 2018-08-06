@@ -3,6 +3,11 @@ import TracePlugin, { Trace } from './plugins/Trace';
 import MetricPlugin from './plugins/Metric';
 import InvocationPlugin from './plugins/Invocation';
 import ThundraConfig from './plugins/config/ThundraConfig';
+import TraceConfig from './plugins/config/TraceConfig';
+import MetricConfig from './plugins/config/MetricConfig';
+import InvocationConfig from './plugins/config/InvocationConfig';
+import TraceDef from './plugins/config/TraceDef';
+
 const ThundraWarmup = require('@thundra/warmup');
 
 let tracePlugin: Trace = null;
@@ -17,12 +22,12 @@ module.exports = (options: any) => {
     const invocationPlugin = InvocationPlugin(config.invocationConfig);
     config.plugins.push(invocationPlugin);
 
-    if (config.traceConfig.enabled) {
+    if (!(process.env.thundra_trace_disable === 'true') && config.traceConfig.enabled) {
         tracePlugin = TracePlugin(config.traceConfig);
         config.plugins.push(tracePlugin);
     }
 
-    if (config.metricConfig.enabled) {
+    if (!(process.env.thundra_metric_disable === 'true') && config.metricConfig.enabled) {
         const metricPlugin = MetricPlugin(config.metricConfig);
         config.plugins.push(metricPlugin);
     }
@@ -72,4 +77,12 @@ module.exports.tracer = function getTracer() {
     } else {
         throw new Error('Trace plugin is not enabled.');
     }
+};
+
+module.exports.config = {
+    ThundraConfig,
+    TraceConfig,
+    MetricConfig,
+    InvocationConfig,
+    TraceDef,
 };

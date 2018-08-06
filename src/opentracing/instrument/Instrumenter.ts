@@ -1,3 +1,13 @@
+import ThundraTracer from '../Tracer';
+import TraceConfig from '../../plugins/config/TraceConfig';
+import TraceDef, { TraceDefCheckLevel } from '../../plugins/config/TraceDef';
+import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, Syntax, TRACE_DEF_FILE_PREFIX_ENV_KEY } from '../../Constants';
+import Argument from './Argument';
+import ReturnValue from './ReturnValue';
+import Utils from '../../plugins/Utils';
+import Stack from './Stack';
+import NodeWrapper from './NodeWrapper';
+
 const Module = require('module');
 const falafel = require('falafel');
 const util = require('util');
@@ -5,16 +15,6 @@ const path = require('path');
 
 const TRACE_ENTRY = 'var __thundraEntryData__ = __thundraTraceEntry__({name: %s, args: %s, argNames:%s});';
 const TRACE_EXIT = '__thundraTraceExit__({entryData: __thundraEntryData__, exception: %s,returnValue: %s, exceptionValue:%s});';
-
-import ThundraTracer from '../Tracer';
-import TraceConfig from '../../plugins/config/TraceConfig';
-import TraceOption, { TraceOptionCheckLevel } from '../../plugins/config/TraceOption';
-import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, Syntax, TRACE_DEF_FILE_PREFIX_ENV_KEY } from '../../Constants';
-import Argument from './Argument';
-import ReturnValue from './ReturnValue';
-import Utils from '../../plugins/Utils';
-import Stack from './Stack';
-import NodeWrapper from './NodeWrapper';
 
 /*
     Most of the code is derived from njsTrace : https://github.com/ValYouW/njsTrace
@@ -32,7 +32,7 @@ class Instrumenter {
     }
 
     shouldTraceFile(relPath: string): boolean {
-        return this.getThundraTraceOption(relPath + '.*', TraceOptionCheckLevel.FILE) !== null;
+        return this.getThundraTraceDef(relPath + '.*', TraceDefCheckLevel.FILE) !== null;
     }
 
     unhookModuleCompile() {
@@ -79,7 +79,7 @@ class Instrumenter {
             const name = self.getFunctionName(node);
 
             if (name && node.body.type === Syntax.BlockStatement) {
-                const instrumentOption = self.getThundraTraceOption(relPath + '.' + name, TraceOptionCheckLevel.FUNCTION);
+                const instrumentOption = self.getThundraTraceDef(relPath + '.' + name, TraceDefCheckLevel.FUNCTION);
                 if (instrumentOption === null) {
                     self.stack.store = [];
                     return;
@@ -121,12 +121,12 @@ class Instrumenter {
 
             } else if (node.type === Syntax.ReturnStatement) {
 
-                const wrapper: NodeWrapper = new NodeWrapper(node,  (traceOption: TraceOption, sourceNode: any) => {
+                const wrapper: NodeWrapper = new NodeWrapper(node,  (traceDef: TraceDef, sourceNode: any) => {
                     if (sourceNode.argument) {
                         const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
 
                         const traceExit = util.format(TRACE_EXIT, 'false',
-                                                traceOption.traceReturnValue ? tmpVar : 'null', 'null');
+                                                traceDef.traceReturnValue ? tmpVar : 'null', 'null');
 
                         sourceNode.update('{\nvar ' + tmpVar + ' = ' + sourceNode.argument.source() + ';\n' +
                                     traceExit + '\nreturn ' + tmpVar + ';\n}');
@@ -185,30 +185,30 @@ class Instrumenter {
         return '[Anonymous]';
     }
 
-    getThundraTraceOption(traceDefStr: string, checkLevel: TraceOptionCheckLevel): TraceOption {
+    getThundraTraceDef(traceDefStr: string, checkLevel: TraceDefCheckLevel): TraceDef {
         try {
-            if (traceDefStr.includes('node_modules') || !this.traceConfig || !this.traceConfig.traceDef) {
+            if (traceDefStr.includes('node_modules') || !this.traceConfig || !this.traceConfig.traceDefs) {
                 return null;
             }
 
             const traceDefPrefix = process.env[TRACE_DEF_FILE_PREFIX_ENV_KEY];
-            if (traceDefPrefix && TraceOptionCheckLevel.FILE) {
+            if (traceDefPrefix && TraceDefCheckLevel.FILE) {
                 const prefixes = traceDefPrefix.split(',');
                 for (const prefix of prefixes) {
                     if (traceDefStr.startsWith(prefix)) {
-                        return new TraceOption(traceDefPrefix);
+                        return new TraceDef(traceDefPrefix);
                     }
                 }
             }
 
-            for (const traceOption of this.traceConfig.traceDef) {
-                if (checkLevel === TraceOptionCheckLevel.FILE) {
-                    if (traceOption.shouldTraceFile(traceDefStr)) {
-                        return traceOption;
+            for (const traceDef of this.traceConfig.traceDefs) {
+                if (checkLevel === TraceDefCheckLevel.FILE) {
+                    if (traceDef.shouldTraceFile(traceDefStr)) {
+                        return traceDef;
                     }
                 } else {
-                    if (traceOption.shouldTraceFunction(traceDefStr)) {
-                        return traceOption;
+                    if (traceDef.shouldTraceFunction(traceDefStr)) {
+                        return traceDef;
                     }
                 }
             }

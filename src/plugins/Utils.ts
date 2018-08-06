@@ -3,7 +3,7 @@ import { readFile } from 'fs';
 import * as os from 'os';
 import { DATA_FORMAT_VERSION, PROC_IO_PATH, PROC_STAT_PATH } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
-import Reference from '../../node_modules/opentracing/lib/reference';
+import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
 
 class Utils {

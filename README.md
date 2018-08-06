@@ -67,8 +67,6 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 |:---------------|:------:|:-------------:|
 | apiKey         | string |       -       |
 | disableThundra |  bool  |     false     |
-| disableTrace   |  bool  |     false     |
-| disableMetric  |  bool  |     false     |
 | plugins        |  array |      [ ]      |
 
 
