@@ -41,6 +41,15 @@ class ThundraSpan extends Span {
     return this.tags[key];
   }
 
+  setErrorTag(error: Error): void {
+      if (error instanceof Error) {
+        const err = Utils.parseError(error);
+        this.setTag('error', true);
+        this.setTag('error.kind', err.errorType);
+        this.setTag('error.message', err.errorMessage);
+      }
+  }
+
   _createContext(parent: any) {
     if (!this.parentTracer) {
       return;

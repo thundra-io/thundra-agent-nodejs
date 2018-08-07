@@ -95,6 +95,22 @@ describe('Recorder', () => {
     
     });
 
+    describe('Span setErrorTag', () => {
+        const tracer = new ThundraTracer({}); 
+
+        const span = tracer.startSpan('span');
+        span.setErrorTag(new Error('Some thing failed.'));
+
+        span.finish();
+
+        it('should set log and tag relations', () => {
+            expect(tracer.recorder.spanTree.value.getTag('error')).toEqual(true);
+            expect(tracer.recorder.spanTree.value.getTag('error.kind')).toEqual('Error');
+            expect(tracer.recorder.spanTree.value.getTag('error.message')).toEqual('Some thing failed.');
+        });
+    
+    });
+
     describe('Tracer wrapper function', () => {
         const tracer = new ThundraTracer({}); 
 
