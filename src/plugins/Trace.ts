@@ -22,6 +22,7 @@ import TimeoutError from './error/TimeoutError';
 import Reporter from '../Reporter';
 import TraceConfig from './config/TraceConfig';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
+import AuditInfoThrownError from './data/trace/AuditInfoThrownError';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -153,13 +154,16 @@ export class Trace {
         auditInfo.errors = null;
         auditInfo.contextName = spanTreeNode.value.operationName;
         auditInfo.openTimestamp = spanTreeNode.value.startTime;
-        if (spanTreeNode.thrownError) {
+        if (spanTreeNode.value.getTag('error')) {
+            const thrownError = new AuditInfoThrownError();
+            thrownError.errorType = spanTreeNode.value.getTag('error.kind');
+            thrownError.errorMessage = spanTreeNode.value.getTag('error.message');
+            auditInfo.thrownError = thrownError;
             auditInfo.closeTimestamp = Date.now();
         } else {
             auditInfo.closeTimestamp = spanTreeNode.value.startTime + spanTreeNode.value.duration;
         }
         auditInfo.aliveTime = spanTreeNode.value.duration;
-        auditInfo.thrownError = spanTreeNode.thrownError;
         auditInfo.duration = spanTreeNode.value.duration;
         auditInfo.contextType = spanTreeNode.value.className;
         auditInfo.contextGroup = spanTreeNode.value.domainName;

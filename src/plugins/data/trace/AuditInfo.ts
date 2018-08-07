@@ -1,3 +1,5 @@
+import AuditInfoThrownError from './AuditInfoThrownError';
+
 class AuditInfo {
     id: string;
     contextName: string;
@@ -5,7 +7,7 @@ class AuditInfo {
     closeTimestamp: number;
     aliveTime: number;
     errors: any;
-    thrownError: string;
+    thrownError: AuditInfoThrownError;
     duration: number;
     children: AuditInfo[] = new Array<AuditInfo>();
     props: any = {};

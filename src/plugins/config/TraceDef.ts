@@ -1,5 +1,6 @@
 import {Minimatch, IMinimatch} from 'minimatch';
-class TraceOption {
+
+class TraceDef {
     private $pattern: string = null;
     private $traceArgs: boolean;
     private $traceReturnValue: boolean;
@@ -8,6 +9,9 @@ class TraceOption {
     private $regExpFile: IMinimatch;
 
     constructor(pattern: string) {
+        if (!pattern) {
+            throw Error('please pass a valid trace definition pattern to TraceDef constructor.');
+        }
         this.$pattern = pattern;
         this.$traceArgs = false;
         this.$traceReturnValue = false;
@@ -79,9 +83,9 @@ class TraceOption {
     }
 }
 
-export enum TraceOptionCheckLevel {
+export enum TraceDefCheckLevel {
     FILE,
     FUNCTION,
 }
 
-export default TraceOption;
+export default TraceDef;
