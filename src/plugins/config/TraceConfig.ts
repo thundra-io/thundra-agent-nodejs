@@ -32,8 +32,8 @@ class TraceConfig extends BasePluginConfig {
             }
         }
 
-        if (options.traceDef) {
-            for (const def of options.traceDef) {
+        if (options.traceDefs) {
+            for (const def of options.traceDefs) {
                 const option = new TraceDef(def.pattern);
                 option.setPropertyFromConfig(def);
                 this.traceDefs.push(option);

@@ -1,5 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 1.6.0 - August 16, 2018
+#### Added
+- Manual instrumentation support with OpenTracing API
+- Automatic instrumentation support
+- Mask trace of request and response of Lambda Invocation
+#### Fixed
+- Fix crash if env variable `process.env.AWS_LAMBDA_LOG_STREAM_NAME ` not set
+
 ## 1.5.4 - July 23, 2018
 #### Added
 - `timeout` field is added to trace properites

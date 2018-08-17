@@ -128,8 +128,12 @@ export class Trace {
         this.traceData.auditInfo.children = this.generateAuditInfoFromTraces(spanTree);
 
         this.traceData.properties.response = this.getResponse(response);
+        this.traceData.auditInfo.props.request = this.traceData.properties.request;
+        this.traceData.auditInfo.props.response = this.traceData.properties.response;
         this.endTimestamp = Date.now();
         this.traceData.endTimestamp = this.traceData.auditInfo.closeTimestamp = this.endTimestamp;
+        this.traceData.auditInfo.duration = this.endTimestamp - this.startTimestamp;
+        this.traceData.auditInfo.aliveTime = this.endTimestamp - this.startTimestamp;
         this.traceData.duration = this.endTimestamp - this.startTimestamp;
         const reportData = Utils.generateReport(this.traceData, this.dataType, this.apiKey);
         this.report(reportData);
@@ -161,10 +165,16 @@ export class Trace {
             auditInfo.thrownError = thrownError;
             auditInfo.closeTimestamp = Date.now();
         } else {
-            auditInfo.closeTimestamp = spanTreeNode.value.startTime + spanTreeNode.value.duration;
+            if (spanTreeNode.value.duration === undefined || spanTreeNode.value.duration === null) {
+                auditInfo.closeTimestamp = Date.now();
+                auditInfo.aliveTime = auditInfo.closeTimestamp - auditInfo.openTimestamp;
+                auditInfo.duration = auditInfo.closeTimestamp - auditInfo.openTimestamp;
+            } else {
+                auditInfo.aliveTime = spanTreeNode.value.duration;
+                auditInfo.duration = spanTreeNode.value.duration;
+                auditInfo.closeTimestamp = spanTreeNode.value.startTime + spanTreeNode.value.duration;
+            }
         }
-        auditInfo.aliveTime = spanTreeNode.value.duration;
-        auditInfo.duration = spanTreeNode.value.duration;
         auditInfo.contextType = spanTreeNode.value.className;
         auditInfo.contextGroup = spanTreeNode.value.domainName;
 

@@ -1,6 +1,6 @@
 {
   "name": "@thundra/core",
-  "version": "1.6.0",
+  "version": "1.5.4",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
@@ -9,7 +9,9 @@
     "start": "npm-run-all --parallel watch:server watch:build",
     "test": "npm run compile; jest --coverage",
     "test-ci": "npm run compile;  jest --config config.json --coverage; cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "lint": "tslint --project tsconfig.json -t stylish"
+    "lint": "tslint --project tsconfig.json -t stylish",
+    "release-minor": "npm run build; release-it minor -n --npm.publish --src.commit --src.tag --no-src.push --src.tagName='v%s' --github.release",
+    "release": "npm run build; release-it -n --npm.publish --src.commit --src.tag --src.push"
   },
   "repository": {
     "type": "git",
@@ -39,6 +41,7 @@
     "@types/node": "^10.5.0",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.3",
+    "babel-jest": "^23.4.0",
     "babel-loader": "^7.1.2",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-polyfill": "^6.26.0",
@@ -48,19 +51,19 @@
     "coveralls": "^3.0.1",
     "eslint": "^4.19.1",
     "eslint-plugin-babel": "^5.1.0",
+    "gaze-run-interrupt": "^1.0.1",
     "i": "^0.3.6",
     "jest": "^22.4.4",
     "npm-run-all": "^4.1.1",
     "opentracing": "0.14.1",
+    "release-it": "^7.5.0",
     "ts-loader": "^4.4.1",
     "ts-node": "^7.0.0",
     "tslint": "5.7.0",
     "typescript": "^2.9.2",
     "uglifyjs-webpack-plugin": "^1.2.5",
     "webpack": "^4.14.0",
-    "webpack-cli": "^3.0.8",
-    "babel-jest": "^23.4.0",
-    "gaze-run-interrupt": "^1.0.1"
+    "webpack-cli": "^3.0.8"
   },
   "dependencies": {
     "@thundra/warmup": "^1.0.0",

@@ -33,7 +33,7 @@ describe('TraceConfig', () => {
 
     it('should parse from programatic config', () => {
         const traceConfig = new TraceConfig( {
-            traceDef: [{
+            traceDefs: [{
                 pattern : 'business.f*',
                 traceArgs: true,
                 traceReturnValue: false,

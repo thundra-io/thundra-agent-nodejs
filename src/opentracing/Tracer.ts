@@ -81,6 +81,7 @@ class ThundraTracer extends Tracer {
         operationName: name,
         parent: this.getActiveSpan() ? this.getActiveSpan().spanContext : null,
         tags: this.tags,
+        rootTraceId,
         startTime: Date.now(),
         className: fields.className,
         domainName: fields.domainName,

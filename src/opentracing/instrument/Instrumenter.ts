@@ -13,7 +13,7 @@ const falafel = require('falafel');
 const util = require('util');
 const path = require('path');
 
-const TRACE_ENTRY = 'var __thundraEntryData__ = __thundraTraceEntry__({name: %s, args: %s, argNames:%s});';
+const TRACE_ENTRY = 'var __thundraEntryData__ = __thundraTraceEntry__({name: %s, path: %s, args: %s, argNames:%s});';
 const TRACE_EXIT = '__thundraTraceExit__({entryData: __thundraEntryData__, exception: %s,returnValue: %s, exceptionValue:%s});';
 
 /*
@@ -47,7 +47,7 @@ class Instrumenter {
 
         Module.prototype._compile = function (content: any, filename: any) {
             const relPath = path.relative(process.cwd(), filename);
-            let relPathWithDots = relPath.replace('/', TRACE_DEF_SEPERATOR);
+            let relPathWithDots = relPath.replace(/\//g , TRACE_DEF_SEPERATOR);
             relPathWithDots = relPathWithDots.replace('.js', '');
 
             if (self.shouldTraceFile(relPathWithDots)) {
@@ -103,13 +103,13 @@ class Instrumenter {
                     argNames = '[' + node.params.map((p: any) => '\'' + p.name + '\'').join(',') + ']';
                 }
 
-                const traceEntry = util.format(TRACE_ENTRY, JSON.stringify(name), args, argNames);
+                const traceEntry = util.format(TRACE_ENTRY, JSON.stringify(name), JSON.stringify(relPath), args, argNames);
                 const traceExit = util.format(TRACE_EXIT, 'false', 'null', 'null');
 
                 const newFuncBody = '\n' + traceEntry + '\n' + origFuncBody + '\n' + traceExit + '\n';
 
                 if (wrapFunctions) {
-                    const traceEX = util.format(TRACE_EXIT, 'true', startLine, 'null',
+                    const traceEX = util.format(TRACE_EXIT, 'true', 'null',
                                                 instrumentOption.traceError ? '__thundraEX__' : 'null');
 
                     node.update(funcDec + '{\ntry {' + newFuncBody + '} catch(__thundraEX__) {\n' +
@@ -223,15 +223,20 @@ class Instrumenter {
         const self: any = this;
         global.__thundraTraceEntry__ = function (args: any) {
             try {
-                const span = self.tracer.startSpan(args.name);
+                const span = self.tracer.startSpan(args.path + '.' + args.name);
                 const spanArguments: Argument[] = [];
                 if (args.args) {
                     for (let i = 0; i < args.args.length; i++) {
-                        spanArguments.push(new Argument(args.argNames[i], typeof args.args[i], args.args[i]));
+                        const argType = typeof args.args[i];
+                        let argValue = args.args[i];
+                        if (argType === 'function') {
+                            argValue = argValue.toString();
+                        }
+                        spanArguments.push(new Argument(args.argNames[i], argType, argValue));
                     }
                 }
                 span.setTag(ARGS_TAG_NAME, spanArguments);
-                return { name: args.name, file: args.file, fnLine: args.line, ts: Date.now()};
+                return {};
             } catch (ex) {
                 self.tracer.finishSpan();
             }
@@ -240,15 +245,17 @@ class Instrumenter {
         global.__thundraTraceExit__ = function (args: any) {
             try {
                 const span = self.tracer.getActiveSpan();
-                if (!args.exception && args.returnValue) {
-                    span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, args.returnValue));
+                if (!args.exception) {
+                    if (args.returnValue) {
+                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, args.returnValue));
+                    }
                 } else {
                     const err = Utils.parseError(args.exceptionValue);
                     span.setTag('error', true);
                     span.setTag('error.kind', err.errorType);
                     span.setTag('error.message', err.errorMessage);
                 }
-                self.tracer.finishSpan();
+                span.finish();
             } catch (ex) {
                 self.tracer.finishSpan();
             }

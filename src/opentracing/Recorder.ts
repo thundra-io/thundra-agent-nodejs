@@ -11,12 +11,17 @@ class ThundraRecorder {
             if (!this.spanTree) {
                 this.spanTree = node;
             } else {
-                this.activeSpan.children.push(node);
-                node.parent = this.activeSpan;
+                if (this.activeSpan) {
+                    this.activeSpan.children.push(node);
+                    node.parent = this.activeSpan;
+                } else {
+                   this.spanTree.children.push(node);
+                   node.parent = null;
+                }
             }
             this.activeSpan = node;
         } else if (spanEvent === SpanEvent.SPAN_FINISH) {
-            this.activeSpan = this.activeSpan.parent;
+            this.activeSpan =  this.activeSpan ? this.activeSpan.parent : null;
         }
     }
 
