@@ -22,6 +22,7 @@ import TimeoutError from './plugins/error/TimeoutError';
 import HttpError from './plugins/error/HttpError';
 
 class ThundraWrapper {
+
     private originalThis: any;
     private originalEvent: any;
     private originalContext: any;
@@ -37,7 +38,6 @@ class ThundraWrapper {
 
     constructor(self: any, event: any, context: any, callback: any,
                 originalFunction: any, plugins: any, pluginContext: any, apiKey: any) {
-
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
@@ -72,11 +72,15 @@ class ThundraWrapper {
 
     wrappedCallback = (error: any, result: any) => {
         this.report(error, result, () => {
-                if (typeof this.originalCallback === 'function') {
-                    this.originalCallback(error, result);
-                }
+                this.invokeCallback(error, result);
             },
         );
+    }
+
+    invokeCallback(error: any, result: any): void {
+        if (typeof this.originalCallback === 'function') {
+            this.originalCallback(error, result);
+        }
     }
 
     invoke(): void {
@@ -92,12 +96,26 @@ class ThundraWrapper {
             .then(() => {
                 this.pluginContext.requestCount += 1;
                 try {
-                    return this.originalFunction.call(
+                    let result = this.originalFunction.call(
                         this.originalThis,
                         this.originalEvent,
                         this.wrappedContext,
                         this.wrappedCallback,
                     );
+                    if (result instanceof Promise) {
+                        result.then(
+                            (data) => {
+                                this.report(null, data, () => {
+                                    this.invokeCallback(null, data);
+                                });
+                            },
+                            (err) => {
+                                this.report(err, null, () => {
+                                    this.invokeCallback(err, null);
+                                });
+                            });
+                    }
+                    return result;
                 } catch (error) {
                     this.report(error, null, null);
                     return error;
@@ -115,7 +133,7 @@ class ThundraWrapper {
         );
     }
 
-     async report(error: any, result: any, callback: any) {
+    async report(error: any, result: any, callback: any) {
         if (!this.reported) {
             this.reported = true;
 
@@ -185,6 +203,7 @@ class ThundraWrapper {
           wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
         }, endTime);
     }
+
 }
 
 export default ThundraWrapper;
