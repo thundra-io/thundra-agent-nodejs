@@ -18,6 +18,8 @@ delete process.env.thundra_trace_disable;
 delete process.env.thundra_metric_disable;
 delete process.env.thundra_disable;
 delete process.env.thundra_apiKey;
+delete process.env.thundra_lambda_publish_rest_trustAllCertificates;
+delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
 
 describe('Thundra library', () => {
 
@@ -165,4 +167,41 @@ describe('Thundra library', () => {
 
     });
 
+    describe('Authorize All Certs', () => {   
+        describe('enabled by config', () => {   
+            delete process.env.thundra_lambda_publish_rest_trustAllCertificates;
+            delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+
+            const originalEvent = {key: 'value'};
+            const originalContext = {};
+            const originalCallback = jest.fn();
+            const originalFunction = jest.fn(() => originalCallback());
+            const ThundraWrapper = new Thundra({apiKey: 'apiKey', trustAllCert: true});
+            const wrappedFunction = new ThundraWrapper(originalFunction);
+            wrappedFunction(originalEvent, originalContext, originalCallback);
+            
+            it('should set environment variable', () => {
+                expect(process.env.NODE_TLS_REJECT_UNAUTHORIZED).toBe('0');
+            });
+        });
+
+        describe('enabled by environment variable', () => {   
+            delete process.env.thundra_lambda_publish_rest_trustAllCertificates;
+            delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+
+            process.env.thundra_lambda_publish_rest_trustAllCertificates = true;
+            
+            const originalEvent = {key: 'value'};
+            const originalContext = {};
+            const originalCallback = jest.fn();
+            const originalFunction = jest.fn(() => originalCallback());
+            const ThundraWrapper = new Thundra({apiKey: 'apiKey', trustAllCert: true});
+            const wrappedFunction = new ThundraWrapper(originalFunction);
+            wrappedFunction(originalEvent, originalContext, originalCallback);
+            
+            it('should set environment variable', () => {
+                expect(process.env.NODE_TLS_REJECT_UNAUTHORIZED).toBe('0');
+            });
+        });
+    });
 });

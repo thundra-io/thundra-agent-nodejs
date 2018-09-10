@@ -59,6 +59,7 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 | thundra_lambda_trace_response_skip       |  bool  |     false     |
 | thundra_lambda_timeout_margin            | number |     200       |
 | thundra_lambda_http_responseCheck_skip   |  bool  |     false     |
+| thundra_lambda_publish_rest_trustAllCertificates | bool | false   |
 | thundra_lambda_publish_rest_baseUrl      | string |  https<nolink>://collector.thundra.io/api  |
 
 #### 2. Module initialization parameters

@@ -4,6 +4,7 @@ import InvocationConfig from './InvocationConfig';
 const koalas = require('koalas');
 
 class ThundraConfig {
+    trustAllCert: boolean;
     apiKey: string;
     disableThundra: boolean;
     traceConfig: TraceConfig;
@@ -21,6 +22,7 @@ class ThundraConfig {
         this.traceConfig = new TraceConfig(options.traceConfig);
         this.metricConfig = new MetricConfig(options.metricConfig);
         this.invocationConfig = new InvocationConfig(options.invocationConfig);
+        this.trustAllCert = koalas(process.env.thundra_lambda_publish_rest_trustAllCertificates, options.trustAllCert, false);
     }
 }
 
