@@ -32,6 +32,11 @@ module.exports = (options: any) => {
         const metricPlugin = MetricPlugin(config.metricConfig);
         config.plugins.push(metricPlugin);
     }
+
+    if (config.trustAllCert) {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    }
+
     const applicationId = process.env.AWS_LAMBDA_LOG_STREAM_NAME ?
                           process.env.AWS_LAMBDA_LOG_STREAM_NAME.split(']').pop() :
                           Utils.generateId();
