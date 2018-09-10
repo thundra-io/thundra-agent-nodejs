@@ -63,11 +63,16 @@ const createMockBeforeInvocationData = () => {
     };
 };
 
+const createMockPromise = () => {
+    return Promise.resolve('test');
+};
+
 module.exports = {
     createMockContext,
     createMockReporterInstance,
     createMockWrapperInstance,
     createMockPluginContext,
     createMockPlugin,
-    createMockBeforeInvocationData
+    createMockBeforeInvocationData,
+    createMockPromise
 };

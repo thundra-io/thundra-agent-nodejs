@@ -1,10 +1,12 @@
 import ThundraWrapper from '../dist/ThundraWrapper';
-import {createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext} from './mocks/mocks';
+import {createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext, createMockPromise} from './mocks/mocks';
 import HttpError from '../dist/plugins/error/HttpError';
 import TimeoutError from '../dist/plugins/error/TimeoutError';
 
 const pluginContext = createMockPluginContext();
+
 describe('ThundraWrapper', () => {
+
     const originalThis = this;
     const originalEvent = {key1: 'value2', key2: 'value2'};
     const originalContext = createMockContext();
@@ -89,7 +91,9 @@ describe('ThundraWrapper', () => {
     });
 
     describe('originalFunction calls callback', () => {
+
         describe('wrappedCallback', () => {
+
             describe('with mock report function', () => {
                 const originalCallback = jest.fn();
                 const originalFunction = jest.fn(() => originalCallback());
@@ -100,6 +104,7 @@ describe('ThundraWrapper', () => {
                     expect(thundraWrapper.report).toBeCalled();
                 });
             });
+
             describe('with real report function', () => {
                 const originalCallback = jest.fn();
                 const originalFunction = jest.fn(() => originalCallback());
@@ -110,8 +115,8 @@ describe('ThundraWrapper', () => {
                     expect(thundraWrapper.reporter.sendReports).toBeCalled();
                 });
             });
-        });
 
+        });
 
         describe('report once', async () => {
             const originalCallback = jest.fn();
@@ -209,6 +214,7 @@ describe('ThundraWrapper', () => {
     describe('originalFunction calls succeed/done/fail', () => {
 
         describe('wrappedContext', () => {
+
             const originalFunction = jest.fn();
             const originalCallback = null;
             const originalContext = createMockContext();
@@ -239,8 +245,8 @@ describe('ThundraWrapper', () => {
                     expect(originalContext.fail).toBeCalledWith({err: 'error'});
                 });
             });
-        });
 
+        });
 
         describe('invoke', () => {
             const originalContext = createMockContext();
@@ -248,14 +254,29 @@ describe('ThundraWrapper', () => {
             const originalFunction = jest.fn((event, context) => context.succeed());
             const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
             thundraWrapper.wrappedContext.succeed = jest.fn();
-            thundraWrapper.report = jest.fn();
+            thundraWrapper.renport = jest.fn();
             thundraWrapper.invoke();
             it('should call original function and wrappedContext\'s succeed', () => {
                 expect(originalFunction.mock.calls.length).toBe(1);
                 expect(thundraWrapper.wrappedContext.succeed.mock.calls.length).toBe(1);
 
             });
+        });
 
+    });
+
+    describe('originalFunction returns promise', () => {
+        const mockPromise = createMockPromise();
+        const originalCallback = jest.fn();
+        const originalFunction = jest.fn(() => mockPromise);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
+        thundraWrapper.reporter = createMockReporterInstance();
+        thundraWrapper.invoke();
+        it('should call originalCallback', () => {
+            expect(originalCallback).toBeCalledWith(null, 'test');
+        });
+        it('should call reporter.sendReports', () => {
+            expect(thundraWrapper.reporter.sendReports).toBeCalled();
         });
     });
 
