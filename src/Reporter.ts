@@ -1,11 +1,11 @@
-import * as net from "net";
+import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
 import {URL} from './Constants';
 
 const httpAgent = new http.Agent({
-    keepAlive: true
+    keepAlive: true,
 });
 const httpsAgent = new https.Agent({
     maxCachedSessions: 1,
@@ -22,7 +22,7 @@ class Reporter {
     constructor(apiKey: string, u?: url.URL) {
         this.reports = [];
         this.apiKey = apiKey;
-        this.useHttps = (u ? u.protocol : URL.protocol) === 'https:'
+        this.useHttps = (u ? u.protocol : URL.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
     }
 
@@ -31,13 +31,11 @@ class Reporter {
     }
 
     createRequestOptions(u?: url.URL): http.RequestOptions {
-        const portValue = u ? u.port : URL.port;
-        const port: number = parseInt(portValue, 0);
         return {
             method: 'POST',
             hostname: u ? u.hostname : URL.hostname,
             path: (u ? u.pathname : URL.pathname) + '/monitor-datas',
-            port: port,
+            port: parseInt(u ? u.port : URL.port, 0),
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'ApiKey ' + this.apiKey,
@@ -45,7 +43,7 @@ class Reporter {
             agent: this.useHttps ? httpsAgent : httpAgent,
             createConnection: (options: http.ClientRequestArgs, oncreate: (err: Error, socket: net.Socket) => void) => {
                 try {
-                    let socket: net.Socket = net.createConnection(<number>options.port, options.hostname);
+                    const socket: net.Socket = net.createConnection(options.port as number, options.hostname);
                     socket.setNoDelay(true);
                     socket.setKeepAlive(true);
                     oncreate(null, socket);
@@ -54,7 +52,7 @@ class Reporter {
                     oncreate(e, null);
                     throw e;
                 }
-            }
+            },
         };
     }
 
