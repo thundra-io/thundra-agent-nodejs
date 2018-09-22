@@ -1,16 +1,18 @@
 import TraceConfig from './TraceConfig';
 import MetricConfig from './MetricConfig';
 import InvocationConfig from './InvocationConfig';
+import {TIMEOUT_MARGIN} from '../../Constants';
 const koalas = require('koalas');
 
 class ThundraConfig {
+
     trustAllCert: boolean;
     apiKey: string;
     disableThundra: boolean;
     traceConfig: TraceConfig;
     metricConfig: MetricConfig;
     invocationConfig: InvocationConfig;
-    timeoutMargin: number = 200;
+    timeoutMargin: number;
     plugins: any [];
 
     constructor(options: any) {
@@ -18,12 +20,13 @@ class ThundraConfig {
         this.plugins = koalas(options.plugins, []);
         this.apiKey = koalas(process.env.thundra_apiKey, options.apiKey, '');
         this.disableThundra = koalas(process.env.thundra_disable, options.disableThundra, false);
-        this.timeoutMargin = koalas(process.env.thundra_lambda_timeout_margin, options.timeoutMargin, 200);
+        this.timeoutMargin = koalas(process.env.thundra_lambda_timeout_margin, options.timeoutMargin, TIMEOUT_MARGIN);
         this.traceConfig = new TraceConfig(options.traceConfig);
         this.metricConfig = new MetricConfig(options.metricConfig);
         this.invocationConfig = new InvocationConfig(options.invocationConfig);
         this.trustAllCert = koalas(process.env.thundra_lambda_publish_rest_trustAllCertificates, options.trustAllCert, false);
     }
+
 }
 
 export default ThundraConfig;
