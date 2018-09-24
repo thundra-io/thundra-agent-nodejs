@@ -7,6 +7,7 @@ import TraceConfig from './plugins/config/TraceConfig';
 import MetricConfig from './plugins/config/MetricConfig';
 import InvocationConfig from './plugins/config/InvocationConfig';
 import TraceDef from './plugins/config/TraceDef';
+import IntegrationConfig from './plugins/config/IntegrationConfig';
 import Utils from './plugins/Utils';
 
 const ThundraWarmup = require('@thundra/warmup');
@@ -42,7 +43,7 @@ module.exports = (options: any) => {
                           Utils.generateId();
 
     const pluginContext = {
-        applicationId,
+        applicationId: process.env.AWS_LAMBDA_LOG_STREAM_NAME.split(']').pop(),
         applicationProfile: process.env.thundra_applicationProfile ? process.env.thundra_applicationProfile : 'default',
         applicationRegion: process.env.AWS_REGION,
         applicationVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
@@ -94,4 +95,5 @@ module.exports.config = {
     MetricConfig,
     InvocationConfig,
     TraceDef,
+    IntegrationConfig,
 };

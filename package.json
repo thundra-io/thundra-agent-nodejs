@@ -1,6 +1,6 @@
 {
   "name": "@thundra/core",
-  "version": "1.6.0",
+  "version": "1.5.9",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
@@ -56,6 +56,8 @@
     "jest": "^22.4.4",
     "npm-run-all": "^4.1.1",
     "opentracing": "0.14.1",
+    "pg": "6.4.0",
+    "redis": "^2.8.0",
     "release-it": "^7.5.0",
     "ts-loader": "^4.4.1",
     "ts-node": "^7.0.0",
@@ -72,6 +74,9 @@
     "falafel": "^2.1.0",
     "koalas": "^1.0.2",
     "minimatch": "^3.0.4",
-    "uuid": "^3.2.1"
+    "require-in-the-middle": "^3.1.0",
+    "shimmer": "^1.2.0",
+    "uuid": "^3.2.1",
+    "semver": "^5.5.0"
   }
 }

@@ -33,7 +33,7 @@ module.exports = {
                 }
             },
             sourceMap: true,
-            parallel: true
+            parallel: true,
         }),
         new webpack.optimize.ModuleConcatenationPlugin()
     ]

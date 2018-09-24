@@ -80,7 +80,7 @@ class ThundraTracer extends Tracer {
       span = new ThundraSpan(this, {
         operationName: name,
         parent: this.getActiveSpan() ? this.getActiveSpan().spanContext : null,
-        tags: this.tags,
+        tags: Object.assign(tags, this.tags, fields.tags),
         rootTraceId,
         startTime: Date.now(),
         className: fields.className,

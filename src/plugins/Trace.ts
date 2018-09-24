@@ -17,12 +17,14 @@ import TraceData from './data/trace/TraceData';
 import TraceDataProperties from './data/trace/TraceProperties';
 import {initGlobalTracer} from 'opentracing';
 import HttpError from './error/HttpError';
-import { LOG_TAG_NAME } from '../Constants';
+import { LOG_TAG_NAME, INTEGRATIONS, SpanTags, DBTags, HttpTags, RedisTags, SpanTypes, AwsDynamoTags,
+        AwsSQSTags, AwsSNSTags, AwsKinesisTags, AwsS3Tags, AwsLambdaTags } from '../Constants';
 import TimeoutError from './error/TimeoutError';
 import Reporter from '../Reporter';
 import TraceConfig from './config/TraceConfig';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
 import AuditInfoThrownError from './data/trace/AuditInfoThrownError';
+import Integration from './integrations/Integration';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -36,6 +38,7 @@ export class Trace {
     startTimestamp: number;
     tracer: ThundraTracer;
     instrumenter: Instrumenter;
+    integrations: Map<string, Integration>;
 
     constructor(config: TraceConfig) {
         this.hooks = {
@@ -52,6 +55,20 @@ export class Trace {
 
         this.instrumenter = new Instrumenter(this.tracer, config);
         this.instrumenter.hookModuleCompile();
+
+        this.integrations = new Map<string, Integration>();
+
+        if (this.config && this.config.integrations) {
+            for (const integration of config.integrations) {
+                const clazz = INTEGRATIONS[integration.name];
+                if (clazz) {
+                    if (!this.integrations.get(integration.name)) {
+                        const instance = new clazz(this.tracer, integration.opt);
+                        this.integrations.set(integration.name, instance);
+                    }
+                }
+            }
+        }
     }
 
     report(data: any): void {
@@ -140,6 +157,10 @@ export class Trace {
 
         this.tracer.destroy();
         this.instrumenter.unhookModuleCompile();
+
+        for (const key of this.integrations.keys()) {
+            this.integrations.get(key).unwrap();
+        }
     }
 
     private generateAuditInfoFromTraces(spanTree: SpanTreeNode): AuditInfo[] {
@@ -181,10 +202,13 @@ export class Trace {
         Object.keys(spanTreeNode.value.tags).forEach((key) => {
             auditInfo.props[key] = spanTreeNode.value.tags[key];
         });
+
         auditInfo.props[LOG_TAG_NAME] = spanTreeNode.value.logs;
         for (const node of spanTreeNode.children) {
             auditInfo.children.push(this.spanTreeToAuditInfo(node));
         }
+
+        this.enrichAuditInfo(auditInfo);
         return auditInfo;
     }
 
@@ -200,6 +224,119 @@ export class Trace {
         }
 
         return originalEvent;
+    }
+
+    private enrichAuditInfo(auditInfo: AuditInfo) {
+        if (auditInfo.props[SpanTags.SPAN_TYPE]) {
+
+            if (auditInfo.props[SpanTags.SPAN_TYPE] === SpanTypes.RDB) {
+                auditInfo.props.databaseName = auditInfo.props[DBTags.DB_INSTANCE];
+                auditInfo.props.query = auditInfo.props[DBTags.DB_STATEMENT];
+                auditInfo.props.queryType = auditInfo.props[DBTags.DB_STATEMENT_TYPE];
+                if (auditInfo.props[DBTags.DB_STATEMENT_TYPE] === 'SELECT') {
+                    auditInfo.props.operationType = 'READ';
+                } else {
+                    auditInfo.props.operationType = 'UPDATE';
+                }
+
+                auditInfo.contextGroup = 'DB';
+                auditInfo.contextType = SpanTypes.RDB;
+                auditInfo.contextName = auditInfo.props[DBTags.DB_INSTANCE];
+            }
+
+            if (auditInfo.props[SpanTags.SPAN_TYPE] === SpanTypes.HTTP) {
+                auditInfo.props.path = auditInfo.props[HttpTags.HTTP_PATH];
+                auditInfo.props.method = auditInfo.props[HttpTags.HTTP_METHOD];
+                auditInfo.props.operationTarget = auditInfo.props[HttpTags.HTTP_URL];
+                auditInfo.props.statusCode = auditInfo.props[HttpTags.HTTP_STATUS];
+                auditInfo.props.operationType = 'INVOKE';
+                auditInfo.props.url = auditInfo.props[HttpTags.HTTP_URL];
+                auditInfo.props.host = auditInfo.props[HttpTags.HTTP_HOST];
+
+                if (auditInfo.props[DBTags.DB_STATEMENT_TYPE] === 'SELECT') {
+                    auditInfo.props.operationType = 'UPDATE';
+                } else {
+                    auditInfo.props.operationType = 'READ';
+                }
+
+                auditInfo.contextGroup = 'API';
+                auditInfo.contextType = SpanTypes.HTTP;
+                auditInfo.contextName = auditInfo.props[HttpTags.HTTP_URL];
+            }
+
+            if (auditInfo.props[SpanTags.SPAN_TYPE] === SpanTypes.REDIS) {
+                const commandArgs = auditInfo.props[RedisTags.REDIS_COMMAND_ARGS];
+                auditInfo.props.host = auditInfo.props[RedisTags.REDIS_HOST];
+                auditInfo.props.port = auditInfo.props[RedisTags.REDIS_PORT];
+                auditInfo.props.operationType = auditInfo.props[RedisTags.REDIS_COMMAND_TYPE];
+                auditInfo.props.commandType = auditInfo.props[RedisTags.REDIS_COMMAND];
+                auditInfo.props.command = auditInfo.props[RedisTags.REDIS_COMMAND] + ` \"${commandArgs} \"`;
+                auditInfo.props.operationTarget = auditInfo.props[RedisTags.REDIS_HOST];
+
+                auditInfo.contextGroup = 'Cache';
+                auditInfo.contextType = SpanTypes.REDIS;
+                auditInfo.contextName = auditInfo.props[RedisTags.REDIS_HOST];
+            }
+
+            if (auditInfo.props[SpanTags.SPAN_TYPE] === SpanTypes.AWS_DYNAMO) {
+                auditInfo.props.tableName = auditInfo.props[AwsDynamoTags.TABLE_NAME];
+                auditInfo.props.operationType = auditInfo.props[SpanTags.OPERATION_TYPE];
+                auditInfo.props.instanceName = auditInfo.props[AwsDynamoTags.TABLE_NAME];
+
+                auditInfo.contextGroup = 'DB';
+                auditInfo.contextType = SpanTypes.AWS_DYNAMO;
+                auditInfo.contextName = auditInfo.props[AwsDynamoTags.TABLE_NAME];
+            }
+
+            if (auditInfo.props[SpanTags.SPAN_TYPE] === SpanTypes.AWS_SQS) {
+                auditInfo.props.operationType = auditInfo.props[SpanTags.OPERATION_TYPE];
+                auditInfo.props.queueName = auditInfo.props[AwsSQSTags.QUEUE_NAME];
+
+                auditInfo.contextGroup = 'Messaging';
+                auditInfo.contextType = SpanTypes.AWS_SQS;
+                auditInfo.contextName = auditInfo.props[AwsSQSTags.QUEUE_NAME];
+            }
+
+            if (auditInfo.props[SpanTags.SPAN_TYPE] === SpanTypes.AWS_SNS) {
+                auditInfo.props.operationType = auditInfo.props[SpanTags.OPERATION_TYPE];
+                auditInfo.props.topicName = auditInfo.props[AwsSNSTags.TOPIC_NAME];
+
+                auditInfo.contextGroup = 'Messaging';
+                auditInfo.contextType = SpanTypes.AWS_SNS;
+                auditInfo.contextName = auditInfo.props[AwsSNSTags.TOPIC_NAME];
+            }
+
+            if (auditInfo.props[SpanTags.SPAN_TYPE] === SpanTypes.AWS_KINESIS) {
+
+                auditInfo.props.operationType = auditInfo.props[SpanTags.OPERATION_TYPE];
+                auditInfo.props.streamName = auditInfo.props[AwsKinesisTags.STREAM_NAME];
+
+                auditInfo.contextGroup = 'Stream';
+                auditInfo.contextType = SpanTypes.AWS_KINESIS;
+                auditInfo.contextName = auditInfo.props[AwsKinesisTags.STREAM_NAME];
+            }
+
+            if (auditInfo.props[SpanTags.SPAN_TYPE] === SpanTypes.AWS_S3) {
+                auditInfo.props.operationType = auditInfo.props[SpanTags.OPERATION_TYPE];
+                auditInfo.props.bucketName = auditInfo.props[AwsS3Tags.BUCKET_NAME];
+                auditInfo.props.objectName = auditInfo.props[AwsS3Tags.OBJECT_NAME];
+
+                auditInfo.contextGroup = 'Storage';
+                auditInfo.contextType = SpanTypes.AWS_S3;
+                auditInfo.contextName = auditInfo.props[AwsS3Tags.BUCKET_NAME];
+            }
+
+            if (auditInfo.props[SpanTags.SPAN_TYPE] === SpanTypes.AWS_LAMBDA) {
+                auditInfo.props.functionName = auditInfo.props[AwsLambdaTags.FUNCTION_NAME];
+                auditInfo.props.invocationType = auditInfo.props[AwsLambdaTags.INVOCATION_TYPE];
+                auditInfo.props.qualifier = auditInfo.props[AwsLambdaTags.FUNCTION_QUALIFIER];
+                auditInfo.props.request = auditInfo.props[AwsLambdaTags.INVOCATION_PAYLOAD];
+
+                auditInfo.contextGroup = 'API';
+                auditInfo.contextType = SpanTypes.AWS_LAMBDA;
+                auditInfo.contextName = auditInfo.props[AwsLambdaTags.FUNCTION_NAME];
+            }
+        }
     }
 
     private getResponse(response: any): any {

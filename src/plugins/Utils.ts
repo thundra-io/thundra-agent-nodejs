@@ -6,6 +6,8 @@ import ThundraSpanContext from '../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
 
+const semver = require('semver');
+
 class Utils {
     static generateId() {
         return uuidv4();
@@ -130,6 +132,52 @@ class Utils {
         }
 
         return parent;
+    }
+
+    static validateModuleVersion(basedir: string, versions: string): boolean {
+        try {
+            if (basedir) {
+                const packageJSON = `${basedir}/package.json`;
+                const version = require(packageJSON).version;
+                return semver.satisfies(version, versions);
+            }
+            return false;
+        } catch (err) {
+            return true;
+        }
+    }
+
+    static replaceArgs(statement: string, values: any[]): string {
+        const args = Array.prototype.slice.call(values);
+        const replacer = (value: string) => args[parseInt(value.substr(1), 10) - 1];
+
+        return statement.replace(/(\$\d+)/gm, replacer);
+    }
+
+    static getDynamoDBTableName(request: any): string {
+        let tableName = 'DynamoEngine';
+        if (request.params.TableName) {
+            tableName = request.params.TableName;
+        }
+        if (request.params.RequestItems) {
+            tableName = Object.keys(request.params.RequestItems).join(',');
+        }
+        return tableName;
+    }
+
+    static getQueueName(url: any) {
+        return url.split('/').pop();
+    }
+
+    static getTopicName(topicArn: any) {
+        return topicArn.split(':').pop();
+    }
+
+    static getServiceName(endpoint: string) {
+        if (!endpoint) {
+          return '';
+        }
+        return endpoint.split('.')[0];
     }
 }
 
