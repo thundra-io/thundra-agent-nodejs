@@ -1,15 +1,59 @@
+import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
+import * as url from 'url';
 import {URL} from './Constants';
-import { RequestOptions, ClientRequest } from 'http';
+
+const httpAgent = new http.Agent({
+    keepAlive: true,
+});
+const httpsAgent = new https.Agent({
+    maxCachedSessions: 1,
+    keepAlive: true,
+});
 
 class Reporter {
+
     private reports: any[];
     private apiKey: string;
+    private useHttps: boolean;
+    private requestOptions: http.RequestOptions;
 
-    constructor(apiKey: string) {
+    constructor(apiKey: string, u?: url.URL) {
         this.reports = [];
         this.apiKey = apiKey;
+        this.useHttps = (u ? u.protocol : URL.protocol) === 'https:';
+        this.requestOptions = this.createRequestOptions();
+    }
+
+    getConfig(conf1: any, conf2: any): any {
+        return conf1 ? conf1 : conf2;
+    }
+
+    createRequestOptions(u?: url.URL): http.RequestOptions {
+        return {
+            method: 'POST',
+            hostname: u ? u.hostname : URL.hostname,
+            path: (u ? u.pathname : URL.pathname) + '/monitor-datas',
+            port: parseInt(u ? u.port : URL.port, 0),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'ApiKey ' + this.apiKey,
+            },
+            agent: this.useHttps ? httpsAgent : httpAgent,
+            createConnection: (options: http.ClientRequestArgs, oncreate: (err: Error, socket: net.Socket) => void) => {
+                try {
+                    const socket: net.Socket = net.createConnection(options.port as number, options.hostname);
+                    socket.setNoDelay(true);
+                    socket.setKeepAlive(true);
+                    oncreate(null, socket);
+                    return socket;
+                } catch (e) {
+                    oncreate(e, null);
+                    throw e;
+                }
+            },
+        };
     }
 
     addReport(report: any): void {
@@ -34,24 +78,8 @@ class Reporter {
     }
 
     request(): Promise<any> {
-        const hostname = URL.hostname;
-        const path = URL.pathname + '/monitor-datas';
-        const port = URL.port;
-        const protocol = URL.protocol;
-
         return new Promise((resolve, reject) => {
-            const options: RequestOptions = {
-                method: 'POST',
-                hostname,
-                path,
-                port: parseInt(port, 0),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'ApiKey ' + this.apiKey,
-                },
-            };
-
-            let request: ClientRequest;
+            let request: http.ClientRequest;
             const responseHandler = (response: http.IncomingMessage) => {
                 let responseData = '';
                 response.on('data', (chunk: Buffer | string) => {
@@ -62,8 +90,9 @@ class Reporter {
                 });
             };
 
-            protocol === 'https:' ? request = https.request(options, responseHandler) :
-                                    request = http.request(options, responseHandler);
+            this.useHttps
+                ? request = https.request(this.requestOptions, responseHandler)
+                : request = http.request(this.requestOptions, responseHandler);
 
             request.on('error', (error: any) => {
                 reject(error);
@@ -72,6 +101,7 @@ class Reporter {
             request.end();
         });
     }
+
 }
 
 export default Reporter;

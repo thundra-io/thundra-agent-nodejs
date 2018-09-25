@@ -1,6 +1,7 @@
-import Reporter from '../dist/Reporter';
-import * as constants from '../dist/Constants';
-import url from 'url';
+import Reporter from '../dist/Reporter.js';
+import * as http from 'http';
+import * as https from 'https';
+import {URL} from 'url';
 
 let httpRequestCalled = false;
 let httpsRequestCalled = false;
@@ -28,6 +29,9 @@ jest.mock('http', () => ({
             }),
             end: jest.fn(() => httpRequestEndCalled = true)
         };
+    },
+    Agent: () => {
+        return null;
     }
 }));
 
@@ -42,6 +46,9 @@ jest.mock('https', () => ({
             }),
             end: jest.fn(() => httpsRequestEndCalled = true)
         };
+    },
+    Agent: () => {
+        return null;
     }
 }));
 
@@ -60,6 +67,7 @@ describe('constructor', () => {
 });
 
 describe('Reporter', () => {
+
     describe('constructor', () => {
 
         const reporter = new Reporter('apiKey');
@@ -107,15 +115,14 @@ describe('Reporter', () => {
             });
         });
 
-
         describe('http', () => {
-            const reporter = new Reporter('apiKey');
+            // noinspection JSAnnotator
+            const url = new URL('http://collector.thundra.io/api');
+            const reporter = new Reporter('apiKey', url);
             const mockReport1 = {data: 'data1'};
             const mockReport2 = {data: 'data2'};
 
             test('should make http request', () => {
-                // noinspection JSAnnotator
-                constants.URL = new url.URL('http://collector.thundra.io/api');
                 reporter.addReport(mockReport1);
                 reporter.addReport(mockReport2);
                 reporter.sendReports();
@@ -128,7 +135,6 @@ describe('Reporter', () => {
 
             test('should JSON.stringify reports on https.request', () => {
                 expect(httpSentData).toEqual(JSON.stringify(reporter.reports));
-
             });
         });
     });
