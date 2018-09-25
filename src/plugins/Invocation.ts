@@ -3,11 +3,12 @@ import InvocationData from './data/invocation/InvacationData';
 import Utils from './Utils';
 import TimeoutError from './error/TimeoutError';
 import InvocationConfig from './config/InvocationConfig';
-
+import MonitorDataType from './data/base/MonitorDataType';
+import { DATA_FORMAT_VERSION, LAMBDA_APPLICATION_DOMAIN_NAME,
+    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_FUNCTION_PLATFORM} from '../Constants';
 class Invocation {
     public hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
     public options: InvocationConfig;
-    public dataType: string;
     public invocationData: InvocationData;
     public reporter: any;
     public pluginContext: any;
@@ -21,7 +22,6 @@ class Invocation {
             'after-invocation': this.afterInvocation,
         };
         this.options = options;
-        this.dataType = 'InvocationData';
         this.invocationData = new InvocationData();
     }
 
@@ -41,21 +41,35 @@ class Invocation {
         this.startTimestamp = Date.now();
 
         this.invocationData.id = Utils.generateId();
-        this.invocationData.transactionId = transactionId;
-        this.invocationData.applicationName = originalContext.functionName;
+        this.invocationData.type = MonitorDataType.INVOCATION;
+        // this.invocationData.agentVersion = Utils.getPackageVersion('.');
+        this.invocationData.dataModelVersion = DATA_FORMAT_VERSION;
         this.invocationData.applicationId =  this.pluginContext.applicationId;
+        this.invocationData.applicationDomainName = LAMBDA_APPLICATION_DOMAIN_NAME;
+        this.invocationData.applicationClassName = LAMBDA_APPLICATION_CLASS_NAME;
+        this.invocationData.applicationName = originalContext.functionName;
         this.invocationData.applicationVersion = this.pluginContext.applicationVersion;
-        this.invocationData.applicationProfile = this.pluginContext.applicationProfile;
+        this.invocationData.applicationStage = process.env.thundra_application_stage ? process.env.thundra_application_stage : '';
+        this.invocationData.applicationRuntimeVersion = process.version;
+        this.invocationData.applicationTags = new Map<string, any>();
+        this.invocationData.functionPlatform = LAMBDA_FUNCTION_PLATFORM;
+        this.invocationData.functionName = originalContext.functionName;
+        this.invocationData.functionRegion = this.pluginContext.applicationRegion;
+        this.invocationData.tags = new Map<string, any>();
+
+        /*this.invocationData.traceId = '';
+        this.invocationData.transactionId = '';
+        this.invocationData.spanId = '';*/
+
         this.invocationData.duration = 0;
-        this.invocationData.startTimestamp = this.startTimestamp;
-        this.invocationData.endTimestamp = 0;
         this.invocationData.erroneous = false;
         this.invocationData.errorType = '';
         this.invocationData.errorMessage = '';
         this.invocationData.coldStart = this.pluginContext.requestCount === 0;
         this.invocationData.timeout = false;
-        this.invocationData.region = this.pluginContext.applicationRegion;
-        this.invocationData.memorySize = parseInt(originalContext.memoryLimitInMB, 10);
+
+        // this.invocationData.region = this.pluginContext.applicationRegion;
+        // this.invocationData.memorySize = parseInt(originalContext.memoryLimitInMB, 10);
 
     }
 
@@ -71,9 +85,8 @@ class Invocation {
             this.invocationData.errorMessage = errorMessage;
         }
         this.endTimestamp = Date.now();
-        this.invocationData.endTimestamp = this.endTimestamp;
         this.invocationData.duration = this.endTimestamp - this.startTimestamp;
-        const reportData = Utils.generateReport(this.invocationData, this.dataType, this.apiKey);
+        const reportData = Utils.generateReport(this.invocationData, MonitorDataType.INVOCATION, this.apiKey);
         this.report(reportData);
     }
 }

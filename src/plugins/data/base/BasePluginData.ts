@@ -1,10 +1,19 @@
+import MonitorDataType from './MonitorDataType';
+
 class BasePluginData {
-    readonly applicationType: string = 'node';
-    applicationName: string;
+    id: string;
+    type: MonitorDataType;
+    agentVersion: string;
+    dataModelVersion: string;
     applicationId: string;
-    transactionId: string;
+    applicationDomainName: string;
+    applicationClassName: string;
+    applicationName: string;
     applicationVersion: string;
-    applicationProfile: string;
+    applicationStage: string;
+    readonly applicationRuntime: string = 'node';
+    applicationRuntimeVersion: string;
+    applicationTags: Map<string, any>;
 }
 
 export default BasePluginData;

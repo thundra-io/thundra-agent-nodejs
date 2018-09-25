@@ -7,28 +7,27 @@ import MemoryMetric from './data/metric/MemoryMetric';
 import IOMetric from './data/metric/IOMetric';
 import CPUMetric from './data/metric/CPUMetric';
 import MetricConfig from './config/MetricConfig';
+import MonitorDataType from './data/base/MonitorDataType';
 
 class Metric {
-    public hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
-    public options: any;
-    public dataType: string;
-    public statData: MetricData;
-    public reports: any[];
-    public clockTick: number;
-    public reporter: any;
-    public pluginContext: any;
-    public apiKey: any;
-    public initialProcStat: any;
-    public initialProcIo: any;
-    public startCpuUsage: { procCpuUsed: number; sysCpuUsed: number; sysCpuTotal: number; };
+    hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
+    options: MetricConfig;
+    statData: MetricData;
+    reports: any[];
+    clockTick: number;
+    reporter: any;
+    pluginContext: any;
+    apiKey: any;
+    initialProcStat: any;
+    initialProcIo: any;
+    startCpuUsage: { procCpuUsed: number; sysCpuUsed: number; sysCpuTotal: number; };
 
-    constructor(options: any) {
+    constructor(options: MetricConfig) {
         this.hooks = {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
         };
         this.options = options;
-        this.dataType = 'StatData';
         this.statData = new MetricData();
         this.reports = [];
         this.clockTick = parseInt(execSync('getconf CLK_TCK').toString(), 0);
@@ -53,7 +52,7 @@ class Metric {
         this.statData.rootExecutionAuditContextId = data.contextId,
         this.statData.applicationId = this.pluginContext.applicationId,
         this.statData.applicationName = data.originalContext.functionName,
-        this.statData.applicationProfile = this.pluginContext.applicationProfile,
+        // this.statData.applicationProfile = this.pluginContext.applicationProfile,
         this.statData.applicationVersion = this.pluginContext.applicationVersion,
         this.statData.functionRegion = this.pluginContext.applicationRegion,
         this.statData.statTimestamp = Date.now(),
@@ -84,7 +83,7 @@ class Metric {
             ...this.statData,
             ...threadMetric,
         };
-        const threadStatReport = Utils.generateReport(threadStat, this.dataType, this.apiKey);
+        const threadStatReport = Utils.generateReport(threadStat, MonitorDataType.METRIC, this.apiKey);
         this.reports = [...this.reports, threadStatReport];
     }
 

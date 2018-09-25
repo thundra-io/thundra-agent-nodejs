@@ -67,6 +67,24 @@ const createMockPromise = () => {
     return Promise.resolve('test');
 };
 
+const createMockLogManager = () => {
+    return {
+        reportLog: jest.fn()
+    };
+};
+
+const createMockListener = () => {
+    return {
+        reportLog: jest.fn()
+    };
+};
+
+const createMockReporter = () => {
+    return {
+        addReport: jest.fn()
+    };
+};
+
 module.exports = {
     createMockContext,
     createMockReporterInstance,
@@ -74,5 +92,8 @@ module.exports = {
     createMockPluginContext,
     createMockPlugin,
     createMockBeforeInvocationData,
-    createMockPromise
+    createMockPromise,
+    createMockLogManager,
+    createMockListener,
+    createMockReporter,
 };

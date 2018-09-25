@@ -1,17 +1,21 @@
 import BasePluginData from '../base/BasePluginData';
 
 class InvocationData extends BasePluginData {
-    id: string;
+    traceId: string;
+    transactionId: string;
+    spanId: string;
+    functionPlatform: string;
+    functionName: string;
+    functionRegion: string;
+    startTimestamp: string;
+    finishTimestamp: string;
     duration: number;
-    startTimestamp: number;
-    endTimestamp: number;
     erroneous: boolean;
     errorType: string;
     errorMessage: string;
     coldStart: boolean;
     timeout: boolean;
-    region: string;
-    memorySize: number;
+    tags: Map<string, any>;
 }
 
 export default InvocationData;

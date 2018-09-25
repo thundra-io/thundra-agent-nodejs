@@ -5,6 +5,7 @@ import { DATA_FORMAT_VERSION, PROC_IO_PATH, PROC_STAT_PATH } from '../Constants'
 import ThundraSpanContext from '../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
+import MonitorDataType from './data/base/MonitorDataType';
 
 const semver = require('semver');
 
@@ -13,12 +14,12 @@ class Utils {
         return uuidv4();
     }
 
-    static generateReport(data: any, type: any, apiKey: String) {
+    static generateReport(data: any, type: MonitorDataType, apiKey: String) {
         return {
             data,
             type,
             apiKey,
-            dataFormatVersion: DATA_FORMAT_VERSION,
+            dataModelVersion: DATA_FORMAT_VERSION,
         };
     }
 
@@ -145,6 +146,11 @@ class Utils {
         } catch (err) {
             return true;
         }
+    }
+
+    static getPackageVersion(basedir: string): string {
+        const packageJSON = `${basedir}/package.json`;
+        return require(packageJSON).version;
     }
 
     static replaceArgs(statement: string, values: any[]): string {

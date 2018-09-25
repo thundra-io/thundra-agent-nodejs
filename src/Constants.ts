@@ -29,8 +29,11 @@ export function getTimeoutMargin(region: string) {
     return 1000;
 }
 
-export const DATA_FORMAT_VERSION: string = '1.2';
+export const DATA_FORMAT_VERSION: string = '2.0';
 export const TIMEOUT_MARGIN: number = getTimeoutMargin(process.env.AWS_REGION);
+export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
+export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
+export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
 
 export const HOOKS = [
     'before-invocation',
@@ -66,6 +69,32 @@ export const Syntax = {
     CatchClause: 'CatchClause',
     ReturnStatement: 'ReturnStatement',
     BlockStatement: 'BlockStatement',
+};
+
+export const logLevels: any = {
+    0: 0,
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    6: 6,
+
+    trace: 0,
+    debug: 1,
+    info: 2,
+    warn: 3,
+    error: 4,
+    fatal: 5,
+    none: 6,
+
+    TRACE: 0,
+    DEBUG: 1,
+    INFO: 2,
+    WARN: 3,
+    ERROR: 4,
+    FATAL: 5,
+    NONE: 6,
 };
 
 export const DBTags = {

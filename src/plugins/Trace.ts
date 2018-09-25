@@ -25,11 +25,11 @@ import TraceConfig from './config/TraceConfig';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
 import AuditInfoThrownError from './data/trace/AuditInfoThrownError';
 import Integration from './integrations/Integration';
+import MonitorDataType from './data/base/MonitorDataType';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
     config: TraceConfig;
-    dataType: string;
     traceData: TraceData;
     reporter: Reporter;
     pluginContext: any;
@@ -46,7 +46,6 @@ export class Trace {
             'after-invocation': this.afterInvocation,
         };
         this.config = config;
-        this.dataType = 'AuditData';
         this.traceData = new TraceData();
         const tracerConfig = config ? config.tracerConfig : {};
 
@@ -87,11 +86,11 @@ export class Trace {
         this.startTimestamp = Date.now();
 
         this.traceData.id = Utils.generateId();
-        this.traceData.transactionId = transactionId;
+        // this.traceData.transactionId = transactionId;
         this.traceData.applicationName = originalContext.functionName;
         this.traceData.applicationId = this.pluginContext.applicationId;
         this.traceData.applicationVersion = this.pluginContext.applicationVersion;
-        this.traceData.applicationProfile = this.pluginContext.applicationProfile;
+        // this.traceData.applicationProfile = this.pluginContext.applicationProfile;
         this.traceData.duration = null;
         this.traceData.startTimestamp = this.startTimestamp;
         this.traceData.endTimestamp = null;
@@ -113,7 +112,7 @@ export class Trace {
         this.traceData.properties = new TraceDataProperties();
         this.traceData.properties.timeout = 'false';
         this.traceData.properties.coldStart = this.pluginContext.requestCount > 0 ? 'false' : 'true',
-        this.traceData.properties.functionMemoryLimitInMB =  originalContext.memoryLimitInMB;
+        this.traceData.properties.functionMemoryLimitInMB = originalContext.memoryLimitInMB;
         this.traceData.properties.functionRegion = this.pluginContext.applicationRegion;
         this.traceData.properties.functionARN = originalContext.invokedFunctionArn;
         this.traceData.properties.logGroupName = originalContext.logGroupName;
@@ -152,7 +151,7 @@ export class Trace {
         this.traceData.auditInfo.duration = this.endTimestamp - this.startTimestamp;
         this.traceData.auditInfo.aliveTime = this.endTimestamp - this.startTimestamp;
         this.traceData.duration = this.endTimestamp - this.startTimestamp;
-        const reportData = Utils.generateReport(this.traceData, this.dataType, this.apiKey);
+        const reportData = Utils.generateReport(this.traceData, MonitorDataType.TRACE, this.apiKey);
         this.report(reportData);
 
         this.tracer.destroy();
