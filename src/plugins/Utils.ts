@@ -82,15 +82,18 @@ class Utils {
     static readProcMetricPromise() {
         return new Promise((resolve, reject) => {
             readFile(PROC_STAT_PATH, (err, file) => {
+                const procStatData = {
+                    threadCount: 0,
+                };
+
                 if (err) {
-                    return reject(err);
+                    console.error(`Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0.`);
                 } else {
                     const procStatArray = file.toString().split(' ');
-                    const procStatData = {
-                        threadCount: parseInt(procStatArray[19], 0),
-                    };
-                    return resolve(procStatData);
+                    procStatData.threadCount = parseInt(procStatArray[19], 0);
                 }
+
+                return resolve(procStatData);
             });
         });
     }
@@ -98,16 +101,20 @@ class Utils {
     static readProcIoPromise() {
         return new Promise((resolve, reject) => {
             readFile(PROC_IO_PATH, (err, file) => {
+                const procIoData = {
+                    readBytes: 0,
+                    writeBytes: 0,
+                };
+
                 if (err) {
-                    return reject(err);
+                    console.error(`Cannot read ${PROC_IO_PATH} file. Setting IO Metrics to 0.`);
                 } else {
                     const procIoArray = file.toString().split('\n');
-                    const procIoData = {
-                        readBytes: parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0),
-                        writeBytes: parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1), 0),
-                    };
-                    return resolve(procIoData);
+                    procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
+                    procIoData.writeBytes = parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1), 0);
                 }
+
+                return resolve(procIoData);
             });
         });
     }
