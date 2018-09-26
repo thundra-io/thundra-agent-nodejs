@@ -1,10 +1,10 @@
-import BasePluginData from '../base/BasePluginData';
+import BaseMonitoringData from '../base/BaseMonitoringData';
 
-class MetricData extends BasePluginData {
-    rootExecutionAuditContextId: string;
+class MetricData extends BaseMonitoringData {
+    traceId: string;
     transactionId: string;
-    functionRegion: string;
-    statTimestamp: number;
+    spanId: string;
+    metricTimestamp: number;
 }
 
 export default MetricData;

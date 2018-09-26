@@ -1,21 +1,21 @@
-import BasePluginData from '../base/BasePluginData';
+import BaseMonitoringData from '../base/BaseMonitoringData';
 
-class InvocationData extends BasePluginData {
+class InvocationData extends BaseMonitoringData {
     traceId: string;
     transactionId: string;
     spanId: string;
     functionPlatform: string;
     functionName: string;
     functionRegion: string;
-    startTimestamp: string;
-    finishTimestamp: string;
+    startTimestamp: number;
+    finishTimestamp: number ;
     duration: number;
     erroneous: boolean;
     errorType: string;
     errorMessage: string;
     coldStart: boolean;
     timeout: boolean;
-    tags: Map<string, any>;
+    tags: any;
 }
 
 export default InvocationData;

@@ -1,25 +1,31 @@
 import * as uuidv4 from 'uuid/v4';
 import { readFile } from 'fs';
 import * as os from 'os';
-import { DATA_FORMAT_VERSION, PROC_IO_PATH, PROC_STAT_PATH } from '../Constants';
+import { DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
-import MonitorDataType from './data/base/MonitorDataType';
+import MonitorDataType from './data/base/MonitoringDataType';
+import BaseMonitoringData from './data/base/BaseMonitoringData';
+import BuildInfoLoader from '../BuildInfoLoader';
+import MonitoringDataType from './data/base/MonitoringDataType';
+import InvocationData from './data/invocation/InvacationData';
+import MetricData from './data/metric/MetricData';
 
 const semver = require('semver');
 
 class Utils {
-    static generateId() {
+    static generateId(): string {
         return uuidv4();
     }
 
-    static generateReport(data: any, type: MonitorDataType, apiKey: String) {
+    static generateReport(data: any, apiKey: String) {
         return {
             data,
-            type,
+            type: data.type,
             apiKey,
-            dataModelVersion: DATA_FORMAT_VERSION,
+            dataModelVersion: DATA_MODEL_VERSION,
         };
     }
 
@@ -73,7 +79,7 @@ class Utils {
         return error;
     }
 
-    static readProcStatPromise() {
+    static readProcMetricPromise() {
         return new Promise((resolve, reject) => {
             readFile(PROC_STAT_PATH, (err, file) => {
                 if (err) {
@@ -148,11 +154,6 @@ class Utils {
         }
     }
 
-    static getPackageVersion(basedir: string): string {
-        const packageJSON = `${basedir}/package.json`;
-        return require(packageJSON).version;
-    }
-
     static replaceArgs(statement: string, values: any[]): string {
         const args = Array.prototype.slice.call(values);
         const replacer = (value: string) => args[parseInt(value.substr(1), 10) - 1];
@@ -171,19 +172,55 @@ class Utils {
         return tableName;
     }
 
-    static getQueueName(url: any) {
+    static getQueueName(url: any): string {
         return url.split('/').pop();
     }
 
-    static getTopicName(topicArn: any) {
+    static getTopicName(topicArn: any): string {
         return topicArn.split(':').pop();
     }
 
-    static getServiceName(endpoint: string) {
+    static getServiceName(endpoint: string): string {
         if (!endpoint) {
           return '';
         }
         return endpoint.split('.')[0];
+    }
+
+    static initMonitoringData(pluginContext: any, originalContext: any, type: MonitoringDataType): BaseMonitoringData {
+        const monitoringData = this.createMonitoringData(type);
+
+        monitoringData.id = Utils.generateId();
+        monitoringData.type = type;
+        monitoringData.agentVersion = BuildInfoLoader.getAgentVersion();
+        monitoringData.dataModelVersion = DATA_MODEL_VERSION;
+        monitoringData.applicationId =  pluginContext.applicationId;
+        monitoringData.applicationDomainName = LAMBDA_APPLICATION_DOMAIN_NAME;
+        monitoringData.applicationClassName = LAMBDA_APPLICATION_CLASS_NAME;
+        monitoringData.applicationName = originalContext.functionName;
+        monitoringData.applicationVersion = pluginContext.applicationVersion;
+        monitoringData.applicationStage = process.env.thundra_application_stage ? process.env.thundra_application_stage : '';
+        monitoringData.applicationRuntimeVersion = process.version;
+
+        return monitoringData;
+    }
+
+    static createMonitoringData(type: MonitoringDataType): BaseMonitoringData {
+        let monitoringData: BaseMonitoringData;
+
+        switch (type) {
+            case MonitorDataType.INVOCATION:
+                monitoringData = new InvocationData();
+                break;
+            case MonitorDataType.METRIC:
+                monitoringData = new MetricData();
+                break;
+            case MonitorDataType.SPAN:
+                monitoringData = null;
+                break;
+        }
+
+        return monitoringData;
     }
 }
 

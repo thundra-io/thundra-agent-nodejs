@@ -29,7 +29,7 @@ export function getTimeoutMargin(region: string) {
     return 1000;
 }
 
-export const DATA_FORMAT_VERSION: string = '2.0';
+export const DATA_MODEL_VERSION: string = '2.0';
 export const TIMEOUT_MARGIN: number = getTimeoutMargin(process.env.AWS_REGION);
 export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
 export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
@@ -47,6 +47,8 @@ export const URL: url.UrlWithStringQuery = url.parse(
         ? process.env.thundra_lambda_publish_rest_baseUrl
         : 'https://collector.thundra.io/api',
 );
+
+export const MONITORING_DATA_PATH = '/monitoring-data';
 
 export const PROC_STAT_PATH: string = '/proc/self/stat';
 export const PROC_IO_PATH: string = '/proc/self/io';

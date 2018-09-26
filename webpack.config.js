@@ -12,7 +12,6 @@ module.exports = {
         libraryTarget: 'commonjs2',
         library: 'thundra'
     },
-    devtool: 'inline-source-map',
     resolve: {
         extensions: [ '.tsx', '.ts', '.js' ]
     },

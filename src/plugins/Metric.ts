@@ -7,18 +7,18 @@ import MemoryMetric from './data/metric/MemoryMetric';
 import IOMetric from './data/metric/IOMetric';
 import CPUMetric from './data/metric/CPUMetric';
 import MetricConfig from './config/MetricConfig';
-import MonitorDataType from './data/base/MonitorDataType';
+import MonitoringDataType from './data/base/MonitoringDataType';
 
 class Metric {
     hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
     options: MetricConfig;
-    statData: MetricData;
+    metricData: MetricData;
     reports: any[];
     clockTick: number;
     reporter: any;
     pluginContext: any;
     apiKey: any;
-    initialProcStat: any;
+    initialProcMetric: any;
     initialProcIo: any;
     startCpuUsage: { procCpuUsed: number; sysCpuUsed: number; sysCpuTotal: number; };
 
@@ -28,7 +28,6 @@ class Metric {
             'after-invocation': this.afterInvocation,
         };
         this.options = options;
-        this.statData = new MetricData();
         this.reports = [];
         this.clockTick = parseInt(execSync('getconf CLK_TCK').toString(), 0);
     }
@@ -43,105 +42,113 @@ class Metric {
     }
 
     beforeInvocation = async (data: any) => {
-        const [procStat, procIo] = await Promise.all([Utils.readProcStatPromise(), Utils.readProcIoPromise()]);
-        this.initialProcStat = procStat;
+        const { originalContext, transactionId } = data;
+
+        const [procMetric, procIo] = await Promise.all([Utils.readProcMetricPromise(), Utils.readProcIoPromise()]);
+        this.initialProcMetric = procMetric;
         this.initialProcIo = procIo;
         this.reporter = data.reporter;
 
-        this.statData.transactionId = data.transactionId,
-        this.statData.rootExecutionAuditContextId = data.contextId,
-        this.statData.applicationId = this.pluginContext.applicationId,
-        this.statData.applicationName = data.originalContext.functionName,
-        // this.statData.applicationProfile = this.pluginContext.applicationProfile,
-        this.statData.applicationVersion = this.pluginContext.applicationVersion,
-        this.statData.functionRegion = this.pluginContext.applicationRegion,
-        this.statData.statTimestamp = Date.now(),
+        this.metricData = Utils.initMonitoringData(this.pluginContext,
+            originalContext, MonitoringDataType.METRIC) as MetricData;
+        this.metricData.metricTimestamp = Date.now();
+
+        this.metricData.transactionId = transactionId;
+        this.metricData.spanId = transactionId;
+        this.metricData.traceId = transactionId;
+
         this.startCpuUsage = Utils.getCpuUsage();
         this.reports = [];
     }
 
     afterInvocation = async () => {
         await Promise.all([
-            this.addThreadStatReport(),
-            this.addMemoryStatReport(),
-            this.addCpuStatReport(),
-            this.addIoStatReport(),
-        ]);
+            this.addThreadMetricReport(),
+            this.addMemoryMetricReport(),
+            this.addCpuMetricReport(),
+            this.addIoMetricReport(),
+        ]).catch((err: Error) => {
+            console.error('Cannot obtain metric data :' + err);
+        });
         this.reports.forEach((report) => {
             this.report(report);
         });
     }
 
-    addThreadStatReport = async () => {
-        const {threadCount} = this.initialProcStat;
+    addThreadMetricReport = async () => {
+        const {threadCount} = this.initialProcMetric;
 
         const threadMetric = new ThreadMetric();
+        threadMetric.initWithBaseMonitoringDataValues(this.metricData);
         threadMetric.id = Utils.generateId();
-        threadMetric.threadCount = threadCount;
+        threadMetric.metricTimestamp = Date.now();
 
-        const threadStat = {
-            ...this.statData,
-            ...threadMetric,
+        threadMetric.metrics = {
+            'app.threadCount' : threadCount,
         };
-        const threadStatReport = Utils.generateReport(threadStat, MonitorDataType.METRIC, this.apiKey);
-        this.reports = [...this.reports, threadStatReport];
+
+        const threadMetricReport = Utils.generateReport(threadMetric, this.apiKey);
+        this.reports = [...this.reports, threadMetricReport];
     }
 
-    addMemoryStatReport = async () => {
+    addMemoryMetricReport = async () => {
         const {rss, heapTotal, heapUsed, external} = process.memoryUsage();
         const totalMemory = os.totalmem();
         const freeMemory = os.freemem();
 
         const memoryMetric = new MemoryMetric();
+        memoryMetric.initWithBaseMonitoringDataValues(this.metricData);
         memoryMetric.id = Utils.generateId();
-        memoryMetric['proc.rss'] = rss;
-        memoryMetric['proc.heapTotal'] = heapTotal;
-        memoryMetric['proc.heapUsed'] = heapUsed;
-        memoryMetric['proc.external'] = external;
-        memoryMetric['os.totalMemory'] = totalMemory;
-        memoryMetric['os.freeMemory'] = freeMemory;
-        memoryMetric['os.usedMemory'] = totalMemory - freeMemory;
+        memoryMetric.metricTimestamp = Date.now();
 
-        const memoryStat = {
-            ...this.statData,
-            ...memoryMetric,
+        memoryMetric.metrics = {
+            'app.maxMemory': heapTotal,
+            'app.usedMemory' : heapUsed,
+            'app.rss' : rss,
+            'sys.maxMemory' : totalMemory,
+            'sys.usedMemory': totalMemory - freeMemory,
+            'sys.external' : external,
+            'sys.free' : freeMemory,
         };
-        const memoryStatReport = Utils.generateReport(memoryStat, this.dataType, this.apiKey);
-        this.reports = [...this.reports, memoryStatReport];
+
+        const memoryMetricReport = Utils.generateReport(memoryMetric, this.apiKey);
+        this.reports = [...this.reports, memoryMetricReport];
     }
 
-    addCpuStatReport = async () => {
+    addCpuMetricReport = async () => {
         const endCpuUsage = Utils.getCpuUsage();
         const cpuLoad = Utils.getCpuLoad(this.startCpuUsage, endCpuUsage, this.clockTick);
 
         const cpuMetric = new CPUMetric();
+        cpuMetric.initWithBaseMonitoringDataValues(this.metricData);
         cpuMetric.id = Utils.generateId();
-        cpuMetric.processCpuLoad = cpuLoad.procCpuLoad;
-        cpuMetric.systemCpuLoad = cpuLoad.sysCpuLoad;
+        cpuMetric.metricTimestamp = Date.now();
 
-        const cpuStat = {
-            ...this.statData,
-            ...cpuMetric,
+        cpuMetric.metrics = {
+            'app.cpuLoad': cpuLoad.procCpuLoad,
+            'sys.cpuLoad': cpuLoad.sysCpuLoad,
         };
-        const cpuStatReport = Utils.generateReport(cpuStat, this.dataType, this.apiKey);
-        this.reports = [...this.reports, cpuStatReport];
+
+        const cpuMetricReport = Utils.generateReport(cpuMetric, this.apiKey);
+        this.reports = [...this.reports, cpuMetricReport];
     }
 
-    addIoStatReport = async () => {
+    addIoMetricReport = async () => {
         const startProcIo = this.initialProcIo;
         const endProcIo: any = await Utils.readProcIoPromise();
 
         const ioMetric = new IOMetric();
+        ioMetric.initWithBaseMonitoringDataValues(this.metricData);
         ioMetric.id = Utils.generateId();
-        ioMetric['proc.diskReadBytes'] = endProcIo.readBytes - startProcIo.readBytes;
-        ioMetric['proc.diskWriteBytes'] = endProcIo.writeBytes - startProcIo.writeBytes;
+        ioMetric.metricTimestamp = Date.now();
 
-        const ioStat = {
-            ...this.statData,
-            ...ioMetric,
+        ioMetric.metrics = {
+            'sys.diskReadBytes':  endProcIo.readBytes - startProcIo.readBytes,
+            'sys.diskWriteBytes': endProcIo.writeBytes - startProcIo.writeBytes,
         };
-        const ioStatReport = Utils.generateReport(ioStat, this.dataType, this.apiKey);
-        this.reports = [...this.reports, ioStatReport];
+
+        const ioMetricReport = Utils.generateReport(ioMetric, this.apiKey);
+        this.reports = [...this.reports, ioMetricReport];
     }
 }
 

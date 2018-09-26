@@ -1,9 +1,9 @@
 
 import TraceDataProperties from './TraceProperties';
 import AuditInfo from './AuditInfo';
-import BasePluginData from '../base/BasePluginData';
+import BaseMonitoringData from '../base/BaseMonitoringData';
 
-class TraceData extends BasePluginData {
+class TraceData extends BaseMonitoringData {
     id: string;
     duration: number;
     startTimestamp: number;

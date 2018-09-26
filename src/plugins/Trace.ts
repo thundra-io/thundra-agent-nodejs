@@ -25,7 +25,7 @@ import TraceConfig from './config/TraceConfig';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
 import AuditInfoThrownError from './data/trace/AuditInfoThrownError';
 import Integration from './integrations/Integration';
-import MonitorDataType from './data/base/MonitorDataType';
+import MonitorDataType from './data/base/MonitoringDataType';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -151,7 +151,7 @@ export class Trace {
         this.traceData.auditInfo.duration = this.endTimestamp - this.startTimestamp;
         this.traceData.auditInfo.aliveTime = this.endTimestamp - this.startTimestamp;
         this.traceData.duration = this.endTimestamp - this.startTimestamp;
-        const reportData = Utils.generateReport(this.traceData, MonitorDataType.TRACE, this.apiKey);
+        const reportData = Utils.generateReport(this.traceData, this.apiKey);
         this.report(reportData);
 
         this.tracer.destroy();

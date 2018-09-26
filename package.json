@@ -1,9 +1,10 @@
 {
   "name": "@thundra/core",
-  "version": "1.5.9",
+  "version": "1.6.1",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
+    "precompile": "node create-build-info.js",
     "compile": "tsc",
     "build": "webpack",
     "start": "npm-run-all --parallel watch:server watch:build",
