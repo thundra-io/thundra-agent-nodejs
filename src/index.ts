@@ -53,12 +53,14 @@ module.exports = (options: any) => {
     }
 
     const logStreamName = Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
+    const region =  Utils.getConfiguration(envVariableKeys.AWS_REGION);
+    const functionVersion = Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
     const applicationId = logStreamName ? logStreamName.split(']').pop() : Utils.generateId();
 
     const pluginContext: PluginContext = {
         applicationId,
-        applicationRegion: Utils.getConfiguration(envVariableKeys.AWS_REGION),
-        applicationVersion: Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION),
+        applicationRegion: region ? region : '',
+        applicationVersion: functionVersion ? functionVersion : '',
         requestCount: 0,
         apiKey: config.apiKey,
         timeoutMargin: config.timeoutMargin,

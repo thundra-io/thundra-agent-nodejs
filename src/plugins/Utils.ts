@@ -214,7 +214,8 @@ class Utils {
         monitoringData.applicationClassName = LAMBDA_APPLICATION_CLASS_NAME;
         monitoringData.applicationName = originalContext ? originalContext.functionName : '';
         monitoringData.applicationVersion = pluginContext ? pluginContext.applicationVersion : '';
-        monitoringData.applicationStage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
+        const stage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
+        monitoringData.applicationStage = stage ? stage : ''; 
         monitoringData.applicationRuntimeVersion = process.version;
 
         return monitoringData;
