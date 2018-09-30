@@ -1,4 +1,4 @@
-import { Tracer, Reference, Tags } from 'opentracing';
+import { Tracer } from 'opentracing';
 import ThundraSpan, { SpanEvent } from './Span';
 import ThundraRecorder from './Recorder';
 import ThundraSampler from './Sampler';

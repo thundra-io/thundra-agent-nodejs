@@ -64,7 +64,7 @@ class Log {
             this.logData.tags['error.kind'] = error.errorType;
             this.logData.tags['error.stack'] = error.stack;
             if (error.code) {
-                this.logData.tags['error.code'] = error.stack;
+                this.logData.tags['error.code'] = error.code;
             }
             if (error.stack) {
                 this.logData.tags['error.stack'] = error.stack;

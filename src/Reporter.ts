@@ -2,7 +2,8 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import {URL, MONITORING_DATA_PATH} from './Constants';
+import {URL, MONITORING_DATA_PATH, envVariableKeys} from './Constants';
+import Utils from './plugins/Utils';
 
 const httpAgent = new http.Agent({
     keepAlive: true,
@@ -53,7 +54,7 @@ class Reporter {
     }
 
     addReport(report: any): void {
-        if (process.env.thundra_lambda_publish_cloudwatch_enable === 'true') {
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) === 'true') {
             const jsonStringReport = '\n' + JSON.stringify(report).replace(/\r?\n|\r/g, '') + '\n';
             process.stdout.write(jsonStringReport);
         } else {

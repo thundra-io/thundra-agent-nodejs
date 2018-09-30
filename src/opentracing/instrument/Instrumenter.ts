@@ -1,7 +1,7 @@
 import ThundraTracer from '../Tracer';
 import TraceConfig from '../../plugins/config/TraceConfig';
 import TraceDef, { TraceDefCheckLevel } from '../../plugins/config/TraceDef';
-import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, Syntax, TRACE_DEF_FILE_PREFIX_ENV_KEY } from '../../Constants';
+import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, Syntax, TRACE_DEF_FILE_PREFIX_ENV_KEY, envVariableKeys } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/Utils';
@@ -191,7 +191,7 @@ class Instrumenter {
                 return null;
             }
 
-            const traceDefPrefix = process.env[TRACE_DEF_FILE_PREFIX_ENV_KEY];
+            const traceDefPrefix = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_TRACE_DEF_FILE_PREFIX);
             if (traceDefPrefix && TraceDefCheckLevel.FILE) {
                 const prefixes = traceDefPrefix.split(',');
                 for (const prefix of prefixes) {
@@ -254,6 +254,12 @@ class Instrumenter {
                     span.setTag('error', true);
                     span.setTag('error.kind', err.errorType);
                     span.setTag('error.message', err.errorMessage);
+                    if (err.code) {
+                        this.invocationData.tags['error.code'] = err.code;
+                    }
+                    if (err.stack) {
+                        this.invocationData.tags['error.stack'] = err.stack;
+                    }
                 }
                 span.finish();
             } catch (ex) {

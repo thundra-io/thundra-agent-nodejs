@@ -93,7 +93,7 @@ class Invocation {
             this.invocationData.tags['error.kind'] = error.errorType;
             this.invocationData.tags['error.stack'] = error.stack;
             if (error.code) {
-                this.invocationData.tags['error.code'] = error.stack;
+                this.invocationData.tags['error.code'] = error.code;
             }
             if (error.stack) {
                 this.invocationData.tags['error.stack'] = error.stack;

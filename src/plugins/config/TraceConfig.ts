@@ -1,7 +1,8 @@
 import BasePluginConfig from './BasePluginConfig';
 import TraceDef from './TraceDef';
-import { TRACE_DEF_ENV_KEY, TRACE_INTEGRATION_ENV_KEY } from '../../Constants';
+import {envVariableKeys } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
+import Utils from '../Utils';
 const koalas = require('koalas');
 
 class TraceConfig extends BasePluginConfig {
@@ -16,8 +17,10 @@ class TraceConfig extends BasePluginConfig {
     constructor(options: any) {
         options = options ? options : {};
         super(koalas(options.enabled, true));
-        this.disableRequest = koalas(process.env.thundra_lambda_trace_request_skip === 'true', options.disableRequest, false);
-        this.disableResponse = koalas(process.env.thundra_lambda_trace_response_skip === 'true' , options.disableResponse, false);
+        this.disableRequest = koalas(Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP) === 'true', options.disableRequest, false);
+        this.disableResponse = koalas(Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) === 'true', options.disableResponse, false);
         this.maskRequest = koalas(options.maskRequest, null);
         this.maskResponse = koalas(options.maskResponse, null);
         this.integrations = koalas([]);
@@ -25,14 +28,14 @@ class TraceConfig extends BasePluginConfig {
         this.traceDefs = [];
 
         for (const key of Object.keys(process.env)) {
-            if (key.startsWith(TRACE_DEF_ENV_KEY)) {
+            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_TRACE_DEF)) {
                 try {
                     this.traceDefs.push(this.parseTraceDefEnvVariable(process.env[key]));
                 } catch (ex) {
                     console.error(`Cannot parse trace def ${key}`);
                 }
             }
-            if (key.startsWith(TRACE_INTEGRATION_ENV_KEY)) {
+            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS)) {
                 try {
                     this.integrations.push(... this.parseIntegrationsEnvVariable(process.env[key]));
                 } catch (ex) {

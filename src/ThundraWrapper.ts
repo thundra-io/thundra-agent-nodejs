@@ -20,6 +20,8 @@ import * as uuidv4 from 'uuid/v4';
 import Reporter from './Reporter';
 import TimeoutError from './plugins/error/TimeoutError';
 import HttpError from './plugins/error/HttpError';
+import Utils from './plugins/Utils';
+import { envVariableKeys } from './Constants';
 
 class ThundraWrapper {
 
@@ -143,7 +145,7 @@ class ThundraWrapper {
                 response: result,
             };
 
-            if (this.pluginContext.skipHttpResponseCheck || this.isErrorResponse(result)) {
+            if (this.isErrorResponse(result)) {
                 afterInvocationData = {
                     error: new HttpError('Lambda returned with error response.'),
                     response: result,
@@ -151,7 +153,7 @@ class ThundraWrapper {
             }
 
             await this.executeHook('after-invocation', afterInvocationData, true);
-            if (process.env.thundra_lambda_publish_cloudwatch_enable !== 'true') {
+            if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) !== 'true') {
                 await this.reporter.sendReports();
             }
 

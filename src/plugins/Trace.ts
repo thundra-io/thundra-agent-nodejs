@@ -14,8 +14,7 @@ import Utils from './Utils';
 import TraceData from './data/trace/TraceData';
 import {initGlobalTracer} from 'opentracing';
 import HttpError from './error/HttpError';
-import { LOG_TAG_NAME, INTEGRATIONS, SpanTags, DBTags, HttpTags, RedisTags, SpanTypes, AwsDynamoTags,
-        AwsSQSTags, AwsSNSTags, AwsKinesisTags, AwsS3Tags, AwsLambdaTags } from '../Constants';
+import {INTEGRATIONS } from '../Constants';
 import Reporter from '../Reporter';
 import TraceConfig from './config/TraceConfig';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
@@ -134,20 +133,18 @@ export class Trace {
             this.traceData.tags.error = true;
             this.traceData.tags['error.message'] = error.errorMessage;
             this.traceData.tags['error.kind'] = error.errorType;
-            this.traceData.tags['error.stack'] = error.stack;
 
             this.rootSpan.tags.error = true;
             this.rootSpan.tags['error.message'] = error.errorMessage;
             this.rootSpan.tags['error.kind'] = error.errorType;
-            this.rootSpan.tags['error.stack'] = error.stack;
 
             if (error.code) {
-                this.traceData.tags['error.code'] = error.stack;
-                this.rootSpan.tags['error.code'] = error.stack;
+                this.traceData.tags['error.code'] = error.code;
+                this.rootSpan.tags['error.code'] = error.code;
             }
             if (error.stack) {
                 this.traceData.tags['error.stack'] = error.stack;
-                this.rootSpan.tags['error.code'] = error.stack;
+                this.rootSpan.tags['error.stack'] = error.stack;
             }
         }
 

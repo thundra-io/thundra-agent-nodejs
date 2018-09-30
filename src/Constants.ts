@@ -5,6 +5,7 @@ import PostgreIntegration from './plugins/integrations/PostgreIntegration';
 import MySQL2Integration from './plugins/integrations/MySQL2Integration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
 import AWSIntegration from './plugins/integrations/AWSIntegration';
+import Utils from './plugins/Utils';
 
 export function getTimeoutMargin(region: string) {
     if (region) {
@@ -30,7 +31,7 @@ export function getTimeoutMargin(region: string) {
 }
 
 export const DATA_MODEL_VERSION: string = '2.0';
-export const TIMEOUT_MARGIN: number = getTimeoutMargin(process.env.AWS_REGION);
+export const TIMEOUT_MARGIN: number = getTimeoutMargin(Utils.getConfiguration(this.envVariableKeys.AWS_REGION));
 export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
 export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
 export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
@@ -43,8 +44,8 @@ export const HOOKS = [
 export const URL: url.UrlWithStringQuery = url.parse(
     // the comment below is for ignoring in unit tests, do not remove it
     // istanbul ignore next
-    process.env.thundra_lambda_publish_rest_baseUrl
-        ? process.env.thundra_lambda_publish_rest_baseUrl
+    Utils.getConfiguration(this.envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL)
+        ? Utils.getConfiguration(this.envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL)
         : 'https://collector.thundra.io/api',
 );
 
@@ -52,14 +53,42 @@ export const MONITORING_DATA_PATH = '/monitoring-data';
 
 export const PROC_STAT_PATH: string = '/proc/self/stat';
 export const PROC_IO_PATH: string = '/proc/self/io';
-export const LOG_TAG_NAME: string = 'LOGS';
-export const ARGS_TAG_NAME: string = 'ARGS';
-export const RETURN_VALUE_TAG_NAME: string = 'RETURN_VALUE';
+export const ARGS_TAG_NAME: string = 'method.args';
+export const RETURN_VALUE_TAG_NAME: string = 'method.return_value';
 
-export const TRACE_INTEGRATION_ENV_KEY: string = 'thundra_trace_integrations';
-export const TRACE_DEF_ENV_KEY: string = 'thundra_trace_def';
-export const TRACE_DEF_FILE_PREFIX_ENV_KEY: string = 'thundra_trace_traceablePrefixes';
 export const TRACE_DEF_SEPERATOR: string = '.';
+
+export const envVariableKeys = {
+    THUNDRA_APIKEY: 'thundra_apiKey',
+    THUNDRA_DISABLE: 'thundra_agent_lambda_disable',
+    THUNDRA_APPLICATION_STAGE: 'thundra_agent_lambda_application_stage',
+    THUNDRA_APPLICATION_DOMAIN_NAME: 'thundra_agent_lambda_application_domainName',
+    THUNDRA_APPLICATION_CLASS_NAME: 'thundra_agent_lambda_application_className',
+    THUNDRA_APPLICATION_VERSION: 'thundra_agent_lambda_application_version',
+    THUNDRA_LAMBDA_TIMEOUT_MARGIN: 'thundra_agent_lambda_timeout_margin',
+    THUNDRA_LAMBDA_REPORT_REST_BASEURL: 'thundra_agent_lambda_report_rest_baseUrl',
+    THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE: 'thundra_agent_lambda_report_cloudwatch_enable',
+    THUNDRA_DISABLE_TRACE: 'thundra_agent_lambda_trace_disable',
+    THUNDRA_DISABLE_METRIC: 'thundra_agent_lambda_metric_disable',
+    THUNDRA_DISABLE_LOG: 'thundra_agent_lambda_log_disable',
+
+    THUNDRA_LAMBDA_TRACE_REQUEST_SKIP: 'thundra_agent_lambda_trace_request_skip',
+    THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP: 'thundra_agent_lambda_trace_response_skip',
+    THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE: 'thundra_agent_lambda_trace_instrument_disable',
+    THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG : 'thundra_agent_lambda_trace_instrument_traceableConfig',
+    THUNDRRA_LAMBDA_LOG_LOGLEVEL: 'thundra_agent_lambda_log_loglevel',
+
+    AWS_LAMBDA_APPLICATION_ID: 'AWS_LAMBDA_APPLICATION_ID',
+    AWS_LAMBDA_LOG_STREAM_NAME: 'AWS_LAMBDA_LOG_STREAM_NAME',
+    AWS_LAMBDA_FUNCTION_VERSION: 'AWS_LAMBDA_FUNCTION_VERSION',
+    AWS_REGION: 'AWS_REGION',
+    AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',
+
+    THUNDRA_LAMBDA_TRACE_TRACE_DEF_FILE_PREFIX: 'thundra_agent_lambda_trace_traceablePrefixes',
+    THUNDRA_LAMBDA_TRACE_TRACE_DEF: 'thundra_agent_lambda_trace_def',
+    THUNDRA_LAMBDA_TRACE_INTEGRATIONS: 'thundra_agent_lambda_integrations',
+    THUNDRA_LAMBDA_AGENT_TRUST_ALL_CERTIFICATES: 'thundra_lambda_publish_report_trustAllCertificates',
+};
 
 export const Syntax = {
     FunctionDeclaration: 'FunctionDeclaration',

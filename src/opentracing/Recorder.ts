@@ -1,5 +1,4 @@
 import ThundraSpan, { SpanEvent } from './Span';
-import SpanTreeNode from './SpanTree';
 import Stack from './instrument/Stack';
 
 class ThundraRecorder {

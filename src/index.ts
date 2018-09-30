@@ -14,6 +14,7 @@ import LogConfig from './plugins/config/LogConfig';
 import PluginContext from './plugins/PluginContext';
 import ThundraTracer from './opentracing/Tracer';
 import LogManager from './plugins/LogManager';
+import { envVariableKeys } from './Constants';
 
 const ThundraWarmup = require('@thundra/warmup');
 
@@ -27,17 +28,17 @@ module.exports = (options: any) => {
         return (originalFunc: any) => originalFunc;
     }
 
-    if (!(process.env.thundra_trace_disable === 'true') && config.traceConfig.enabled) {
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') || config.traceConfig.enabled) {
         tracePlugin = TracePlugin(config.traceConfig);
         config.plugins.push(tracePlugin);
     }
 
-    if (!(process.env.thundra_metric_disable === 'true') && config.metricConfig.enabled) {
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC) === 'true') || config.metricConfig.enabled) {
         const metricPlugin = MetricPlugin(config.metricConfig);
         config.plugins.push(metricPlugin);
     }
 
-    if (!(process.env.thundra_log_disable === 'true') && config.logConfig.enabled) {
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG) === 'true') || config.logConfig.enabled) {
         const logPlugin = LogPlugin(config.logConfig);
         logManager = new LogManager();
         logManager.addListener(logPlugin);
@@ -51,19 +52,16 @@ module.exports = (options: any) => {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
 
-    const applicationId = process.env.AWS_LAMBDA_LOG_STREAM_NAME ?
-                          process.env.AWS_LAMBDA_LOG_STREAM_NAME.split(']').pop() :
-                          Utils.generateId();
+    const logStreamName = Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
+    const applicationId = logStreamName ? logStreamName.split(']').pop() : Utils.generateId();
 
     const pluginContext: PluginContext = {
         applicationId,
-        applicationProfile: process.env.thundra_applicationProfile ? process.env.thundra_applicationProfile : 'default',
-        applicationRegion: process.env.AWS_REGION,
-        applicationVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
+        applicationRegion: Utils.getConfiguration(envVariableKeys.AWS_REGION),
+        applicationVersion:  Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION),
         requestCount: 0,
         apiKey: config.apiKey,
         timeoutMargin: config.timeoutMargin,
-        skipHttpResponseCheck: process.env.thundra_lambda_http_responseCheck_skip === 'true' ? true : false,
     };
 
     config.plugins.forEach((plugin: any) => {

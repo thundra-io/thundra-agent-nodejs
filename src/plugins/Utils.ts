@@ -2,7 +2,7 @@ import * as uuidv4 from 'uuid/v4';
 import { readFile } from 'fs';
 import * as os from 'os';
 import { DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME } from '../Constants';
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
@@ -30,6 +30,10 @@ class Utils {
             apiKey,
             dataModelVersion: DATA_MODEL_VERSION,
         };
+    }
+
+    static getConfiguration(key: string): string {
+        return process.env[key];
     }
 
     static getCpuUsage() {
@@ -208,7 +212,7 @@ class Utils {
         monitoringData.applicationClassName = LAMBDA_APPLICATION_CLASS_NAME;
         monitoringData.applicationName = originalContext.functionName;
         monitoringData.applicationVersion = pluginContext.applicationVersion;
-        monitoringData.applicationStage = process.env.thundra_application_stage ? process.env.thundra_application_stage : '';
+        monitoringData.applicationStage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
         monitoringData.applicationRuntimeVersion = process.version;
 
         return monitoringData;
