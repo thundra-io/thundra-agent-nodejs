@@ -1,7 +1,7 @@
 import ThundraTracer from '../Tracer';
 import TraceConfig from '../../plugins/config/TraceConfig';
 import TraceDef, { TraceDefCheckLevel } from '../../plugins/config/TraceDef';
-import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, Syntax, TRACE_DEF_FILE_PREFIX_ENV_KEY, envVariableKeys } from '../../Constants';
+import {envVariableKeys, TRACE_DEF_SEPERATOR, Syntax, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/Utils';
