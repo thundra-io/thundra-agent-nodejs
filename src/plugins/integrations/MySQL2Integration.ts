@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import {DBTags, SpanTags, SpanTypes} from '../../Constants';
+import {DBTags, SpanTags, SpanTypes, DomainNames, ClassNames} from '../../Constants';
 import Utils from '../Utils';
 
 const shimmer = require('shimmer');
@@ -32,8 +32,10 @@ class MySQL2Integration implements Integration {
       return function queryWrapper(sql: any , values: any, cb: any) {
         const parentSpan = tracer.getActiveSpan();
 
-        const span = tracer.startSpan(this.config.database, {
+        const span = tracer._startSpan(this.config.database, {
             childOf : parentSpan,
+            domainName: DomainNames.DB,
+            className: ClassNames.RDB,
         });
 
         span.addTags({
@@ -61,6 +63,8 @@ class MySQL2Integration implements Integration {
             span.setTag('error', true);
             span.setTag('error.kind', parseError.errorType);
             span.setTag('error.message', parseError.errorMessage);
+            span.setTag('error.stack', parseError.stack);
+            span.setTag('error.code', parseError.code);
           }
 
           span.finish();

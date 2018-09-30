@@ -68,6 +68,7 @@ class ThundraWrapper {
         };
 
         this.timeout = this.setupTimeoutHandler(this);
+        /// consol
     }
 
     wrappedCallback = (error: any, result: any) => {
@@ -89,10 +90,9 @@ class ThundraWrapper {
             originalEvent: this.originalEvent,
             reporter: this.reporter,
             contextId: uuidv4(),
-            transactionId: uuidv4(),
         };
 
-        this.executeHook('before-invocation', beforeInvocationData)
+        this.executeHook('before-invocation', beforeInvocationData, false)
             .then(() => {
                 this.pluginContext.requestCount += 1;
                 try {
@@ -123,9 +123,10 @@ class ThundraWrapper {
         });
     }
 
-    async executeHook(hook: any, data: any) {
+    async executeHook(hook: any, data: any, reverse: boolean) {
+        const plugins = reverse ? this.plugins.reverse() : this.plugins;
         await Promise.all(
-            this.plugins.map(async (plugin: any) => {
+            plugins.map((plugin: any) => {
                 if (plugin.hooks && plugin.hooks[hook]) {
                     return plugin.hooks[hook](data);
                 }
@@ -149,7 +150,7 @@ class ThundraWrapper {
                 };
             }
 
-            await this.executeHook('after-invocation', afterInvocationData);
+            await this.executeHook('after-invocation', afterInvocationData, true);
             if (process.env.thundra_lambda_publish_cloudwatch_enable !== 'true') {
                 await this.reporter.sendReports();
             }

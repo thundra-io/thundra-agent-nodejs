@@ -1,4 +1,5 @@
 import BaseMonitoringData from '../base/BaseMonitoringData';
+import MonitorDataType from '../base/MonitoringDataType';
 
 class InvocationData extends BaseMonitoringData {
     traceId: string;
@@ -16,6 +17,10 @@ class InvocationData extends BaseMonitoringData {
     coldStart: boolean;
     timeout: boolean;
     tags: any;
+
+    constructor() {
+        super(MonitorDataType.INVOCATION);
+    }
 }
 
 export default InvocationData;

@@ -2,6 +2,7 @@ import TraceConfig from './TraceConfig';
 import MetricConfig from './MetricConfig';
 import InvocationConfig from './InvocationConfig';
 import {TIMEOUT_MARGIN} from '../../Constants';
+import LogConfig from './LogConfig';
 const koalas = require('koalas');
 
 class ThundraConfig {
@@ -12,6 +13,7 @@ class ThundraConfig {
     traceConfig: TraceConfig;
     metricConfig: MetricConfig;
     invocationConfig: InvocationConfig;
+    logConfig: LogConfig;
     timeoutMargin: number;
     plugins: any [];
 
@@ -23,6 +25,7 @@ class ThundraConfig {
         this.timeoutMargin = koalas(process.env.thundra_lambda_timeout_margin, options.timeoutMargin, TIMEOUT_MARGIN);
         this.traceConfig = new TraceConfig(options.traceConfig);
         this.metricConfig = new MetricConfig(options.metricConfig);
+        this.logConfig = new LogConfig(options.logConfig);
         this.invocationConfig = new InvocationConfig(options.invocationConfig);
         this.trustAllCert = koalas(process.env.thundra_lambda_publish_rest_trustAllCertificates, options.trustAllCert, false);
     }

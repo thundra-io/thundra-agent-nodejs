@@ -1,4 +1,4 @@
-/*import Trace from '../../dist/plugins/Trace';
+import Trace from '../../dist/plugins/Trace';
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
 import { DATA_MODEL_VERSION } from '../../dist/Constants';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
@@ -333,13 +333,5 @@ describe('Trace', () => {
         it('should set Timeout true', () => {
             expect(tracer.traceData.properties.timeout).toBeTruthy();
         });
-    });
-});*/
-
-
-describe('afterInvocation with TimeoutError', () => {
-
-    it('should set Timeout true', () => {
-        expect(true).toBeTruthy();
     });
 });

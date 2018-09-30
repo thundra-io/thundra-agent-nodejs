@@ -67,6 +67,7 @@ class Reporter {
                 if (response.status !== 200) {
                     console.log(this.reports);
                 }
+                console.log(response);
             })
             .catch((err: any) => {
                 console.error(err);

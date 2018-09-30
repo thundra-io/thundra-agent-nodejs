@@ -99,6 +99,32 @@ export const logLevels: any = {
     NONE: 6,
 };
 
+export const DomainNames = {
+    AWS: 'AWS',
+    DB: 'DB',
+    MESSAGING: 'Messaging',
+    STREAM: 'Stream',
+    STORAGE: 'Storage',
+    API: 'API',
+    CACHE: 'Cache',
+};
+
+export const ClassNames = {
+    AWSSERVICE: 'AWSService',
+    DYNAMODB: 'AWS-DynamoDB',
+    SQS: 'AWS-SQS',
+    SNS: 'AWS-SNS',
+    KINESIS: 'AWS-Kinesis',
+    FIREHOSE: 'AWS-Firehose',
+    S3: 'AWS-S3',
+    LAMBDA: 'AWS-Lambda',
+    RDB: 'RDB',
+    REDIS: 'Redis',
+    HTTP : 'HTTP',
+};
+
+export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
+
 export const DBTags = {
     DB_STATEMENT: 'db.statement',
     DB_STATEMENT_TYPE: 'db.statement.type',
@@ -109,12 +135,17 @@ export const DBTags = {
     DB_USER: 'db.user',
 };
 
+export const DBTypes = {
+    DYNAMODB: ' aws-dynamodb',
+    REDIS: 'redis',
+};
+
 export const HttpTags = {
     HTTP_METHOD: 'http.method',
     HTTP_URL: 'http.url',
     HTTP_PATH: 'http.path',
     HTTP_HOST: 'http.host',
-    HTTP_STATUS: 'http.status',
+    HTTP_STATUS: 'http.status_code',
 };
 
 export const RedisTags = {
@@ -146,15 +177,15 @@ export const AwsKinesisTags = {
 };
 
 export const AwsLambdaTags = {
-    FUNCTION_NAME: 'function.name',
-    FUNCTION_QUALIFIER: 'function.qualifier',
-    INVOCATION_TYPE: 'invocation.type',
-    INVOCATION_PAYLOAD: 'invocation.payload',
+    FUNCTION_NAME: 'aws.lambda.function.name',
+    FUNCTION_QUALIFIER: 'aws.lambda.function.qualifier',
+    INVOCATION_TYPE: 'aws.lambda.invocation.type',
+    INVOCATION_PAYLOAD: 'aws.lambda.invocation.payload',
 };
 
 export const AwsS3Tags = {
-    BUCKET_NAME: 'bucket.name',
-    OBJECT_NAME: 'object.name',
+    BUCKET_NAME: 'aws.s3.bucket.name',
+    OBJECT_NAME: 'aws.s3.object.name',
 };
 
 export const AwsSNSTags = {
@@ -163,16 +194,6 @@ export const AwsSNSTags = {
 
 export const AwsSQSTags = {
     QUEUE_NAME: 'aws.sqs.queue.name',
-};
-
-export const AwsClassNames = {
-    AwsSQS: 'AWS-SQS',
-    AwsSNS: 'AWS-SNS',
-    AwsDDB: 'AWS-DynamoDB',
-    AwsKinesis: 'AWS-Kinesis',
-    AwsFirehose: 'AWS-Firehose',
-    AwsS3: 'AWS-S3',
-    AwsLambda: 'AWS-Lambda',
 };
 
 export const SpanTags = {
@@ -202,7 +223,7 @@ export const INTEGRATIONS: any = {
     aws: AWSIntegration,
 };
 
-export const SQSCommandTypes: any = {
+export const SQSRequestTypes: any = {
     receiveMessage: 'READ',
     sendMessage: 'WRITE',
     sendMessageBatch: 'WRITE',
@@ -210,8 +231,13 @@ export const SQSCommandTypes: any = {
     deleteMessageBatch: 'DELETE',
 };
 
-export const SNSCommandTypes: any = {
+export const SNSRequesTypes: any = {
     write: 'WRITE',
+};
+
+export const LambdaRequestType: any = {
+    invokeAsync: 'CALL',
+    invoke: 'CALL',
 };
 
 export const RedisCommandTypes: any  = {
@@ -364,6 +390,12 @@ export const DynamoDBRequestTypes: any = {
 export const KinesisRequestTypes: any = {
     getRecords: 'READ',
     putRecords: 'WRITE',
+    putRecord: 'WRITE',
+};
+
+export const FirehoseRequestTypes: any = {
+    getRecords: 'READ',
+    putRecordBatch: 'WRITE',
     putRecord: 'WRITE',
 };
 

@@ -9,8 +9,12 @@ class MemoryMetric extends MetricData {
         'sys.maxMemory': number;
         'sys.usedMemory': number;
         'sys.external': number
-        'sys.free': number;
+        'sys.freeMemory': number;
     };
+
+    constructor() {
+        super();
+    }
 }
 
 export default MemoryMetric;

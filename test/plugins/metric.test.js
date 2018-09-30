@@ -165,7 +165,7 @@ describe('Metrics', () => {
             expect(metric.reports[0].data.metrics['app.rss']).toBeDefined();
             expect(metric.reports[0].data.metrics['app.usedMemory']).toBeDefined();
             expect(metric.reports[0].data.metrics['sys.external']).toBeDefined();
-            expect(metric.reports[0].data.metrics['sys.free']).toBeDefined();
+            expect(metric.reports[0].data.metrics['sys.freeMemory']).toBeDefined();
             expect(metric.reports[0].data.metrics['sys.maxMemory']).toBeDefined();
             expect(metric.reports[0].data.metrics['sys.usedMemory']).toBeDefined();
         });

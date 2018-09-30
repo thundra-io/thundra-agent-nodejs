@@ -6,6 +6,10 @@ class CPUMetric extends MetricData {
         'app.cpuLoad': number,
         'sys.cpuLoad': number,
     };
+
+    constructor() {
+        super();
+    }
 }
 
 export default CPUMetric;

@@ -13,6 +13,7 @@ class ThundraSpan extends Span {
   logs: any[];
   className: string;
   domainName: string;
+  order: number;
 
   constructor(tracer: any, fields: any) {
     super();
@@ -31,6 +32,7 @@ class ThundraSpan extends Span {
     this.logs = [];
     this.className = fields.className;
     this.domainName = fields.domainName;
+    this.order = fields.order;
   }
 
   getOperationName(): string {

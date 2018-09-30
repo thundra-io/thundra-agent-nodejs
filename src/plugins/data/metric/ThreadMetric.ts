@@ -5,6 +5,10 @@ class ThreadMetric extends MetricData {
     metrics: {
         'app.threadCount': number;
     };
+
+    constructor() {
+        super();
+    }
 }
 
 export default ThreadMetric;

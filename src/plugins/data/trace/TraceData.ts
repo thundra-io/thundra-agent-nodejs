@@ -1,20 +1,16 @@
-
-import TraceDataProperties from './TraceProperties';
-import AuditInfo from './AuditInfo';
 import BaseMonitoringData from '../base/BaseMonitoringData';
+import MonitorDataType from '../base/MonitoringDataType';
 
 class TraceData extends BaseMonitoringData {
-    id: string;
     duration: number;
+    rootSpanId: string;
     startTimestamp: number;
-    endTimestamp: number;
-    errors: any;
-    thrownError: string;
-    readonly contextType: string = 'ExecutionContext';
-    contextName: string;
-    contextId: string;
-    auditInfo: AuditInfo;
-    properties: TraceDataProperties;
+    finishTimestamp: number;
+    tags: any;
+
+    constructor() {
+        super(MonitorDataType.TRACE);
+    }
 }
 
 export default TraceData;

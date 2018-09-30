@@ -3,6 +3,7 @@ enum MonitoringDataType {
     TRACE = 'Trace',
     SPAN = 'Span',
     METRIC = 'Metric',
+    LOG = 'Log',
 }
 
 export default MonitoringDataType;

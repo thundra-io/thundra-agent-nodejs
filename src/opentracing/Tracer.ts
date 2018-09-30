@@ -5,6 +5,8 @@ import ThundraSampler from './Sampler';
 import Utils from '../plugins/Utils';
 
 class ThundraTracer extends Tracer {
+  static instance: ThundraTracer;
+
   tags: any;
   recorder: ThundraRecorder;
   sampler: ThundraSampler;
@@ -17,10 +19,15 @@ class ThundraTracer extends Tracer {
     this.recorder = config.recorder ? config.recorder : new ThundraRecorder();
     this.sampler = config.sampler ? config.sampler : new ThundraSampler(1);
     this.activeSpans = new Map<string, ThundraSpan>();
+    ThundraTracer.instance = this;
+  }
+
+  static getInstance(): ThundraTracer {
+      return ThundraTracer.instance ? ThundraTracer.instance : new ThundraTracer();
   }
 
   getActiveSpan(): ThundraSpan {
-    return this.recorder.getActiveSpan() ? this.recorder.getActiveSpan().value : null;
+    return this.recorder.getActiveSpan();
   }
 
   finishSpan(): void {
@@ -33,7 +40,7 @@ class ThundraTracer extends Tracer {
     return this.recorder;
   }
 
-  destroy() {
+  destroy(): void {
     this.recorder.destroy();
     this.activeSpans.clear();
   }

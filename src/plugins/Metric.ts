@@ -8,6 +8,8 @@ import IOMetric from './data/metric/IOMetric';
 import CPUMetric from './data/metric/CPUMetric';
 import MetricConfig from './config/MetricConfig';
 import MonitoringDataType from './data/base/MonitoringDataType';
+import PluginContext from './PluginContext';
+import ThundraTracer from '../opentracing/Tracer';
 
 class Metric {
     hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
@@ -16,11 +18,12 @@ class Metric {
     reports: any[];
     clockTick: number;
     reporter: any;
-    pluginContext: any;
+    pluginContext: PluginContext;
     apiKey: any;
     initialProcMetric: any;
     initialProcIo: any;
     startCpuUsage: { procCpuUsed: number; sysCpuUsed: number; sysCpuTotal: number; };
+    tracer: ThundraTracer;
 
     constructor(options: MetricConfig) {
         this.hooks = {
@@ -30,19 +33,20 @@ class Metric {
         this.options = options;
         this.reports = [];
         this.clockTick = parseInt(execSync('getconf CLK_TCK').toString(), 0);
+        this.tracer = ThundraTracer.getInstance();
     }
 
     report(data: any): void {
         this.reporter.addReport(data);
     }
 
-    setPluginContext = (pluginContext: any) => {
+    setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
         this.apiKey = pluginContext.apiKey;
     }
 
     beforeInvocation = async (data: any) => {
-        const { originalContext, transactionId } = data;
+        const { originalContext } = data;
 
         const [procMetric, procIo] = await Promise.all([Utils.readProcMetricPromise(), Utils.readProcIoPromise()]);
         this.initialProcMetric = procMetric;
@@ -53,9 +57,11 @@ class Metric {
             originalContext, MonitoringDataType.METRIC) as MetricData;
         this.metricData.metricTimestamp = Date.now();
 
-        this.metricData.transactionId = transactionId;
-        this.metricData.spanId = transactionId;
-        this.metricData.traceId = transactionId;
+        const activeSpan = this.tracer.getActiveSpan();
+        this.metricData.transactionId = this.pluginContext.transactionId ?
+                                        this.pluginContext.transactionId : originalContext.awsRequestId;
+        this.metricData.spanId = activeSpan ? activeSpan.spanContext.spanId : '';
+        this.metricData.traceId = activeSpan ?  activeSpan.spanContext.traceId : '';
 
         this.startCpuUsage = Utils.getCpuUsage();
         this.reports = [];
@@ -79,7 +85,7 @@ class Metric {
         const {threadCount} = this.initialProcMetric;
 
         const threadMetric = new ThreadMetric();
-        threadMetric.initWithBaseMonitoringDataValues(this.metricData);
+        threadMetric.initWithMetricMonitoringDataValues(this.metricData);
         threadMetric.id = Utils.generateId();
         threadMetric.metricTimestamp = Date.now();
 
@@ -97,7 +103,7 @@ class Metric {
         const freeMemory = os.freemem();
 
         const memoryMetric = new MemoryMetric();
-        memoryMetric.initWithBaseMonitoringDataValues(this.metricData);
+        memoryMetric.initWithMetricMonitoringDataValues(this.metricData);
         memoryMetric.id = Utils.generateId();
         memoryMetric.metricTimestamp = Date.now();
 
@@ -108,7 +114,7 @@ class Metric {
             'sys.maxMemory' : totalMemory,
             'sys.usedMemory': totalMemory - freeMemory,
             'sys.external' : external,
-            'sys.free' : freeMemory,
+            'sys.freeMemory' : freeMemory,
         };
 
         const memoryMetricReport = Utils.generateReport(memoryMetric, this.apiKey);
@@ -120,7 +126,7 @@ class Metric {
         const cpuLoad = Utils.getCpuLoad(this.startCpuUsage, endCpuUsage, this.clockTick);
 
         const cpuMetric = new CPUMetric();
-        cpuMetric.initWithBaseMonitoringDataValues(this.metricData);
+        cpuMetric.initWithMetricMonitoringDataValues(this.metricData);
         cpuMetric.id = Utils.generateId();
         cpuMetric.metricTimestamp = Date.now();
 
@@ -138,7 +144,7 @@ class Metric {
         const endProcIo: any = await Utils.readProcIoPromise();
 
         const ioMetric = new IOMetric();
-        ioMetric.initWithBaseMonitoringDataValues(this.metricData);
+        ioMetric.initWithMetricMonitoringDataValues(this.metricData);
         ioMetric.id = Utils.generateId();
         ioMetric.metricTimestamp = Date.now();
 

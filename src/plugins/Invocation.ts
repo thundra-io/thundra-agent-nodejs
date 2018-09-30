@@ -6,15 +6,15 @@ import InvocationConfig from './config/InvocationConfig';
 import MonitorDataType from './data/base/MonitoringDataType';
 import { DATA_MODEL_VERSION, LAMBDA_APPLICATION_DOMAIN_NAME,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_FUNCTION_PLATFORM} from '../Constants';
-import BuildInfoLoader from '../BuildInfoLoader';
 import MonitoringDataType from './data/base/MonitoringDataType';
+import PluginContext from './PluginContext';
 
 class Invocation {
     public hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
     public options: InvocationConfig;
     public invocationData: InvocationData;
     public reporter: any;
-    public pluginContext: any;
+    public pluginContext: PluginContext;
     public apiKey: any;
     public finishTimestamp: any;
     public startTimestamp: number;
@@ -31,13 +31,13 @@ class Invocation {
         this.reporter.addReport(data);
     }
 
-    setPluginContext = (pluginContext: any) => {
+    setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
         this.apiKey = pluginContext.apiKey;
     }
 
     beforeInvocation = (data: any) => {
-        const { originalContext, reporter, transactionId } = data;
+        const { originalContext, reporter } = data;
         this.reporter = reporter;
         this.finishTimestamp = null;
         this.startTimestamp = Date.now();
@@ -59,9 +59,11 @@ class Invocation {
         this.invocationData.coldStart = this.pluginContext.requestCount === 0;
         this.invocationData.timeout = false;
 
-        this.invocationData.transactionId = transactionId;
-        this.invocationData.spanId = transactionId;
-        this.invocationData.traceId = transactionId;
+        this.invocationData.transactionId = this.pluginContext.transactionId ?
+                                            this.pluginContext.transactionId : originalContext.awsRequestId;
+
+        this.invocationData.spanId = this.pluginContext.spanId;
+        this.invocationData.traceId = this.pluginContext.traceId;
 
         this.invocationData.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
         this.invocationData.tags['aws.lambda.invocation.request_id '] = originalContext.awsRequestId;
@@ -77,15 +79,25 @@ class Invocation {
 
     afterInvocation = (data: any) => {
         if (data.error) {
-            const { errorType, errorMessage } = Utils.parseError(data.error);
+            const error = Utils.parseError(data.error);
             this.invocationData.erroneous = true;
             if (data.error instanceof TimeoutError) {
                 this.invocationData.timeout = true;
                 this.invocationData.tags['aws.lambda.invocation.timeout'] = true;
             }
 
-            this.invocationData.errorType = errorType;
-            this.invocationData.errorMessage = errorMessage;
+            this.invocationData.errorType = error.errorType;
+            this.invocationData.errorMessage = error.errorMessage;
+            this.invocationData.tags.error = true;
+            this.invocationData.tags['error.message'] = error.errorMessage;
+            this.invocationData.tags['error.kind'] = error.errorType;
+            this.invocationData.tags['error.stack'] = error.stack;
+            if (error.code) {
+                this.invocationData.tags['error.code'] = error.stack;
+            }
+            if (error.stack) {
+                this.invocationData.tags['error.stack'] = error.stack;
+            }
         }
         this.finishTimestamp = Date.now();
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;

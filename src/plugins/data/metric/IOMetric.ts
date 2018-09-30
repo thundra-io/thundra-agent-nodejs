@@ -6,6 +6,10 @@ class IOMetric extends MetricData {
         'sys.diskReadBytes': number,
         'sys.diskWriteBytes': number,
     };
+
+    constructor() {
+        super();
+    }
 }
 
 export default IOMetric;

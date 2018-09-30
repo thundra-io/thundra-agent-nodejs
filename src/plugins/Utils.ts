@@ -12,6 +12,9 @@ import BuildInfoLoader from '../BuildInfoLoader';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import InvocationData from './data/invocation/InvacationData';
 import MetricData from './data/metric/MetricData';
+import TraceData from './data/trace/TraceData';
+import SpanData from './data/trace/SpanData';
+import LogData from './data/log/LogData';
 
 const semver = require('semver');
 
@@ -61,7 +64,7 @@ class Utils {
     }
 
     static parseError(err: any) {
-        const error: any = { errorMessage: '', errorType: 'Unknown Error' };
+        const error: any = { errorMessage: '', errorType: 'Unknown Error', stack: null, code: 0 };
         if (err instanceof Error) {
             error.errorType = err.name;
             error.errorMessage = err.message;
@@ -198,7 +201,6 @@ class Utils {
         const monitoringData = this.createMonitoringData(type);
 
         monitoringData.id = Utils.generateId();
-        monitoringData.type = type;
         monitoringData.agentVersion = BuildInfoLoader.getAgentVersion();
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
         monitoringData.applicationId =  pluginContext.applicationId;
@@ -222,8 +224,14 @@ class Utils {
             case MonitorDataType.METRIC:
                 monitoringData = new MetricData();
                 break;
+            case MonitorDataType.TRACE:
+                monitoringData = new TraceData();
+                break;
             case MonitorDataType.SPAN:
-                monitoringData = null;
+                monitoringData = new SpanData();
+                break;
+            case MonitorDataType.LOG:
+                monitoringData = new LogData();
                 break;
         }
 

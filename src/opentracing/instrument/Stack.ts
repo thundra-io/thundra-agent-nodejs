@@ -6,6 +6,9 @@ class Stack<T> {
     pop(): T | undefined {
       return this.store.pop();
     }
+    clear(): void {
+      this.store = [];
+    }
   }
 
 export default Stack;

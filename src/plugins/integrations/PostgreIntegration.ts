@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import {DBTags, SpanTags, SpanTypes} from '../../Constants';
+import {DBTags, SpanTags, SpanTypes, DomainNames, ClassNames} from '../../Constants';
 import Utils from '../Utils';
 
 const shimmer = require('shimmer');
@@ -34,8 +34,10 @@ class PostgreIntegration implements Integration {
         const parentSpan = tracer.getActiveSpan();
 
         const params = this.connectionParameters;
-        const span = tracer.startSpan(params.database, {
+        const span = tracer._startSpan(params.database, {
             childOf : parentSpan,
+            domainName: DomainNames.DB,
+            className: ClassNames.RDB,
         });
 
         if (params) {

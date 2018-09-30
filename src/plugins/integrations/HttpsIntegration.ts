@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import { HttpTags, SpanTags, SpanTypes } from '../../Constants';
+import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames } from '../../Constants';
 import Utils from '../Utils';
 import * as url from 'url';
 
@@ -40,11 +40,14 @@ class HttpsIntegration implements Integration {
         }
 
         const parentSpan = tracer.getActiveSpan();
-        const span = tracer.startSpan(host + path, {
-            childOf : parentSpan,
-        });
+        const span = tracer._startSpan(host + path, {
+          childOf : parentSpan,
+          domainName: DomainNames.API,
+          className: ClassNames.HTTP,
+      });
 
         span.addTags({
+          [SpanTags.OPERATION_TYPE]: 'CALL',
           [SpanTags.SPAN_TYPE] : SpanTypes.HTTP,
           [HttpTags.HTTP_METHOD]: method,
           [HttpTags.HTTP_HOST]: host,
@@ -69,6 +72,8 @@ class HttpsIntegration implements Integration {
             span.setTag('error', true);
             span.setTag('error.kind', parseError.errorType);
             span.setTag('error.message', parseError.errorMessage);
+            span.setTag('error.stack', parseError.stack);
+            span.setTag('error.code', parseError.code);
 
             span.finish();
         });

@@ -1,7 +1,8 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import { SpanTags, RedisTags, RedisCommandTypes, SpanTypes } from '../../Constants';
+import { SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames, ClassNames, DBTypes, DBTags } from '../../Constants';
 import Utils from '../Utils';
+import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -46,14 +47,21 @@ class RedisIntegration implements Integration {
           command = options.command.toUpperCase();
         }
 
-        const span = tracer.startSpan(host, {
+        const operationType = RedisCommandTypes[command] ?  RedisCommandTypes[command] : 'READ';
+
+        const span = tracer._startSpan(host, {
           childOf: parentSpan,
+          domainName: DomainNames.CACHE,
+          className: ClassNames.REDIS,
           tags: {
             [SpanTags.SPAN_TYPE]: SpanTypes.REDIS,
+            [DB_TYPE]: DBTypes.REDIS,
+            [DB_INSTANCE]: host,
+            [DBTags.DB_STATEMENT_TYPE]: operationType,
             [RedisTags.REDIS_HOST]: host,
             [RedisTags.REDIS_PORT]: port,
             [RedisTags.REDIS_COMMAND]: command,
-            [RedisTags.REDIS_COMMAND_TYPE]: RedisCommandTypes[command],
+            [RedisTags.REDIS_COMMAND_TYPE]: operationType,
             [RedisTags.REDIS_COMMAND_ARGS]: options.args.join(','),
           },
         });

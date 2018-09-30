@@ -29,14 +29,14 @@ class Logger {
     }
 
     reportLog(level: any, args: any) {
-        const logData = {
+        const logInfo = {
             logMessage: util.format.apply(util, args),
             logLevel: level,
-            logLevelId: logLevels[level],
-            loggerName: this.loggerName,
+            logLevelCode: logLevels[level],
+            logContextName: this.loggerName,
             logTimestamp: Date.now(),
         };
-        this.logManager.reportLog(logData);
+        this.logManager.reportLog(logInfo);
     }
 
     trace(...args: any[]) {
