@@ -7,57 +7,6 @@ import RedisIntegration from './plugins/integrations/RedisIntegration';
 import AWSIntegration from './plugins/integrations/AWSIntegration';
 import Utils from './plugins/Utils';
 
-export function getTimeoutMargin(region: string) {
-    if (region) {
-        if (region === 'us-west-2') { // our region
-            return 200;
-        } else if (region.startsWith('us-west-')) { // Any region at west of USA
-            return 400;
-        } else if (region.startsWith('us-')) { // Any region at USA
-            return 600;
-        } else if (region.startsWith('ca-')) { // Any region at Canada
-            return 600;
-        } else if (region.startsWith('sa-')) { // Any region at South America
-            return 800;
-        } else if (region.startsWith('cn-')) { // Any region at China
-            return 1000;
-        } else if (region.startsWith('eu-')) { // Any region at Europe
-            return 1000;
-        } else if (region.startsWith('ap-')) { // Any region at Asia Pacific
-            return 1000;
-        }
-    }
-    return 1000;
-}
-
-export const DATA_MODEL_VERSION: string = '2.0';
-export const TIMEOUT_MARGIN: number = getTimeoutMargin(Utils.getConfiguration(this.envVariableKeys.AWS_REGION));
-export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
-export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
-export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
-
-export const HOOKS = [
-    'before-invocation',
-    'after-invocation',
-];
-
-export const URL: url.UrlWithStringQuery = url.parse(
-    // the comment below is for ignoring in unit tests, do not remove it
-    // istanbul ignore next
-    Utils.getConfiguration(this.envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL)
-        ? Utils.getConfiguration(this.envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL)
-        : 'https://collector.thundra.io/api',
-);
-
-export const MONITORING_DATA_PATH = '/monitoring-data';
-
-export const PROC_STAT_PATH: string = '/proc/self/stat';
-export const PROC_IO_PATH: string = '/proc/self/io';
-export const ARGS_TAG_NAME: string = 'method.args';
-export const RETURN_VALUE_TAG_NAME: string = 'method.return_value';
-
-export const TRACE_DEF_SEPERATOR: string = '.';
-
 export const envVariableKeys = {
     THUNDRA_APIKEY: 'thundra_apiKey',
     THUNDRA_DISABLE: 'thundra_agent_lambda_disable',
@@ -89,6 +38,57 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TRACE_INTEGRATIONS: 'thundra_agent_lambda_integrations',
     THUNDRA_LAMBDA_AGENT_TRUST_ALL_CERTIFICATES: 'thundra_lambda_publish_report_trustAllCertificates',
 };
+
+export function getTimeoutMargin(region: string) {
+    if (region) {
+        if (region === 'us-west-2') { // our region
+            return 200;
+        } else if (region.startsWith('us-west-')) { // Any region at west of USA
+            return 400;
+        } else if (region.startsWith('us-')) { // Any region at USA
+            return 600;
+        } else if (region.startsWith('ca-')) { // Any region at Canada
+            return 600;
+        } else if (region.startsWith('sa-')) { // Any region at South America
+            return 800;
+        } else if (region.startsWith('cn-')) { // Any region at China
+            return 1000;
+        } else if (region.startsWith('eu-')) { // Any region at Europe
+            return 1000;
+        } else if (region.startsWith('ap-')) { // Any region at Asia Pacific
+            return 1000;
+        }
+    }
+    return 1000;
+}
+
+export const DATA_MODEL_VERSION: string = '2.0';
+export const TIMEOUT_MARGIN: number = getTimeoutMargin(Utils.getConfiguration(envVariableKeys.AWS_REGION));
+export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
+export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
+export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
+
+export const HOOKS = [
+    'before-invocation',
+    'after-invocation',
+];
+
+export const URL: url.UrlWithStringQuery = url.parse(
+    // the comment below is for ignoring in unit tests, do not remove it
+    // istanbul ignore next
+    Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL)
+        ? Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL)
+        : 'https://collector.thundra.io/api',
+);
+
+export const MONITORING_DATA_PATH = '/monitoring-data';
+
+export const PROC_STAT_PATH: string = '/proc/self/stat';
+export const PROC_IO_PATH: string = '/proc/self/io';
+export const ARGS_TAG_NAME: string = 'method.args';
+export const RETURN_VALUE_TAG_NAME: string = 'method.return_value';
+
+export const TRACE_DEF_SEPERATOR: string = '.';
 
 export const Syntax = {
     FunctionDeclaration: 'FunctionDeclaration',
