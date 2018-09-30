@@ -16,7 +16,6 @@
 *
 */
 
-import * as uuidv4 from 'uuid/v4';
 import Reporter from './Reporter';
 import TimeoutError from './plugins/error/TimeoutError';
 import HttpError from './plugins/error/HttpError';
@@ -36,7 +35,6 @@ class ThundraWrapper {
     private reporter: Reporter;
     private wrappedContext: any;
     private timeout: NodeJS.Timer;
-    private apiKey: string;
 
     constructor(self: any, event: any, context: any, callback: any,
                 originalFunction: any, plugins: any, pluginContext: any, apiKey: any) {
@@ -48,7 +46,6 @@ class ThundraWrapper {
         this.plugins = plugins;
         this.pluginContext = pluginContext;
         this.reported = false;
-        this.apiKey = apiKey;
         this.reporter = new Reporter(apiKey);
         this.wrappedContext = {
             ...context,
@@ -70,13 +67,12 @@ class ThundraWrapper {
         };
 
         this.timeout = this.setupTimeoutHandler(this);
-        /// consol
     }
 
     wrappedCallback = (error: any, result: any) => {
         this.report(error, result, () => {
-                this.invokeCallback(error, result);
-            },
+            this.invokeCallback(error, result);
+        },
         );
     }
 
@@ -91,7 +87,6 @@ class ThundraWrapper {
             originalContext: this.originalContext,
             originalEvent: this.originalEvent,
             reporter: this.reporter,
-            contextId: uuidv4(),
         };
 
         this.executeHook('before-invocation', beforeInvocationData, false)
@@ -122,7 +117,7 @@ class ThundraWrapper {
                     this.report(error, null, null);
                     return error;
                 }
-        });
+            });
     }
 
     async executeHook(hook: any, data: any, reverse: boolean) {
@@ -184,7 +179,7 @@ class ThundraWrapper {
         if (!response) {
             return false;
         }
-        return response.statusCode && typeof response.statusCode  === 'number' && response.body ;
+        return response.statusCode && typeof response.statusCode === 'number' && response.body;
     }
 
     setupTimeoutHandler(wrapperInstance: any): NodeJS.Timer | undefined {
@@ -192,18 +187,18 @@ class ThundraWrapper {
         const { getRemainingTimeInMillis = () => 0 } = originalContext;
 
         if (pluginContext.timeoutMargin < 1 || getRemainingTimeInMillis() < 10) {
-          return undefined;
+            return undefined;
         }
         const maxEndTime = 299900;
         const configEndTime = Math.max(
-          0,
-          getRemainingTimeInMillis() - pluginContext.timeoutMargin,
+            0,
+            getRemainingTimeInMillis() - pluginContext.timeoutMargin,
         );
 
         const endTime = Math.min(configEndTime, maxEndTime);
 
         return setTimeout(() => {
-          wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
+            wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
         }, endTime);
     }
 

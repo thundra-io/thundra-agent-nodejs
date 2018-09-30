@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import {DBTags, SpanTags, SpanTypes, DomainNames, ClassNames} from '../../Constants';
+import { DBTags, SpanTags, SpanTypes, DomainNames, ClassNames } from '../../Constants';
 import Utils from '../Utils';
 
 const shimmer = require('shimmer');
@@ -18,11 +18,11 @@ class PostgreIntegration implements Integration {
 
     this.hook = Hook('pg', { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'pg') {
-          this.lib = exp;
-          this.config = config;
-          this.basedir = basedir;
+        this.lib = exp;
+        this.config = config;
+        this.basedir = basedir;
 
-          this.wrap.call(this, exp, tracer, config);
+        this.wrap.call(this, exp, tracer, config);
       }
       return exp;
     });
@@ -35,19 +35,19 @@ class PostgreIntegration implements Integration {
 
         const params = this.connectionParameters;
         const span = tracer._startSpan(params.database, {
-            childOf : parentSpan,
-            domainName: DomainNames.DB,
-            className: ClassNames.RDB,
+          childOf: parentSpan,
+          domainName: DomainNames.DB,
+          className: ClassNames.RDB,
         });
 
         if (params) {
-            span.addTags({
-                [SpanTags.SPAN_TYPE] : SpanTypes.RDB,
-                [DBTags.DB_INSTANCE]: params.database,
-                [DBTags.DB_USER]: params.user,
-                [DBTags.DB_HOST]: params.host,
-                [DBTags.DB_PORT]: params.port,
-            });
+          span.addTags({
+            [SpanTags.SPAN_TYPE]: SpanTypes.RDB,
+            [DBTags.DB_INSTANCE]: params.database,
+            [DBTags.DB_USER]: params.user,
+            [DBTags.DB_HOST]: params.host,
+            [DBTags.DB_PORT]: params.port,
+          });
         }
 
         const pgQuery = query.apply(this, arguments);
@@ -56,13 +56,13 @@ class PostgreIntegration implements Integration {
         statement = Utils.replaceArgs(statement, pgQuery.values);
 
         span.addTags({
-          [DBTags.DB_STATEMENT_TYPE] : statement.split(' ')[0].toUpperCase(),
+          [DBTags.DB_STATEMENT_TYPE]: statement.split(' ')[0].toUpperCase(),
           [DBTags.DB_STATEMENT]: statement,
         });
 
         const originalCallback = pgQuery.callback;
 
-        pgQuery.callback = (err: any , res: any) => {
+        pgQuery.callback = (err: any, res: any) => {
           if (err) {
             const parseError = Utils.parseError(err);
             span.setTag('error', true);

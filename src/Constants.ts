@@ -5,7 +5,6 @@ import PostgreIntegration from './plugins/integrations/PostgreIntegration';
 import MySQL2Integration from './plugins/integrations/MySQL2Integration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
 import AWSIntegration from './plugins/integrations/AWSIntegration';
-import Utils from './plugins/Utils';
 
 export const envVariableKeys = {
     THUNDRA_APIKEY: 'thundra_apiKey',
@@ -24,7 +23,7 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TRACE_REQUEST_SKIP: 'thundra_agent_lambda_trace_request_skip',
     THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP: 'thundra_agent_lambda_trace_response_skip',
     THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE: 'thundra_agent_lambda_trace_instrument_disable',
-    THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG : 'thundra_agent_lambda_trace_instrument_traceableConfig',
+    THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG: 'thundra_agent_lambda_trace_instrument_traceableConfig',
     THUNDRRA_LAMBDA_LOG_LOGLEVEL: 'thundra_agent_lambda_log_loglevel',
 
     AWS_LAMBDA_APPLICATION_ID: 'AWS_LAMBDA_APPLICATION_ID',
@@ -36,7 +35,7 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TRACE_TRACE_DEF_FILE_PREFIX: 'thundra_agent_lambda_trace_traceablePrefixes',
     THUNDRA_LAMBDA_TRACE_TRACE_DEF: 'thundra_agent_lambda_trace_def',
     THUNDRA_LAMBDA_TRACE_INTEGRATIONS: 'thundra_agent_lambda_integrations',
-    THUNDRA_LAMBDA_AGENT_TRUST_ALL_CERTIFICATES: 'thundra_lambda_publish_report_trustAllCertificates',
+    THUNDRA_LAMBDA_AGENT_TRUST_ALL_CERTIFICATES: 'thundra_agent_lambda_publish_report_trustAllCertificates',
 };
 
 export function getTimeoutMargin(region: string) {
@@ -63,7 +62,7 @@ export function getTimeoutMargin(region: string) {
 }
 
 export const DATA_MODEL_VERSION: string = '2.0';
-export const TIMEOUT_MARGIN: number = getTimeoutMargin(Utils.getConfiguration(envVariableKeys.AWS_REGION));
+export const TIMEOUT_MARGIN: number = getTimeoutMargin(process.env[envVariableKeys.AWS_REGION]);
 export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
 export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
 export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
@@ -76,8 +75,8 @@ export const HOOKS = [
 export const URL: url.UrlWithStringQuery = url.parse(
     // the comment below is for ignoring in unit tests, do not remove it
     // istanbul ignore next
-    Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL)
-        ? Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL)
+    process.env[envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL]
+        ? process.env[envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL]
         : 'https://collector.thundra.io/api',
 );
 
@@ -149,7 +148,7 @@ export const ClassNames = {
     LAMBDA: 'AWS-Lambda',
     RDB: 'RDB',
     REDIS: 'Redis',
-    HTTP : 'HTTP',
+    HTTP: 'HTTP',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -269,7 +268,7 @@ export const LambdaRequestType: any = {
     invoke: 'CALL',
 };
 
-export const RedisCommandTypes: any  = {
+export const RedisCommandTypes: any = {
     APPEND: 'WRITE',
     BGREWRITEAOF: 'WRITE',
     BGSAVE: 'WRITE',

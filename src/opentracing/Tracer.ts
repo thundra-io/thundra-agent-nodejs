@@ -23,7 +23,7 @@ class ThundraTracer extends Tracer {
   }
 
   static getInstance(): ThundraTracer {
-      return ThundraTracer.instance ? ThundraTracer.instance : new ThundraTracer();
+    return ThundraTracer.instance ? ThundraTracer.instance : new ThundraTracer();
   }
 
   getActiveSpan(): ThundraSpan {
@@ -32,7 +32,7 @@ class ThundraTracer extends Tracer {
 
   finishSpan(): void {
     if (this.getActiveSpan()) {
-       this.getActiveSpan().finish();
+      this.getActiveSpan().finish();
     }
   }
 
@@ -49,9 +49,9 @@ class ThundraTracer extends Tracer {
     const activeSpan = this.getActiveSpan();
     let span: ThundraSpan;
     // tslint:disable-next-line:no-angle-bracket-type-assertion
-    return <T> ((...args: any[]) => {
+    return <T>((...args: any[]) => {
       try {
-        span = this.startSpan(spanName, {childOf: activeSpan}) as ThundraSpan;
+        span = this.startSpan(spanName, { childOf: activeSpan }) as ThundraSpan;
         const returnValue = func(...args);
         span.finish();
         return returnValue;
@@ -70,7 +70,7 @@ class ThundraTracer extends Tracer {
     const parentContext = Utils.getParentContext(fields.references);
 
     if (parentContext && !this.activeSpans.get(parentContext.spanId)) {
-        throw new Error('Invalid spanId : ' + parentContext.spanId);
+      throw new Error('Invalid spanId : ' + parentContext.spanId);
     }
 
     if (parentContext) {

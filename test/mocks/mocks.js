@@ -7,7 +7,7 @@ const createMockContext = () => {
         logGroupName: '/aws/lambda/test',
         logStreamName: '2018/03/07/[$LATEST]test',
         functionName: 'test',
-        memoryLimitInMB: '128',
+        memoryLimitInMB: 128,
         functionVersion: '$LATEST',
         getRemainingTimeInMillis: jest.fn(),
         invokeid: 'invokeId',

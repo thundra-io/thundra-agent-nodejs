@@ -12,9 +12,9 @@
 import ThundraTracer from '../opentracing/Tracer';
 import Utils from './Utils';
 import TraceData from './data/trace/TraceData';
-import {initGlobalTracer} from 'opentracing';
+import { initGlobalTracer } from 'opentracing';
 import HttpError from './error/HttpError';
-import {INTEGRATIONS } from '../Constants';
+import { INTEGRATIONS } from '../Constants';
 import Reporter from '../Reporter';
 import TraceConfig from './config/TraceConfig';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
@@ -23,6 +23,7 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
+import TimeoutError from './error/TimeoutError';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -76,14 +77,14 @@ export class Trace {
     }
 
     beforeInvocation = (data: any) => {
-        const { originalContext, originalEvent, reporter} = data;
+        const { originalContext, originalEvent, reporter } = data;
 
         this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
-            rootTraceId:  this.pluginContext.traceId,
+            rootTraceId: this.pluginContext.traceId,
         });
 
         // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.
-        if (!originalContext.awsRequestId || originalContext.awsRequestId === 'id' ) {
+        if (!originalContext.awsRequestId || originalContext.awsRequestId === 'id') {
             originalContext.awsRequestId = Utils.generateId();
         }
 
@@ -109,6 +110,7 @@ export class Trace {
         this.traceData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
         this.traceData.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.traceData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
+        this.traceData.tags['aws.lambda.invocation.timeout'] = false;
 
         this.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
         this.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
@@ -128,6 +130,10 @@ export class Trace {
             const error = Utils.parseError(data.error);
             if (!(data.error instanceof HttpError)) {
                 response = error;
+            }
+
+            if (data.error instanceof TimeoutError) {
+                this.traceData.tags['aws.lambda.invocation.timeout'] = true;
             }
 
             this.traceData.tags.error = true;
@@ -170,10 +176,6 @@ export class Trace {
 
         this.tracer.destroy();
         this.instrumenter.unhookModuleCompile();
-
-       /* for (const key of this.integrations.keys()) {
-            this.integrations.get(key).unwrap();
-        }*/
     }
 
     buildSpanData(span: ThundraSpan, pluginContext: PluginContext): SpanData {

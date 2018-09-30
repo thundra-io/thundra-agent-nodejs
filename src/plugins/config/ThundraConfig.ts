@@ -21,8 +21,8 @@ class ThundraConfig {
     constructor(options: any) {
         options = options ? options : {};
         this.plugins = koalas(options.plugins, []);
-        this.apiKey = koalas(Utils.getConfiguration(envVariableKeys.THUNDRA_APIKEY), options.apiKey, '');
-        this.disableThundra = koalas(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE), false);
+        this.apiKey = koalas(Utils.getConfiguration(envVariableKeys.THUNDRA_APIKEY), options.apiKey, null);
+        this.disableThundra = koalas(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE), options.disableThundra, false);
         this.timeoutMargin = koalas(parseInt(Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TIMEOUT_MARGIN), 10),
             options.timeoutMargin, TIMEOUT_MARGIN);
         this.traceConfig = new TraceConfig(options.traceConfig);

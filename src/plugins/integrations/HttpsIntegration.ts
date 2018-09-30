@@ -32,8 +32,8 @@ class HttpsIntegration implements Integration {
       return function requestWrapper(options: any, callback: any) {
         const method = (options.method || 'GET').toUpperCase();
         options = typeof options === 'string' ? url.parse(options) : options;
-        const host =  options.hostname || options.host || 'localhost';
-        const path =  options.path || options.pathname || '/';
+        const host = options.hostname || options.host || 'localhost';
+        const path = options.path || options.pathname || '/';
 
         if (host === 'collector.thundra.io' || host === 'serverless.com') {
           return request.apply(this, [options, callback]);
@@ -41,14 +41,14 @@ class HttpsIntegration implements Integration {
 
         const parentSpan = tracer.getActiveSpan();
         const span = tracer._startSpan(host + path, {
-          childOf : parentSpan,
+          childOf: parentSpan,
           domainName: DomainNames.API,
           className: ClassNames.HTTP,
-      });
+        });
 
         span.addTags({
           [SpanTags.OPERATION_TYPE]: 'CALL',
-          [SpanTags.SPAN_TYPE] : SpanTypes.HTTP,
+          [SpanTags.SPAN_TYPE]: SpanTypes.HTTP,
           [HttpTags.HTTP_METHOD]: method,
           [HttpTags.HTTP_HOST]: host,
           [HttpTags.HTTP_PATH]: path,
@@ -68,14 +68,14 @@ class HttpsIntegration implements Integration {
         });
 
         req.on('error', (err: any) => {
-            const parseError = Utils.parseError(err);
-            span.setTag('error', true);
-            span.setTag('error.kind', parseError.errorType);
-            span.setTag('error.message', parseError.errorMessage);
-            span.setTag('error.stack', parseError.stack);
-            span.setTag('error.code', parseError.code);
+          const parseError = Utils.parseError(err);
+          span.setTag('error', true);
+          span.setTag('error.kind', parseError.errorType);
+          span.setTag('error.message', parseError.errorMessage);
+          span.setTag('error.stack', parseError.stack);
+          span.setTag('error.code', parseError.code);
 
-            span.finish();
+          span.finish();
         });
 
         return req;

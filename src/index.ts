@@ -24,7 +24,7 @@ let logManager: LogManager = null;
 module.exports = (options: any) => {
     const config = new ThundraConfig(options);
 
-    if (!config.apiKey || config.disableThundra) {
+    if (!(config.apiKey) || config.disableThundra) {
         return (originalFunc: any) => originalFunc;
     }
 
@@ -58,7 +58,7 @@ module.exports = (options: any) => {
     const pluginContext: PluginContext = {
         applicationId,
         applicationRegion: Utils.getConfiguration(envVariableKeys.AWS_REGION),
-        applicationVersion:  Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION),
+        applicationVersion: Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION),
         requestCount: 0,
         apiKey: config.apiKey,
         timeoutMargin: config.timeoutMargin,

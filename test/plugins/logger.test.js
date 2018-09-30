@@ -3,7 +3,7 @@ import {logLevels} from '../../dist/Constants';
 import {createMockLogManager} from '../mocks/mocks';
 
 describe('Logger', () => {
-    delete process.env.thundra_log_logLevel;
+    delete process.env.thundra_agent_lambda_log_loglevel;
     describe('constructor', () => {
         const logManager = createMockLogManager();
         const options = {opt1: 1, opt2: 2};
@@ -97,10 +97,10 @@ describe('Logger', () => {
         const logger = new Logger({}, logManager);
         Date.now = () => {return null;};
         const logReport = {
-            logMessage: '{"logLevel": "DEBUG", "logLevelId": 1, "logMessage": "test 1 {\"key1\":1,\"key2\":\"two\"} more", "logTimestamp": null, "loggerName": "default"}',
+            logMessage: 'test 1 {\"key1\":1,\"key2\":\"two\"} more',
             logLevel: 'DEBUG',
-            logLevelId: logLevels['DEBUG'],
-            loggerName: logger.loggerName,
+            logLevelCode: logLevels['DEBUG'],
+            logContextName: logger.loggerName,
             logTimestamp: null,
         };
         logger.reportLog('DEBUG', ['%s %d %j', 'test', 1, {key1: 1, key2: 'two'}, 'more']);
@@ -112,7 +112,7 @@ describe('Logger', () => {
 });
 
 describe('Logger with env level variable', () => {
-    process.env.thundra_log_logLevel = 'none';
+    process.env.thundra_agent_lambda_log_loglevel = 'none';
     describe('should not report', () => {
         const logManager = createMockLogManager();
         const logger = new Logger({}, logManager);
@@ -130,7 +130,7 @@ describe('Logger with env level variable', () => {
 });
 
 describe('log', () => {
-    delete process.env.thundra_log_logLevel;
+    delete process.env.thundra_agent_lambda_log_loglevel;
     const logManager = createMockLogManager();
     const logger = new Logger({}, logManager);
     logger.levels = {

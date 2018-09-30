@@ -59,7 +59,7 @@ describe('Invocation', () => {
             expect(invocation.invocationData.applicationClassName).toEqual(LAMBDA_APPLICATION_CLASS_NAME);
             expect(invocation.invocationData.applicationName).toEqual(beforeInvocationData.originalContext.functionName);
             expect(invocation.invocationData.applicationVersion).toEqual(pluginContext.applicationVersion);
-            expect(invocation.invocationData.applicationStage).toEqual('');
+            expect(invocation.invocationData.applicationStage).toEqual(undefined);
             expect(invocation.invocationData.applicationRuntime).toEqual('node');
             expect(invocation.invocationData.applicationRuntimeVersion).toEqual(process.version);
             expect(invocation.invocationData.applicationTags).toEqual({});

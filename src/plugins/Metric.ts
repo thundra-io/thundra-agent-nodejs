@@ -1,5 +1,5 @@
 import * as os from 'os';
-import {execSync} from 'child_process';
+import { execSync } from 'child_process';
 import MetricData from './data/metric/MetricData';
 import Utils from './Utils';
 import ThreadMetric from './data/metric/ThreadMetric';
@@ -59,9 +59,9 @@ class Metric {
 
         const activeSpan = this.tracer.getActiveSpan();
         this.metricData.transactionId = this.pluginContext.transactionId ?
-                                        this.pluginContext.transactionId : originalContext.awsRequestId;
+            this.pluginContext.transactionId : originalContext.awsRequestId;
         this.metricData.spanId = activeSpan ? activeSpan.spanContext.spanId : '';
-        this.metricData.traceId = activeSpan ?  activeSpan.spanContext.traceId : '';
+        this.metricData.traceId = activeSpan ? activeSpan.spanContext.traceId : '';
 
         this.startCpuUsage = Utils.getCpuUsage();
         this.reports = [];
@@ -82,7 +82,7 @@ class Metric {
     }
 
     addThreadMetricReport = async () => {
-        const {threadCount} = this.initialProcMetric;
+        const { threadCount } = this.initialProcMetric;
 
         const threadMetric = new ThreadMetric();
         threadMetric.initWithMetricMonitoringDataValues(this.metricData);
@@ -90,7 +90,7 @@ class Metric {
         threadMetric.metricTimestamp = Date.now();
 
         threadMetric.metrics = {
-            'app.threadCount' : threadCount,
+            'app.threadCount': threadCount,
         };
 
         const threadMetricReport = Utils.generateReport(threadMetric, this.apiKey);
@@ -98,7 +98,7 @@ class Metric {
     }
 
     addMemoryMetricReport = async () => {
-        const {rss, heapTotal, heapUsed, external} = process.memoryUsage();
+        const { rss, heapTotal, heapUsed, external } = process.memoryUsage();
         const totalMemory = os.totalmem();
         const freeMemory = os.freemem();
 
@@ -109,12 +109,12 @@ class Metric {
 
         memoryMetric.metrics = {
             'app.maxMemory': heapTotal,
-            'app.usedMemory' : heapUsed,
-            'app.rss' : rss,
-            'sys.maxMemory' : totalMemory,
+            'app.usedMemory': heapUsed,
+            'app.rss': rss,
+            'sys.maxMemory': totalMemory,
             'sys.usedMemory': totalMemory - freeMemory,
-            'sys.external' : external,
-            'sys.freeMemory' : freeMemory,
+            'sys.external': external,
+            'sys.freeMemory': freeMemory,
         };
 
         const memoryMetricReport = Utils.generateReport(memoryMetric, this.apiKey);
@@ -149,7 +149,7 @@ class Metric {
         ioMetric.metricTimestamp = Date.now();
 
         ioMetric.metrics = {
-            'sys.diskReadBytes':  endProcIo.readBytes - startProcIo.readBytes,
+            'sys.diskReadBytes': endProcIo.readBytes - startProcIo.readBytes,
             'sys.diskWriteBytes': endProcIo.writeBytes - startProcIo.writeBytes,
         };
 

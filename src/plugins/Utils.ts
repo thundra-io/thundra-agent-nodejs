@@ -1,8 +1,10 @@
 import * as uuidv4 from 'uuid/v4';
 import { readFile } from 'fs';
 import * as os from 'os';
-import { DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys } from '../Constants';
+import {
+    DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys,
+} from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
@@ -196,7 +198,7 @@ class Utils {
 
     static getServiceName(endpoint: string): string {
         if (!endpoint) {
-          return '';
+            return '';
         }
         return endpoint.split('.')[0];
     }
@@ -207,11 +209,11 @@ class Utils {
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = BuildInfoLoader.getAgentVersion();
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
-        monitoringData.applicationId =  pluginContext.applicationId;
+        monitoringData.applicationId = pluginContext ? pluginContext.applicationId : '';
         monitoringData.applicationDomainName = LAMBDA_APPLICATION_DOMAIN_NAME;
         monitoringData.applicationClassName = LAMBDA_APPLICATION_CLASS_NAME;
-        monitoringData.applicationName = originalContext.functionName;
-        monitoringData.applicationVersion = pluginContext.applicationVersion;
+        monitoringData.applicationName = originalContext ? originalContext.functionName : '';
+        monitoringData.applicationVersion = pluginContext ? pluginContext.applicationVersion : '';
         monitoringData.applicationStage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
         monitoringData.applicationRuntimeVersion = process.version;
 

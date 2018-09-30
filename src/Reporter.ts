@@ -2,7 +2,7 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import {URL, MONITORING_DATA_PATH, envVariableKeys} from './Constants';
+import { URL, MONITORING_DATA_PATH, envVariableKeys } from './Constants';
 import Utils from './plugins/Utils';
 
 const httpAgent = new http.Agent({
@@ -64,11 +64,10 @@ class Reporter {
 
     async sendReports(): Promise<void> {
         await this.request()
-            .then((response: any ) => {
+            .then((response: any) => {
                 if (response.status !== 200) {
                     console.log(this.reports);
                 }
-                console.log(response);
             })
             .catch((err: any) => {
                 console.error(err);
@@ -84,7 +83,7 @@ class Reporter {
                     responseData += chunk;
                 });
                 response.on('end', () => {
-                    resolve({status: response.statusCode, data: responseData});
+                    resolve({ status: response.statusCode, data: responseData });
                 });
             };
 

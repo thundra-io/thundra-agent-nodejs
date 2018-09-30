@@ -89,8 +89,8 @@ class Logger {
                     this.levels[args[0]](...args.slice(1));
                 }
             } else {
-                throw new Error(`[ThundraLogger] level ${args[0]} is not defined,
-                                available levels are ${Object.keys(this.levels)}`);
+                // tslint:disable-next-line:max-line-length
+                throw new Error(`[ThundraLogger] level ${args[0]} is not defined, available levels are ${Object.keys(this.levels)}`);
             }
         } else if (args[0] !== null && typeof args[0] === 'object') {
             if (Object.keys(args[0]).length === 2 && 'level' in args[0] && 'message' in args[0]) {
@@ -99,8 +99,8 @@ class Logger {
                 if (level in this.levels) {
                     this.levels[level](message);
                 } else {
-                    throw new Error(`[ThundraLogger] level ${level} is not defined,
-                                     available levels are ${Object.keys(this.levels)}`);
+                    // tslint:disable-next-line:max-line-length
+                    throw new Error(`[ThundraLogger] level ${level} is not defined, available levels are ${Object.keys(this.levels)}`);
                 }
             } else {
                 throw new Error('[ThundraLogger] invalid usage, please provide both level and message');

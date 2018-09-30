@@ -1,7 +1,7 @@
 import ThundraTracer from '../Tracer';
 import TraceConfig from '../../plugins/config/TraceConfig';
 import TraceDef, { TraceDefCheckLevel } from '../../plugins/config/TraceDef';
-import {envVariableKeys, TRACE_DEF_SEPERATOR, Syntax, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
+import { envVariableKeys, TRACE_DEF_SEPERATOR, Syntax, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/Utils';
@@ -47,7 +47,7 @@ class Instrumenter {
 
         Module.prototype._compile = function (content: any, filename: any) {
             const relPath = path.relative(process.cwd(), filename);
-            let relPathWithDots = relPath.replace(/\//g , TRACE_DEF_SEPERATOR);
+            let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPERATOR);
             relPathWithDots = relPathWithDots.replace('.js', '');
 
             if (self.shouldTraceFile(relPathWithDots)) {
@@ -110,10 +110,10 @@ class Instrumenter {
 
                 if (wrapFunctions) {
                     const traceEX = util.format(TRACE_EXIT, 'true', 'null',
-                                                instrumentOption.traceError ? '__thundraEX__' : 'null');
+                        instrumentOption.traceError ? '__thundraEX__' : 'null');
 
                     node.update(funcDec + '{\ntry {' + newFuncBody + '} catch(__thundraEX__) {\n' +
-                                traceEX + '\nthrow __thundraEX__;\n}\n}');
+                        traceEX + '\nthrow __thundraEX__;\n}\n}');
 
                 } else {
                     node.update(funcDec + '{' + newFuncBody + '}');
@@ -121,15 +121,15 @@ class Instrumenter {
 
             } else if (node.type === Syntax.ReturnStatement) {
 
-                const wrapper: NodeWrapper = new NodeWrapper(node,  (traceDef: TraceDef, sourceNode: any) => {
+                const wrapper: NodeWrapper = new NodeWrapper(node, (traceDef: TraceDef, sourceNode: any) => {
                     if (sourceNode.argument) {
                         const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
 
                         const traceExit = util.format(TRACE_EXIT, 'false',
-                                                traceDef.traceReturnValue ? tmpVar : 'null', 'null');
+                            traceDef.traceReturnValue ? tmpVar : 'null', 'null');
 
                         sourceNode.update('{\nvar ' + tmpVar + ' = ' + sourceNode.argument.source() + ';\n' +
-                                    traceExit + '\nreturn ' + tmpVar + ';\n}');
+                            traceExit + '\nreturn ' + tmpVar + ';\n}');
                     } else {
                         const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
                         sourceNode.update('{' + traceExit + sourceNode.source() + '}');

@@ -47,7 +47,7 @@ class RedisIntegration implements Integration {
           command = options.command.toUpperCase();
         }
 
-        const operationType = RedisCommandTypes[command] ?  RedisCommandTypes[command] : 'READ';
+        const operationType = RedisCommandTypes[command] ? RedisCommandTypes[command] : 'READ';
 
         const span = tracer._startSpan(host, {
           childOf: parentSpan,

@@ -1,4 +1,4 @@
-/*import Utils from '../../dist/plugins/Utils';
+import Utils from '../../dist/plugins/Utils';
 import {DATA_MODEL_VERSION} from '../../dist/Constants';
 
 jest.mock('os', () => ({
@@ -63,7 +63,7 @@ describe('getCpuLoad', () => {
 
 describe('readProcStatPromise', () => {
     it('Should read proc stat file correctly', async () => {
-        const procStatData = await Utils.readProcStatPromise();
+        const procStatData = await Utils.readProcMetricPromise();
         expect(procStatData).toEqual({threadCount: 20});
     });
 });
@@ -76,13 +76,13 @@ describe('readProcIoPromise', () => {
 });
 
 describe('generateReport', () => {
-    const exampleReport = Utils.generateReport('data', 'type', 'apiKey');
+    const exampleReport = Utils.generateReport('data', 'apiKey');
     it('Should generate report with correct fields', () => {
         expect(exampleReport).toEqual({
             data: 'data',
-            type: 'type',
+            type: undefined,
             apiKey: 'apiKey',
-            dataFormatVersion: DATA_MODEL_VERSION
+            dataModelVersion: DATA_MODEL_VERSION
         });
     });
 });
@@ -119,11 +119,5 @@ describe('parseError', () => {
         it('should set error type correctly', () => {
             expect(parsedError.errorType).toEqual('Unknown Error');
         });
-    });
-});*/
-describe('afterInvocation with TimeoutError', () => {
-
-    it('should set Timeout true', () => {
-        expect(true).toBeTruthy();
     });
 });

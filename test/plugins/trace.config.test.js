@@ -3,7 +3,7 @@ import TraceDef from '../../dist/plugins/config/TraceDef';
 
 describe('TraceConfig', () => {
     it('should parse single envirenment variable', () => {
-        process.env.thundra_trace_def = 'album.getAlbum[traceArgs=true,traceReturnValue=true,traceError=true]'; 
+        process.env.thundra_agent_lambda_trace_def = 'album.getAlbum[traceArgs=true,traceReturnValue=true,traceError=true]'; 
         const traceConfig = new TraceConfig({});
         
         expect(traceConfig.traceDefs.length).toBe(1);
@@ -12,12 +12,12 @@ describe('TraceConfig', () => {
         expect(traceConfig.traceDefs[0].traceReturnValue).toBe(true);
         expect(traceConfig.traceDefs[0].pattern).toBe('album.getAlbum');
 
-        delete process.env.thundra_trace_def;
+        delete process.env.thundra_agent_lambda_trace_def;
     });
 
     it('should parse multiple envirenment variable', () => {
-        process.env.thundra_trace_def1 = 'album.getAlbum[traceArgs=true,traceReturnValue=false, traceError=true]'; 
-        process.env.thundra_trace_def2 = 'user.get*[traceArgs=true,traceReturnValue=true,traceError=false]'; 
+        process.env.thundra_agent_lambda_trace_def1 = 'album.getAlbum[traceArgs=true,traceReturnValue=false, traceError=true]'; 
+        process.env.thundra_agent_lambda_trace_def2 = 'user.get*[traceArgs=true,traceReturnValue=true,traceError=false]'; 
         const traceConfig = new TraceConfig({});
         
         expect(traceConfig.traceDefs.length).toBe(2);
@@ -27,8 +27,8 @@ describe('TraceConfig', () => {
         expect(traceConfig.traceDefs[1].pattern).toBe('user.get*');
         expect(traceConfig.traceDefs[1].shouldTraceFunction('user.get')).toBeTruthy();
 
-        delete process.env.thundra_trace_def1;
-        delete process.env.thundra_trace_def2;
+        delete process.env.thundra_agent_lambda_trace_def1;
+        delete process.env.thundra_agent_lambda_trace_def2;
     });
 
     it('should parse from programatic config', () => {

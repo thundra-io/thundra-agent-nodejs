@@ -3,9 +3,7 @@ import InvocationData from './data/invocation/InvacationData';
 import Utils from './Utils';
 import TimeoutError from './error/TimeoutError';
 import InvocationConfig from './config/InvocationConfig';
-import MonitorDataType from './data/base/MonitoringDataType';
-import { DATA_MODEL_VERSION, LAMBDA_APPLICATION_DOMAIN_NAME,
-    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_FUNCTION_PLATFORM} from '../Constants';
+import {LAMBDA_FUNCTION_PLATFORM} from '../Constants';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 
@@ -47,7 +45,7 @@ class Invocation {
 
         this.invocationData.applicationTags = {};
         this.invocationData.functionPlatform = LAMBDA_FUNCTION_PLATFORM;
-        this.invocationData.functionName = originalContext.functionName;
+        this.invocationData.functionName = originalContext ? originalContext.functionName : '';
         this.invocationData.functionRegion = this.pluginContext.applicationRegion;
         this.invocationData.tags = {};
         this.invocationData.startTimestamp = this.startTimestamp;
@@ -60,7 +58,7 @@ class Invocation {
         this.invocationData.timeout = false;
 
         this.invocationData.transactionId = this.pluginContext.transactionId ?
-                                            this.pluginContext.transactionId : originalContext.awsRequestId;
+            this.pluginContext.transactionId : originalContext.awsRequestId;
 
         this.invocationData.spanId = this.pluginContext.spanId;
         this.invocationData.traceId = this.pluginContext.traceId;
@@ -70,11 +68,10 @@ class Invocation {
         this.invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
         this.invocationData.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.invocationData.tags['aws.region'] = this.pluginContext.applicationRegion;
-        this.invocationData.tags['aws.lambda.log_group_name'] = originalContext.logGroupName;
+        this.invocationData.tags['aws.lambda.log_group_name'] = originalContext ? originalContext.logGroupName : '';
         this.invocationData.tags['aws.lambda.invocation.timeout'] = false;
-        this.invocationData.tags['aws.lambda.name'] = originalContext.functionName;
+        this.invocationData.tags['aws.lambda.name'] = originalContext ? originalContext.functionName : '';
         this.invocationData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
-
     }
 
     afterInvocation = (data: any) => {

@@ -1,6 +1,6 @@
 import Metric from '../../dist/plugins/Metric';
 import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
-import {DATA_MODEL_VERSION,LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_FUNCTION_PLATFORM, LAMBDA_APPLICATION_DOMAIN_NAME} from '../../dist/Constants';
+import {DATA_MODEL_VERSION,LAMBDA_APPLICATION_CLASS_NAME,LAMBDA_APPLICATION_DOMAIN_NAME} from '../../dist/Constants';
 
 import Utils from '../../dist/plugins/Utils';
 
