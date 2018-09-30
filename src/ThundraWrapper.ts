@@ -199,6 +199,7 @@ class ThundraWrapper {
 
         return setTimeout(() => {
             wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
+            wrapperInstance.reported = false;
         }, endTime);
     }
 

@@ -8,14 +8,14 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 
 class Invocation {
-    public hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
-    public options: InvocationConfig;
-    public invocationData: InvocationData;
-    public reporter: any;
-    public pluginContext: PluginContext;
-    public apiKey: any;
-    public finishTimestamp: any;
-    public startTimestamp: number;
+    hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
+    options: InvocationConfig;
+    invocationData: InvocationData;
+    reporter: any;
+    pluginContext: PluginContext;
+    apiKey: any;
+    finishTimestamp: any;
+    startTimestamp: number;
 
     constructor(options: any) {
         this.hooks = {
