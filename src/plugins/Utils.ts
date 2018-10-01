@@ -1,23 +1,40 @@
 import * as uuidv4 from 'uuid/v4';
 import { readFile } from 'fs';
 import * as os from 'os';
-import { DATA_FORMAT_VERSION, PROC_IO_PATH, PROC_STAT_PATH } from '../Constants';
+import {
+    DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys,
+} from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
+import MonitorDataType from './data/base/MonitoringDataType';
+import BaseMonitoringData from './data/base/BaseMonitoringData';
+import BuildInfoLoader from '../BuildInfoLoader';
+import MonitoringDataType from './data/base/MonitoringDataType';
+import InvocationData from './data/invocation/InvacationData';
+import MetricData from './data/metric/MetricData';
+import TraceData from './data/trace/TraceData';
+import SpanData from './data/trace/SpanData';
+import LogData from './data/log/LogData';
+import ThundraLogger from '../ThundraLogger';
 
 class Utils {
-    static generateId() {
+    static generateId(): string {
         return uuidv4();
     }
 
-    static generateReport(data: any, type: any, apiKey: String) {
+    static generateReport(data: any, apiKey: String) {
         return {
             data,
-            type,
+            type: data.type,
             apiKey,
-            dataFormatVersion: DATA_FORMAT_VERSION,
+            dataModelVersion: DATA_MODEL_VERSION,
         };
+    }
+
+    static getConfiguration(key: string): string {
+        return process.env[key];
     }
 
     static getCpuUsage() {
@@ -52,7 +69,7 @@ class Utils {
     }
 
     static parseError(err: any) {
-        const error: any = { errorMessage: '', errorType: 'Unknown Error' };
+        const error: any = { errorMessage: '', errorType: 'Unknown Error', stack: null, code: 0 };
         if (err instanceof Error) {
             error.errorType = err.name;
             error.errorMessage = err.message;
@@ -70,18 +87,21 @@ class Utils {
         return error;
     }
 
-    static readProcStatPromise() {
+    static readProcMetricPromise() {
         return new Promise((resolve, reject) => {
             readFile(PROC_STAT_PATH, (err, file) => {
+                const procStatData = {
+                    threadCount: 0,
+                };
+
                 if (err) {
-                    return reject(err);
+                    ThundraLogger.getInstance().error(`Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0.`);
                 } else {
                     const procStatArray = file.toString().split(' ');
-                    const procStatData = {
-                        threadCount: parseInt(procStatArray[19], 0),
-                    };
-                    return resolve(procStatData);
+                    procStatData.threadCount = parseInt(procStatArray[19], 0);
                 }
+
+                return resolve(procStatData);
             });
         });
     }
@@ -89,16 +109,20 @@ class Utils {
     static readProcIoPromise() {
         return new Promise((resolve, reject) => {
             readFile(PROC_IO_PATH, (err, file) => {
+                const procIoData = {
+                    readBytes: 0,
+                    writeBytes: 0,
+                };
+
                 if (err) {
-                    return reject(err);
+                    ThundraLogger.getInstance().error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
                 } else {
                     const procIoArray = file.toString().split('\n');
-                    const procIoData = {
-                        readBytes: parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0),
-                        writeBytes: parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1), 0),
-                    };
-                    return resolve(procIoData);
+                    procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
+                    procIoData.writeBytes = parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1), 0);
                 }
+
+                return resolve(procIoData);
             });
         });
     }
@@ -108,13 +132,13 @@ class Utils {
         if (references) {
             for (const ref of references) {
                 if (!(ref instanceof Reference)) {
-                    console.error(`Expected ${ref} to be an instance of opentracing.Reference`);
+                    ThundraLogger.getInstance().error(`Expected ${ref} to be an instance of opentracing.Reference`);
                     break;
                 }
                 const spanContext = ref.referencedContext();
 
                 if (!(spanContext instanceof ThundraSpanContext)) {
-                    console.error(`Expected ${spanContext} to be an instance of SpanContext`);
+                    ThundraLogger.getInstance().error(`Expected ${spanContext} to be an instance of SpanContext`);
                     break;
                 }
 
@@ -130,6 +154,81 @@ class Utils {
         }
 
         return parent;
+    }
+
+    static replaceArgs(statement: string, values: any[]): string {
+        const args = Array.prototype.slice.call(values);
+        const replacer = (value: string) => args[parseInt(value.substr(1), 10) - 1];
+
+        return statement.replace(/(\$\d+)/gm, replacer);
+    }
+
+    static getDynamoDBTableName(request: any): string {
+        let tableName = 'DynamoEngine';
+        if (request.params.TableName) {
+            tableName = request.params.TableName;
+        }
+        if (request.params.RequestItems) {
+            tableName = Object.keys(request.params.RequestItems).join(',');
+        }
+        return tableName;
+    }
+
+    static getQueueName(url: any): string {
+        return url.split('/').pop();
+    }
+
+    static getTopicName(topicArn: any): string {
+        return topicArn.split(':').pop();
+    }
+
+    static getServiceName(endpoint: string): string {
+        if (!endpoint) {
+            return '';
+        }
+        return endpoint.split('.')[0];
+    }
+
+    static initMonitoringData(pluginContext: any, originalContext: any, type: MonitoringDataType): BaseMonitoringData {
+        const monitoringData = this.createMonitoringData(type);
+
+        monitoringData.id = Utils.generateId();
+        monitoringData.agentVersion = BuildInfoLoader.getAgentVersion();
+        monitoringData.dataModelVersion = DATA_MODEL_VERSION;
+        monitoringData.applicationId = pluginContext ? pluginContext.applicationId : '';
+        monitoringData.applicationDomainName = LAMBDA_APPLICATION_DOMAIN_NAME;
+        monitoringData.applicationClassName = LAMBDA_APPLICATION_CLASS_NAME;
+        monitoringData.applicationName = originalContext ? originalContext.functionName : '';
+        monitoringData.applicationVersion = pluginContext ? pluginContext.applicationVersion : '';
+        const stage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
+        monitoringData.applicationStage = stage ? stage : '';
+        monitoringData.applicationRuntimeVersion = process.version;
+
+        return monitoringData;
+    }
+
+    static createMonitoringData(type: MonitoringDataType): BaseMonitoringData {
+        let monitoringData: BaseMonitoringData;
+
+        switch (type) {
+            case MonitorDataType.INVOCATION:
+                monitoringData = new InvocationData();
+                break;
+            case MonitorDataType.METRIC:
+                monitoringData = new MetricData();
+                break;
+            case MonitorDataType.TRACE:
+                monitoringData = new TraceData();
+                break;
+            case MonitorDataType.SPAN:
+                monitoringData = new SpanData();
+                break;
+            case MonitorDataType.LOG:
+                monitoringData = new LogData();
+                break;
+        }
+
+        return monitoringData;
     }
 }
 

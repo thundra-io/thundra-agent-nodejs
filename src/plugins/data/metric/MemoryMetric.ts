@@ -1,13 +1,20 @@
-class MemoryMetric {
-    id: string;
-    readonly statName: string = 'MemoryStat';
-    'proc.rss': number;
-    'proc.heapTotal': number;
-    'proc.heapUsed': number;
-    'proc.external': number;
-    'os.totalMemory': number;
-    'os.freeMemory': number;
-    'os.usedMemory': number;
+import MetricData from './MetricData';
+
+class MemoryMetric extends MetricData {
+    readonly metricName: string = 'MemoryMetric';
+    metrics: {
+        'app.maxMemory': number;
+        'app.usedMemory': number;
+        'app.rss': number;
+        'sys.maxMemory': number;
+        'sys.usedMemory': number;
+        'sys.external': number
+        'sys.freeMemory': number;
+    };
+
+    constructor() {
+        super();
+    }
 }
 
 export default MemoryMetric;

@@ -2,6 +2,7 @@ import { Span } from 'opentracing';
 import ThundraSpanContext from './SpanContext';
 import Utils from '../plugins/Utils';
 import ThundraTracer from './Tracer';
+import ThundraLogger from '../ThundraLogger';
 class ThundraSpan extends Span {
   parentTracer: ThundraTracer;
   operationName: string;
@@ -13,6 +14,7 @@ class ThundraSpan extends Span {
   logs: any[];
   className: string;
   domainName: string;
+  order: number;
 
   constructor(tracer: any, fields: any) {
     super();
@@ -31,6 +33,7 @@ class ThundraSpan extends Span {
     this.logs = [];
     this.className = fields.className;
     this.domainName = fields.domainName;
+    this.order = fields.order;
   }
 
   getOperationName(): string {
@@ -42,12 +45,18 @@ class ThundraSpan extends Span {
   }
 
   setErrorTag(error: Error): void {
-      if (error instanceof Error) {
-        const err = Utils.parseError(error);
-        this.setTag('error', true);
-        this.setTag('error.kind', err.errorType);
-        this.setTag('error.message', err.errorMessage);
+    if (error instanceof Error) {
+      const err = Utils.parseError(error);
+      this.setTag('error', true);
+      this.setTag('error.kind', err.errorType);
+      this.setTag('error.message', err.errorMessage);
+      if (err.code) {
+        this.setTag('error.code', err.code);
       }
+      if (error.stack) {
+        this.setTag('error.stack', err.stack);
+      }
+    }
   }
 
   _createContext(parent: any) {
@@ -103,7 +112,7 @@ class ThundraSpan extends Span {
         this.tags[key] = keyValuePairs[key];
       });
     } catch (e) {
-      console.error(e);
+      ThundraLogger.getInstance().debug(e);
     }
   }
 

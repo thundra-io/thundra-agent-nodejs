@@ -1,5 +1,5 @@
 import Utils from '../../dist/plugins/Utils';
-import {DATA_FORMAT_VERSION} from '../../dist/Constants';
+import {DATA_MODEL_VERSION} from '../../dist/Constants';
 
 jest.mock('os', () => ({
     cpus: () => {
@@ -63,7 +63,7 @@ describe('getCpuLoad', () => {
 
 describe('readProcStatPromise', () => {
     it('Should read proc stat file correctly', async () => {
-        const procStatData = await Utils.readProcStatPromise();
+        const procStatData = await Utils.readProcMetricPromise();
         expect(procStatData).toEqual({threadCount: 20});
     });
 });
@@ -76,13 +76,13 @@ describe('readProcIoPromise', () => {
 });
 
 describe('generateReport', () => {
-    const exampleReport = Utils.generateReport('data', 'type', 'apiKey');
+    const exampleReport = Utils.generateReport('data', 'apiKey');
     it('Should generate report with correct fields', () => {
         expect(exampleReport).toEqual({
             data: 'data',
-            type: 'type',
+            type: undefined,
             apiKey: 'apiKey',
-            dataFormatVersion: DATA_FORMAT_VERSION
+            dataModelVersion: DATA_MODEL_VERSION
         });
     });
 });

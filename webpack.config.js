@@ -12,7 +12,6 @@ module.exports = {
         libraryTarget: 'commonjs2',
         library: 'thundra'
     },
-    devtool: 'inline-source-map',
     resolve: {
         extensions: [ '.tsx', '.ts', '.js' ]
     },
@@ -33,7 +32,7 @@ module.exports = {
                 }
             },
             sourceMap: true,
-            parallel: true
+            parallel: true,
         }),
         new webpack.optimize.ModuleConcatenationPlugin()
     ]

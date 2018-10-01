@@ -1,12 +1,13 @@
 import ThundraTracer from '../Tracer';
 import TraceConfig from '../../plugins/config/TraceConfig';
 import TraceDef, { TraceDefCheckLevel } from '../../plugins/config/TraceDef';
-import {TRACE_DEF_SEPERATOR, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, Syntax, TRACE_DEF_FILE_PREFIX_ENV_KEY } from '../../Constants';
+import { envVariableKeys, TRACE_DEF_SEPERATOR, Syntax, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/Utils';
 import Stack from './Stack';
 import NodeWrapper from './NodeWrapper';
+import ThundraLogger from '../../ThundraLogger';
 
 const Module = require('module');
 const falafel = require('falafel');
@@ -47,7 +48,7 @@ class Instrumenter {
 
         Module.prototype._compile = function (content: any, filename: any) {
             const relPath = path.relative(process.cwd(), filename);
-            let relPathWithDots = relPath.replace(/\//g , TRACE_DEF_SEPERATOR);
+            let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPERATOR);
             relPathWithDots = relPathWithDots.replace('.js', '');
 
             if (self.shouldTraceFile(relPathWithDots)) {
@@ -64,7 +65,7 @@ class Instrumenter {
                         content = content.substring(Module.wrapper[0].length, content.length - Module.wrapper[1].length);
                     }
                 } catch (ex) {
-                    console.log(ex);
+                    ThundraLogger.getInstance().debug(ex);
                 }
             }
             self.origCompile.call(this, content, filename);
@@ -110,10 +111,10 @@ class Instrumenter {
 
                 if (wrapFunctions) {
                     const traceEX = util.format(TRACE_EXIT, 'true', 'null',
-                                                instrumentOption.traceError ? '__thundraEX__' : 'null');
+                        instrumentOption.traceError ? '__thundraEX__' : 'null');
 
                     node.update(funcDec + '{\ntry {' + newFuncBody + '} catch(__thundraEX__) {\n' +
-                                traceEX + '\nthrow __thundraEX__;\n}\n}');
+                        traceEX + '\nthrow __thundraEX__;\n}\n}');
 
                 } else {
                     node.update(funcDec + '{' + newFuncBody + '}');
@@ -121,15 +122,15 @@ class Instrumenter {
 
             } else if (node.type === Syntax.ReturnStatement) {
 
-                const wrapper: NodeWrapper = new NodeWrapper(node,  (traceDef: TraceDef, sourceNode: any) => {
+                const wrapper: NodeWrapper = new NodeWrapper(node, (traceDef: TraceDef, sourceNode: any) => {
                     if (sourceNode.argument) {
                         const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
 
                         const traceExit = util.format(TRACE_EXIT, 'false',
-                                                traceDef.traceReturnValue ? tmpVar : 'null', 'null');
+                            traceDef.traceReturnValue ? tmpVar : 'null', 'null');
 
                         sourceNode.update('{\nvar ' + tmpVar + ' = ' + sourceNode.argument.source() + ';\n' +
-                                    traceExit + '\nreturn ' + tmpVar + ';\n}');
+                            traceExit + '\nreturn ' + tmpVar + ';\n}');
                     } else {
                         const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
                         sourceNode.update('{' + traceExit + sourceNode.source() + '}');
@@ -191,7 +192,7 @@ class Instrumenter {
                 return null;
             }
 
-            const traceDefPrefix = process.env[TRACE_DEF_FILE_PREFIX_ENV_KEY];
+            const traceDefPrefix = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_TRACE_DEF_FILE_PREFIX);
             if (traceDefPrefix && TraceDefCheckLevel.FILE) {
                 const prefixes = traceDefPrefix.split(',');
                 for (const prefix of prefixes) {
@@ -254,6 +255,12 @@ class Instrumenter {
                     span.setTag('error', true);
                     span.setTag('error.kind', err.errorType);
                     span.setTag('error.message', err.errorMessage);
+                    if (err.code) {
+                        this.invocationData.tags['error.code'] = err.code;
+                    }
+                    if (err.stack) {
+                        this.invocationData.tags['error.stack'] = err.stack;
+                    }
                 }
                 span.finish();
             } catch (ex) {
