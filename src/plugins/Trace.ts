@@ -14,7 +14,7 @@ import Utils from './Utils';
 import TraceData from './data/trace/TraceData';
 import { initGlobalTracer } from 'opentracing';
 import HttpError from './error/HttpError';
-import { INTEGRATIONS } from '../Constants';
+import { INTEGRATIONS, envVariableKeys } from '../Constants';
 import Reporter from '../Reporter';
 import TraceConfig from './config/TraceConfig';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
@@ -44,17 +44,20 @@ export class Trace {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
         };
-        this.config = config;
+
         this.traceData = new TraceData();
         const tracerConfig = config ? config.tracerConfig : {};
+        this.config = config;
 
         this.tracer = new ThundraTracer(tracerConfig);
         initGlobalTracer(this.tracer);
 
-        this.instrumenter = new Instrumenter(this.tracer, config);
-        this.instrumenter.hookModuleCompile();
+        if (this.config && !(this.config.disableInstrumentation)) {
+            this.instrumenter = new Instrumenter(this.tracer, config);
+            this.instrumenter.hookModuleCompile();
+        }
 
-        if (this.config && this.config.integrations) {
+        if (this.config && this.config.integrations && !(this.config.disableInstrumentation)) {
             this.integrations = new Map<string, Integration>();
             for (const integration of config.integrations) {
                 const clazz = INTEGRATIONS[integration.name];
@@ -174,9 +177,10 @@ export class Trace {
             const spanReportData = Utils.generateReport(spanData, this.apiKey);
             this.report(spanReportData);
         }
-
-        this.tracer.destroy();
-        this.instrumenter.unhookModuleCompile();
+        if (this.config && !(this.config.disableInstrumentation)) {
+            this.tracer.destroy();
+            this.instrumenter.unhookModuleCompile();
+        }
     }
 
     buildSpanData(span: ThundraSpan, pluginContext: PluginContext): SpanData {

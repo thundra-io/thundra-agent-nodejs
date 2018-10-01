@@ -16,6 +16,7 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TIMEOUT_MARGIN: 'thundra_agent_lambda_timeout_margin',
     THUNDRA_LAMBDA_REPORT_REST_BASEURL: 'thundra_agent_lambda_report_rest_baseUrl',
     THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE: 'thundra_agent_lambda_report_cloudwatch_enable',
+    THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES: 'thundra_agent_lambda_publish_report_trustAllCertificates',
     THUNDRA_DISABLE_TRACE: 'thundra_agent_lambda_trace_disable',
     THUNDRA_DISABLE_METRIC: 'thundra_agent_lambda_metric_disable',
     THUNDRA_DISABLE_LOG: 'thundra_agent_lambda_log_disable',
@@ -24,19 +25,16 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP: 'thundra_agent_lambda_trace_response_skip',
     THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE: 'thundra_agent_lambda_trace_instrument_disable',
     THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG: 'thundra_agent_lambda_trace_instrument_traceableConfig',
+    THUNDRA_LAMBDA_TRACE_INSTRUMENT_FILE_PREFIX: 'thundra_agent_lambda_trace_instrument_file_prefix',
+    THUNDRA_LAMBDA_TRACE_INTEGRATIONS: 'thundra_agent_lambda_trace_instrument_integrations',
     THUNDRRA_LAMBDA_LOG_LOGLEVEL: 'thundra_agent_lambda_log_loglevel',
+    THUNDRA_AGENT_LAMBDA_AGENT_DEBUG_ENABLE: 'thundra_agent_lambda_debug_enable',
 
     AWS_LAMBDA_APPLICATION_ID: 'AWS_LAMBDA_APPLICATION_ID',
     AWS_LAMBDA_LOG_STREAM_NAME: 'AWS_LAMBDA_LOG_STREAM_NAME',
     AWS_LAMBDA_FUNCTION_VERSION: 'AWS_LAMBDA_FUNCTION_VERSION',
     AWS_REGION: 'AWS_REGION',
     AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',
-
-    THUNDRA_LAMBDA_TRACE_TRACE_DEF_FILE_PREFIX: 'thundra_agent_lambda_trace_traceablePrefixes',
-    THUNDRA_LAMBDA_TRACE_TRACE_DEF: 'thundra_agent_lambda_trace_def',
-    THUNDRA_LAMBDA_TRACE_INTEGRATIONS: 'thundra_agent_lambda_integrations',
-    THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES: 'thundra_agent_lambda_publish_report_trustAllCertificates',
-    THUNDRA_AGENT_LAMBDA_AGENT_DEBUG_ENABLE: 'thundra_agent_lambda_debug_enable',
 };
 
 export function getTimeoutMargin(region: string) {
@@ -78,7 +76,7 @@ export const URL: url.UrlWithStringQuery = url.parse(
     // istanbul ignore next
     process.env[envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL]
         ? process.env[envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL]
-        : 'https://collector.thundra.io/api',
+        : 'https://api.thundra.io/v1',
 );
 
 export const MONITORING_DATA_PATH = '/monitoring-data';

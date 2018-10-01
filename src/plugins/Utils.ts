@@ -192,15 +192,18 @@ class Utils {
     static initMonitoringData(pluginContext: any, originalContext: any, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
+        const domainName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_DOMAIN_NAME);
+        const className = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_CLASS_NAME);
+        const stage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
+
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = BuildInfoLoader.getAgentVersion();
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
         monitoringData.applicationId = pluginContext ? pluginContext.applicationId : '';
-        monitoringData.applicationDomainName = LAMBDA_APPLICATION_DOMAIN_NAME;
-        monitoringData.applicationClassName = LAMBDA_APPLICATION_CLASS_NAME;
+        monitoringData.applicationDomainName =  domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
+        monitoringData.applicationClassName = className ? className : LAMBDA_APPLICATION_CLASS_NAME;
         monitoringData.applicationName = originalContext ? originalContext.functionName : '';
         monitoringData.applicationVersion = pluginContext ? pluginContext.applicationVersion : '';
-        const stage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
         monitoringData.applicationStage = stage ? stage : '';
         monitoringData.applicationRuntimeVersion = process.version;
 

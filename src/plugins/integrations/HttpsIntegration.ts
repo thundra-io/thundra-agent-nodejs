@@ -3,8 +3,6 @@ import ThundraTracer from '../../opentracing/Tracer';
 import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames } from '../../Constants';
 import Utils from '../Utils';
 import * as url from 'url';
-import ModuleVersionValidator from './ModuleVersionValidator';
-import ThundraLogger from '../../ThundraLogger';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -37,7 +35,7 @@ class HttpsIntegration implements Integration {
         const host = options.hostname || options.host || 'localhost';
         const path = options.path || options.pathname || '/';
 
-        if (host === 'collector.thundra.io' || host === 'serverless.com') {
+        if (host === 'api.thundra.io' || host === 'serverless.com') {
           return request.apply(this, [options, callback]);
         }
 

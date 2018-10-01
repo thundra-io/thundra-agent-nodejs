@@ -43,7 +43,7 @@ describe('Trace', () => {
 
     describe('constructor with trace def', () => {
         const configs = {
-            traceDef: [{
+            traceableConfigs: [{
                 pattern: './libs/business1',
                 traceArgs: true,
                 traceReturnValue: true,
@@ -58,11 +58,11 @@ describe('Trace', () => {
 
         const tracePluginWithOptions = Trace(configs);
         it('Should set tracer config correctly', () => {
-            expect(tracePluginWithOptions.config.traceDef).toBeTruthy();
-            expect(tracePluginWithOptions.config.traceDef.length).toBe(2);
-            expect(tracePluginWithOptions.config.traceDef[0].pattern).toEqual(configs.traceDef[0].pattern);
-            expect(tracePluginWithOptions.config.traceDef[0].traceArgs).toEqual(configs.traceDef[0].traceArgs);
-            expect(tracePluginWithOptions.config.traceDef[0].traceError).toEqual(configs.traceDef[0].traceError);
+            expect(tracePluginWithOptions.config.traceableConfigs).toBeTruthy();
+            expect(tracePluginWithOptions.config.traceableConfigs.length).toBe(2);
+            expect(tracePluginWithOptions.config.traceableConfigs[0].pattern).toEqual(configs.traceableConfigs[0].pattern);
+            expect(tracePluginWithOptions.config.traceableConfigs[0].traceArgs).toEqual(configs.traceableConfigs[0].traceArgs);
+            expect(tracePluginWithOptions.config.traceableConfigs[0].traceError).toEqual(configs.traceableConfigs[0].traceError);
         });
 
     });

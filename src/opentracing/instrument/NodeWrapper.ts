@@ -1,10 +1,10 @@
-import TraceDef from '../../plugins/config/TraceDef';
+import TraceableConfig from '../../plugins/config/TraceableConfig';
 
 class NodeWrapper {
     node: any;
-    instrumentFunction: (traceDef: TraceDef, node: any) => void;
+    instrumentFunction: (traceableConfig: TraceableConfig, node: any) => void;
 
-    constructor(node: any, instrumentFunction: (traceDef: TraceDef, node: any) => void) {
+    constructor(node: any, instrumentFunction: (traceableConfig: TraceableConfig, node: any) => void) {
         this.node = node;
         this.instrumentFunction = instrumentFunction;
     }

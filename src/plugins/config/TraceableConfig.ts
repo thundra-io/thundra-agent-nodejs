@@ -1,6 +1,6 @@
 import {Minimatch, IMinimatch} from 'minimatch';
 
-class TraceDef {
+class TraceableConfig {
     private $pattern: string = null;
     private $traceArgs: boolean;
     private $traceReturnValue: boolean;
@@ -10,7 +10,7 @@ class TraceDef {
 
     constructor(pattern: string) {
         if (!pattern) {
-            throw Error('please pass a valid trace definition pattern to TraceDef constructor.');
+            throw Error('please pass a valid trace definition pattern to TraceableConfig constructor.');
         }
         this.$pattern = pattern;
         this.$traceArgs = false;
@@ -67,12 +67,12 @@ class TraceDef {
         }
     }
 
-    shouldTraceFunction(traceDef: string): boolean {
-        return this.$regExpFunction.match(traceDef);
+    shouldTraceFunction(traceableConfig: string): boolean {
+        return this.$regExpFunction.match(traceableConfig);
     }
 
-    shouldTraceFile(traceDef: string): boolean {
-        return this.$regExpFile.match(traceDef);
+    shouldTraceFile(traceableConfig: string): boolean {
+        return this.$regExpFile.match(traceableConfig);
     }
 
     setPropertyFromConfig(options: any) {
@@ -83,9 +83,9 @@ class TraceDef {
     }
 }
 
-export enum TraceDefCheckLevel {
+export enum TracableConfigCheckLevel {
     FILE,
     FUNCTION,
 }
 
-export default TraceDef;
+export default TraceableConfig;

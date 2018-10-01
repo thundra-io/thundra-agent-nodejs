@@ -35,7 +35,7 @@ class HttpIntegration implements Integration {
         const host = options.hostname || options.host || 'localhost';
         const path = options.path || options.pathname || '/';
 
-        if (host === 'collector.thundra.io' || host === 'serverless.com') {
+        if (host === 'api.thundra.io' || host === 'serverless.com') {
           return request.apply(this, [options, callback]);
         }
 

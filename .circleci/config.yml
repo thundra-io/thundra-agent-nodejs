@@ -7,6 +7,4 @@ jobs:
         - checkout
         - run: npm install
         - run: npm run lint
-        - run: docker-compose up -d
         - run: npm run test-ci
-        - run: docker-compose down

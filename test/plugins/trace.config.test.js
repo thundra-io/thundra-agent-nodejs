@@ -1,39 +1,39 @@
 import TraceConfig  from '../../dist/plugins/config/TraceConfig';
-import TraceDef from '../../dist/plugins/config/TraceDef';
+import TraceableConfig from '../../dist/plugins/config/TraceableConfig';
 
 describe('TraceConfig', () => {
     it('should parse single envirenment variable', () => {
-        process.env.thundra_agent_lambda_trace_def = 'album.getAlbum[traceArgs=true,traceReturnValue=true,traceError=true]'; 
+        process.env.thundra_agent_lambda_trace_instrument_traceableConfig = 'album.getAlbum[traceArgs=true,traceReturnValue=true,traceError=true]'; 
         const traceConfig = new TraceConfig({});
         
-        expect(traceConfig.traceDefs.length).toBe(1);
-        expect(traceConfig.traceDefs[0].traceArgs).toBe(true);
-        expect(traceConfig.traceDefs[0].traceError).toBe(true);
-        expect(traceConfig.traceDefs[0].traceReturnValue).toBe(true);
-        expect(traceConfig.traceDefs[0].pattern).toBe('album.getAlbum');
+        expect(traceConfig.traceableConfigs.length).toBe(1);
+        expect(traceConfig.traceableConfigs[0].traceArgs).toBe(true);
+        expect(traceConfig.traceableConfigs[0].traceError).toBe(true);
+        expect(traceConfig.traceableConfigs[0].traceReturnValue).toBe(true);
+        expect(traceConfig.traceableConfigs[0].pattern).toBe('album.getAlbum');
 
-        delete process.env.thundra_agent_lambda_trace_def;
+        delete process.env.thundra_agent_lambda_trace_instrument_traceableConfig;
     });
 
-    it('should parse multiple envirenment variable', () => {
-        process.env.thundra_agent_lambda_trace_def1 = 'album.getAlbum[traceArgs=true,traceReturnValue=false, traceError=true]'; 
-        process.env.thundra_agent_lambda_trace_def2 = 'user.get*[traceArgs=true,traceReturnValue=true,traceError=false]'; 
+    it('should parse multiple environment variable', () => {
+        process.env.thundra_agent_lambda_trace_instrument_traceableConfig1 = 'album.getAlbum[traceArgs=true,traceReturnValue=false, traceError=true]'; 
+        process.env.thundra_agent_lambda_trace_instrument_traceableConfig2 = 'user.get*[traceArgs=true,traceReturnValue=true,traceError=false]'; 
         const traceConfig = new TraceConfig({});
         
-        expect(traceConfig.traceDefs.length).toBe(2);
-        expect(traceConfig.traceDefs[1].traceArgs).toBe(true);
-        expect(traceConfig.traceDefs[1].traceError).toBe(false);
-        expect(traceConfig.traceDefs[1].traceReturnValue).toBe(true);
-        expect(traceConfig.traceDefs[1].pattern).toBe('user.get*');
-        expect(traceConfig.traceDefs[1].shouldTraceFunction('user.get')).toBeTruthy();
+        expect(traceConfig.traceableConfigs.length).toBe(2);
+        expect(traceConfig.traceableConfigs[1].traceArgs).toBe(true);
+        expect(traceConfig.traceableConfigs[1].traceError).toBe(false);
+        expect(traceConfig.traceableConfigs[1].traceReturnValue).toBe(true);
+        expect(traceConfig.traceableConfigs[1].pattern).toBe('user.get*');
+        expect(traceConfig.traceableConfigs[1].shouldTraceFunction('user.get')).toBeTruthy();
 
-        delete process.env.thundra_agent_lambda_trace_def1;
-        delete process.env.thundra_agent_lambda_trace_def2;
+        delete process.env.thundra_agent_lambda_trace_instrument_traceableConfig1;
+        delete process.env.thundra_agent_lambda_trace_instrument_traceableConfig2;
     });
 
     it('should parse from programatic config', () => {
         const traceConfig = new TraceConfig( {
-            traceDefs: [{
+            traceableConfigs: [{
                 pattern : 'business.f*',
                 traceArgs: true,
                 traceReturnValue: false,
@@ -41,11 +41,11 @@ describe('TraceConfig', () => {
             }]
         });
         
-        expect(traceConfig.traceDefs.length).toBe(1);
-        expect(traceConfig.traceDefs[0].traceArgs).toBe(true);
-        expect(traceConfig.traceDefs[0].traceError).toBe(true);
-        expect(traceConfig.traceDefs[0].traceReturnValue).toBe(false);
-        expect(traceConfig.traceDefs[0].pattern).toBe('business.f*');
+        expect(traceConfig.traceableConfigs.length).toBe(1);
+        expect(traceConfig.traceableConfigs[0].traceArgs).toBe(true);
+        expect(traceConfig.traceableConfigs[0].traceError).toBe(true);
+        expect(traceConfig.traceableConfigs[0].traceReturnValue).toBe(false);
+        expect(traceConfig.traceableConfigs[0].pattern).toBe('business.f*');
 
     });
 });
@@ -53,18 +53,18 @@ describe('TraceConfig', () => {
 describe('TraceOption', () => {
 
     it('should test shouldTrace', () => {
-        const traceDef = new TraceDef('album.get*');
-        expect(traceDef.shouldTraceFunction('album.getAlbum')).toBeTruthy();
-        expect(traceDef.shouldTraceFunction('album.setAlbum')).toBeFalsy();
+        const traceableConfigs = new TraceableConfig('album.get*');
+        expect(traceableConfigs.shouldTraceFunction('album.getAlbum')).toBeTruthy();
+        expect(traceableConfigs.shouldTraceFunction('album.setAlbum')).toBeFalsy();
     });
 
     it('should test shouldTrace with exactly match', () => {
-        const traceDef = new TraceDef('business.go');
-        expect(traceDef.shouldTraceFunction('business.go')).toBeTruthy();
+        const traceableConfigs = new TraceableConfig('business.go');
+        expect(traceableConfigs.shouldTraceFunction('business.go')).toBeTruthy();
     });
 
     it('should test shouldTraceFile', () => {
-        const traceDef = new TraceDef('business.go');
-        expect(traceDef.shouldTraceFile('business.*')).toBeTruthy();
+        const traceableConfigs = new TraceableConfig('business.go');
+        expect(traceableConfigs.shouldTraceFile('business.*')).toBeTruthy();
     });
 });

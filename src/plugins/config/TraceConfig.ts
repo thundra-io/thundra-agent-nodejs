@@ -1,5 +1,5 @@
 import BasePluginConfig from './BasePluginConfig';
-import TraceDef from './TraceDef';
+import TraceableConfig from './TraceableConfig';
 import {envVariableKeys } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
 import Utils from '../Utils';
@@ -10,10 +10,11 @@ class TraceConfig extends BasePluginConfig {
     disableRequest: boolean;
     disableResponse: boolean;
     tracerConfig: any;
-    traceDefs: TraceDef[];
+    traceableConfigs: TraceableConfig[];
     maskRequest: (request: any) => any;
     maskResponse: (response: any) => any;
     integrations: IntegrationConfig[];
+    disableInstrumentation: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -26,12 +27,14 @@ class TraceConfig extends BasePluginConfig {
         this.maskResponse = koalas(options.maskResponse, null);
         this.integrations = koalas([]);
         this.tracerConfig = koalas(options.tracerConfig, {});
-        this.traceDefs = [];
+        this.traceableConfigs = [];
+        this.disableInstrumentation = koalas(Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) === 'true',  options.disableInstrumentation, true);
 
         for (const key of Object.keys(process.env)) {
-            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_TRACE_DEF)) {
+            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {
                 try {
-                    this.traceDefs.push(this.parseTraceDefEnvVariable(process.env[key]));
+                    this.traceableConfigs.push(this.parseTraceableConfigEnvVariable(process.env[key]));
                 } catch (ex) {
                     ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
                 }
@@ -45,11 +48,11 @@ class TraceConfig extends BasePluginConfig {
             }
         }
 
-        if (options.traceDefs) {
-            for (const def of options.traceDefs) {
-                const option = new TraceDef(def.pattern);
+        if (options.traceableConfigs) {
+            for (const def of options.traceableConfigs) {
+                const option = new TraceableConfig(def.pattern);
                 option.setPropertyFromConfig(def);
-                this.traceDefs.push(option);
+                this.traceableConfigs.push(option);
             }
         }
 
@@ -64,10 +67,10 @@ class TraceConfig extends BasePluginConfig {
         }
     }
 
-    parseTraceDefEnvVariable(value: string): TraceDef {
+    parseTraceableConfigEnvVariable(value: string): TraceableConfig {
         const args = value.substring(value.indexOf('[') + 1, value.indexOf(']')).split(',');
         const pattern = value.substring(0, value.indexOf('['));
-        const option: TraceDef = new TraceDef(pattern);
+        const option: TraceableConfig = new TraceableConfig(pattern);
         for (const arg of args) {
             const tupple = arg.split('=');
             option.setProperty(tupple[0], tupple[1]);

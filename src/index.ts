@@ -7,7 +7,7 @@ import ThundraConfig from './plugins/config/ThundraConfig';
 import TraceConfig from './plugins/config/TraceConfig';
 import MetricConfig from './plugins/config/MetricConfig';
 import InvocationConfig from './plugins/config/InvocationConfig';
-import TraceDef from './plugins/config/TraceDef';
+import TraceableConfig from './plugins/config/TraceableConfig';
 import IntegrationConfig from './plugins/config/IntegrationConfig';
 import Utils from './plugins/Utils';
 import LogConfig from './plugins/config/LogConfig';
@@ -124,6 +124,6 @@ module.exports.config = {
     MetricConfig,
     InvocationConfig,
     LogConfig,
-    TraceDef,
+    TraceableConfig,
     IntegrationConfig,
 };

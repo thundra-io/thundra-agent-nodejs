@@ -9,7 +9,7 @@ test('HOOKS did not change', () => {
 });
 
 test('URL default value did not change',() => {
-    expect(URL.href).toEqual('https://collector.thundra.io/api');
+    expect(URL.href).toEqual('https://api.thundra.io/v1');
 });
 
 test('PROC_STAT_PATH did not change', () => {
