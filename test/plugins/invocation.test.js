@@ -1,7 +1,8 @@
 import Invocation from '../../dist/plugins/Invocation';
 import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
-import {DATA_FORMAT_VERSION} from '../../dist/Constants';
+import {DATA_MODEL_VERSION, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_FUNCTION_PLATFORM} from '../../dist/Constants';
+const buildInfo = require('../../dist/BuildInfo');
 
 
 const pluginContext = createMockPluginContext();
@@ -29,9 +30,6 @@ describe('Invocation', () => {
                 'after-invocation': invocation.afterInvocation
             });
         });
-        it('Should set dataType correctly', () => {
-            expect(invocation.dataType).toEqual('InvocationData');
-        });
     });
 
 
@@ -53,28 +51,48 @@ describe('Invocation', () => {
             expect(invocation.reporter).toBe(beforeInvocationData.reporter);
             expect(invocation.apiKey).toBe(pluginContext.apiKey);
             expect(invocation.invocationData.id).toBeTruthy();
-            expect(invocation.invocationData.transactionId).toEqual(beforeInvocationData.transactionId);
-            expect(invocation.invocationData.applicationName).toEqual(beforeInvocationData.originalContext.functionName);
+            expect(invocation.invocationData.type).toEqual('Invocation');
+            expect(invocation.invocationData.agentVersion).toEqual(buildInfo.version);
+            expect(invocation.invocationData.dataModelVersion).toEqual(DATA_MODEL_VERSION);
             expect(invocation.invocationData.applicationId).toEqual(pluginContext.applicationId);
+            expect(invocation.invocationData.applicationDomainName).toEqual(LAMBDA_APPLICATION_DOMAIN_NAME);
+            expect(invocation.invocationData.applicationClassName).toEqual(LAMBDA_APPLICATION_CLASS_NAME);
+            expect(invocation.invocationData.applicationName).toEqual(beforeInvocationData.originalContext.functionName);
             expect(invocation.invocationData.applicationVersion).toEqual(pluginContext.applicationVersion);
-            expect(invocation.invocationData.applicationProfile).toEqual(pluginContext.applicationProfile);
-            expect(invocation.invocationData.applicationType).toEqual('node');
+            expect(invocation.invocationData.applicationStage).toEqual('');
+            expect(invocation.invocationData.applicationRuntime).toEqual('node');
+            expect(invocation.invocationData.applicationRuntimeVersion).toEqual(process.version);
+            expect(invocation.invocationData.applicationTags).toEqual({});
             expect(invocation.invocationData.duration).toEqual(0);
             expect(invocation.invocationData.startTimestamp).toEqual(invocation.startTimestamp);
-            expect(invocation.invocationData.endTimestamp).toEqual(0);
+            expect(invocation.invocationData.finishTimestamp).toEqual(0);
             expect(invocation.invocationData.erroneous).toEqual(false);
             expect(invocation.invocationData.errorType).toEqual('');
             expect(invocation.invocationData.errorMessage).toEqual('');
             expect(invocation.invocationData.coldStart).toEqual(pluginContext.requestCount === 0);
             expect(invocation.invocationData.timeout).toEqual(false);
-            expect(invocation.invocationData.region).toEqual(pluginContext.applicationRegion);
-            expect(invocation.invocationData.memorySize).toEqual(parseInt(beforeInvocationData.originalContext.memoryLimitInMB));
+            expect(invocation.invocationData.functionRegion).toEqual(pluginContext.applicationRegion);
+            expect(invocation.invocationData.functionName).toEqual(beforeInvocationData.originalContext.functionName);
+            expect(invocation.invocationData.functionPlatform).toEqual(LAMBDA_FUNCTION_PLATFORM);
+            expect(invocation.invocationData.tags).toEqual({
+                'aws.lambda.arn': 'arn:aws:lambda:us-west-2:123456789123:function:test',
+                'aws.lambda.invocation.coldstart': true,
+                'aws.lambda.invocation.request_id ': 'awsRequestId',
+                'aws.lambda.invocation.timeout': false,
+                'aws.lambda.log_group_name': '/aws/lambda/test',
+                'aws.lambda.log_stream_name': '2018/03/07/[$LATEST]test',
+                'aws.lambda.memory_limit': 128,
+                'aws.lambda.name': 'test',
+                'aws.region': 'region'});
         });
     });
 
     describe('afterInvocation', () => {
         const invocation = Invocation();
         invocation.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        invocation.beforeInvocation(beforeInvocationData);
+
         const afterInvocationData = {};
         invocation.report = jest.fn();
         it('Should call report method', async () => {
@@ -92,8 +110,8 @@ describe('Invocation', () => {
         it('Should call report method', async () => {
             await invocation.beforeInvocation(beforeInvocationData);
             await invocation.afterInvocation(afterInvocationData);
-            expect(invocation.endTimestamp).toBeTruthy();
-            expect(invocation.invocationData.duration).toEqual(invocation.endTimestamp - invocation.startTimestamp);
+            expect(invocation.finishTimestamp).toBeTruthy();
+            expect(invocation.invocationData.duration).toEqual(invocation.finishTimestamp - invocation.startTimestamp);
             expect(invocation.invocationData.erroneous).toEqual(false);
             expect(invocation.report).toHaveBeenCalledTimes(1);
         });
@@ -108,11 +126,11 @@ describe('Invocation', () => {
         it('Should call report method', async () => {
             await invocation.beforeInvocation(beforeInvocationData);
             await invocation.afterInvocation(afterInvocationData);
-            expect(invocation.endTimestamp).toBeTruthy();
+            expect(invocation.finishTimestamp).toBeTruthy();
             expect(invocation.invocationData.erroneous).toEqual(true);
             expect(invocation.invocationData.errorType).toEqual('Error');
             expect(invocation.invocationData.errorMessage).toEqual('error message');
-            expect(invocation.invocationData.duration).toEqual(invocation.endTimestamp - invocation.startTimestamp);
+            expect(invocation.invocationData.duration).toEqual(invocation.finishTimestamp - invocation.startTimestamp);
             expect(invocation.report).toHaveBeenCalledTimes(1);
         });
     });
@@ -143,7 +161,7 @@ describe('Invocation', () => {
                 data: invocation.invocationData,
                 type: invocation.dataType,
                 apiKey: invocation.apiKey,
-                dataFormatVersion: DATA_FORMAT_VERSION
+                dataFormatVersion: DATA_MODEL_VERSION
             });
         });
     });

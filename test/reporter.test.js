@@ -161,6 +161,8 @@ describe('Reporter', () => {
     });
 
     describe('sendReports failure', () => {
+        
+        process.env.thundra_agent_lambda_debug_enable = 'true';
         let consoleOutput;
 
         const reporter = new Reporter('apiKey');
@@ -186,7 +188,7 @@ describe('Reporter', () => {
 
     describe('addReports async', () => {
         let stdout = null;
-        process.env.thundra_lambda_publish_cloudwatch_enable = true;
+        process.env.thundra_agent_lambda_report_cloudwatch_enable = true;
         process.stdout.write = jest.fn(input => stdout = input);
         const reporter = new Reporter('apiKey');
         const mockReport = {data: 'data'};
