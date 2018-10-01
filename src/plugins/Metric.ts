@@ -10,6 +10,7 @@ import MetricConfig from './config/MetricConfig';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 import ThundraTracer from '../opentracing/Tracer';
+import ThundraLogger from '../ThundraLogger';
 
 class Metric {
     hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
@@ -74,7 +75,7 @@ class Metric {
             this.addCpuMetricReport(),
             this.addIoMetricReport(),
         ]).catch((err: Error) => {
-            console.error('Cannot obtain metric data :' + err);
+            ThundraLogger.getInstance().error('Cannot obtain metric data :' + err);
         });
         this.reports.forEach((report) => {
             this.report(report);

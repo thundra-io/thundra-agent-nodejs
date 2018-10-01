@@ -49,7 +49,7 @@ class ThundraTracer extends Tracer {
     const activeSpan = this.getActiveSpan();
     let span: ThundraSpan;
     // tslint:disable-next-line:no-angle-bracket-type-assertion
-    return <T>((...args: any[]) => {
+    return <T> ((...args: any[]) => {
       try {
         span = this.startSpan(spanName, { childOf: activeSpan }) as ThundraSpan;
         const returnValue = func(...args);

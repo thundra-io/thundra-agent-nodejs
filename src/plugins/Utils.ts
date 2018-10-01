@@ -17,8 +17,7 @@ import MetricData from './data/metric/MetricData';
 import TraceData from './data/trace/TraceData';
 import SpanData from './data/trace/SpanData';
 import LogData from './data/log/LogData';
-
-const semver = require('semver');
+import ThundraLogger from '../ThundraLogger';
 
 class Utils {
     static generateId(): string {
@@ -96,7 +95,7 @@ class Utils {
                 };
 
                 if (err) {
-                    console.error(`Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0.`);
+                    ThundraLogger.getInstance().error(`Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0.`);
                 } else {
                     const procStatArray = file.toString().split(' ');
                     procStatData.threadCount = parseInt(procStatArray[19], 0);
@@ -116,7 +115,7 @@ class Utils {
                 };
 
                 if (err) {
-                    console.error(`Cannot read ${PROC_IO_PATH} file. Setting IO Metrics to 0.`);
+                    ThundraLogger.getInstance().error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
                 } else {
                     const procIoArray = file.toString().split('\n');
                     procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
@@ -133,13 +132,13 @@ class Utils {
         if (references) {
             for (const ref of references) {
                 if (!(ref instanceof Reference)) {
-                    console.error(`Expected ${ref} to be an instance of opentracing.Reference`);
+                    ThundraLogger.getInstance().error(`Expected ${ref} to be an instance of opentracing.Reference`);
                     break;
                 }
                 const spanContext = ref.referencedContext();
 
                 if (!(spanContext instanceof ThundraSpanContext)) {
-                    console.error(`Expected ${spanContext} to be an instance of SpanContext`);
+                    ThundraLogger.getInstance().error(`Expected ${spanContext} to be an instance of SpanContext`);
                     break;
                 }
 
@@ -155,19 +154,6 @@ class Utils {
         }
 
         return parent;
-    }
-
-    static validateModuleVersion(basedir: string, versions: string): boolean {
-        try {
-            if (basedir) {
-                const packageJSON = `${basedir}/package.json`;
-                const version = require(packageJSON).version;
-                return semver.satisfies(version, versions);
-            }
-            return false;
-        } catch (err) {
-            return true;
-        }
     }
 
     static replaceArgs(statement: string, values: any[]): string {
@@ -215,7 +201,7 @@ class Utils {
         monitoringData.applicationName = originalContext ? originalContext.functionName : '';
         monitoringData.applicationVersion = pluginContext ? pluginContext.applicationVersion : '';
         const stage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
-        monitoringData.applicationStage = stage ? stage : ''; 
+        monitoringData.applicationStage = stage ? stage : '';
         monitoringData.applicationRuntimeVersion = process.version;
 
         return monitoringData;

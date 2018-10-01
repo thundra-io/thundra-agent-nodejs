@@ -4,6 +4,7 @@ import * as https from 'https';
 import * as url from 'url';
 import { URL, MONITORING_DATA_PATH, envVariableKeys } from './Constants';
 import Utils from './plugins/Utils';
+import ThundraLogger from './ThundraLogger';
 
 const httpAgent = new http.Agent({
     keepAlive: true,
@@ -66,11 +67,11 @@ class Reporter {
         await this.request()
             .then((response: any) => {
                 if (response.status !== 200) {
-                    console.log(this.reports);
+                    ThundraLogger.getInstance().debug(this.reports);
                 }
             })
             .catch((err: any) => {
-                console.error(err);
+                ThundraLogger.getInstance().error(err);
             });
     }
 

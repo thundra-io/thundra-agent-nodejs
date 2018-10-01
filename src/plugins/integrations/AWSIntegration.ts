@@ -9,6 +9,8 @@ import {
 import Utils from '../Utils';
 import { Span } from 'opentracing';
 import { DB_INSTANCE, DB_STATEMENT, DB_USER, DB_TYPE } from 'opentracing/lib/ext/tags';
+import ThundraLogger from '../../ThundraLogger';
+import ModuleVersionValidator from './ModuleVersionValidator';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -23,7 +25,14 @@ class AWSIntegration implements Integration {
   constructor(tracer: ThundraTracer, config: any) {
     this.version = '2.x';
     this.hook = Hook('aws-sdk', { internals: true }, (exp: any, name: string, basedir: string) => {
-      if (name === 'aws-sdk') {
+      const moduleValidator = new ModuleVersionValidator();
+      const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+
+      if (isValidVersion) {
+        ThundraLogger.getInstance().error(`Invalid module version. Supported version is ${this.version}`);
+      }
+
+      if (name === 'aws-sdk' && isValidVersion) {
         this.lib = exp;
         this.config = config;
         this.basedir = basedir;
@@ -189,7 +198,7 @@ class AWSIntegration implements Integration {
           return wrappedFunction.apply(this, [wrappedCallback]);
 
         } catch (error) {
-          console.error(error);
+          ThundraLogger.getInstance().error(error);
         }
       };
     }

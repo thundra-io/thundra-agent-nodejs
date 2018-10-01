@@ -2,6 +2,7 @@ import { Span } from 'opentracing';
 import ThundraSpanContext from './SpanContext';
 import Utils from '../plugins/Utils';
 import ThundraTracer from './Tracer';
+import ThundraLogger from '../ThundraLogger';
 class ThundraSpan extends Span {
   parentTracer: ThundraTracer;
   operationName: string;
@@ -111,7 +112,7 @@ class ThundraSpan extends Span {
         this.tags[key] = keyValuePairs[key];
       });
     } catch (e) {
-      console.error(e);
+      ThundraLogger.getInstance().debug(e);
     }
   }
 

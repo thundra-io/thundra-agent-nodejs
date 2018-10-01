@@ -2,6 +2,7 @@ import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import { DBTags, SpanTags, SpanTypes, DomainNames, ClassNames } from '../../Constants';
 import Utils from '../Utils';
+import ModuleVersionValidator from './ModuleVersionValidator';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -17,7 +18,9 @@ class PostgreIntegration implements Integration {
     this.version = '6.x';
 
     this.hook = Hook('pg', { internals: true }, (exp: any, name: string, basedir: string) => {
-      if (name === 'pg') {
+      const moduleValidator = new ModuleVersionValidator();
+      const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+      if (name === 'pg' && isValidVersion) {
         this.lib = exp;
         this.config = config;
         this.basedir = basedir;

@@ -30,7 +30,7 @@ class ThundraConfig {
         this.logConfig = new LogConfig(options.logConfig);
         this.invocationConfig = new InvocationConfig(options.invocationConfig);
         this.trustAllCert = koalas(Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_AGENT_TRUST_ALL_CERTIFICATES), options.trustAllCert, false);
+            envVariableKeys.THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES), options.trustAllCert, false);
     }
 
 }

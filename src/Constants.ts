@@ -35,7 +35,8 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TRACE_TRACE_DEF_FILE_PREFIX: 'thundra_agent_lambda_trace_traceablePrefixes',
     THUNDRA_LAMBDA_TRACE_TRACE_DEF: 'thundra_agent_lambda_trace_def',
     THUNDRA_LAMBDA_TRACE_INTEGRATIONS: 'thundra_agent_lambda_integrations',
-    THUNDRA_LAMBDA_AGENT_TRUST_ALL_CERTIFICATES: 'thundra_agent_lambda_publish_report_trustAllCertificates',
+    THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES: 'thundra_agent_lambda_publish_report_trustAllCertificates',
+    THUNDRA_AGENT_LAMBDA_AGENT_DEBUG_ENABLE: 'thundra_agent_lambda_debug_enable',
 };
 
 export function getTimeoutMargin(region: string) {

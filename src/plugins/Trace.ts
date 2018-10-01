@@ -55,6 +55,7 @@ export class Trace {
         this.instrumenter.hookModuleCompile();
 
         if (this.config && this.config.integrations) {
+            this.integrations = new Map<string, Integration>();
             for (const integration of config.integrations) {
                 const clazz = INTEGRATIONS[integration.name];
                 if (clazz) {

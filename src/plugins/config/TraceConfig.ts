@@ -3,6 +3,7 @@ import TraceDef from './TraceDef';
 import {envVariableKeys } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
 import Utils from '../Utils';
+import ThundraLogger from '../../ThundraLogger';
 const koalas = require('koalas');
 
 class TraceConfig extends BasePluginConfig {
@@ -32,14 +33,14 @@ class TraceConfig extends BasePluginConfig {
                 try {
                     this.traceDefs.push(this.parseTraceDefEnvVariable(process.env[key]));
                 } catch (ex) {
-                    console.error(`Cannot parse trace def ${key}`);
+                    ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
                 }
             }
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS)) {
                 try {
                     this.integrations.push(... this.parseIntegrationsEnvVariable(process.env[key]));
                 } catch (ex) {
-                    console.error(`Cannot parse trace def ${key}`);
+                    ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
                 }
             }
         }

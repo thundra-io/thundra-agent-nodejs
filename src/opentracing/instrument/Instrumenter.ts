@@ -7,6 +7,7 @@ import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/Utils';
 import Stack from './Stack';
 import NodeWrapper from './NodeWrapper';
+import ThundraLogger from '../../ThundraLogger';
 
 const Module = require('module');
 const falafel = require('falafel');
@@ -64,7 +65,7 @@ class Instrumenter {
                         content = content.substring(Module.wrapper[0].length, content.length - Module.wrapper[1].length);
                     }
                 } catch (ex) {
-                    console.log(ex);
+                    ThundraLogger.getInstance().debug(ex);
                 }
             }
             self.origCompile.call(this, content, filename);

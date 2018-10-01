@@ -161,6 +161,8 @@ describe('Reporter', () => {
     });
 
     describe('sendReports failure', () => {
+        
+        process.env.thundra_agent_lambda_debug_enable = 'true';
         let consoleOutput;
 
         const reporter = new Reporter('apiKey');

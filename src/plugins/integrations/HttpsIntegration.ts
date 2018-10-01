@@ -3,6 +3,8 @@ import ThundraTracer from '../../opentracing/Tracer';
 import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames } from '../../Constants';
 import Utils from '../Utils';
 import * as url from 'url';
+import ModuleVersionValidator from './ModuleVersionValidator';
+import ThundraLogger from '../../ThundraLogger';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -16,7 +18,7 @@ class HttpsIntegration implements Integration {
 
   constructor(tracer: ThundraTracer, config: any) {
     this.hook = Hook('https', { internals: true }, (exp: any, name: string, basedir: string) => {
-      if (name === 'https') {
+      if (name === 'https' ) {
         this.lib = exp;
         this.config = config;
         this.basedir = basedir;
