@@ -28,17 +28,17 @@ module.exports = (options: any) => {
         return (originalFunc: any) => originalFunc;
     }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') || config.traceConfig.enabled) {
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
         tracePlugin = TracePlugin(config.traceConfig);
         config.plugins.push(tracePlugin);
     }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC) === 'true') || config.metricConfig.enabled) {
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC) === 'true') && config.metricConfig.enabled) {
         const metricPlugin = MetricPlugin(config.metricConfig);
         config.plugins.push(metricPlugin);
     }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG) === 'true') || config.logConfig.enabled) {
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG) === 'true') && config.logConfig.enabled) {
         const logPlugin = LogPlugin(config.logConfig);
         logManager = new LogManager();
         logManager.addListener(logPlugin);

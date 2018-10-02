@@ -41,7 +41,7 @@ class Metric {
         this.reporter.addReport(data);
     }
 
-    setPluginContext = (pluginContext: PluginContext) => {
+    setPluginContext(pluginContext: PluginContext) {
         this.pluginContext = pluginContext;
         this.apiKey = pluginContext.apiKey;
     }

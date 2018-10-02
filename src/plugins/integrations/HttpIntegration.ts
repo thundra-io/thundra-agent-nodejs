@@ -65,6 +65,7 @@ class HttpIntegration implements Integration {
           if (req.listenerCount('response') === 1) {
             res.resume();
           }
+          span.finish();
         });
 
         req.on('error', (err: any) => {

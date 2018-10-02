@@ -104,7 +104,7 @@ export class Trace {
 
         this.traceData.id = this.pluginContext.traceId;
         this.traceData.startTimestamp = Date.now();
-        this.traceData.rootSpanId = this.rootSpan.spanContext.spanId;
+        this.traceData.rootSpanId = this.rootSpan ? this.rootSpan.spanContext.spanId : '';
 
         this.traceData.tags = {};
         this.traceData.tags['aws.region'] = this.pluginContext.applicationRegion;
@@ -173,9 +173,11 @@ export class Trace {
 
         const spanList = this.tracer.getRecorder().getSpanList();
         for (const span of spanList) {
-            const spanData = this.buildSpanData(span, this.pluginContext);
-            const spanReportData = Utils.generateReport(spanData, this.apiKey);
-            this.report(spanReportData);
+            if (span) {
+                const spanData = this.buildSpanData(span, this.pluginContext);
+                const spanReportData = Utils.generateReport(spanData, this.apiKey);
+                this.report(spanReportData);
+            }
         }
         if (this.config && !(this.config.disableInstrumentation)) {
             this.tracer.destroy();

@@ -2,6 +2,8 @@ import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import {DBTags, SpanTags, SpanTypes, DomainNames, ClassNames} from '../../Constants';
 import Utils from '../Utils';
+import ModuleVersionValidator from './ModuleVersionValidator';
+import ThundraLogger from '../../ThundraLogger';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -16,6 +18,13 @@ class MySQL2Integration implements Integration {
   constructor(tracer: ThundraTracer, config: any) {
     this.version = '^1.5';
     this.hook = Hook('mysql2', { internals: true }, (exp: any, name: string, basedir: string) => {
+      const moduleValidator = new ModuleVersionValidator();
+      const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+
+      if (!isValidVersion) {
+        ThundraLogger.getInstance().error(`Invalid module version. Supported version is ${this.version}`);
+      }
+
       if (name === 'mysql2/lib/connection.js') {
           this.lib = exp;
           this.config = config;

@@ -28,7 +28,7 @@ class AWSIntegration implements Integration {
       const moduleValidator = new ModuleVersionValidator();
       const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
 
-      if (isValidVersion) {
+      if (!isValidVersion) {
         ThundraLogger.getInstance().error(`Invalid module version. Supported version is ${this.version}`);
       }
 

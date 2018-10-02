@@ -19,7 +19,10 @@ class ThundraRecorder {
             node.order = this.spanOrder;
             this.spanOrder++;
         } else if (spanEvent === SpanEvent.SPAN_FINISH) {
-            this.spanList.push(this.activeSpanStack.pop());
+            const span = this.activeSpanStack.pop();
+            if (span) {
+                this.spanList.push(span);
+            }
             this.activeSpan = this.activeSpanStack.peek();
         }
     }

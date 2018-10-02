@@ -3,6 +3,8 @@ import ThundraTracer from '../../opentracing/Tracer';
 import { SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames, ClassNames, DBTypes, DBTags } from '../../Constants';
 import Utils from '../Utils';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
+import ModuleVersionValidator from './ModuleVersionValidator';
+import ThundraLogger from '../../ThundraLogger';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -18,6 +20,12 @@ class RedisIntegration implements Integration {
     this.version = '^2.6';
     this.hook = Hook('redis', { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'redis') {
+        const moduleValidator = new ModuleVersionValidator();
+        const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+
+        if (!isValidVersion) {
+          ThundraLogger.getInstance().error(`Invalid module version. Supported version is ${this.version}`);
+        }
         this.lib = exp;
         this.config = config;
         this.basedir = basedir;
