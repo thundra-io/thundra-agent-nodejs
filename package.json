@@ -1,12 +1,12 @@
 {
   "name": "@thundra/core",
-  "version": "1.6.1",
+  "version": "2.0.0",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
     "precompile": "node create-build-info.js",
     "compile": "tsc",
-    "build": "webpack",
+    "build": "node create-build-info.js;webpack",
     "start": "npm-run-all --parallel watch:server watch:build",
     "test": "npm run compile; jest --coverage",
     "test-ci": "npm run compile;  jest --config config.json --coverage; cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
@@ -71,7 +71,7 @@
     "webpack-cli": "^3.0.8"
   },
   "dependencies": {
-    "@thundra/warmup": "^1.0.0",
+    "@thundra/warmup": "^1.1.1",
     "falafel": "^2.1.0",
     "koalas": "^1.0.2",
     "minimatch": "^3.0.4",
