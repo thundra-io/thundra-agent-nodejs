@@ -81,6 +81,7 @@ export class Trace {
     }
 
     beforeInvocation = (data: any) => {
+        this.tracer.destroy();
         const { originalContext, originalEvent, reporter } = data;
 
         this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
