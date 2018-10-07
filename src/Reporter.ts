@@ -68,6 +68,7 @@ class Reporter {
             .then((response: any) => {
                 if (response.status !== 200) {
                     ThundraLogger.getInstance().debug(this.reports);
+                    ThundraLogger.getInstance().error(response);
                 }
             })
             .catch((err: any) => {
