@@ -16,7 +16,7 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TIMEOUT_MARGIN: 'thundra_agent_lambda_timeout_margin',
     THUNDRA_LAMBDA_REPORT_REST_BASEURL: 'thundra_agent_lambda_report_rest_baseUrl',
     THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE: 'thundra_agent_lambda_report_cloudwatch_enable',
-    THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES: 'thundra_agent_lambda_publish_report_trustAllCertificates',
+    THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES: 'thundra_agent_lambda_publish_report_rest_trustAllCertificates',
     THUNDRA_DISABLE_TRACE: 'thundra_agent_lambda_trace_disable',
     THUNDRA_DISABLE_METRIC: 'thundra_agent_lambda_metric_disable',
     THUNDRA_DISABLE_LOG: 'thundra_agent_lambda_log_disable',

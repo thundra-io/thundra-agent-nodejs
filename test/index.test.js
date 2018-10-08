@@ -19,7 +19,7 @@ delete process.env.thundra_agent_lambda_trace_disable;
 delete process.env.thundra_agent_lambda_metric_disable;
 delete process.env.thundra_agent_lambda_log_disable;
 delete process.env.thundra_apiKey;
-delete process.env.thundra_agent_lambda_publish_report_trustAllCertificates;
+delete process.env.thundra_agent_lambda_publish_report_rest_trustAllCertificates;
 delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
 
 describe('Thundra library', () => {
@@ -168,7 +168,7 @@ describe('Thundra library', () => {
 
     describe('Authorize All Certs', () => {
         describe('enabled by config', () => {
-            delete process.env.thundra_agent_lambda_publish_report_trustAllCertificates;
+            delete process.env.thundra_agent_lambda_publish_report_rest_trustAllCertificates;
             delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
 
             const originalEvent = { key: 'value' };
@@ -185,10 +185,10 @@ describe('Thundra library', () => {
         });
 
         describe('enabled by environment variable', () => {
-            delete process.env.thundra_agent_lambda_publish_report_trustAllCertificates;
+            delete process.env.thundra_agent_lambda_publish_report_rest_trustAllCertificates;
             delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
 
-            process.env.thundra_agent_lambda_publish_report_trustAllCertificates = true;
+            process.env.thundra_agent_lambda_publish_report_rest_trustAllCertificates = true;
 
             const originalEvent = { key: 'value' };
             const originalContext = {};

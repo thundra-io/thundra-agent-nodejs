@@ -46,29 +46,29 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 
 #### 1. Environment variables
 
-| Name                                                    | Type   | Default Value |
-|:--------------------------------------------------------|:------:|:-------------:|
-| thundra_apiKey                                          | string |       -       |
-| thundra_agent_lambda_application_stage                  | string |    empty      |
-| thundra_agent_lambda_application_domainName             | string |    API        |
-| thundra_agent_lambda_application_className              | string |    AWS-Lambda |
-| thundra_agent_lambda_disable                            | bool   |    false      |
-| thundra_agent_lambda_timeout_margin                     | number |    200        |
-| thundra_agent_lambda_report_rest_baseUrl                | string |    https<nolink>://api.thundra.io/v1        |
-| thundra_agent_lambda_report_cloudwatch_enable           | bool   |    false      |
-| thundra_agent_lambda_trace_disable                      | bool   |    false      |
-| thundra_agent_lambda_metric_disable                     | bool   |    false      |
-| thundra_agent_lambda_log_disable                        | bool   |    false      |
-| thundra_agent_lambda_trace_request_skip                 | bool   |    false      |
-| thundra_agent_lambda_trace_response_skip                | bool   |    false      |
-| thundra_agent_lambda_trace_instrument_disable           | bool   |    false      |
-| thundra_agent_lambda_trace_instrument_traceableConfig   | string |    empty      |
-| thundra_agent_lambda_trace_instrument_file_prefix       | string |    empty      |
-| thundra_agent_lambda_log_loglevel                       | string |    TRACE      |
-| thundra_agent_lambda_integrations                       | string |    empty      |
-| thundra_agent_lambda_publish_report_trustAllCertificates| bool   |     false     |
-| thundra_agent_lambda_debug_enable                       | bool   |     false     |
-| thundra_agent_lambda_trace_instrument_integrations      | bool   |     false     |
+| Name                                                            | Type   | Default Value |
+|:----------------------------------------------------------------|:------:|:-------------:|
+| thundra_apiKey                                                  | string |       -       |
+| thundra_agent_lambda_application_stage                          | string |    empty      |
+| thundra_agent_lambda_application_domainName                     | string |    API        |
+| thundra_agent_lambda_application_className                      | string |    AWS-Lambda |
+| thundra_agent_lambda_disable                                    | bool   |    false      |
+| thundra_agent_lambda_timeout_margin                             | number |    200        |
+| thundra_agent_lambda_report_rest_baseUrl                        | string |    https<nolink>://api.thundra.io/v1        |
+| thundra_agent_lambda_report_cloudwatch_enable                   | bool   |    false      |
+| thundra_agent_lambda_trace_disable                              | bool   |    false      |
+| thundra_agent_lambda_metric_disable                             | bool   |    false      |
+| thundra_agent_lambda_log_disable                                | bool   |    false      |
+| thundra_agent_lambda_trace_request_skip                         | bool   |    false      |
+| thundra_agent_lambda_trace_response_skip                        | bool   |    false      |
+| thundra_agent_lambda_trace_instrument_disable                   | bool   |    false      |
+| thundra_agent_lambda_trace_instrument_traceableConfig           | string |    empty      |
+| thundra_agent_lambda_trace_instrument_file_prefix               | string |    empty      |
+| thundra_agent_lambda_log_loglevel                               | string |    TRACE      |
+| thundra_agent_lambda_integrations                               | string |    empty      |
+| thundra_agent_lambda_publish_report_rest_trustAllCertificates   | bool   |     false     |
+| thundra_agent_lambda_debug_enable                               | bool   |     false     |
+| thundra_agent_lambda_trace_instrument_integrations              | bool   |     false     |
 
 #### 2. Module initialization parameters
 
