@@ -173,7 +173,7 @@ You can cut down cold starts easily by deploying our lambda function [`thundra-l
 Our agent handles warmup requests automatically so you don't need to make any code changes.
 
 You just need to deploy `thundra-lambda-warmup` once, then you can enable warming up for your lambda by 
-* setting its environment variable `thundra_lambda_warmup_warmupAware` **true** OR
+* setting its environment variable `thundra_agent_lambda_warmup_warmupAware` **true** OR
 * adding its name to `thundra-lambda-warmup`'s environment variable `thundra_lambda_warmup_function`.
 
 Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs for more information.
