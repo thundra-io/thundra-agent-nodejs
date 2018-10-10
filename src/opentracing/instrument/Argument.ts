@@ -1,12 +1,12 @@
 class Argument {
-    argName: string;
-    argType: string;
-    argValue: any;
+    name: string;
+    type: string;
+    value: any;
 
-    constructor(argName: string, argType: string, argValue: any) {
-        this.argName = argName;
-        this.argType = argType;
-        this.argValue = argValue;
+    constructor(name: string, type: string, value: any) {
+        this.name = name;
+        this.type = type;
+        this.value = value;
     }
 }
 
