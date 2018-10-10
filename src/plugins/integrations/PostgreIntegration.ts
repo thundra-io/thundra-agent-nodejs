@@ -19,19 +19,19 @@ class PostgreIntegration implements Integration {
     this.version = '6.x';
 
     this.hook = Hook('pg', { internals: true }, (exp: any, name: string, basedir: string) => {
-      const moduleValidator = new ModuleVersionValidator();
-      const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+      if (name === 'pg') {
+        const moduleValidator = new ModuleVersionValidator();
+        const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
 
-      if (!isValidVersion) {
-        ThundraLogger.getInstance().error(`Invalid module version. Supported version is ${this.version}`);
-      }
+        if (!isValidVersion) {
+          ThundraLogger.getInstance().error(`Invalid module version. for pg integration. Supported version is ${this.version}`);
+        } else {
+          this.lib = exp;
+          this.config = config;
+          this.basedir = basedir;
 
-      if (name === 'pg' && isValidVersion) {
-        this.lib = exp;
-        this.config = config;
-        this.basedir = basedir;
-
-        this.wrap.call(this, exp, tracer, config);
+          this.wrap.call(this, exp, tracer, config);
+        }
       }
       return exp;
     });

@@ -25,19 +25,19 @@ class AWSIntegration implements Integration {
   constructor(tracer: ThundraTracer, config: any) {
     this.version = '2.x';
     this.hook = Hook('aws-sdk', { internals: true }, (exp: any, name: string, basedir: string) => {
-      const moduleValidator = new ModuleVersionValidator();
-      const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+      if (name === 'aws-sdk') {
+        const moduleValidator = new ModuleVersionValidator();
+        const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+        if (!isValidVersion) {
+          ThundraLogger.getInstance().error(`Invalid module version for aws-sdk integration.
+                                             Supported version is ${this.version}`);
+        } else {
+          this.lib = exp;
+          this.config = config;
+          this.basedir = basedir;
 
-      if (!isValidVersion) {
-        ThundraLogger.getInstance().error(`Invalid module version. Supported version is ${this.version}`);
-      }
-
-      if (name === 'aws-sdk' && isValidVersion) {
-        this.lib = exp;
-        this.config = config;
-        this.basedir = basedir;
-
-        this.wrap.call(this, exp, tracer, config);
+          this.wrap.call(this, exp, tracer, config);
+        }
       }
       return exp;
     });
@@ -59,7 +59,7 @@ class AWSIntegration implements Integration {
             const operationName = request.operation;
             const operationType = SQSRequestTypes[operationName];
             const queueName = operationType ?
-              Utils.getQueueName(request.params.QueueUrl) : AWS_SERVICE_REQUEST;
+            Utils.getQueueName(request.params.QueueUrl) : AWS_SERVICE_REQUEST;
 
             activeSpan = tracer._startSpan(queueName, {
               childOf: parentSpan,
@@ -83,6 +83,7 @@ class AWSIntegration implements Integration {
               className: ClassNames.SNS,
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SNS,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsSNSTags.TOPIC_NAME]: topicName,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
               },
@@ -103,6 +104,8 @@ class AWSIntegration implements Integration {
                 [SpanTags.OPERATION_TYPE]: statementType ? statementType : 'READ',
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_DYNAMO,
                 [AwsDynamoTags.TABLE_NAME]: tableName,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
+                [DBTags.DB_STATEMENT]: request.params,
               },
             });
           } else if (serviceName === 's3') {
@@ -118,6 +121,7 @@ class AWSIntegration implements Integration {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_S3,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
                 [AwsS3Tags.BUCKET_NAME]: request.params.Bucket,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsS3Tags.OBJECT_NAME]: request.params.Body,
               },
             });
@@ -134,6 +138,7 @@ class AWSIntegration implements Integration {
                 [AwsLambdaTags.FUNCTION_NAME]: lambdaName,
                 [AwsLambdaTags.FUNCTION_QUALIFIER]: request.params.Qualifier,
                 [AwsLambdaTags.INVOCATION_PAYLOAD]: request.params.Payload,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
               },
             });
@@ -150,6 +155,7 @@ class AWSIntegration implements Integration {
                 [SpanTags.OPERATION_TYPE]: KinesisRequestTypes[operationName] ?
                   KinesisRequestTypes[operationName] : 'READ',
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_KINESIS,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsKinesisTags.STREAM_NAME]: streamName,
               },
             });
@@ -166,6 +172,7 @@ class AWSIntegration implements Integration {
                 [SpanTags.OPERATION_TYPE]: FirehoseRequestTypes[operationName] ?
                   FirehoseRequestTypes[operationName] : 'READ',
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_KINESIS,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsFirehoseTags.STREAM_NAME]: streamName,
               },
             });

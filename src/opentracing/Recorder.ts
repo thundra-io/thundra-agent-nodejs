@@ -35,6 +35,10 @@ class ThundraRecorder {
         return this.activeSpan;
     }
 
+    getActiveSpanStack(): Stack<ThundraSpan> {
+        return this.activeSpanStack;
+    }
+
     destroy() {
         this.activeSpanStack.clear();
         this.spanList = [];

@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import {DBTags, SpanTags, SpanTypes, DomainNames, ClassNames} from '../../Constants';
+import { DBTags, SpanTags, SpanTypes, DomainNames, ClassNames } from '../../Constants';
 import Utils from '../Utils';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
@@ -18,19 +18,19 @@ class MySQL2Integration implements Integration {
   constructor(tracer: ThundraTracer, config: any) {
     this.version = '^1.5';
     this.hook = Hook('mysql2', { internals: true }, (exp: any, name: string, basedir: string) => {
-      const moduleValidator = new ModuleVersionValidator();
-      const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-
-      if (!isValidVersion) {
-        ThundraLogger.getInstance().error(`Invalid module version. Supported version is ${this.version}`);
-      }
-
       if (name === 'mysql2/lib/connection.js') {
+        const moduleValidator = new ModuleVersionValidator();
+        const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+        if (!isValidVersion) {
+          ThundraLogger.getInstance().error(`Invalid module version for mysql2 integration.
+                                             Supported version is ${this.version}`);
+        } else {
           this.lib = exp;
           this.config = config;
           this.basedir = basedir;
 
           this.wrap.call(this, exp, tracer, config);
+        }
       }
       return exp;
     });
@@ -38,21 +38,21 @@ class MySQL2Integration implements Integration {
 
   wrap(lib: any, tracer: ThundraTracer, config: any) {
     function wrapper(query: any) {
-      return function queryWrapper(sql: any , values: any, cb: any) {
+      return function queryWrapper(sql: any, values: any, cb: any) {
         const parentSpan = tracer.getActiveSpan();
 
         const span = tracer._startSpan(this.config.database, {
-            childOf : parentSpan,
-            domainName: DomainNames.DB,
-            className: ClassNames.RDB,
+          childOf: parentSpan,
+          domainName: DomainNames.DB,
+          className: ClassNames.RDB,
         });
 
         span.addTags({
-          [SpanTags.SPAN_TYPE] : SpanTypes.RDB,
+          [SpanTags.SPAN_TYPE]: SpanTypes.RDB,
           [DBTags.DB_INSTANCE]: this.config.database,
           [DBTags.DB_USER]: this.config.user,
           [DBTags.DB_HOST]: this.config.host,
-          [DBTags.DB_PORT]:  this.config.port,
+          [DBTags.DB_PORT]: this.config.port,
         });
 
         const sequence = query.call(this, sql, values, cb);
@@ -60,7 +60,7 @@ class MySQL2Integration implements Integration {
         const statement = sequence.sql;
 
         span.addTags({
-          [DBTags.DB_STATEMENT_TYPE] : statement.split(' ')[0],
+          [DBTags.DB_STATEMENT_TYPE]: statement.split(' ')[0],
           [DBTags.DB_STATEMENT]: statement,
         });
 

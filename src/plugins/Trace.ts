@@ -167,6 +167,8 @@ export class Trace {
 
         if (this.tracer.getActiveSpan()) {
             this.tracer.getActiveSpan().finish();
+        } else {
+            this.rootSpan.finish();
         }
 
         const reportData = Utils.generateReport(this.traceData, this.apiKey);
