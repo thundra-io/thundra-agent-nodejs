@@ -97,6 +97,7 @@ class Invocation {
             }
         }
         this.finishTimestamp = Date.now();
+        this.invocationData.finishTimestamp = this.finishTimestamp;
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);

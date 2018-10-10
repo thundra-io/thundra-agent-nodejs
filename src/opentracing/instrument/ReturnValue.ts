@@ -1,10 +1,10 @@
 class ReturnValue {
-    returnValueType: string;
-    returnValue: any;
+    type: string;
+    value: any;
 
-    constructor(returnValueType: string, returnValue: any) {
-        this.returnValueType = returnValueType;
-        this.returnValue = returnValue;
+    constructor(type: string, value: any) {
+        this.type = type;
+        this.value = value;
     }
 }
 
