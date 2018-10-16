@@ -57,6 +57,7 @@ class Metric {
         this.metricData = Utils.initMonitoringData(this.pluginContext,
             originalContext, MonitoringDataType.METRIC) as MetricData;
         this.metricData.metricTimestamp = Date.now();
+        this.metricData.tags['aws.region'] = this.pluginContext.applicationRegion;
 
         const activeSpan = this.tracer.getActiveSpan();
         this.metricData.transactionId = this.pluginContext.transactionId ?

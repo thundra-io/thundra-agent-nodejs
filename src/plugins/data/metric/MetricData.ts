@@ -6,6 +6,7 @@ class MetricData extends BaseMonitoringData {
     transactionId: string;
     spanId: string;
     metricTimestamp: number;
+    tags: any = {};
 
     constructor() {
         super(MonitorDataType.METRIC);
@@ -16,6 +17,7 @@ class MetricData extends BaseMonitoringData {
         this.traceId = data.traceId;
         this.transactionId = data.transactionId;
         this.spanId = data.spanId;
+        this.tags = data.tags;
     }
 }
 

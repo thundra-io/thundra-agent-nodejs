@@ -256,10 +256,10 @@ class Instrumenter {
                     span.setTag('error.kind', err.errorType);
                     span.setTag('error.message', err.errorMessage);
                     if (err.code) {
-                        this.invocationData.tags['error.code'] = err.code;
+                        span.setTag('error.code', err.code);
                     }
                     if (err.stack) {
-                        this.invocationData.tags['error.stack'] = err.stack;
+                        span.setTag('error.stack', err.stack);
                     }
                 }
                 span.finish();
