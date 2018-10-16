@@ -35,6 +35,9 @@ export const envVariableKeys = {
     AWS_LAMBDA_FUNCTION_VERSION: 'AWS_LAMBDA_FUNCTION_VERSION',
     AWS_REGION: 'AWS_REGION',
     AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',
+
+    THUNDRA_AGENT_METRIC_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_metric_sample_sampler_timeAware_timeFreq',
+    THUNDRA_AGENT_METRIC_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_metric_sample_sampler_countAware_countFreq',
 };
 
 export function getTimeoutMargin(region: string) {

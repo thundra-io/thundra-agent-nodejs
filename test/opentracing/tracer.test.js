@@ -7,7 +7,6 @@ describe('Recorder', () => {
         const tracer = new ThundraTracer({});
         it('should not init recorder sampler and active spans', () => {
             expect(tracer.recorder).toBeTruthy();
-            expect(tracer.sampler).toBeTruthy();
         });
     });
 

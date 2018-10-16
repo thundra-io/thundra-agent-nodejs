@@ -4,6 +4,7 @@ import {envVariableKeys } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
 import Utils from '../Utils';
 import ThundraLogger from '../../ThundraLogger';
+import TraceSamplerConfig from './TraceSamplerConfig';
 const koalas = require('koalas');
 
 class TraceConfig extends BasePluginConfig {
@@ -15,6 +16,7 @@ class TraceConfig extends BasePluginConfig {
     maskResponse: (response: any) => any;
     integrations: IntegrationConfig[];
     disableInstrumentation: boolean;
+    samplerConfig: TraceSamplerConfig;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -30,6 +32,7 @@ class TraceConfig extends BasePluginConfig {
         this.traceableConfigs = [];
         this.disableInstrumentation = koalas(Utils.getConfiguration(
             envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) === 'true',  options.disableInstrumentation, true);
+        this.samplerConfig = new TraceSamplerConfig(options.samplerConfig);
 
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {

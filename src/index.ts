@@ -15,6 +15,12 @@ import PluginContext from './plugins/PluginContext';
 import ThundraTracer from './opentracing/Tracer';
 import LogManager from './plugins/LogManager';
 import { envVariableKeys } from './Constants';
+import TraceSamplerConfig from './plugins/config/TraceSamplerConfig';
+import MetricSamplerConfig from './plugins/config/MetricSamplerConfig';
+import CountAwareSamplerConfig from './plugins/config/CountAwareSamplerConfig';
+import DurationAwareSamplerConfig from './plugins/config/DurationAwareSamplerConfig';
+import ErrorAwareSamplerConfig from './plugins/config/ErrorAwareSamplerConfig';
+import TimeAwareSamplerConfig from './plugins/config/TimeAwareSamplerConfig';
 
 const ThundraWarmup = require('@thundra/warmup');
 
@@ -126,4 +132,10 @@ module.exports.config = {
     LogConfig,
     TraceableConfig,
     IntegrationConfig,
+    TraceSamplerConfig,
+    MetricSamplerConfig,
+    CountAwareSamplerConfig,
+    DurationAwareSamplerConfig,
+    ErrorAwareSamplerConfig,
+    TimeAwareSamplerConfig,
 };

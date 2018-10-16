@@ -14,7 +14,7 @@ import ThundraLogger from '../ThundraLogger';
 
 class Metric {
     hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
-    options: MetricConfig;
+    config: MetricConfig;
     metricData: MetricData;
     reports: any[];
     clockTick: number;
@@ -26,12 +26,12 @@ class Metric {
     startCpuUsage: { procCpuUsed: number; sysCpuUsed: number; sysCpuTotal: number; };
     tracer: ThundraTracer;
 
-    constructor(options: MetricConfig) {
+    constructor(config: MetricConfig) {
         this.hooks = {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
         };
-        this.options = options;
+        this.config = config;
         this.reports = [];
         this.clockTick = parseInt(execSync('getconf CLK_TCK').toString(), 0);
         this.tracer = ThundraTracer.getInstance();
@@ -69,14 +69,18 @@ class Metric {
     }
 
     afterInvocation = async () => {
-        await Promise.all([
-            this.addThreadMetricReport(),
-            this.addMemoryMetricReport(),
-            this.addCpuMetricReport(),
-            this.addIoMetricReport(),
-        ]).catch((err: Error) => {
-            ThundraLogger.getInstance().error('Cannot obtain metric data :' + err);
-        });
+        const sampled = (this.config && this.config.samplerConfig) ? this.config.samplerConfig.isSampled() : true;
+        if (sampled) {
+            await Promise.all([
+                this.addThreadMetricReport(),
+                this.addMemoryMetricReport(),
+                this.addCpuMetricReport(),
+                this.addIoMetricReport(),
+            ]).catch((err: Error) => {
+                ThundraLogger.getInstance().error('Cannot obtain metric data :' + err);
+            });
+        }
+
         this.reports.forEach((report) => {
             this.report(report);
         });

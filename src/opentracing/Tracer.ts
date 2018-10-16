@@ -9,7 +9,6 @@ class ThundraTracer extends Tracer {
 
   tags: any;
   recorder: ThundraRecorder;
-  sampler: ThundraSampler;
   activeSpans: Map<string, ThundraSpan>;
 
   constructor(config: any = {}) {
@@ -17,7 +16,6 @@ class ThundraTracer extends Tracer {
 
     this.tags = config.tags;
     this.recorder = config.recorder ? config.recorder : new ThundraRecorder();
-    this.sampler = config.sampler ? config.sampler : new ThundraSampler(1);
     this.activeSpans = new Map<string, ThundraSpan>();
     ThundraTracer.instance = this;
   }
@@ -116,7 +114,7 @@ class ThundraTracer extends Tracer {
   }
 
   _isSampled(span: ThundraSpan) {
-    return this.sampler.isSampled(span);
+    return true;
   }
 }
 

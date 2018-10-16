@@ -175,13 +175,17 @@ export class Trace {
         this.report(reportData);
 
         const spanList = this.tracer.getRecorder().getSpanList();
-        for (const span of spanList) {
-            if (span) {
-                const spanData = this.buildSpanData(span, this.pluginContext);
-                const spanReportData = Utils.generateReport(spanData, this.apiKey);
-                this.report(spanReportData);
+        const sampled = (this.config && this.config.samplerConfig) ? this.config.samplerConfig.isSampled(this.rootSpan) : true;
+        if (sampled) {
+            for (const span of spanList) {
+                if (span) {
+                    const spanData = this.buildSpanData(span, this.pluginContext);
+                    const spanReportData = Utils.generateReport(spanData, this.apiKey);
+                    this.report(spanReportData);
+                }
             }
         }
+
         if (this.config && !(this.config.disableInstrumentation)) {
             this.tracer.destroy();
             this.instrumenter.unhookModuleCompile();

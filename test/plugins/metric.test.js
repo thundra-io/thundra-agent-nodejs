@@ -20,22 +20,22 @@ const pluginContext = createMockPluginContext();
 describe('Metrics', () => {
 
     describe('Export function', () => {
-        const options = {opt1: 'opt1', opt2: 'opt2'};
-        const metric = Metric(options);
+        const config = {opt1: 'opt1', opt2: 'opt2'};
+        const metric = Metric(config);
         metric.setPluginContext(pluginContext);
         it('should export a function which returns an object', () => {
             expect(typeof Metric).toEqual('function');
             expect(typeof metric).toEqual('object');
         });
         it('should be able to pass options', () => {
-            expect(metric.options).toEqual(options);
+            expect(metric.config).toEqual(config);
         });
     });
 
     describe('Constructor', () => {
-        const options = {op1t: 'opt1', opt2: 'opt2'};
+        const config = {op1t: 'opt1', opt2: 'opt2'};
         const metric = Metric();
-        const metricWithOptions = Metric(options);
+        const metricWithOptions = Metric(config);
         
         it('Should have the same HOOKS', () => {
             expect(metric.hooks).toEqual({
@@ -49,7 +49,7 @@ describe('Metrics', () => {
         });
         it('Should be able to initialize variables with options', () => {
             expect(metricWithOptions.reports).toEqual([]);
-            expect(metricWithOptions.options).toEqual(options);
+            expect(metricWithOptions.config).toEqual(config);
 
         });
         it('Should get clock tick', () => {
