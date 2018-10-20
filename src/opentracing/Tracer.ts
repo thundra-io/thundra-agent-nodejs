@@ -1,13 +1,14 @@
-import { Tracer, Reference, Tags } from 'opentracing';
+import { Tracer } from 'opentracing';
 import ThundraSpan, { SpanEvent } from './Span';
 import ThundraRecorder from './Recorder';
 import ThundraSampler from './Sampler';
 import Utils from '../plugins/Utils';
 
 class ThundraTracer extends Tracer {
+  static instance: ThundraTracer;
+
   tags: any;
   recorder: ThundraRecorder;
-  sampler: ThundraSampler;
   activeSpans: Map<string, ThundraSpan>;
 
   constructor(config: any = {}) {
@@ -15,17 +16,21 @@ class ThundraTracer extends Tracer {
 
     this.tags = config.tags;
     this.recorder = config.recorder ? config.recorder : new ThundraRecorder();
-    this.sampler = config.sampler ? config.sampler : new ThundraSampler(1);
     this.activeSpans = new Map<string, ThundraSpan>();
+    ThundraTracer.instance = this;
+  }
+
+  static getInstance(): ThundraTracer {
+    return ThundraTracer.instance ? ThundraTracer.instance : new ThundraTracer();
   }
 
   getActiveSpan(): ThundraSpan {
-    return this.recorder.getActiveSpan() ? this.recorder.getActiveSpan().value : null;
+    return this.recorder.getActiveSpan();
   }
 
   finishSpan(): void {
     if (this.getActiveSpan()) {
-       this.getActiveSpan().finish();
+      this.getActiveSpan().finish();
     }
   }
 
@@ -33,18 +38,17 @@ class ThundraTracer extends Tracer {
     return this.recorder;
   }
 
-  destroy() {
+  destroy(): void {
     this.recorder.destroy();
     this.activeSpans.clear();
   }
 
   wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
     const activeSpan = this.getActiveSpan();
-    let span: ThundraSpan;
+    const span: ThundraSpan = this.startSpan(spanName, { childOf: activeSpan }) as ThundraSpan;
     // tslint:disable-next-line:no-angle-bracket-type-assertion
     return <T> ((...args: any[]) => {
       try {
-        span = this.startSpan(spanName, {childOf: activeSpan}) as ThundraSpan;
         const returnValue = func(...args);
         span.finish();
         return returnValue;
@@ -63,7 +67,7 @@ class ThundraTracer extends Tracer {
     const parentContext = Utils.getParentContext(fields.references);
 
     if (parentContext && !this.activeSpans.get(parentContext.spanId)) {
-        throw new Error('Invalid spanId : ' + parentContext.spanId);
+      throw new Error('Invalid spanId : ' + parentContext.spanId);
     }
 
     if (parentContext) {
@@ -80,7 +84,7 @@ class ThundraTracer extends Tracer {
       span = new ThundraSpan(this, {
         operationName: name,
         parent: this.getActiveSpan() ? this.getActiveSpan().spanContext : null,
-        tags: this.tags,
+        tags: Object.assign(tags, this.tags, fields.tags),
         rootTraceId,
         startTime: Date.now(),
         className: fields.className,
@@ -109,7 +113,7 @@ class ThundraTracer extends Tracer {
   }
 
   _isSampled(span: ThundraSpan) {
-    return this.sampler.isSampled(span);
+    return true;
   }
 }
 

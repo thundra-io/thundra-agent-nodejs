@@ -1,17 +1,26 @@
-import BasePluginData from '../base/BasePluginData';
+import BaseMonitoringData from '../base/BaseMonitoringData';
+import MonitorDataType from '../base/MonitoringDataType';
 
-class InvocationData extends BasePluginData {
-    id: string;
-    duration: number;
+class InvocationData extends BaseMonitoringData {
+    traceId: string;
+    transactionId: string;
+    spanId: string;
+    functionPlatform: string;
+    functionName: string;
+    functionRegion: string;
     startTimestamp: number;
-    endTimestamp: number;
+    finishTimestamp: number ;
+    duration: number;
     erroneous: boolean;
     errorType: string;
     errorMessage: string;
     coldStart: boolean;
     timeout: boolean;
-    region: string;
-    memorySize: number;
+    tags: any;
+
+    constructor() {
+        super(MonitorDataType.INVOCATION);
+    }
 }
 
 export default InvocationData;

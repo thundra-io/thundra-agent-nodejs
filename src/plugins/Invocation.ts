@@ -3,17 +3,19 @@ import InvocationData from './data/invocation/InvacationData';
 import Utils from './Utils';
 import TimeoutError from './error/TimeoutError';
 import InvocationConfig from './config/InvocationConfig';
+import {LAMBDA_FUNCTION_PLATFORM} from '../Constants';
+import MonitoringDataType from './data/base/MonitoringDataType';
+import PluginContext from './PluginContext';
 
 class Invocation {
-    public hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
-    public options: InvocationConfig;
-    public dataType: string;
-    public invocationData: InvocationData;
-    public reporter: any;
-    public pluginContext: any;
-    public apiKey: any;
-    public endTimestamp: any;
-    public startTimestamp: number;
+    hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
+    options: InvocationConfig;
+    invocationData: InvocationData;
+    reporter: any;
+    pluginContext: PluginContext;
+    apiKey: any;
+    finishTimestamp: any;
+    startTimestamp: number;
 
     constructor(options: any) {
         this.hooks = {
@@ -21,59 +23,83 @@ class Invocation {
             'after-invocation': this.afterInvocation,
         };
         this.options = options;
-        this.dataType = 'InvocationData';
-        this.invocationData = new InvocationData();
     }
 
     report(data: any): void {
         this.reporter.addReport(data);
     }
 
-    setPluginContext = (pluginContext: any) => {
+    setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
         this.apiKey = pluginContext.apiKey;
     }
 
     beforeInvocation = (data: any) => {
-        const { originalContext, reporter, transactionId } = data;
+        const { originalContext, reporter } = data;
         this.reporter = reporter;
-        this.endTimestamp = null;
+        this.finishTimestamp = null;
         this.startTimestamp = Date.now();
 
-        this.invocationData.id = Utils.generateId();
-        this.invocationData.transactionId = transactionId;
-        this.invocationData.applicationName = originalContext.functionName;
-        this.invocationData.applicationId =  this.pluginContext.applicationId;
-        this.invocationData.applicationVersion = this.pluginContext.applicationVersion;
-        this.invocationData.applicationProfile = this.pluginContext.applicationProfile;
-        this.invocationData.duration = 0;
+        this.invocationData = Utils.initMonitoringData(this.pluginContext,
+            originalContext, MonitoringDataType.INVOCATION) as InvocationData;
+
+        this.invocationData.applicationTags = {};
+        this.invocationData.functionPlatform = LAMBDA_FUNCTION_PLATFORM;
+        this.invocationData.functionName = originalContext ? originalContext.functionName : '';
+        this.invocationData.functionRegion = this.pluginContext.applicationRegion;
+        this.invocationData.tags = {};
         this.invocationData.startTimestamp = this.startTimestamp;
-        this.invocationData.endTimestamp = 0;
+        this.invocationData.finishTimestamp = 0;
+        this.invocationData.duration = 0;
         this.invocationData.erroneous = false;
         this.invocationData.errorType = '';
         this.invocationData.errorMessage = '';
         this.invocationData.coldStart = this.pluginContext.requestCount === 0;
         this.invocationData.timeout = false;
-        this.invocationData.region = this.pluginContext.applicationRegion;
-        this.invocationData.memorySize = parseInt(originalContext.memoryLimitInMB, 10);
 
+        this.invocationData.transactionId = this.pluginContext.transactionId ?
+            this.pluginContext.transactionId : originalContext.awsRequestId;
+
+        this.invocationData.spanId = this.pluginContext.spanId;
+        this.invocationData.traceId = this.pluginContext.traceId;
+
+        this.invocationData.tags['aws.lambda.memory_limit'] = this.pluginContext.maxMemory;
+        this.invocationData.tags['aws.lambda.invocation.request_id '] = originalContext.awsRequestId;
+        this.invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
+        this.invocationData.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
+        this.invocationData.tags['aws.region'] = this.pluginContext.applicationRegion;
+        this.invocationData.tags['aws.lambda.log_group_name'] = originalContext ? originalContext.logGroupName : '';
+        this.invocationData.tags['aws.lambda.invocation.timeout'] = false;
+        this.invocationData.tags['aws.lambda.name'] = originalContext ? originalContext.functionName : '';
+        this.invocationData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
     }
 
     afterInvocation = (data: any) => {
         if (data.error) {
-            const { errorType, errorMessage } = Utils.parseError(data.error);
+            const error = Utils.parseError(data.error);
             this.invocationData.erroneous = true;
             if (data.error instanceof TimeoutError) {
                 this.invocationData.timeout = true;
+                this.invocationData.tags['aws.lambda.invocation.timeout'] = true;
             }
 
-            this.invocationData.errorType = errorType;
-            this.invocationData.errorMessage = errorMessage;
+            this.invocationData.errorType = error.errorType;
+            this.invocationData.errorMessage = error.errorMessage;
+            this.invocationData.tags.error = true;
+            this.invocationData.tags['error.message'] = error.errorMessage;
+            this.invocationData.tags['error.kind'] = error.errorType;
+            this.invocationData.tags['error.stack'] = error.stack;
+            if (error.code) {
+                this.invocationData.tags['error.code'] = error.code;
+            }
+            if (error.stack) {
+                this.invocationData.tags['error.stack'] = error.stack;
+            }
         }
-        this.endTimestamp = Date.now();
-        this.invocationData.endTimestamp = this.endTimestamp;
-        this.invocationData.duration = this.endTimestamp - this.startTimestamp;
-        const reportData = Utils.generateReport(this.invocationData, this.dataType, this.apiKey);
+        this.finishTimestamp = Date.now();
+        this.invocationData.finishTimestamp = this.finishTimestamp;
+        this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
+        const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);
     }
 }

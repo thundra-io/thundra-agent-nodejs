@@ -1,7 +1,7 @@
-import {HOOKS, URL, PROC_STAT_PATH, PROC_IO_PATH, DATA_FORMAT_VERSION, getTimeoutMargin} from '../dist/Constants';
+import {HOOKS, URL, PROC_STAT_PATH, PROC_IO_PATH, DATA_MODEL_VERSION, getTimeoutMargin} from '../dist/Constants';
 
-test('DATA_FORMAT_VERSION did not change', () => {
-    expect(DATA_FORMAT_VERSION).toEqual('1.2');
+test('DATA_MODEL_VERSION did not change', () => {
+    expect(DATA_MODEL_VERSION).toEqual('2.0');
 });
 
 test('HOOKS did not change', () => {
@@ -9,7 +9,7 @@ test('HOOKS did not change', () => {
 });
 
 test('URL default value did not change',() => {
-    expect(URL.href).toEqual('https://collector.thundra.io/api');
+    expect(URL.href).toEqual('https://api.thundra.io/v1');
 });
 
 test('PROC_STAT_PATH did not change', () => {

@@ -46,21 +46,31 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 
 #### 1. Environment variables
 
-| Name                                     | Type   | Default Value |
-|:-----------------------------------------|:------:|:-------------:|
-| thundra_apiKey                           | string |       -       |
-| thundra_applicationProfile               | string |    default    |
-| thundra_disable                          |  bool  |     false     |
-| thundra_trace_disable                    |  bool  |     false     |
-| thundra_metric_disable                   |  bool  |     false     |
-| thundra_lambda_publish_cloudwatch_enable |  bool  |     false     |
-| thundra_lambda_warmup_warmupAware        |  bool  |     false     |
-| thundra_lambda_trace_request_skip        |  bool  |     false     |
-| thundra_lambda_trace_response_skip       |  bool  |     false     |
-| thundra_lambda_timeout_margin            | number |     200       |
-| thundra_lambda_http_responseCheck_skip   |  bool  |     false     |
-| thundra_lambda_publish_rest_trustAllCertificates | bool | false   |
-| thundra_lambda_publish_rest_baseUrl      | string |  https<nolink>://collector.thundra.io/api  |
+| Name                                                            | Type   | Default Value |
+|:----------------------------------------------------------------|:------:|:-------------:|
+| thundra_apiKey                                                  | string |       -       |
+| thundra_agent_lambda_application_stage                          | string |    empty      |
+| thundra_agent_lambda_application_domainName                     | string |    API        |
+| thundra_agent_lambda_application_className                      | string |    AWS-Lambda |
+| thundra_agent_lambda_disable                                    | bool   |    false      |
+| thundra_agent_lambda_timeout_margin                             | number |    200        |
+| thundra_agent_lambda_report_rest_baseUrl                        | string |    https<nolink>://api.thundra.io/v1        |
+| thundra_agent_lambda_report_cloudwatch_enable                   | bool   |    false      |
+| thundra_agent_lambda_trace_disable                              | bool   |    false      |
+| thundra_agent_lambda_metric_disable                             | bool   |    false      |
+| thundra_agent_lambda_log_disable                                | bool   |    false      |
+| thundra_agent_lambda_trace_request_skip                         | bool   |    false      |
+| thundra_agent_lambda_trace_response_skip                        | bool   |    false      |
+| thundra_agent_lambda_trace_instrument_disable                   | bool   |    false      |
+| thundra_agent_lambda_trace_instrument_traceableConfig           | string |    empty      |
+| thundra_agent_lambda_trace_instrument_file_prefix               | string |    empty      |
+| thundra_agent_lambda_log_loglevel                               | string |    TRACE      |
+| thundra_agent_lambda_integrations                               | string |    empty      |
+| thundra_agent_lambda_publish_report_rest_trustAllCertificates   | bool   |    false      |
+| thundra_agent_lambda_debug_enable                               | bool   |    false      |
+| thundra_agent_lambda_trace_instrument_integrations              | bool   |    false      |
+| thundra_agent_lambda_metric_sample_sampler_timeAware_timeFreq   | number |    300000     |
+| thundra_agent_lambda_metric_sample_sampler_countAware_countFreq | number |    10         |
 
 #### 2. Module initialization parameters
 
@@ -82,7 +92,82 @@ Check out our async monitoring example at our [example projects](https://github.
 ## Log Support
 You can monitor your logs using Thundra and enjoy the three pillars of observability in one place!
 
-Check out our [log module](https://github.com/thundra-io/thundra-lambda-agent-nodejs-log).
+```js
+const thundra = require("@thundra/core")({
+    apiKey: "MY_APIKEY",
+});
+
+const logger = thundra.createLogger();
+
+exports.handler = thundra((event, context, callback) => {
+    logger.info("Hello %s", "Thundra");
+    callback(null, "Hello Thundra!");
+});
+```
+
+You can also set the name of a logger while creating it (default name is `default`):
+
+```js
+const logger = thundra.createLogger({loggerName: "Bob"});
+```
+
+Logger's name will be visible in Thundra's trace chart.
+
+## How to use Thundra loggers
+
+You can log by two different ways.
+
+### 1. Using `trace`, `debug`, `info`, `warn`, `error`, `fatal` methods
+
+All these methods support `printf`-like format. Same as Node's [`util.format`](https://nodejs.org/api/util.html#util_util_format_format_args).
+```js
+const thundra = require("@thundra/core");
+const logger = thundra.createLogger();
+
+logger.trace("Hey, I %s things", "trace");
+logger.debug("Someone is %s %d"," debugging", 2);
+logger.info("Get some info","and more");
+logger.warn("I am warning you %s", "!!!");
+logger.error("Error Error Error...");
+logger.fatal("FATALITY");
+```
+
+### 2. Using `log` method
+
+Pass an object with `level` and `message` fields:
+```js
+const thundra = require("@thundra/core");
+const logger = thundra.createLogger();
+
+logger.log({
+    level: "trace",
+    message: "Hey, I am tracing."
+});
+```
+
+You can also pass `level` as a string, this way you can use `printf`-like formatting:
+
+```js
+logger.log("trace", "Hey, I am %s", "tracing.");
+```
+`level` can be one of the following: `"trace"`, `"debug"`, `"info"`, `"warn"`, `"error"`, `"fatal"`
+
+## Log Levels
+
+In increasing precedence: **`trace`**, **`debug`**, **`info`**, **`warn`**, **`error`**, **`fatal`**.
+
+You can set the log level by setting the environment variable `thundra_log_logLevel` to one of the following:
+* `trace`
+* `debug`
+* `info`
+* `warn`
+* `error`
+* `fatal`
+* `none`
+
+For instance, if `thundra_log_logLevel` is:
+* `debug`, only `debug` and higher precedence logs will be reported.
+* `none`, none of the logs will be reported.
 
 ## Warmup Support
 You can cut down cold starts easily by deploying our lambda function [`thundra-lambda-warmup`](https://github.com/thundra-io/thundra-lambda-warmup).
@@ -90,7 +175,7 @@ You can cut down cold starts easily by deploying our lambda function [`thundra-l
 Our agent handles warmup requests automatically so you don't need to make any code changes.
 
 You just need to deploy `thundra-lambda-warmup` once, then you can enable warming up for your lambda by 
-* setting its environment variable `thundra_lambda_warmup_warmupAware` **true** OR
+* setting its environment variable `thundra_agent_lambda_warmup_warmupAware` **true** OR
 * adding its name to `thundra-lambda-warmup`'s environment variable `thundra_lambda_warmup_function`.
 
 Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs for more information.

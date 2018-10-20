@@ -2,7 +2,9 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import {URL} from './Constants';
+import { URL, MONITORING_DATA_PATH, envVariableKeys } from './Constants';
+import Utils from './plugins/Utils';
+import ThundraLogger from './ThundraLogger';
 
 const httpAgent = new http.Agent({
     keepAlive: true,
@@ -26,15 +28,11 @@ class Reporter {
         this.requestOptions = this.createRequestOptions();
     }
 
-    getConfig(conf1: any, conf2: any): any {
-        return conf1 ? conf1 : conf2;
-    }
-
     createRequestOptions(u?: url.URL): http.RequestOptions {
         return {
             method: 'POST',
             hostname: u ? u.hostname : URL.hostname,
-            path: (u ? u.pathname : URL.pathname) + '/monitor-datas',
+            path: (u ? u.pathname : URL.pathname) + MONITORING_DATA_PATH,
             port: parseInt(u ? u.port : URL.port, 0),
             headers: {
                 'Content-Type': 'application/json',
@@ -57,7 +55,7 @@ class Reporter {
     }
 
     addReport(report: any): void {
-        if (process.env.thundra_lambda_publish_cloudwatch_enable === 'true') {
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) === 'true') {
             const jsonStringReport = '\n' + JSON.stringify(report).replace(/\r?\n|\r/g, '') + '\n';
             process.stdout.write(jsonStringReport);
         } else {
@@ -67,13 +65,14 @@ class Reporter {
 
     async sendReports(): Promise<void> {
         await this.request()
-            .then((response: any ) => {
+            .then((response: any) => {
                 if (response.status !== 200) {
-                    console.log(this.reports);
+                    ThundraLogger.getInstance().debug(this.reports);
+                    ThundraLogger.getInstance().error(response);
                 }
             })
             .catch((err: any) => {
-                console.error(err);
+                ThundraLogger.getInstance().error(err);
             });
     }
 
@@ -86,7 +85,7 @@ class Reporter {
                     responseData += chunk;
                 });
                 response.on('end', () => {
-                    resolve({status: response.statusCode, data: responseData});
+                    resolve({ status: response.statusCode, data: responseData });
                 });
             };
 

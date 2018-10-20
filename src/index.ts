@@ -1,55 +1,75 @@
 import ThundraWrapper from './ThundraWrapper';
 import TracePlugin, { Trace } from './plugins/Trace';
 import MetricPlugin from './plugins/Metric';
+import LogPlugin from './plugins/Log';
 import InvocationPlugin from './plugins/Invocation';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import TraceConfig from './plugins/config/TraceConfig';
 import MetricConfig from './plugins/config/MetricConfig';
 import InvocationConfig from './plugins/config/InvocationConfig';
-import TraceDef from './plugins/config/TraceDef';
+import TraceableConfig from './plugins/config/TraceableConfig';
+import IntegrationConfig from './plugins/config/IntegrationConfig';
 import Utils from './plugins/Utils';
+import LogConfig from './plugins/config/LogConfig';
+import PluginContext from './plugins/PluginContext';
+import ThundraTracer from './opentracing/Tracer';
+import LogManager from './plugins/LogManager';
+import { envVariableKeys } from './Constants';
+import TraceSamplerConfig from './plugins/config/TraceSamplerConfig';
+import MetricSamplerConfig from './plugins/config/MetricSamplerConfig';
+import CountAwareSamplerConfig from './plugins/config/CountAwareSamplerConfig';
+import DurationAwareSamplerConfig from './plugins/config/DurationAwareSamplerConfig';
+import ErrorAwareSamplerConfig from './plugins/config/ErrorAwareSamplerConfig';
+import TimeAwareSamplerConfig from './plugins/config/TimeAwareSamplerConfig';
 
 const ThundraWarmup = require('@thundra/warmup');
 
 let tracePlugin: Trace = null;
+let logManager: LogManager = null;
 
 module.exports = (options: any) => {
     const config = new ThundraConfig(options);
 
-    if (!config.apiKey || config.disableThundra) {
+    if (!(config.apiKey) || config.disableThundra) {
         return (originalFunc: any) => originalFunc;
+    }
+
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
+        tracePlugin = TracePlugin(config.traceConfig);
+        config.plugins.push(tracePlugin);
+    }
+
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC) === 'true') && config.metricConfig.enabled) {
+        const metricPlugin = MetricPlugin(config.metricConfig);
+        config.plugins.push(metricPlugin);
+    }
+
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG) === 'true') && config.logConfig.enabled) {
+        const logPlugin = LogPlugin(config.logConfig);
+        logManager = new LogManager();
+        logManager.addListener(logPlugin);
+        config.plugins.push(logPlugin);
     }
 
     const invocationPlugin = InvocationPlugin(config.invocationConfig);
     config.plugins.push(invocationPlugin);
 
-    if (!(process.env.thundra_trace_disable === 'true') && config.traceConfig.enabled) {
-        tracePlugin = TracePlugin(config.traceConfig);
-        config.plugins.push(tracePlugin);
-    }
-
-    if (!(process.env.thundra_metric_disable === 'true') && config.metricConfig.enabled) {
-        const metricPlugin = MetricPlugin(config.metricConfig);
-        config.plugins.push(metricPlugin);
-    }
-
     if (config.trustAllCert) {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
 
-    const applicationId = process.env.AWS_LAMBDA_LOG_STREAM_NAME ?
-                          process.env.AWS_LAMBDA_LOG_STREAM_NAME.split(']').pop() :
-                          Utils.generateId();
+    const logStreamName = Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
+    const region =  Utils.getConfiguration(envVariableKeys.AWS_REGION);
+    const functionVersion = Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
+    const applicationId = logStreamName ? logStreamName.split(']').pop() : Utils.generateId();
 
-    const pluginContext = {
+    const pluginContext: PluginContext = {
         applicationId,
-        applicationProfile: process.env.thundra_applicationProfile ? process.env.thundra_applicationProfile : 'default',
-        applicationRegion: process.env.AWS_REGION,
-        applicationVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
+        applicationRegion: region ? region : '',
+        applicationVersion: functionVersion ? functionVersion : '',
         requestCount: 0,
         apiKey: config.apiKey,
         timeoutMargin: config.timeoutMargin,
-        skipHttpResponseCheck: process.env.thundra_lambda_http_responseCheck_skip === 'true' ? true : false,
     };
 
     config.plugins.forEach((plugin: any) => {
@@ -80,11 +100,27 @@ module.exports = (options: any) => {
     };
 };
 
-module.exports.tracer = function getTracer() {
+module.exports.tracer = () => {
     if (tracePlugin) {
-        return tracePlugin.tracer;
+        return ThundraTracer.getInstance();
     } else {
         throw new Error('Trace plugin is not enabled.');
+    }
+};
+
+module.exports.createLogger = (options: any) => {
+    if (logManager) {
+        return logManager.createLogger(options);
+    } else {
+        throw new Error('Log plugin is not enabled.');
+    }
+};
+
+module.exports.addLogListener = (listener: any) => {
+    if (logManager) {
+        return logManager.addListener(listener);
+    } else {
+        throw new Error('Log plugin is not enabled.');
     }
 };
 
@@ -93,5 +129,13 @@ module.exports.config = {
     TraceConfig,
     MetricConfig,
     InvocationConfig,
-    TraceDef,
+    LogConfig,
+    TraceableConfig,
+    IntegrationConfig,
+    TraceSamplerConfig,
+    MetricSamplerConfig,
+    CountAwareSamplerConfig,
+    DurationAwareSamplerConfig,
+    ErrorAwareSamplerConfig,
+    TimeAwareSamplerConfig,
 };

@@ -1,41 +1,48 @@
 import ThundraSpan, { SpanEvent } from './Span';
-import SpanTreeNode from './SpanTree';
+import Stack from './instrument/Stack';
 
 class ThundraRecorder {
-    private activeSpan: SpanTreeNode;
-    private spanTree: SpanTreeNode;
+    private activeSpan: ThundraSpan;
+    private activeSpanStack: Stack<ThundraSpan>;
+    private spanList: ThundraSpan[];
+    private spanOrder = 1;
 
-    record(span: ThundraSpan, spanEvent: SpanEvent): void {
+    constructor() {
+        this.activeSpanStack = new Stack<ThundraSpan>();
+        this.spanList = [];
+    }
+
+    record(node: ThundraSpan, spanEvent: SpanEvent): void {
         if (spanEvent === SpanEvent.SPAN_START) {
-            const node: SpanTreeNode = new SpanTreeNode(span);
-            if (!this.spanTree) {
-                this.spanTree = node;
-            } else {
-                if (this.activeSpan) {
-                    this.activeSpan.children.push(node);
-                    node.parent = this.activeSpan;
-                } else {
-                   this.spanTree.children.push(node);
-                   node.parent = null;
-                }
-            }
+            this.activeSpanStack.push(node);
             this.activeSpan = node;
+            node.order = this.spanOrder;
+            this.spanOrder++;
         } else if (spanEvent === SpanEvent.SPAN_FINISH) {
-            this.activeSpan =  this.activeSpan ? this.activeSpan.parent : null;
+            const span = this.activeSpanStack.pop();
+            if (span) {
+                this.spanList.push(span);
+            }
+            this.activeSpan = this.activeSpanStack.peek();
         }
     }
 
-    getSpanTree(): SpanTreeNode {
-        return this.spanTree;
+    getSpanList(): ThundraSpan[] {
+        return this.spanList;
     }
 
-    getActiveSpan(): SpanTreeNode {
+    getActiveSpan(): ThundraSpan {
         return this.activeSpan;
     }
 
+    getActiveSpanStack(): Stack<ThundraSpan> {
+        return this.activeSpanStack;
+    }
+
     destroy() {
-        this.spanTree = null;
-        this.activeSpan = null;
+        this.activeSpanStack.clear();
+        this.spanList = [];
+        this.spanOrder = 1;
     }
 }
 

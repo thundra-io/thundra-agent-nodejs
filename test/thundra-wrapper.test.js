@@ -15,7 +15,7 @@ describe('ThundraWrapper', () => {
 
     describe('report', async () => {
         jest.useFakeTimers();
-        process.env.thundra_lambda_publish_cloudwatch_enable = 'false';
+        process.env.thundra_agent_lambda_report_cloudwatch_enable = 'false';
         const originalCallback = jest.fn();
         const originalFunction = jest.fn(() => originalCallback());
         const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
@@ -70,7 +70,6 @@ describe('ThundraWrapper', () => {
             expect(thundraWrapper.originalCallback).toBe(originalCallback);
             expect(thundraWrapper.originalFunction).toBe(originalFunction);
             expect(thundraWrapper.plugins).toEqual(plugins);
-            expect(thundraWrapper.apiKey).toBe(apiKey);
         });
     });
 
@@ -145,22 +144,7 @@ describe('ThundraWrapper', () => {
                     error: new HttpError('Lambda returned with error response.'),
                     response: response   
                 };
-                expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
-            });
-            
-        });
-
-        describe('AWS Lambda Proxy Response', async () => {
-            const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
-            thundraWrapper.executeHook = jest.fn();
-            thundraWrapper.isErrorResponse = jest.fn();
-            pluginContext.skipHttpResponseCheck = true;
-            thundraWrapper.wrappedCallback(null, {statusCode: 500, body:'{\'message\':\'I have failed\'}'});
-            pluginContext.skipHttpResponseCheck = false;
-            it('should isErrorResponse disabled', () => {
-                expect(thundraWrapper.isErrorResponse).not.toHaveBeenCalled();
+                expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData, true);
             });
             
         });
@@ -177,7 +161,7 @@ describe('ThundraWrapper', () => {
                     error: new HttpError('Lambda returned with error response.'),
                     response: response   
                 };
-                expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
+                expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData, true);
             });   
         });
 
@@ -192,7 +176,7 @@ describe('ThundraWrapper', () => {
                     error: null,
                     response: {statusCode: 200, body:'{\'message\':\'I have failed\'}'}  
                 };
-                expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData);
+                expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData, true);
             });
             
         });
