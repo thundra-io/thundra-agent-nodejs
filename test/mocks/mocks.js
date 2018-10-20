@@ -7,7 +7,7 @@ const createMockContext = () => {
         logGroupName: '/aws/lambda/test',
         logStreamName: '2018/03/07/[$LATEST]test',
         functionName: 'test',
-        memoryLimitInMB: 128,
+        memoryLimitInMB: 512,
         functionVersion: '$LATEST',
         getRemainingTimeInMillis: jest.fn(),
         invokeid: 'invokeId',
@@ -48,7 +48,8 @@ const createMockPluginContext = () => {
         applicationRegion: 'region',
         applicationVersion: 'version',
         requestCount: 0,
-        apiKey: 'apiKey'
+        apiKey: 'apiKey',
+        maxMemory: 512
     };
 };
 

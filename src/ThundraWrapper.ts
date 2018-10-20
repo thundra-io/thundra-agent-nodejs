@@ -45,6 +45,7 @@ class ThundraWrapper {
         this.originalFunction = originalFunction;
         this.plugins = plugins;
         this.pluginContext = pluginContext;
+        this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
         this.reported = false;
         this.reporter = new Reporter(apiKey);
         this.wrappedContext = {

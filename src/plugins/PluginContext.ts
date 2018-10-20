@@ -10,6 +10,7 @@ class PluginContext {
     traceId?: string;
     transactionId?: string;
     error?: Error;
+    maxMemory?: number;
 }
 
 export default PluginContext;

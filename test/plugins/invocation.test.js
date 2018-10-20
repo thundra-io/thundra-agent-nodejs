@@ -81,7 +81,7 @@ describe('Invocation', () => {
                 'aws.lambda.invocation.timeout': false,
                 'aws.lambda.log_group_name': '/aws/lambda/test',
                 'aws.lambda.log_stream_name': '2018/03/07/[$LATEST]test',
-                'aws.lambda.memory_limit': 128,
+                'aws.lambda.memory_limit': 512,
                 'aws.lambda.name': 'test',
                 'aws.region': 'region'});
         });

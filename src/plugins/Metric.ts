@@ -114,7 +114,7 @@ class Metric {
         memoryMetric.metricTimestamp = Date.now();
 
         memoryMetric.metrics = {
-            'app.maxMemory': heapTotal,
+            'app.maxMemory': this.pluginContext.maxMemory,
             'app.usedMemory': heapUsed,
             'app.rss': rss,
             'sys.maxMemory': totalMemory,
