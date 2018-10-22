@@ -1,6 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file.
-## 2.0 - October 1, 2018
+## 2.0.1 - October 22, 2018
 #### Added
 - Migration to new data model 
 - Async support
