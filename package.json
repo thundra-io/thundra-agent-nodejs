@@ -71,7 +71,7 @@
     "webpack-cli": "^3.0.8"
   },
   "dependencies": {
-    "@thundra/warmup": "^1.1.1",
+    "@thundra/warmup": "1.0.0",
     "falafel": "^2.1.0",
     "koalas": "^1.0.2",
     "minimatch": "^3.0.4",

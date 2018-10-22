@@ -93,13 +93,13 @@ Check out our async monitoring example at our [example projects](https://github.
 You can monitor your logs using Thundra and enjoy the three pillars of observability in one place!
 
 ```js
-const thundra = require("@thundra/core")({
-    apiKey: "MY_APIKEY",
-});
+const thundra = require("@thundra/core");
 
 const logger = thundra.createLogger();
 
-exports.handler = thundra((event, context, callback) => {
+exports.handler = thundra({
+    apiKey: "MY_APIKEY",
+})((event, context, callback) => {
     logger.info("Hello %s", "Thundra");
     callback(null, "Hello Thundra!");
 });

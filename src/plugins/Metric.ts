@@ -104,7 +104,7 @@ class Metric {
     }
 
     addMemoryMetricReport = async () => {
-        const { rss, heapTotal, heapUsed, external } = process.memoryUsage();
+        const { rss, heapUsed, external } = process.memoryUsage();
         const totalMemory = os.totalmem();
         const freeMemory = os.freemem();
 
@@ -114,7 +114,7 @@ class Metric {
         memoryMetric.metricTimestamp = Date.now();
 
         memoryMetric.metrics = {
-            'app.maxMemory': this.pluginContext.maxMemory,
+            'app.maxMemory': this.pluginContext.maxMemory * 1024 * 1024,
             'app.usedMemory': heapUsed,
             'app.rss': rss,
             'sys.maxMemory': totalMemory,
