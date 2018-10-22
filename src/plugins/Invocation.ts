@@ -72,6 +72,7 @@ class Invocation {
         this.invocationData.tags['aws.lambda.invocation.timeout'] = false;
         this.invocationData.tags['aws.lambda.name'] = originalContext ? originalContext.functionName : '';
         this.invocationData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
+        this.invocationData.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
     }
 
     afterInvocation = (data: any) => {
