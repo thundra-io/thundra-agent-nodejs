@@ -83,7 +83,8 @@ describe('Invocation', () => {
                 'aws.lambda.log_stream_name': '2018/03/07/[$LATEST]test',
                 'aws.lambda.memory_limit': 512,
                 'aws.lambda.name': 'test',
-                'aws.region': 'region'});
+                'aws.region': 'region',
+                'aws.lambda.invocation.request_id': 'awsRequestId',});
         });
     });
 
