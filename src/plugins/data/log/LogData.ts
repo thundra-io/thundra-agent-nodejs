@@ -28,6 +28,7 @@ class LogData extends BaseMonitoringData {
         this.logLevel = logInfo.logLevel;
         this.logLevelCode = logInfo.logLevelCode;
         this.logContextName = logInfo.logContextName;
+        this.tags = {};
     }
 
     addErrorTags(data: LogData) {
