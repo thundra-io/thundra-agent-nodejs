@@ -70,6 +70,7 @@ module.exports = (options: any) => {
         requestCount: 0,
         apiKey: config.apiKey,
         timeoutMargin: config.timeoutMargin,
+        transactionId: null,
     };
 
     config.plugins.forEach((plugin: any) => {
