@@ -25,6 +25,7 @@ class Metric {
     initialProcIo: any;
     startCpuUsage: { procCpuUsed: number; sysCpuUsed: number; sysCpuTotal: number; };
     tracer: ThundraTracer;
+    pluginOrder: number = 2;
 
     constructor(config: MetricConfig) {
         this.hooks = {

@@ -122,14 +122,16 @@ class ThundraWrapper {
     }
 
     async executeHook(hook: any, data: any, reverse: boolean) {
-        const plugins = reverse ? this.plugins.reverse() : this.plugins;
-        await Promise.all(
-            plugins.map((plugin: any) => {
-                if (plugin.hooks && plugin.hooks[hook]) {
-                    return plugin.hooks[hook](data);
-                }
-            }),
-        );
+        this.plugins.sort((p1: any, p2: any) => p1.pluginOrder > p2.pluginOrder ? 1 : -1);
+
+        if (reverse) {
+            this.plugins.reverse();
+        }
+
+        for (const plugin of this.plugins) {
+            console.log(plugin.pluginOrder);
+            await plugin.hooks[hook](data);
+        }
     }
 
     async report(error: any, result: any, callback: any) {

@@ -38,6 +38,7 @@ export class Trace {
     instrumenter: Instrumenter;
     integrations: Map<string, Integration>;
     rootSpan: ThundraSpan;
+    pluginOrder: number = 1;
 
     constructor(config: TraceConfig) {
         this.hooks = {
