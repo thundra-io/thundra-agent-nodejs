@@ -128,10 +128,13 @@ class ThundraWrapper {
             this.plugins.reverse();
         }
 
-        for (const plugin of this.plugins) {
-            console.log(plugin.pluginOrder);
-            await plugin.hooks[hook](data);
-        }
+        await Promise.all(
+            this.plugins.map((plugin: any) => {
+                if (plugin.hooks && plugin.hooks[hook]) {
+                    return plugin.hooks[hook](data);
+                }
+            }),
+        );
     }
 
     async report(error: any, result: any, callback: any) {
