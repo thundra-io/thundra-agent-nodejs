@@ -1,5 +1,8 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.0.2 - October 23, 2018
+#### Fixed
+- Enable log plugin to be used before initialising Thundra Agent
 ## 2.0.1 - October 22, 2018
 #### Added
 - Migration to new data model 
