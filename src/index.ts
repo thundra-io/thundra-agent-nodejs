@@ -21,11 +21,10 @@ import CountAwareSamplerConfig from './plugins/config/CountAwareSamplerConfig';
 import DurationAwareSamplerConfig from './plugins/config/DurationAwareSamplerConfig';
 import ErrorAwareSamplerConfig from './plugins/config/ErrorAwareSamplerConfig';
 import TimeAwareSamplerConfig from './plugins/config/TimeAwareSamplerConfig';
+import Logger from './plugins/Logger';
+import Log from './plugins/Log';
 
 const ThundraWarmup = require('@thundra/warmup');
-
-let tracePlugin: Trace = null;
-let logManager: LogManager = null;
 
 module.exports = (options: any) => {
     const config = new ThundraConfig(options);
@@ -35,7 +34,7 @@ module.exports = (options: any) => {
     }
 
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
-        tracePlugin = TracePlugin(config.traceConfig);
+        const tracePlugin = TracePlugin(config.traceConfig);
         config.plugins.push(tracePlugin);
     }
 
@@ -45,10 +44,14 @@ module.exports = (options: any) => {
     }
 
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG) === 'true') && config.logConfig.enabled) {
-        const logPlugin = LogPlugin(config.logConfig);
-        logManager = new LogManager();
-        logManager.addListener(logPlugin);
-        config.plugins.push(logPlugin);
+        if (!Log.getInstance()) {
+            const logConfig: LogConfig = new LogConfig({});
+            const logPlugin = new Log(logConfig);
+            Log.setInstance(logPlugin);
+            Logger.getLogManager().addListener(logPlugin);
+        }
+
+        config.plugins.push(Log.getInstance());
     }
 
     const invocationPlugin = InvocationPlugin(config.invocationConfig);
@@ -102,27 +105,21 @@ module.exports = (options: any) => {
 };
 
 module.exports.tracer = () => {
-    if (tracePlugin) {
-        return ThundraTracer.getInstance();
-    } else {
-        throw new Error('Trace plugin is not enabled.');
-    }
+    return ThundraTracer.getInstance();
 };
 
 module.exports.createLogger = (options: any) => {
-    if (logManager) {
-        return logManager.createLogger(options);
-    } else {
-        throw new Error('Log plugin is not enabled.');
+    if (!Log.getInstance()) {
+        const config: LogConfig = new LogConfig({});
+        const logPlugin = new Log(config);
+        Log.setInstance(logPlugin);
+        Logger.getLogManager().addListener(logPlugin);
     }
+    return Logger.getLogManager().createLogger(options);
 };
 
 module.exports.addLogListener = (listener: any) => {
-    if (logManager) {
-        return logManager.addListener(listener);
-    } else {
-        throw new Error('Log plugin is not enabled.');
-    }
+    return Logger.getLogManager().addListener(listener);
 };
 
 module.exports.config = {

@@ -1,6 +1,5 @@
 const semver = require('semver');
 import * as fs from 'fs';
-import ThundraConfig from '../config/ThundraConfig';
 
 class ModuleVersionValidator {
     moduleMap: Map<string, string>;

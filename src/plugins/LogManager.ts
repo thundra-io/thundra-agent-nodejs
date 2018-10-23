@@ -12,7 +12,7 @@ class LogManager {
     }
 
     createLogger(options: any) {
-        return new Logger(options, this);
+        return new Logger(options);
     }
 
     reportLog(logReport: any) {

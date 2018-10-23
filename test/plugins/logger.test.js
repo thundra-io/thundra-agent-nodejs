@@ -6,14 +6,16 @@ describe('Logger', () => {
     delete process.env.thundra_agent_lambda_log_loglevel;
     describe('constructor', () => {
         const logManager = createMockLogManager();
+        Logger.setLogManager(logManager);
         const options = {opt1: 1, opt2: 2};
-        const logger = new Logger(options, logManager);
-        const loggerWithName = new Logger({loggerName: 'logger'}, logManager);
+        const logger = new Logger(options);
+        const loggerWithName = new Logger({loggerName: 'logger'});
+
         it('should set options', () => {
             expect(logger.options).toBe(options);
         });
         it('should set logManager', () => {
-            expect(logger.logManager).toBe(logManager);
+            expect(Logger.getLogManager()).toBeTruthy();
         });
         it('should set loggerName', () => {
             expect(logger.loggerName).toBe('default');
@@ -94,7 +96,8 @@ describe('Logger', () => {
 
     describe('reportLog', () => {
         const logManager = createMockLogManager();
-        const logger = new Logger({}, logManager);
+        const logger = new Logger({});
+        Logger.setLogManager(logManager);
         Date.now = () => {return null;};
         const logReport = {
             logMessage: 'test 1 {\"key1\":1,\"key2\":\"two\"} more',
@@ -115,7 +118,8 @@ describe('Logger with env level variable', () => {
     process.env.thundra_agent_lambda_log_loglevel = 'none';
     describe('should not report', () => {
         const logManager = createMockLogManager();
-        const logger = new Logger({}, logManager);
+        const logger = new Logger({});
+        Logger.setLogManager(logManager);
         logger.reportLog = jest.fn();
         logger.fatal(1, 2, 3);
         logger.error(1, 2, 3);
@@ -132,7 +136,7 @@ describe('Logger with env level variable', () => {
 describe('log', () => {
     delete process.env.thundra_agent_lambda_log_loglevel;
     const logManager = createMockLogManager();
-    const logger = new Logger({}, logManager);
+    const logger = new Logger({});
     logger.levels = {
         'trace': jest.fn(),
         'debug': jest.fn(),

@@ -1,18 +1,18 @@
 import {logLevels, envVariableKeys} from '../Constants';
 import * as util from 'util';
 import Utils from './Utils';
+import LogManager from './LogManager';
 
 class Logger {
+    static logManagerInstance: LogManager;
     options: any;
     loggerName: any;
-    logManager: any;
     logLevel: any;
     levels: any;
-    constructor(options: { loggerName: any; }, logManager: any) {
+
+    constructor(options: { loggerName: any; }) {
         this.options = options;
         this.loggerName = options && options.loggerName ? options.loggerName : 'default';
-        this.logManager = logManager;
-
         const levelConfig = Utils.getConfiguration(envVariableKeys.THUNDRRA_LAMBDA_LOG_LOGLEVEL);
         this.logLevel = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
         this.levels = {          // higher number = higher priority
@@ -21,8 +21,19 @@ class Logger {
             info: this.info,   // 2
             warn: this.warn,   // 3
             error: this.error, // 4
-            fatal: this.fatal,  // 5
+            fatal: this.fatal, // 5
         };
+    }
+
+    static getLogManager(): LogManager {
+        if (!Logger.logManagerInstance) {
+            Logger.logManagerInstance = new LogManager();
+        }
+        return Logger.logManagerInstance;
+    }
+
+    static setLogManager(instance: LogManager): LogManager {
+        return Logger.logManagerInstance = instance;
     }
 
     shouldReport(level: any) {
@@ -37,7 +48,7 @@ class Logger {
             logContextName: this.loggerName,
             logTimestamp: Date.now(),
         };
-        this.logManager.reportLog(logInfo);
+        Logger.getLogManager().reportLog(logInfo);
     }
 
     trace(...args: any[]) {

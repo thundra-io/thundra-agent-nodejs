@@ -6,6 +6,8 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraTracer from '../opentracing/Tracer';
 
 class Log {
+    static instance: Log;
+
     options: LogConfig;
     reporter: any;
     pluginContext: PluginContext;
@@ -24,6 +26,16 @@ class Log {
         };
         this.options = options;
         this.tracer = ThundraTracer.getInstance();
+
+        Log.instance = this;
+    }
+
+    static getInstance(): Log {
+        return Log.instance;
+    }
+
+    static setInstance(instance: Log) {
+        Log.instance = instance;
     }
 
     report = (logReport: any) => {
@@ -79,6 +91,8 @@ class Log {
             const logReportData = Utils.generateReport(log, this.apiKey);
             this.report(logReportData);
         }
+
+        Log.instance = null;
     }
 
     reportLog = (logInfo: any) => {
@@ -91,6 +105,4 @@ class Log {
     }
 }
 
-export default function instantiateLogPlugin(config: LogConfig) {
-    return new Log(config);
-}
+export default Log;
