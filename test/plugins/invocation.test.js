@@ -3,6 +3,7 @@ import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
 import {DATA_MODEL_VERSION, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_FUNCTION_PLATFORM} from '../../dist/Constants';
 const buildInfo = require('../../dist/BuildInfo');
+var semver = require('semver');
 
 
 const pluginContext = createMockPluginContext();
@@ -52,7 +53,7 @@ describe('Invocation', () => {
             expect(invocation.apiKey).toBe(pluginContext.apiKey);
             expect(invocation.invocationData.id).toBeTruthy();
             expect(invocation.invocationData.type).toEqual('Invocation');
-            expect(invocation.invocationData.agentVersion).toEqual(buildInfo.version);
+            expect(semver.inc(invocation.invocationData.agentVersion, 'patch')).toEqual(buildInfo.version);
             expect(invocation.invocationData.dataModelVersion).toEqual(DATA_MODEL_VERSION);
             expect(invocation.invocationData.applicationId).toEqual(pluginContext.applicationId);
             expect(invocation.invocationData.applicationDomainName).toEqual(LAMBDA_APPLICATION_DOMAIN_NAME);
