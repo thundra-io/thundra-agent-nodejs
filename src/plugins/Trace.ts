@@ -165,12 +165,7 @@ export class Trace {
         this.finishTimestamp = Date.now();
         this.traceData.finishTimestamp = this.finishTimestamp;
         this.traceData.duration = this.finishTimestamp - this.startTimestamp;
-
-        if (this.tracer.getActiveSpan()) {
-            this.tracer.getActiveSpan().finish();
-        } else {
-            this.rootSpan.finish();
-        }
+        this.rootSpan.finish();
 
         const reportData = Utils.generateReport(this.traceData, this.apiKey);
         this.report(reportData);

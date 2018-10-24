@@ -1,6 +1,5 @@
 import * as url from 'url';
 import HttpIntegration from './plugins/integrations/HttpIntegration';
-import HttpsIntegration from './plugins/integrations/HttpsIntegration';
 import PostgreIntegration from './plugins/integrations/PostgreIntegration';
 import MySQL2Integration from './plugins/integrations/MySQL2Integration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
@@ -246,7 +245,6 @@ export const SpanTypes = {
 
 export const INTEGRATIONS: any = {
     http: HttpIntegration,
-    https: HttpsIntegration,
     pg: PostgreIntegration,
     mysql2: MySQL2Integration,
     redis: RedisIntegration,
@@ -350,7 +348,7 @@ export const RedisCommandTypes: any = {
     SADD: 'WRITE',
     SCARD: 'READ',
     SDIFFSTORE: 'WRITE',
-    SET: 'READ',
+    SET: 'WRITE',
     SETBIT: 'WRITE',
     SETEX: 'WRITE',
     SETNX: 'WRITE',

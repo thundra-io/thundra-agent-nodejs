@@ -181,7 +181,7 @@ describe('Reporter', () => {
 
         it('should log reports on failure', () => {
             expect(reporter.request.mock.calls.length).toBe(1);
-            expect(consoleOutput).toEqual(reporter.reports);
+            expect(consoleOutput).toEqual(JSON.stringify(reporter.reports));
         });
 
     });

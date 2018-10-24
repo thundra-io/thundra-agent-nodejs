@@ -75,7 +75,7 @@ class AWSIntegration implements Integration {
             const operationName = request.operation;
             const operationType = SNSRequesTypes[operationName];
             const topicName = operationType ?
-              Utils.getTopicName(request.params.QueueUrl) : AWS_SERVICE_REQUEST;
+            Utils.getTopicName(request.params.QueueUrl) : AWS_SERVICE_REQUEST;
 
             activeSpan = tracer._startSpan(topicName, {
               childOf: parentSpan,
@@ -188,21 +188,21 @@ class AWSIntegration implements Integration {
             });
           }
 
-          const wrappedCallback = (err: any, res: any) => {
-            activeSpan.finish();
-            if (err) {
-              const parseError = Utils.parseError(err);
+          request.on('complete', (response: any) => {
+            if (activeSpan) {
+              activeSpan.finish();
+            }
+            if (response.error !== null) {
+              const parseError = Utils.parseError(response.error );
               activeSpan.setTag('error', true);
               activeSpan.setTag('error.kind', parseError.errorType);
               activeSpan.setTag('error.message', parseError.errorMessage);
               activeSpan.setTag('error.stack', parseError.stack);
               activeSpan.setTag('error.code', parseError.code);
-
             }
-            originalCallback(err, res);
-          };
+          });
 
-          return wrappedFunction.apply(this, [wrappedCallback]);
+          return wrappedFunction.apply(this, [originalCallback]);
 
         } catch (error) {
           ThundraLogger.getInstance().error(error);

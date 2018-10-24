@@ -67,7 +67,7 @@ class Reporter {
         await this.request()
             .then((response: any) => {
                 if (response.status !== 200) {
-                    ThundraLogger.getInstance().debug(this.reports);
+                    ThundraLogger.getInstance().debug(JSON.stringify(this.reports));
                     ThundraLogger.getInstance().error(response);
                 }
             })

@@ -57,19 +57,21 @@ class HttpIntegration implements Integration {
 
         const req = request.call(this, options, callback);
 
+        req.on('socket', () => {
+          if (req.listenerCount('response') === 1) {
+            req.on('response', (res: any) => res.resume());
+          }
+        });
+
         req.on('response', (res: any) => {
           span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
-
           res.on('end', () => span.finish());
-
-          if (req.listenerCount('response') === 1) {
-            res.resume();
-          }
           span.finish();
         });
 
         req.on('error', (err: any) => {
           const parseError = Utils.parseError(err);
+
           span.setTag('error', true);
           span.setTag('error.kind', parseError.errorType);
           span.setTag('error.message', parseError.errorMessage);
