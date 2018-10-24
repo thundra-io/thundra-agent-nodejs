@@ -1,5 +1,8 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.0.3 - October 24, 2018
+#### Fixed
+- AWS and HTTP integrations spans were not closed correctly fixed now. Removed HTTPS integration, it is not needed `https` module is using `http` underneath.
 ## 2.0.2 - October 23, 2018
 #### Fixed
 - Enable log plugin to be used before initialising Thundra Agent
