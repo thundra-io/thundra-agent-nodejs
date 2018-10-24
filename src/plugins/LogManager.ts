@@ -20,6 +20,10 @@ class LogManager {
             listener.reportLog(logReport);
         });
     }
+
+    destroy() {
+        this.listeners = [];
+    }
 }
 
 export default LogManager;

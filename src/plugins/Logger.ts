@@ -32,10 +32,6 @@ class Logger {
         return Logger.logManagerInstance;
     }
 
-    static setLogManager(instance: LogManager): LogManager {
-        return Logger.logManagerInstance = instance;
-    }
-
     shouldReport(level: any) {
         return logLevels[level] >= this.logLevel;
     }
@@ -119,6 +115,10 @@ class Logger {
         } else {
             throw new Error('[ThundraLogger] invalid usage');
         }
+    }
+
+    destroy() {
+        Logger.logManagerInstance.destroy();
     }
 }
 

@@ -45,9 +45,7 @@ module.exports = (options: any) => {
 
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG) === 'true') && config.logConfig.enabled) {
         if (!Log.getInstance()) {
-            const logConfig: LogConfig = new LogConfig({});
-            const logPlugin = new Log(logConfig);
-            Log.setInstance(logPlugin);
+            const logPlugin = new Log(config.logConfig);
             Logger.getLogManager().addListener(logPlugin);
         }
 
@@ -112,7 +110,6 @@ module.exports.createLogger = (options: any) => {
     if (!Log.getInstance()) {
         const config: LogConfig = new LogConfig({});
         const logPlugin = new Log(config);
-        Log.setInstance(logPlugin);
         Logger.getLogManager().addListener(logPlugin);
     }
     return Logger.getLogManager().createLogger(options);
