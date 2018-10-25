@@ -117,6 +117,11 @@ class ThundraSpan extends Span {
   }
 
   _finish(finishTime: number = Date.now()) {
+    if (this.duration) {
+      ThundraLogger.getInstance().debug('Span is already finished.');
+      return;
+    }
+
     this.duration = finishTime - this.startTime;
     if (this.spanContext.sampled) {
       this.parentTracer._record(this);

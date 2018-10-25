@@ -1,7 +1,6 @@
 import { Tracer } from 'opentracing';
 import ThundraSpan, { SpanEvent } from './Span';
 import ThundraRecorder from './Recorder';
-import ThundraSampler from './Sampler';
 import Utils from '../plugins/Utils';
 
 class ThundraTracer extends Tracer {
