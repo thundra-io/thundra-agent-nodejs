@@ -1,5 +1,8 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.0.4 - October 26, 2018
+#### Fixed
+- Cleanup LogManager after each invocation
 ## 2.0.3 - October 24, 2018
 #### Fixed
 - AWS and HTTP integrations spans were not closed correctly fixed now. Removed HTTPS integration, it is not needed `https` module is using `http` underneath.

@@ -11,8 +11,8 @@
     "test": "npm run compile; jest --coverage",
     "test-ci": "npm run compile;  jest --config config.json --coverage; cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "tslint --project tsconfig.json -t stylish",
-    "release-minor": "npm run build; release-it minor -n --npm.publish --src.commit --src.tag --no-src.push --src.tagName='v%s' --github.release",
-    "release": "npm run build; release-it -n --npm.publish --src.commit --src.tag --src.push --no-src.push --src.tagName='v%s' --github.release"
+    "release-minor": "npm install; npm run build; release-it minor -n --npm.publish --src.commit --src.tag --no-src.push --src.tagName='v%s' --github.release",
+    "release": "npm install; npm run build; release-it -n --npm.publish --src.commit --src.tag --src.push --no-src.push --src.tagName='v%s' --github.release"
   },
   "repository": {
     "type": "git",
