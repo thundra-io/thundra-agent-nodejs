@@ -7,10 +7,10 @@ import {
   DBTags, DBTypes, FirehoseRequestTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST, S3RequestTypes, LambdaRequestType,
 } from '../../Constants';
 import Utils from '../Utils';
-import { Span } from 'opentracing';
-import { DB_INSTANCE, DB_STATEMENT, DB_USER, DB_TYPE } from 'opentracing/lib/ext/tags';
+import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import ModuleVersionValidator from './ModuleVersionValidator';
+import ThundraSpan from '../../opentracing/Span';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -53,7 +53,7 @@ class AWSIntegration implements Integration {
           const parentSpan = tracer.getActiveSpan();
           const originalCallback = callback;
 
-          let activeSpan: Span = null;
+          let activeSpan: ThundraSpan = null;
 
           if (serviceName === 'sqs') {
             const operationName = request.operation;
@@ -65,6 +65,7 @@ class AWSIntegration implements Integration {
               childOf: parentSpan,
               domainName: DomainNames.MESSAGING,
               className: ClassNames.SQS,
+              disableActiveStart: true,
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SQS,
                 [AwsSQSTags.QUEUE_NAME]: queueName,
@@ -81,6 +82,7 @@ class AWSIntegration implements Integration {
               childOf: parentSpan,
               domainName: DomainNames.MESSAGING,
               className: ClassNames.SNS,
+              disableActiveStart: true,
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SNS,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
@@ -97,6 +99,7 @@ class AWSIntegration implements Integration {
               childOf: parentSpan,
               domainName: DomainNames.DB,
               className: ClassNames.DYNAMODB,
+              disableActiveStart: true,
               tags: {
                 [DB_TYPE]: DBTypes.DYNAMODB,
                 [DB_INSTANCE]: serviceEndpoint,
@@ -117,6 +120,7 @@ class AWSIntegration implements Integration {
               childOf: parentSpan,
               domainName: DomainNames.STORAGE,
               className: ClassNames.S3,
+              disableActiveStart: true,
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_S3,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
@@ -132,6 +136,7 @@ class AWSIntegration implements Integration {
 
             activeSpan = tracer._startSpan(lambdaName, {
               childOf: parentSpan,
+              disableActiveStart: true,
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_LAMBDA,
                 [SpanTags.OPERATION_TYPE]: operationType,
@@ -151,6 +156,7 @@ class AWSIntegration implements Integration {
               childOf: parentSpan,
               domainName: DomainNames.STREAM,
               className: ClassNames.KINESIS,
+              disableActiveStart: true,
               tags: {
                 [SpanTags.OPERATION_TYPE]: KinesisRequestTypes[operationName] ?
                   KinesisRequestTypes[operationName] : 'READ',
@@ -168,6 +174,7 @@ class AWSIntegration implements Integration {
               childOf: parentSpan,
               domainName: DomainNames.STREAM,
               className: ClassNames.FIREHOSE,
+              disableActiveStart: true,
               tags: {
                 [SpanTags.OPERATION_TYPE]: FirehoseRequestTypes[operationName] ?
                   FirehoseRequestTypes[operationName] : 'READ',
@@ -181,6 +188,7 @@ class AWSIntegration implements Integration {
               childOf: parentSpan,
               domainName: DomainNames.AWS,
               className: ClassNames.AWSSERVICE,
+              disableActiveStart: true,
               tags: {
                 [AwsSDKTags.SERVICE_NAME]: serviceName,
                 [AwsSDKTags.REQUEST_NAME]: request.operation,
@@ -190,7 +198,7 @@ class AWSIntegration implements Integration {
 
           request.on('complete', (response: any) => {
             if (activeSpan) {
-              activeSpan.finish();
+              activeSpan.close();
             }
             if (response.error !== null) {
               const parseError = Utils.parseError(response.error );

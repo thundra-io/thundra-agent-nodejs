@@ -13,9 +13,9 @@ class DurationAwareSampler implements Sampler<ThundraSpan> {
     isSampled(span: ThundraSpan): boolean {
         if (span) {
             if (this.longerThan) {
-                return span.duration > this.duration;
+                return span.getDuration() > this.duration;
             } else {
-                return span.duration <= this.duration;
+                return span.getDuration() <= this.duration;
             }
         } else {
             return false;

@@ -61,6 +61,7 @@ class RedisIntegration implements Integration {
           childOf: parentSpan,
           domainName: DomainNames.CACHE,
           className: ClassNames.REDIS,
+          disableActiveStart: true,
           tags: {
             [SpanTags.SPAN_TYPE]: SpanTypes.REDIS,
             [DB_TYPE]: DBTypes.REDIS,
@@ -84,7 +85,7 @@ class RedisIntegration implements Integration {
             span.setTag('error.message', parseError.errorMessage);
           }
 
-          span.finish();
+          span.close();
 
           originalCallback(err, res);
         };

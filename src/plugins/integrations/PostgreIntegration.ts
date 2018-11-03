@@ -47,6 +47,7 @@ class PostgreIntegration implements Integration {
           childOf: parentSpan,
           domainName: DomainNames.DB,
           className: ClassNames.RDB,
+          disableActiveStart: true,
         });
 
         if (params) {
@@ -79,7 +80,7 @@ class PostgreIntegration implements Integration {
             span.setTag('error.message', parseError.errorMessage);
           }
 
-          span.finish();
+          span.close();
 
           if (originalCallback) {
             originalCallback(err, res);

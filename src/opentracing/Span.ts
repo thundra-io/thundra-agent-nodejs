@@ -3,13 +3,14 @@ import ThundraSpanContext from './SpanContext';
 import Utils from '../plugins/Utils';
 import ThundraTracer from './Tracer';
 import ThundraLogger from '../ThundraLogger';
+
 class ThundraSpan extends Span {
   parentTracer: ThundraTracer;
   operationName: string;
   tags: any;
   startTime: number;
+  finishTime: number;
   spanContext: ThundraSpanContext;
-  duration: number;
   rootTraceId: string;
   logs: any[];
   className: string;
@@ -28,6 +29,7 @@ class ThundraSpan extends Span {
     this.operationName = operationName;
     this.tags = Object.assign({}, tags);
     this.startTime = startTime;
+    this.finishTime = 0;
     this.rootTraceId = fields.rootTraceId || null;
     this.spanContext = this._createContext(parent);
     this.logs = [];
@@ -117,14 +119,38 @@ class ThundraSpan extends Span {
   }
 
   _finish(finishTime: number = Date.now()) {
-    if (this.duration) {
+    if (this.finishTime !== 0) {
       ThundraLogger.getInstance().debug('Span is already finished.');
       return;
     }
 
-    this.duration = finishTime - this.startTime;
+    this.finishTime = finishTime;
     if (this.spanContext.sampled) {
       this.parentTracer._record(this);
+    }
+  }
+
+  close(finishTime: number = Date.now()) {
+    if (this.finishTime !== 0) {
+      ThundraLogger.getInstance().debug('Span is already closed.');
+      return;
+    }
+
+    this.finishTime = finishTime;
+    if (this.spanContext.sampled) {
+      this.parentTracer._record(this, {disableActiveSpanHandling: true});
+    }
+  }
+
+  isFinished() {
+    return this.finishTime !== 0;
+  }
+
+  getDuration() {
+    if (this.finishTime !== 0) {
+      return this.finishTime - this.startTime;
+    } else {
+      return Date.now() - this.startTime;
     }
   }
 

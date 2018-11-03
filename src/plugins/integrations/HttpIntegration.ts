@@ -44,6 +44,7 @@ class HttpIntegration implements Integration {
           childOf: parentSpan,
           domainName: DomainNames.API,
           className: ClassNames.HTTP,
+          disableActiveStart: true,
         });
 
         span.addTags({
@@ -65,8 +66,8 @@ class HttpIntegration implements Integration {
 
         req.on('response', (res: any) => {
           span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
-          res.on('end', () => span.finish());
-          span.finish();
+          res.on('end', () => span.close());
+          span.close();
         });
 
         req.on('error', (err: any) => {
@@ -78,7 +79,7 @@ class HttpIntegration implements Integration {
           span.setTag('error.stack', parseError.stack);
           span.setTag('error.code', parseError.code);
 
-          span.finish();
+          span.close();
         });
 
         return req;

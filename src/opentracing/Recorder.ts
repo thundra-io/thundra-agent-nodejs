@@ -12,18 +12,23 @@ class ThundraRecorder {
         this.spanList = [];
     }
 
-    record(node: ThundraSpan, spanEvent: SpanEvent): void {
-        if (!node) {
+    record(span: ThundraSpan, spanEvent: SpanEvent, options?: any): void {
+        if (!span) {
             ThundraLogger.getInstance().error('Undefined span.');
-        } else if (spanEvent === SpanEvent.SPAN_START) {
-            ThundraLogger.getInstance().debug(`Span with name ${node.operationName} started.`);
-            this.activeSpanStack.push(node);
-            node.order = this.spanOrder;
-            this.spanOrder++;
-        } else if (spanEvent === SpanEvent.SPAN_FINISH) {
-            ThundraLogger.getInstance().debug(`Span with name ${node.operationName} finished.`);
-            const span = this.activeSpanStack.pop();
-            this.spanList.push(span);
+        } else {
+            if (spanEvent === SpanEvent.SPAN_START) {
+                ThundraLogger.getInstance().debug(`Span with name ${span.operationName} started.`);
+                if (!(options && options.disableActiveSpanHandling === true)) {
+                    this.activeSpanStack.push(span);
+                }
+                span.order = this.spanOrder++;
+            } else if (spanEvent === SpanEvent.SPAN_FINISH) {
+                ThundraLogger.getInstance().debug(`Span with name ${span.operationName} finished.`);
+                if (!(options && options.disableActiveSpanHandling === true)) {
+                    this.activeSpanStack.pop();
+                }
+                this.spanList.push(span);
+            }
         }
     }
 
@@ -35,8 +40,12 @@ class ThundraRecorder {
         return this.activeSpanStack.peek();
     }
 
-    getActiveSpanStack(): Stack<ThundraSpan> {
-        return this.activeSpanStack;
+    setActiveSpan(span: ThundraSpan) {
+        this.activeSpanStack.push(span);
+    }
+
+    removeActiveSpan(): ThundraSpan {
+        return this.activeSpanStack.pop();
     }
 
     destroy() {

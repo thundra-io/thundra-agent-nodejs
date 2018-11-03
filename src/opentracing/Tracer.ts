@@ -27,6 +27,14 @@ class ThundraTracer extends Tracer {
     return this.recorder.getActiveSpan();
   }
 
+  setActiveSpan(span: ThundraSpan) {
+    this.recorder.setActiveSpan(span);
+  }
+
+  removeActiveSpan(): ThundraSpan {
+    return this.recorder.removeActiveSpan();
+  }
+
   finishSpan(): void {
     if (this.getActiveSpan()) {
       this.getActiveSpan().finish();
@@ -91,13 +99,18 @@ class ThundraTracer extends Tracer {
       });
     }
 
-    this.recorder.record(span, SpanEvent.SPAN_START);
+    this.recorder.record(
+        span,
+        SpanEvent.SPAN_START,
+        {
+          disableActiveSpanHandling: fields.disableActiveStart === true,
+        });
     this.activeSpans.set(span.spanContext.spanId, span);
     return span;
   }
 
-  _record(span: ThundraSpan) {
-    this.recorder.record(span, SpanEvent.SPAN_FINISH);
+  _record(span: ThundraSpan, options?: any) {
+    this.recorder.record(span, SpanEvent.SPAN_FINISH, options);
     this.activeSpans.delete(span.spanContext.spanId);
   }
 
