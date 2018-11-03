@@ -237,7 +237,9 @@ class Instrumenter {
                     }
                 }
                 span.setTag(ARGS_TAG_NAME, spanArguments);
-                return {};
+                return {
+                    span,
+                };
             } catch (ex) {
                 self.tracer.finishSpan();
             }
@@ -245,7 +247,8 @@ class Instrumenter {
 
         global.__thundraTraceExit__ = function (args: any) {
             try {
-                const span = self.tracer.getActiveSpan();
+                const entryData = args.entryData;
+                const span = (entryData && entryData.span) ? entryData.span : self.tracer.getActiveSpan();
                 if (!args.exception) {
                     if (args.returnValue) {
                         span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, args.returnValue));
