@@ -1,10 +1,12 @@
 import BasePluginConfig from './BasePluginConfig';
 import TraceableConfig from './TraceableConfig';
-import {envVariableKeys } from '../../Constants';
+import {envVariableKeys, INTEGRATIONS } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
 import Utils from '../Utils';
 import ThundraLogger from '../../ThundraLogger';
 import TraceSamplerConfig from './TraceSamplerConfig';
+import Integration from '../integrations/Integration';
+import Instrumenter from '../../opentracing/instrument/Instrumenter';
 const koalas = require('koalas');
 
 class TraceConfig extends BasePluginConfig {
@@ -17,6 +19,8 @@ class TraceConfig extends BasePluginConfig {
     integrations: IntegrationConfig[];
     disableInstrumentation: boolean;
     samplerConfig: TraceSamplerConfig;
+    integrationsMap: Map<string, Integration>;
+    instrumenter: Instrumenter;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -42,7 +46,7 @@ class TraceConfig extends BasePluginConfig {
                     ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
                 }
             }
-            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS)) {
+            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE)) {
                 try {
                     this.integrations.push(... this.parseIntegrationsEnvVariable(process.env[key]));
                 } catch (ex) {
@@ -68,6 +72,25 @@ class TraceConfig extends BasePluginConfig {
                 }
             }
         }
+
+        if (!(this.disableInstrumentation)) {
+            this.integrationsMap = new Map<string, Integration>();
+
+            for (const key of Object.keys(INTEGRATIONS)) {
+                const clazz = INTEGRATIONS[key];
+                if (clazz) {
+                    if (!this.integrationsMap.get(key)) {
+                        if (!this.isConfigDisabled(key)) {
+                            const instance = new clazz(key);
+                            this.integrationsMap.set(key, instance);
+                        }
+                    }
+                }
+            }
+
+            this.instrumenter = new Instrumenter(this);
+            this.instrumenter.hookModuleCompile();
+        }
     }
 
     parseTraceableConfigEnvVariable(value: string): TraceableConfig {
@@ -85,9 +108,23 @@ class TraceConfig extends BasePluginConfig {
         const args = value.substring(value.indexOf('[') + 1, value.indexOf(']')).split(',');
         const configs: IntegrationConfig[] = [];
         for (const arg of args) {
-            configs.push(new IntegrationConfig(arg, {}));
+            configs.push(new IntegrationConfig(arg, {enabled: false}));
         }
         return configs;
+    }
+
+    isConfigDisabled(name: string) {
+        let disabled = false;
+        for (const config of this.integrations) {
+            if (config.name === name && !config.enabled) {
+                disabled = true;
+            }
+        }
+        return disabled;
+    }
+
+    unhookModuleCompile() {
+        this.instrumenter.unhookModuleCompile();
     }
 }
 

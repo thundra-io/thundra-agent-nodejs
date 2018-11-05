@@ -29,17 +29,19 @@ class RedisIntegration implements Integration {
           this.config = config;
           this.basedir = basedir;
 
-          this.wrap.call(this, exp, tracer, config);
+          this.wrap.call(this, exp, config);
         }
       }
       return exp;
     });
   }
 
-  wrap(lib: any, tracer: ThundraTracer, config: any) {
+  wrap(lib: any, config: any) {
 
     function wrapper(internalSendCommand: any) {
       return function internalSendCommandWrapper(options: any) {
+        const tracer = ThundraTracer.getInstance();
+
         if (!options) {
           return internalSendCommand.call(this, options);
         }

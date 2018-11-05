@@ -1,4 +1,3 @@
-import ThundraTracer from '../Tracer';
 import TraceConfig from '../../plugins/config/TraceConfig';
 import TraceableConfig, { TracableConfigCheckLevel } from '../../plugins/config/TraceableConfig';
 import { envVariableKeys, TRACE_DEF_SEPERATOR, Syntax, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
@@ -8,6 +7,7 @@ import Utils from '../../plugins/Utils';
 import Stack from './Stack';
 import NodeWrapper from './NodeWrapper';
 import ThundraLogger from '../../ThundraLogger';
+import ThundraTracer from '../Tracer';
 
 const Module = require('module');
 const falafel = require('falafel');
@@ -21,13 +21,11 @@ const TRACE_EXIT = '__thundraTraceExit__({entryData: __thundraEntryData__, excep
     Most of the code is derived from njsTrace : https://github.com/ValYouW/njsTrace
 */
 class Instrumenter {
-    tracer: ThundraTracer;
     traceConfig: TraceConfig;
     origCompile: any;
     stack: Stack<NodeWrapper>;
 
-    constructor(tracer: ThundraTracer, traceConfig: TraceConfig) {
-        this.tracer = tracer;
+    constructor(traceConfig: TraceConfig) {
         this.traceConfig = traceConfig;
         this.stack = new Stack<NodeWrapper>();
     }
@@ -221,10 +219,9 @@ class Instrumenter {
     }
 
     setGlobalFunction() {
-        const self: any = this;
         global.__thundraTraceEntry__ = function (args: any) {
             try {
-                const span = self.tracer.startSpan(args.path + '.' + args.name);
+                const span = ThundraTracer.getInstance().startSpan(args.path + '.' + args.name);
                 const spanArguments: Argument[] = [];
                 if (args.args) {
                     for (let i = 0; i < args.args.length; i++) {
@@ -241,14 +238,14 @@ class Instrumenter {
                     span,
                 };
             } catch (ex) {
-                self.tracer.finishSpan();
+                ThundraTracer.getInstance().finishSpan();
             }
         };
 
         global.__thundraTraceExit__ = function (args: any) {
             try {
                 const entryData = args.entryData;
-                const span = (entryData && entryData.span) ? entryData.span : self.tracer.getActiveSpan();
+                const span = (entryData && entryData.span) ? entryData.span : ThundraTracer.getInstance().getActiveSpan();
                 if (!args.exception) {
                     if (args.returnValue) {
                         span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, args.returnValue));
@@ -267,7 +264,7 @@ class Instrumenter {
                 }
                 span.finish();
             } catch (ex) {
-                self.tracer.finishSpan();
+                ThundraTracer.getInstance().finishSpan();
             }
         };
     }

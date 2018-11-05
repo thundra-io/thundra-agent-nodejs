@@ -14,22 +14,24 @@ class HttpIntegration implements Integration {
   hook: any;
   basedir: string;
 
-  constructor(tracer: ThundraTracer, config: any) {
+  constructor(config: any) {
     this.hook = Hook('http', { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'http') {
         this.lib = exp;
         this.config = config;
         this.basedir = basedir;
 
-        this.wrap.call(this, exp, tracer, config);
+        this.wrap.call(this, exp, config);
       }
       return exp;
     });
   }
 
-  wrap(lib: any, tracer: ThundraTracer, config: any) {
+  wrap(lib: any, config: any) {
     function wrapper(request: any) {
       return function requestWrapper(options: any, callback: any) {
+        const tracer = ThundraTracer.getInstance();
+
         const method = (options.method || 'GET').toUpperCase();
         options = typeof options === 'string' ? url.parse(options) : options;
         const host = options.hostname || options.host || 'localhost';

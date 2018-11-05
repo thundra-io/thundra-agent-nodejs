@@ -22,8 +22,9 @@ class AWSIntegration implements Integration {
   hook: any;
   basedir: string;
 
-  constructor(tracer: ThundraTracer, config: any) {
+  constructor(config: any) {
     this.version = '2.x';
+
     this.hook = Hook('aws-sdk', { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'aws-sdk') {
         const moduleValidator = new ModuleVersionValidator();
@@ -35,17 +36,18 @@ class AWSIntegration implements Integration {
           this.lib = exp;
           this.config = config;
           this.basedir = basedir;
-
-          this.wrap.call(this, exp, tracer, config);
+          this.wrap.call(this, exp, config);
         }
       }
       return exp;
     });
   }
 
-  wrap(lib: any, tracer: ThundraTracer, config: any) {
+  wrap(lib: any, config: any) {
     function wrapper(wrappedFunction: any) {
       return function AWSSDKWrapper(callback: any) {
+
+        const tracer = ThundraTracer.getInstance();
         try {
           const request = this;
           const serviceEndpoint = request.service.config.endpoint;

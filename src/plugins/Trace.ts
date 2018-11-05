@@ -35,8 +35,6 @@ export class Trace {
     finishTimestamp: number;
     startTimestamp: number;
     tracer: ThundraTracer;
-    instrumenter: Instrumenter;
-    integrations: Map<string, Integration>;
     rootSpan: ThundraSpan;
     pluginOrder: number = 1;
 
@@ -52,24 +50,6 @@ export class Trace {
 
         this.tracer = new ThundraTracer(tracerConfig);
         initGlobalTracer(this.tracer);
-
-        if (this.config && !(this.config.disableInstrumentation)) {
-            this.instrumenter = new Instrumenter(this.tracer, config);
-            this.instrumenter.hookModuleCompile();
-        }
-
-        if (this.config && this.config.integrations && !(this.config.disableInstrumentation)) {
-            this.integrations = new Map<string, Integration>();
-            for (const integration of config.integrations) {
-                const clazz = INTEGRATIONS[integration.name];
-                if (clazz) {
-                    if (!this.integrations.get(integration.name)) {
-                        const instance = new clazz(this.tracer, integration.opt);
-                        this.integrations.set(integration.name, instance);
-                    }
-                }
-            }
-        }
     }
 
     report(data: any): void {
@@ -184,7 +164,6 @@ export class Trace {
 
         if (this.config && !(this.config.disableInstrumentation)) {
             this.tracer.destroy();
-            this.instrumenter.unhookModuleCompile();
         }
     }
 
