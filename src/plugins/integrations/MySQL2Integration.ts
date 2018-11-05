@@ -45,6 +45,7 @@ class MySQL2Integration implements Integration {
           childOf: parentSpan,
           domainName: DomainNames.DB,
           className: ClassNames.RDB,
+          disableActiveStart: true,
         });
 
         span.addTags({
@@ -76,7 +77,7 @@ class MySQL2Integration implements Integration {
             span.setTag('error.code', parseError.code);
           }
 
-          span.finish();
+          span.close();
 
           originalCallback(err, res);
         };
@@ -85,7 +86,7 @@ class MySQL2Integration implements Integration {
           sequence.onResult = wrappedCallback;
         } else {
           sequence.on('end', () => {
-            span.finish();
+            span.close();
           });
         }
 

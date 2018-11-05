@@ -202,8 +202,8 @@ export class Trace {
         spanData.serviceName = this.rootSpan.operationName;
         spanData.operationName = span.operationName;
         spanData.startTimestamp = span.startTime;
-        spanData.finishTimestamp = span.startTime + span.duration;
-        spanData.duration = span.duration;
+        spanData.duration = span.getDuration();
+        spanData.finishTimestamp = span.finishTime;
         spanData.tags = span.tags;
         spanData.logs = span.logs;
 
