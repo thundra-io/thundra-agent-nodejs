@@ -1,10 +1,12 @@
 import BasePluginConfig from './BasePluginConfig';
 import TraceableConfig from './TraceableConfig';
-import {envVariableKeys } from '../../Constants';
+import {envVariableKeys, INTEGRATIONS } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
 import Utils from '../Utils';
 import ThundraLogger from '../../ThundraLogger';
 import TraceSamplerConfig from './TraceSamplerConfig';
+import Integration from '../integrations/Integration';
+import Instrumenter from '../../opentracing/instrument/Instrumenter';
 const koalas = require('koalas');
 
 class TraceConfig extends BasePluginConfig {
@@ -14,9 +16,11 @@ class TraceConfig extends BasePluginConfig {
     traceableConfigs: TraceableConfig[];
     maskRequest: (request: any) => any;
     maskResponse: (response: any) => any;
-    integrations: IntegrationConfig[];
+    disabledIntegrations: IntegrationConfig[];
     disableInstrumentation: boolean;
     samplerConfig: TraceSamplerConfig;
+    integrationsMap: Map<string, Integration>;
+    instrumenter: Instrumenter;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -27,7 +31,7 @@ class TraceConfig extends BasePluginConfig {
             envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) === 'true', options.disableResponse, false);
         this.maskRequest = koalas(options.maskRequest, null);
         this.maskResponse = koalas(options.maskResponse, null);
-        this.integrations = koalas([]);
+        this.disabledIntegrations = koalas([]);
         this.tracerConfig = koalas(options.tracerConfig, {});
         this.traceableConfigs = [];
         this.disableInstrumentation = koalas(Utils.getConfiguration(
@@ -42,9 +46,9 @@ class TraceConfig extends BasePluginConfig {
                     ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
                 }
             }
-            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS)) {
+            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE)) {
                 try {
-                    this.integrations.push(... this.parseIntegrationsEnvVariable(process.env[key]));
+                    this.disabledIntegrations.push(... this.parseIntegrationsEnvVariable(process.env[key]));
                 } catch (ex) {
                     ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
                 }
@@ -62,11 +66,30 @@ class TraceConfig extends BasePluginConfig {
         if (options.integrations) {
             for (const intgr of options.integrations) {
                 if (typeof intgr === 'string') {
-                    this.integrations.push(new IntegrationConfig(intgr, {}));
+                    this.disabledIntegrations.push(new IntegrationConfig(intgr, {}));
                 } else {
-                    this.integrations.push(new IntegrationConfig(intgr.name, intgr.opt));
+                    this.disabledIntegrations.push(new IntegrationConfig(intgr.name, intgr.opt));
                 }
             }
+        }
+
+        if (!(this.disableInstrumentation)) {
+            this.integrationsMap = new Map<string, Integration>();
+
+            for (const key of Object.keys(INTEGRATIONS)) {
+                const clazz = INTEGRATIONS[key];
+                if (clazz) {
+                    if (!this.integrationsMap.get(key)) {
+                        if (!this.isConfigDisabled(key)) {
+                            const instance = new clazz(key);
+                            this.integrationsMap.set(key, instance);
+                        }
+                    }
+                }
+            }
+
+            this.instrumenter = new Instrumenter(this);
+            this.instrumenter.hookModuleCompile();
         }
     }
 
@@ -85,9 +108,23 @@ class TraceConfig extends BasePluginConfig {
         const args = value.substring(value.indexOf('[') + 1, value.indexOf(']')).split(',');
         const configs: IntegrationConfig[] = [];
         for (const arg of args) {
-            configs.push(new IntegrationConfig(arg, {}));
+            configs.push(new IntegrationConfig(arg, {enabled: false}));
         }
         return configs;
+    }
+
+    isConfigDisabled(name: string) {
+        let disabled = false;
+        for (const config of this.disabledIntegrations) {
+            if (config.name === name && !config.enabled) {
+                disabled = true;
+            }
+        }
+        return disabled;
+    }
+
+    unhookModuleCompile() {
+        this.instrumenter.unhookModuleCompile();
     }
 }
 

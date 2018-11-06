@@ -15,7 +15,7 @@ class MySQL2Integration implements Integration {
   hook: any;
   basedir: string;
 
-  constructor(tracer: ThundraTracer, config: any) {
+  constructor(config: any) {
     this.version = '^1.5';
     this.hook = Hook('mysql2', { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'mysql2/lib/connection.js') {
@@ -29,16 +29,17 @@ class MySQL2Integration implements Integration {
           this.config = config;
           this.basedir = basedir;
 
-          this.wrap.call(this, exp, tracer, config);
+          this.wrap.call(this, exp, config);
         }
       }
       return exp;
     });
   }
 
-  wrap(lib: any, tracer: ThundraTracer, config: any) {
+  wrap(lib: any, config: any) {
     function wrapper(query: any) {
       return function queryWrapper(sql: any, values: any, cb: any) {
+        const tracer = ThundraTracer.getInstance();
         const parentSpan = tracer.getActiveSpan();
 
         const span = tracer._startSpan(this.config.database, {

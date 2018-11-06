@@ -15,7 +15,7 @@ class PostgreIntegration implements Integration {
   hook: any;
   basedir: string;
 
-  constructor(tracer: ThundraTracer, config: any) {
+  constructor(config: any) {
     this.version = '6.x';
 
     this.hook = Hook('pg', { internals: true }, (exp: any, name: string, basedir: string) => {
@@ -30,16 +30,18 @@ class PostgreIntegration implements Integration {
           this.config = config;
           this.basedir = basedir;
 
-          this.wrap.call(this, exp, tracer, config);
+          this.wrap.call(this, exp, config);
         }
       }
       return exp;
     });
   }
 
-  wrap(lib: any, tracer: ThundraTracer, config: any) {
+  wrap(lib: any, config: any) {
     function wrapper(query: any, args: any) {
       return function queryWrapper() {
+
+        const tracer = ThundraTracer.getInstance();
         const parentSpan = tracer.getActiveSpan();
 
         const params = this.connectionParameters;
