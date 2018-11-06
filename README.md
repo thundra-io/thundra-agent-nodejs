@@ -68,7 +68,7 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 | thundra_agent_lambda_integrations                               | string |    empty      |
 | thundra_agent_lambda_publish_report_rest_trustAllCertificates   | bool   |    false      |
 | thundra_agent_lambda_debug_enable                               | bool   |    false      |
-| thundra_agent_lambda_trace_instrument_integrations              | bool   |    false      |
+| thundra_agent_lambda_trace_instrument_integrations_disable      | array  |    []         |
 | thundra_agent_lambda_metric_sample_sampler_timeAware_timeFreq   | number |    300000     |
 | thundra_agent_lambda_metric_sample_sampler_countAware_countFreq | number |    10         |
 
