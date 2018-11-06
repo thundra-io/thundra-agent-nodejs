@@ -1,5 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.0.5 - November 6, 2018
+#### Added
+- Enable integrations by default
+#### Fixed
+- Propagated span from trace entry to exit through entry data
 ## 2.0.4 - October 26, 2018
 #### Fixed
 - Cleanup LogManager after each invocation
