@@ -16,7 +16,7 @@ class TraceConfig extends BasePluginConfig {
     traceableConfigs: TraceableConfig[];
     maskRequest: (request: any) => any;
     maskResponse: (response: any) => any;
-    integrations: IntegrationConfig[];
+    disabledIntegrations: IntegrationConfig[];
     disableInstrumentation: boolean;
     samplerConfig: TraceSamplerConfig;
     integrationsMap: Map<string, Integration>;
@@ -31,7 +31,7 @@ class TraceConfig extends BasePluginConfig {
             envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) === 'true', options.disableResponse, false);
         this.maskRequest = koalas(options.maskRequest, null);
         this.maskResponse = koalas(options.maskResponse, null);
-        this.integrations = koalas([]);
+        this.disabledIntegrations = koalas([]);
         this.tracerConfig = koalas(options.tracerConfig, {});
         this.traceableConfigs = [];
         this.disableInstrumentation = koalas(Utils.getConfiguration(
@@ -48,7 +48,7 @@ class TraceConfig extends BasePluginConfig {
             }
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE)) {
                 try {
-                    this.integrations.push(... this.parseIntegrationsEnvVariable(process.env[key]));
+                    this.disabledIntegrations.push(... this.parseIntegrationsEnvVariable(process.env[key]));
                 } catch (ex) {
                     ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
                 }
@@ -66,9 +66,9 @@ class TraceConfig extends BasePluginConfig {
         if (options.integrations) {
             for (const intgr of options.integrations) {
                 if (typeof intgr === 'string') {
-                    this.integrations.push(new IntegrationConfig(intgr, {}));
+                    this.disabledIntegrations.push(new IntegrationConfig(intgr, {}));
                 } else {
-                    this.integrations.push(new IntegrationConfig(intgr.name, intgr.opt));
+                    this.disabledIntegrations.push(new IntegrationConfig(intgr.name, intgr.opt));
                 }
             }
         }
@@ -115,7 +115,7 @@ class TraceConfig extends BasePluginConfig {
 
     isConfigDisabled(name: string) {
         let disabled = false;
-        for (const config of this.integrations) {
+        for (const config of this.disabledIntegrations) {
             if (config.name === name && !config.enabled) {
                 disabled = true;
             }
