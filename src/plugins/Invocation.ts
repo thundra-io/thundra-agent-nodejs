@@ -37,6 +37,7 @@ class Invocation {
     }
 
     beforeInvocation = (data: any) => {
+        InvocationSupport.getInstance().removeTags();
         const { originalContext, reporter } = data;
         this.reporter = reporter;
         this.finishTimestamp = null;
