@@ -1,5 +1,5 @@
+import { DATA_MODEL_VERSION } from '../../dist/Constants';
 import Utils from '../../dist/plugins/Utils';
-import {DATA_MODEL_VERSION} from '../../dist/Constants';
 
 jest.mock('os', () => ({
     cpus: () => {
@@ -7,12 +7,12 @@ jest.mock('os', () => ({
             {
                 model: 'Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz',
                 speed: 2800,
-                times: {user: 60000, nice: 0, sys: 30000, idle: 9000000, irq: 0}
+                times: { user: 60000, nice: 0, sys: 30000, idle: 9000000, irq: 0 }
             },
             {
                 model: 'Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz',
                 speed: 2800,
-                times: {user: 50000, nice: 0, sys: 20000, idle: 9000000, irq: 0}
+                times: { user: 50000, nice: 0, sys: 20000, idle: 9000000, irq: 0 }
             }
         ]);
     }
@@ -21,6 +21,9 @@ jest.mock('os', () => ({
 jest.mock('../../dist/Constants', () => ({
     PROC_STAT_PATH: './test/mocks/mock-proc-stat',
     PROC_IO_PATH: './test/mocks/mock-proc-io',
+    envVariableKeys: {
+        THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX: 'thundra_agent_lambda_application_tag_'
+    }
 }));
 
 describe('getCpuUsage', () => {
@@ -64,14 +67,14 @@ describe('getCpuLoad', () => {
 describe('readProcStatPromise', () => {
     it('Should read proc stat file correctly', async () => {
         const procStatData = await Utils.readProcMetricPromise();
-        expect(procStatData).toEqual({threadCount: 20});
+        expect(procStatData).toEqual({ threadCount: 20 });
     });
 });
 
 describe('readProcIoPromise', () => {
     it('Should read proc io file correctly', async () => {
         const procIoData = await Utils.readProcIoPromise();
-        expect(procIoData).toEqual({readBytes: 5453, writeBytes: 323932160});
+        expect(procIoData).toEqual({ readBytes: 5453, writeBytes: 323932160 });
     });
 });
 
@@ -85,6 +88,29 @@ describe('generateReport', () => {
             dataModelVersion: DATA_MODEL_VERSION
         });
     });
+});
+
+describe('addApplicationTags', () => {
+    const THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX = 'thundra_agent_lambda_application_tag_';
+    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag1'] = '5';
+    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag2'] = 'true';
+    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag3'] = 'false';
+    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag4'] = 'test value';
+
+    const applicationTags = {};
+    Utils.addApplicationTags(applicationTags);
+
+    it('should parse application tags from environment variables', () => {
+        expect(applicationTags['tag1']).toBe(5);
+        expect(applicationTags['tag2']).toBe(true);
+        expect(applicationTags['tag3']).toBe(false);
+        expect(applicationTags['tag4']).toBe('test value');
+    });
+
+    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag1'] = null;
+    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag2'] = null;
+    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag3'] = null;
+    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag4'] = null;
 });
 
 describe('parseError', () => {
@@ -111,7 +137,7 @@ describe('parseError', () => {
     });
 
     describe('object error data', () => {
-        const error = {err: 'err', msg: 'msg'};
+        const error = { err: 'err', msg: 'msg' };
         const parsedError = Utils.parseError(error);
         it('should set error message correctly', () => {
             expect(parsedError.errorMessage).toEqual(JSON.stringify(error));

@@ -17,9 +17,10 @@ class BaseMonitoringData {
 
     constructor(type: MonitorDataType) {
         this.type = type;
+        this.applicationTags = {};
     }
 
-    initWithBaseMonitoringDataValues(data: BaseMonitoringData) {
+    initWithBaseMonitoringDataValues(data: BaseMonitoringData): void {
         this.agentVersion = data.agentVersion;
         this.dataModelVersion = data.dataModelVersion;
         this.applicationId = data.applicationId;

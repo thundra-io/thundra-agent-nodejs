@@ -12,7 +12,7 @@ import MonitorDataType from './data/base/MonitoringDataType';
 import BaseMonitoringData from './data/base/BaseMonitoringData';
 import BuildInfoLoader from '../BuildInfoLoader';
 import MonitoringDataType from './data/base/MonitoringDataType';
-import InvocationData from './data/invocation/InvacationData';
+import InvocationData from './data/invocation/InvocationData';
 import MetricData from './data/metric/MetricData';
 import TraceData from './data/trace/TraceData';
 import SpanData from './data/trace/SpanData';
@@ -196,17 +196,24 @@ class Utils {
         const domainName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_DOMAIN_NAME);
         const className = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_CLASS_NAME);
         const stage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
+        const applicationId = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_ID);
+        const applicationName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_NAME);
+        const applicationVersion = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_VERSION);
 
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = BuildInfoLoader.getAgentVersion();
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
-        monitoringData.applicationId = pluginContext ? pluginContext.applicationId : '';
+        monitoringData.applicationId = applicationId ? applicationId : (pluginContext ? pluginContext.applicationId : '');
         monitoringData.applicationDomainName =  domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
         monitoringData.applicationClassName = className ? className : LAMBDA_APPLICATION_CLASS_NAME;
-        monitoringData.applicationName = originalContext ? originalContext.functionName : '';
-        monitoringData.applicationVersion = pluginContext ? pluginContext.applicationVersion : '';
+        monitoringData.applicationName = applicationName ? applicationName :
+                                        (originalContext ? originalContext.functionName : '');
+        monitoringData.applicationVersion = applicationVersion ? applicationVersion :
+                                            (pluginContext ? pluginContext.applicationVersion : '');
         monitoringData.applicationStage = stage ? stage : '';
         monitoringData.applicationRuntimeVersion = process.version;
+
+        Utils.addApplicationTags(monitoringData.applicationTags);
 
         return monitoringData;
     }
@@ -233,6 +240,28 @@ class Utils {
         }
 
         return monitoringData;
+    }
+
+    static addApplicationTags(applicationTags: any): void {
+        for (const key of Object.keys(process.env)) {
+            if (key.startsWith(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX)) {
+                try {
+                    const propsKey = key.substring(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX.length);
+                    const propsValue = process.env[key];
+                    if (isNaN(parseInt(propsValue, 10))) {
+                        if (propsValue === 'true' || propsValue === 'false') {
+                            applicationTags[propsKey] = propsValue === 'true' ? true : false;
+                        } else {
+                            applicationTags[propsKey] = propsValue;
+                        }
+                    } else {
+                        applicationTags[propsKey] = parseInt(propsValue, 10);
+                    }
+                } catch (ex) {
+                    ThundraLogger.getInstance().error(`Cannot parse application tag ${key}`);
+                }
+            }
+        }
     }
 }
 
