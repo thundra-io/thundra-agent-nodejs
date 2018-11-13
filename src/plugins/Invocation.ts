@@ -1,11 +1,12 @@
 
-import InvocationData from './data/invocation/InvacationData';
+import InvocationData from './data/invocation/InvocationData';
 import Utils from './Utils';
 import TimeoutError from './error/TimeoutError';
 import InvocationConfig from './config/InvocationConfig';
 import {LAMBDA_FUNCTION_PLATFORM} from '../Constants';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
+import InvocationSupport from './support/InvocationSupport';
 
 class Invocation {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -44,7 +45,6 @@ class Invocation {
         this.invocationData = Utils.initMonitoringData(this.pluginContext,
             originalContext, MonitoringDataType.INVOCATION) as InvocationData;
 
-        this.invocationData.applicationTags = {};
         this.invocationData.functionPlatform = LAMBDA_FUNCTION_PLATFORM;
         this.invocationData.functionName = originalContext ? originalContext.functionName : '';
         this.invocationData.functionRegion = this.pluginContext.applicationRegion;
@@ -98,11 +98,14 @@ class Invocation {
                 this.invocationData.tags['error.stack'] = error.stack;
             }
         }
+
+        this.invocationData.setTags(InvocationSupport.getInstance().getTags());
         this.finishTimestamp = Date.now();
         this.invocationData.finishTimestamp = this.finishTimestamp;
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);
+        InvocationSupport.getInstance().removeTags();
     }
 }
 
