@@ -92,7 +92,7 @@ class Log {
 
     reportLog = (logInfo: any) => {
         const logData = new LogData();
-        const activeSpan = this.tracer.getActiveSpan();
+        const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
         const spanId = activeSpan ? activeSpan.spanContext.spanId : '';
         logData.initWithLogDataValues(this.logData, spanId, logInfo);
 

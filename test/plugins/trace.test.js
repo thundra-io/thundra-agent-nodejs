@@ -231,8 +231,9 @@ describe('Trace', () => {
         const tracer = Trace();
         tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
+        const testError = Error('error message');
         const afterInvocationData = {
-            error: Error('error message'),
+            error: testError,
             response: { key: 'data' }
         };
         tracer.report = jest.fn();
@@ -252,7 +253,7 @@ describe('Trace', () => {
                 errorMessage: 'error message',
                 errorType: 'Error',
                 code: 0,
-                stack: null
+                stack: testError.stack
             });
             expect(tracer.traceData.finishTimestamp).toBeTruthy();
             expect(tracer.traceData.duration).toEqual(tracer.finishTimestamp - tracer.startTimestamp);

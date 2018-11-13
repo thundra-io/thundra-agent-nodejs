@@ -8,7 +8,6 @@ import ThundraLogger from '../../ThundraLogger';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
-
 class RedisIntegration implements Integration {
   version: string;
   lib: any;
@@ -16,7 +15,7 @@ class RedisIntegration implements Integration {
   hook: any;
   basedir: string;
 
-  constructor(tracer: ThundraTracer, config: any) {
+  constructor(config: any) {
     this.version = '^2.6';
     this.hook = Hook('redis', { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'redis') {

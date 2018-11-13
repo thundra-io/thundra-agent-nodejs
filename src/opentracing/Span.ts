@@ -21,7 +21,7 @@ class ThundraSpan extends Span {
     super();
     fields = fields ? fields : {};
     const startTime = fields.startTime || Date.now();
-    const operationName = fields.operationName;
+    const operationName = fields.operationName ? fields.operationName : '';
     const parent = fields.parent || null;
     const tags = fields.tags || {};
 

@@ -36,8 +36,9 @@ class HttpIntegration implements Integration {
         options = typeof options === 'string' ? url.parse(options) : options;
         const host = options.hostname || options.host || 'localhost';
         const path = options.path || options.pathname || '/';
+        const queryParams = path.split('?').length > 1 ? path.split('?')[1] : '';
 
-        if (host === 'api.thundra.io' || host === 'serverless.com') {
+        if (host === 'api.thundra.io' || host === 'serverless.com' || host.indexOf('amazonaws.com') !== -1) {
           return request.apply(this, [options, callback]);
         }
 
@@ -56,6 +57,7 @@ class HttpIntegration implements Integration {
           [HttpTags.HTTP_HOST]: host,
           [HttpTags.HTTP_PATH]: path,
           [HttpTags.HTTP_URL]: host + path,
+          [HttpTags.QUERY_PARAMS]: queryParams,
         });
 
         const req = request.call(this, options, callback);

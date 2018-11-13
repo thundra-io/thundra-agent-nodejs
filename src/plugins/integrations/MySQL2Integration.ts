@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import { DBTags, SpanTags, SpanTypes, DomainNames, ClassNames } from '../../Constants';
+import { DBTags, SpanTags, SpanTypes, DomainNames, ClassNames, DBTypes } from '../../Constants';
 import Utils from '../Utils';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
@@ -55,6 +55,7 @@ class MySQL2Integration implements Integration {
           [DBTags.DB_USER]: this.config.user,
           [DBTags.DB_HOST]: this.config.host,
           [DBTags.DB_PORT]: this.config.port,
+          [DBTags.DB_TYPE]: DBTypes.MYSQL,
         });
 
         const sequence = query.call(this, sql, values, cb);
