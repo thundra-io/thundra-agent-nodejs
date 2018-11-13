@@ -21,6 +21,7 @@ import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
 import TimeoutError from './error/TimeoutError';
+import { DomainNames, ClassNames } from '../Constants';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -64,6 +65,8 @@ export class Trace {
 
         this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
             rootTraceId: this.pluginContext.traceId,
+            domainName: DomainNames.API,
+            className: ClassNames.LAMBDA,
         });
 
         // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.

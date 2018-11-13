@@ -139,6 +139,8 @@ class AWSIntegration implements Integration {
             activeSpan = tracer._startSpan(lambdaName, {
               childOf: parentSpan,
               disableActiveStart: true,
+              domainName: DomainNames.API,
+              className: ClassNames.LAMBDA,
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_LAMBDA,
                 [SpanTags.OPERATION_TYPE]: operationType,
