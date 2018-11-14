@@ -8,22 +8,20 @@
 * thundra_lambda_publish_cloudwatch_enable is not set), otherwise it logs the report for async monitoring.
 *
 */
-// import AuditInfo from './data/trace/AuditInfo';;
+
 import ThundraTracer from '../opentracing/Tracer';
 import Utils from './Utils';
 import TraceData from './data/trace/TraceData';
 import { initGlobalTracer } from 'opentracing';
 import HttpError from './error/HttpError';
-import { INTEGRATIONS, envVariableKeys } from '../Constants';
 import Reporter from '../Reporter';
 import TraceConfig from './config/TraceConfig';
-import Instrumenter from '../opentracing/instrument/Instrumenter';
-import Integration from './integrations/Integration';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
 import TimeoutError from './error/TimeoutError';
+import { DomainNames, ClassNames } from '../Constants';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -67,6 +65,8 @@ export class Trace {
 
         this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
             rootTraceId: this.pluginContext.traceId,
+            domainName: DomainNames.API,
+            className: ClassNames.LAMBDA,
         });
 
         // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.

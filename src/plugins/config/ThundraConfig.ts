@@ -4,6 +4,7 @@ import InvocationConfig from './InvocationConfig';
 import { TIMEOUT_MARGIN, envVariableKeys } from '../../Constants';
 import LogConfig from './LogConfig';
 import Utils from '../Utils';
+import AwsXRayConfig from './AwsXRayConfig';
 const koalas = require('koalas');
 
 class ThundraConfig {
@@ -15,6 +16,7 @@ class ThundraConfig {
     metricConfig: MetricConfig;
     invocationConfig: InvocationConfig;
     logConfig: LogConfig;
+    xrayConfig: AwsXRayConfig;
     timeoutMargin: number;
     plugins: any[];
 
@@ -29,6 +31,7 @@ class ThundraConfig {
         this.metricConfig = new MetricConfig(options.metricConfig);
         this.logConfig = new LogConfig(options.logConfig);
         this.invocationConfig = new InvocationConfig(options.invocationConfig);
+        this.xrayConfig = new AwsXRayConfig(options.xrayConfig);
         this.trustAllCert = koalas(Utils.getConfiguration(
             envVariableKeys.THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES), options.trustAllCert, false);
     }

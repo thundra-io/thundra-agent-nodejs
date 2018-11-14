@@ -60,7 +60,7 @@ class Metric {
         this.metricData.metricTimestamp = Date.now();
         this.metricData.tags['aws.region'] = this.pluginContext.applicationRegion;
 
-        const activeSpan = this.tracer.getActiveSpan();
+        const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
         this.metricData.transactionId = this.pluginContext.transactionId ?
             this.pluginContext.transactionId : originalContext.awsRequestId;
         this.metricData.spanId = activeSpan ? activeSpan.spanContext.spanId : '';

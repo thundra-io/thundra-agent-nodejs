@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import { DBTags, SpanTags, SpanTypes, DomainNames, ClassNames } from '../../Constants';
+import { DBTags, SpanTags, SpanTypes, DomainNames, ClassNames, DBTypes } from '../../Constants';
 import Utils from '../Utils';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
@@ -59,6 +59,7 @@ class PostgreIntegration implements Integration {
             [DBTags.DB_USER]: params.user,
             [DBTags.DB_HOST]: params.host,
             [DBTags.DB_PORT]: params.port,
+            [DBTags.DB_TYPE]: DBTypes.PG,
           });
         }
 

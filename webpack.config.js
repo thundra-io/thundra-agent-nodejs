@@ -6,6 +6,9 @@ module.exports = {
     mode : 'production' ,
     entry: './src/index.ts',
     target: 'node',
+    externals: {
+        'aws-xray-sdk-core' : 'aws-xray-sdk-core'
+    },
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: './thundra.js',

@@ -73,6 +73,7 @@ class Utils {
         if (err instanceof Error) {
             error.errorType = err.name;
             error.errorMessage = err.message;
+            error.stack = err.stack;
         } else if (typeof err === 'string') {
             error.errorMessage = err.toString();
         } else {

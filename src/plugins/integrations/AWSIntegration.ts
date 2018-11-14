@@ -128,7 +128,7 @@ class AWSIntegration implements Integration {
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
                 [AwsS3Tags.BUCKET_NAME]: request.params.Bucket,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                [AwsS3Tags.OBJECT_NAME]: request.params.Body,
+                [AwsS3Tags.OBJECT_NAME]: request.params.Key,
               },
             });
           } else if (serviceName === 'lambda') {
@@ -139,6 +139,8 @@ class AWSIntegration implements Integration {
             activeSpan = tracer._startSpan(lambdaName, {
               childOf: parentSpan,
               disableActiveStart: true,
+              domainName: DomainNames.API,
+              className: ClassNames.LAMBDA,
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_LAMBDA,
                 [SpanTags.OPERATION_TYPE]: operationType,

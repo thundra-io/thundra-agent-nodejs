@@ -19,6 +19,7 @@ export const envVariableKeys = {
     THUNDRA_DISABLE_TRACE: 'thundra_agent_lambda_trace_disable',
     THUNDRA_DISABLE_METRIC: 'thundra_agent_lambda_metric_disable',
     THUNDRA_DISABLE_LOG: 'thundra_agent_lambda_log_disable',
+    THUNDRA_DISABLE_XRAY: 'thundra_agent_lambda_xray_disable',
 
     THUNDRA_LAMBDA_TRACE_REQUEST_SKIP: 'thundra_agent_lambda_trace_request_skip',
     THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP: 'thundra_agent_lambda_trace_response_skip',
@@ -167,6 +168,8 @@ export const DBTags = {
 export const DBTypes = {
     DYNAMODB: ' aws-dynamodb',
     REDIS: 'redis',
+    PG: 'pg',
+    MYSQL: 'mysql',
 };
 
 export const HttpTags = {
@@ -175,6 +178,7 @@ export const HttpTags = {
     HTTP_PATH: 'http.path',
     HTTP_HOST: 'http.host',
     HTTP_STATUS: 'http.status_code',
+    QUERY_PARAMS: 'http.query_params',
 };
 
 export const RedisTags = {
@@ -438,4 +442,9 @@ export const S3RequestTypes: any = {
     listBuckets: 'READ',
     putObject: 'WRITE',
     putObjectAcl: 'WRITE',
+};
+
+export const AwsXrayConstants: any = {
+    DEFAULT_OPERATION_NAME: 'AWS X-Ray',
+    XRAY_SUBSEGMENTED_TAG_NAME: 'THUNDRA::XRAY_SUBSEGMENTED',
 };

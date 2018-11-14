@@ -2,6 +2,7 @@ import { Tracer } from 'opentracing';
 import ThundraSpan, { SpanEvent } from './Span';
 import ThundraRecorder from './Recorder';
 import Utils from '../plugins/Utils';
+import ThundraSpanListener from '../plugins/listeners/ThundraSpanListener';
 
 class ThundraTracer extends Tracer {
   static instance: ThundraTracer;
@@ -20,7 +21,7 @@ class ThundraTracer extends Tracer {
   }
 
   static getInstance(): ThundraTracer {
-    return ThundraTracer.instance ? ThundraTracer.instance : new ThundraTracer();
+    return ThundraTracer.instance;
   }
 
   getActiveSpan(): ThundraSpan {
@@ -48,6 +49,10 @@ class ThundraTracer extends Tracer {
   destroy(): void {
     this.recorder.destroy();
     this.activeSpans.clear();
+  }
+
+  addSpanListener(listener: ThundraSpanListener) {
+    this.recorder.addListener(listener);
   }
 
   wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
