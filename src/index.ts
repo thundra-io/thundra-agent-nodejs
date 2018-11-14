@@ -140,5 +140,6 @@ module.exports.config = {
     ErrorAwareSamplerConfig,
     TimeAwareSamplerConfig,
     AwsXRayConfig,
-    InvocationSupport,
 };
+
+module.exports.InvocationSupport = InvocationSupport;
