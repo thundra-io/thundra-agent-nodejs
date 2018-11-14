@@ -2,8 +2,14 @@ import ThundraSpanListener from './ThundraSpanListener';
 import ThundraSpan from '../../opentracing/Span';
 import ThundraLogger from '../../ThundraLogger';
 import {AwsXrayConstants } from '../../Constants';
-const AWSXRay =  require('aws-xray-sdk-core');
-const Subsegment = AWSXRay.Subsegment;
+
+let AWSXRay: any;
+let Subsegment: any;
+try {
+    AWSXRay = require('aws-xray-sdk-core');
+    Subsegment = AWSXRay.Subsegment;
+// tslint:disable-next-line:no-empty
+} catch (err) {}
 
 class AwsXRayThundraSpanListener  implements ThundraSpanListener {
     subsegmentMap: Map<string, any>;
@@ -16,6 +22,10 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
 
     onSpanStarted(span: ThundraSpan): void {
         try {
+            if (!AWSXRay) {
+                ThundraLogger.getInstance().error('XRay plugin is enabled but cannot load module aws-xray-sdk-core.');
+                return;
+            }
             const operationName = this.normalizeOperationName(span.getOperationName());
             span.setTag(AwsXrayConstants.XRAY_SUBSEGMENTED_TAG_NAME, true);
 
@@ -30,6 +40,10 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
 
     onSpanFinished(span: ThundraSpan): void {
         try {
+            if (!AWSXRay) {
+                ThundraLogger.getInstance().error('XRay plugin is enabled but cannot load module aws-xray-sdk-core.');
+                return;
+            }
             if (span.getTag(AwsXrayConstants.XRAY_SUBSEGMENTED_TAG_NAME)) {
                 const subsegment = this.subsegmentMap.get(span.spanContext.spanId);
                 if (subsegment) {
