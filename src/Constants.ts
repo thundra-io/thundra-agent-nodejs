@@ -40,7 +40,7 @@ export const envVariableKeys = {
     THUNDRA_AGENT_METRIC_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_metric_sample_sampler_countAware_countFreq',
 
     THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX: 'thundra_agent_lambda_application_tag_',
-    THUNDRA_APPLICATION_ID: 'thundra_agent_application_id',
+    THUNDRA_APPLICATION_ID: 'thundra_agent_lambda_application_id',
     THUNDRA_APPLICATION_NAME: 'thundra_agent_lambda_application_name',
 
 };
