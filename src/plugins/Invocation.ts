@@ -37,7 +37,7 @@ class Invocation {
     }
 
     beforeInvocation = (data: any) => {
-        InvocationSupport.getInstance().removeTags();
+        InvocationSupport.removeTags();
         const { originalContext, reporter } = data;
         this.reporter = reporter;
         this.finishTimestamp = null;
@@ -100,13 +100,13 @@ class Invocation {
             }
         }
 
-        this.invocationData.setTags(InvocationSupport.getInstance().getTags());
+        this.invocationData.setTags(InvocationSupport.tags);
         this.finishTimestamp = Date.now();
         this.invocationData.finishTimestamp = this.finishTimestamp;
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);
-        InvocationSupport.getInstance().removeTags();
+        InvocationSupport.removeTags();
     }
 }
 

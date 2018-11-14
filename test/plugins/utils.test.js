@@ -20,10 +20,7 @@ jest.mock('os', () => ({
 
 jest.mock('../../dist/Constants', () => ({
     PROC_STAT_PATH: './test/mocks/mock-proc-stat',
-    PROC_IO_PATH: './test/mocks/mock-proc-io',
-    envVariableKeys: {
-        THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX: 'thundra_agent_lambda_application_tag_'
-    }
+    PROC_IO_PATH: './test/mocks/mock-proc-io'
 }));
 
 describe('getCpuUsage', () => {
@@ -88,29 +85,6 @@ describe('generateReport', () => {
             dataModelVersion: DATA_MODEL_VERSION
         });
     });
-});
-
-describe('addApplicationTags', () => {
-    const THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX = 'thundra_agent_lambda_application_tag_';
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag1'] = '5';
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag2'] = 'true';
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag3'] = 'false';
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag4'] = 'test value';
-
-    const applicationTags = {};
-    Utils.addApplicationTags(applicationTags);
-
-    it('should parse application tags from environment variables', () => {
-        expect(applicationTags['tag1']).toBe(5);
-        expect(applicationTags['tag2']).toBe(true);
-        expect(applicationTags['tag3']).toBe(false);
-        expect(applicationTags['tag4']).toBe('test value');
-    });
-
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag1'] = null;
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag2'] = null;
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag3'] = null;
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag4'] = null;
 });
 
 describe('parseError', () => {

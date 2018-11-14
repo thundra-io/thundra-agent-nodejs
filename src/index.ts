@@ -24,6 +24,7 @@ import Logger from './plugins/Logger';
 import Log from './plugins/Log';
 import AwsXRayConfig from './plugins/config/AwsXRayConfig';
 import InvocationSupport from './plugins/support/InvocationSupport';
+import ApplicationSupport from './plugins/support/ApplicationSupport';
 
 const ThundraWarmup = require('@thundra/warmup');
 
@@ -64,6 +65,8 @@ module.exports = (options: any) => {
     if (config.trustAllCert) {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
+
+    ApplicationSupport.parseApplicationTags();
 
     const logStreamName = Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
     const region =  Utils.getConfiguration(envVariableKeys.AWS_REGION);

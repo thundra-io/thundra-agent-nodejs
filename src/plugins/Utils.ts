@@ -18,6 +18,7 @@ import TraceData from './data/trace/TraceData';
 import SpanData from './data/trace/SpanData';
 import LogData from './data/log/LogData';
 import ThundraLogger from '../ThundraLogger';
+import ApplicationSupport from './support/ApplicationSupport';
 
 class Utils {
     static generateId(): string {
@@ -213,7 +214,7 @@ class Utils {
         monitoringData.applicationStage = stage ? stage : '';
         monitoringData.applicationRuntimeVersion = process.version;
 
-        Utils.addApplicationTags(monitoringData.applicationTags);
+        monitoringData.applicationTags = {...monitoringData.applicationTags, ...ApplicationSupport.applicationTags};
 
         return monitoringData;
     }
@@ -240,28 +241,6 @@ class Utils {
         }
 
         return monitoringData;
-    }
-
-    static addApplicationTags(applicationTags: any): void {
-        for (const key of Object.keys(process.env)) {
-            if (key.startsWith(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX)) {
-                try {
-                    const propsKey = key.substring(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX.length);
-                    const propsValue = process.env[key];
-                    if (isNaN(parseInt(propsValue, 10))) {
-                        if (propsValue === 'true' || propsValue === 'false') {
-                            applicationTags[propsKey] = propsValue === 'true' ? true : false;
-                        } else {
-                            applicationTags[propsKey] = propsValue;
-                        }
-                    } else {
-                        applicationTags[propsKey] = parseInt(propsValue, 10);
-                    }
-                } catch (ex) {
-                    ThundraLogger.getInstance().error(`Cannot parse application tag ${key}`);
-                }
-            }
-        }
     }
 }
 

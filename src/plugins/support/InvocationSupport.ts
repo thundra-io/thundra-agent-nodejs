@@ -1,47 +1,32 @@
 import ThundraLogger from '../../ThundraLogger';
 
 class InvocationSupport {
-    static instance: InvocationSupport;
+    static tags: any = {};
 
-    tags: Map<string, any>;
-
-    constructor() {
-        this.tags = new Map<string, any>();
-        InvocationSupport.instance = this;
-    }
-
-    static getInstance(): InvocationSupport {
-        return InvocationSupport.instance ? InvocationSupport.instance : new InvocationSupport();
-    }
-
-    setTag(key: string, value: any): void {
+    static setTag(key: string, value: any): void {
         try {
-            this.tags.set(key, value);
+            InvocationSupport.tags[key] = value;
         } catch (e) {
             ThundraLogger.getInstance().error(e);
         }
     }
 
-    getTag(key: string): any {
-        return this.tags.get(key);
+    static getTag(key: string): any {
+        return InvocationSupport.tags[key];
     }
 
-    setTags(keyValuePairs: {[key: string]: any }): void {
+    static setTags(keyValuePairs: {[key: string]: any }): void {
         try {
             Object.keys(keyValuePairs).forEach((key) => {
-              this.tags.set(key, keyValuePairs[key]);
+                InvocationSupport.tags[key] = keyValuePairs[key];
             });
         } catch (e) {
             ThundraLogger.getInstance().error(e);
         }
     }
 
-    getTags(): Map<string, any> {
-        return this.tags;
-    }
-
-    removeTags(): void {
-        this.tags.clear();
+    static removeTags(): void {
+        InvocationSupport.tags = {};
     }
 }
 
