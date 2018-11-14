@@ -55,10 +55,6 @@ class ThundraTracer extends Tracer {
     this.recorder.addListener(listener);
   }
 
-  clearListeners(): any {
-    this.recorder.clearListeners();
-  }
-
   wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
     const activeSpan = this.getActiveSpan();
     const span: ThundraSpan = this.startSpan(spanName, { childOf: activeSpan }) as ThundraSpan;

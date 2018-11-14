@@ -61,13 +61,6 @@ class ThundraRecorder {
         this.listeners.push(listener);
     }
 
-    clearListeners(): any {
-        for (const listener of this.listeners) {
-            listener.onDestroy();
-        }
-        this.listeners = [];
-    }
-
     destroy() {
         this.activeSpanStack.clear();
         this.spanList = [];

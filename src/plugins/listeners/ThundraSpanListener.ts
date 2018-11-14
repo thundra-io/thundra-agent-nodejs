@@ -15,12 +15,6 @@ interface ThundraSpanListener {
      * @param span the finished {@link ThundraSpan span}
      */
     onSpanFinished: (span: ThundraSpan) => void;
-
-    /**
-     * Called when {@link ThundraTracer} has finished.
-     */
-
-    onDestroy: () => void;
 }
 
 export default ThundraSpanListener;

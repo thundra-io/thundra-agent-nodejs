@@ -28,13 +28,7 @@ class AwsXRay {
         };
 
         this.config = config;
-    }
 
-    setPluginContext = (pluginContext: PluginContext) => {
-        this.pluginContext = pluginContext;
-    }
-
-    beforeInvocation = (data: any) => {
         const tracer = ThundraTracer.getInstance();
         if (tracer) {
             tracer.addSpanListener(new AwsXRayThundraSpanListener(this.pluginContext));
@@ -44,12 +38,15 @@ class AwsXRay {
         }
     }
 
-    afterInvocation = (data: any) => {
-        const tracer = ThundraTracer.getInstance();
-        if (tracer) {
-            ThundraTracer.getInstance().clearListeners();
-        }
+    setPluginContext = (pluginContext: PluginContext) => {
+        this.pluginContext = pluginContext;
     }
+
+    // tslint:disable-next-line:no-empty
+    beforeInvocation = (data: any) => {};
+
+    // tslint:disable-next-line:no-empty
+    afterInvocation = (data: any) => {};
 }
 
 export default function instantiateAwsXRayPlugin(config: AwsXRayConfig) {
