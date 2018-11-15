@@ -1,5 +1,6 @@
 import BaseMonitoringData from '../base/BaseMonitoringData';
 import MonitorDataType from '../base/MonitoringDataType';
+import ThundraLogger from '../../../ThundraLogger';
 
 class InvocationData extends BaseMonitoringData {
     traceId: string;
@@ -20,6 +21,16 @@ class InvocationData extends BaseMonitoringData {
 
     constructor() {
         super(MonitorDataType.INVOCATION);
+    }
+
+    setTags(keyValuePairs: {[key: string]: any }): void {
+        try {
+            Object.keys(keyValuePairs).forEach((key) => {
+              this.tags[key] = keyValuePairs[key];
+            });
+        } catch (e) {
+            ThundraLogger.getInstance().error(e);
+        }
     }
 }
 

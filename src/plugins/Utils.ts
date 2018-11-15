@@ -12,12 +12,13 @@ import MonitorDataType from './data/base/MonitoringDataType';
 import BaseMonitoringData from './data/base/BaseMonitoringData';
 import BuildInfoLoader from '../BuildInfoLoader';
 import MonitoringDataType from './data/base/MonitoringDataType';
-import InvocationData from './data/invocation/InvacationData';
+import InvocationData from './data/invocation/InvocationData';
 import MetricData from './data/metric/MetricData';
 import TraceData from './data/trace/TraceData';
 import SpanData from './data/trace/SpanData';
 import LogData from './data/log/LogData';
 import ThundraLogger from '../ThundraLogger';
+import ApplicationSupport from './support/ApplicationSupport';
 
 class Utils {
     static generateId(): string {
@@ -196,17 +197,24 @@ class Utils {
         const domainName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_DOMAIN_NAME);
         const className = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_CLASS_NAME);
         const stage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
+        const applicationId = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_ID);
+        const applicationName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_NAME);
+        const applicationVersion = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_VERSION);
 
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = BuildInfoLoader.getAgentVersion();
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
-        monitoringData.applicationId = pluginContext ? pluginContext.applicationId : '';
+        monitoringData.applicationId = applicationId ? applicationId : (pluginContext ? pluginContext.applicationId : '');
         monitoringData.applicationDomainName =  domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
         monitoringData.applicationClassName = className ? className : LAMBDA_APPLICATION_CLASS_NAME;
-        monitoringData.applicationName = originalContext ? originalContext.functionName : '';
-        monitoringData.applicationVersion = pluginContext ? pluginContext.applicationVersion : '';
+        monitoringData.applicationName = applicationName ? applicationName :
+                                        (originalContext ? originalContext.functionName : '');
+        monitoringData.applicationVersion = applicationVersion ? applicationVersion :
+                                            (pluginContext ? pluginContext.applicationVersion : '');
         monitoringData.applicationStage = stage ? stage : '';
         monitoringData.applicationRuntimeVersion = process.version;
+
+        monitoringData.applicationTags = {...monitoringData.applicationTags, ...ApplicationSupport.applicationTags};
 
         return monitoringData;
     }
