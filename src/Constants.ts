@@ -191,7 +191,7 @@ export const RedisTags = {
     REDIS_PORT: 'redis.port',
     REDIS_COMMAND: 'redis.command',
     REDIS_COMMANDS: 'redis.commands',
-    REDIS_COMMAND_TYPE: 'redis.comand.type',
+    REDIS_COMMAND_TYPE: 'redis.command.type',
     REDIS_COMMAND_ARGS: 'redis.command.args',
 };
 

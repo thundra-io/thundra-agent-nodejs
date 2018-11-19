@@ -32,7 +32,7 @@ describe('Redis Integration', () => {
             expect(writeCommandSpan.tags['redis.host']).toBe('127.0.0.1');
             expect(writeCommandSpan.tags['redis.port']).toBe('6379');
             expect(writeCommandSpan.tags['redis.command']).toBe('SET');
-            expect(writeCommandSpan.tags['redis.comand.type']).toBe('WRITE');
+            expect(writeCommandSpan.tags['redis.command.type']).toBe('WRITE');
             expect(writeCommandSpan.tags['redis.command.args']).toBe('string key,string val');
         
         });
