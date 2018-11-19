@@ -6,10 +6,11 @@
   "scripts": {
     "precompile": "node create-build-info.js",
     "compile": "tsc",
-    "build": "node create-build-info.js;webpack",
+    "build": "node create-build-info.js;webpack;",
     "start": "npm-run-all --parallel watch:server watch:build",
-    "test": "npm run compile; jest --coverage",
-    "test-ci": "npm run compile;  jest --config config.json --coverage; cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "test-automatic-instrumentation": "node ./test/instrumentation/automated.instrumentation.js",
+    "test": "npm run test-automatic-instrumentation; docker-compose up -d; npm run compile; jest --coverage; docker-compose stop",
+    "test-ci": "npm run test-automatic-instrumentation; npm run compile;  jest --config config.json --coverage; cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js;",
     "lint": "tslint --project tsconfig.json -t stylish",
     "release-minor": "npm install; npm run build; release-it minor -n --npm.publish --src.commit --src.tag --no-src.push --src.tagName='v%s' --github.release",
     "release": "npm install; npm run build; release-it -n --npm.publish --src.commit --src.tag --src.push --no-src.push --src.tagName='v%s' --github.release"
@@ -42,6 +43,8 @@
     "@types/minimatch": "^3.0.3",
     "@types/node": "^10.5.0",
     "@types/uuid": "^3.4.3",
+    "aws-sdk": "^2.358.0",
+    "aws-xray-sdk-core": "^2.0.1",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.3",
     "babel-jest": "^23.4.0",
@@ -69,7 +72,7 @@
     "uglifyjs-webpack-plugin": "^1.2.5",
     "webpack": "^4.14.0",
     "webpack-cli": "^3.0.8",
-    "aws-xray-sdk-core": "^2.0.1"
+    "mysql2": "1.6.1"
   },
   "dependencies": {
     "@thundra/warmup": "1.0.0",

@@ -171,7 +171,7 @@ export const DBTags = {
 };
 
 export const DBTypes = {
-    DYNAMODB: ' aws-dynamodb',
+    DYNAMODB: 'aws-dynamodb',
     REDIS: 'redis',
     PG: 'pg',
     MYSQL: 'mysql',
@@ -431,7 +431,6 @@ export const KinesisRequestTypes: any = {
 };
 
 export const FirehoseRequestTypes: any = {
-    getRecords: 'READ',
     putRecordBatch: 'WRITE',
     putRecord: 'WRITE',
 };

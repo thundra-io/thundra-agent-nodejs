@@ -55,7 +55,7 @@ class HttpIntegration implements Integration {
           [SpanTags.SPAN_TYPE]: SpanTypes.HTTP,
           [HttpTags.HTTP_METHOD]: method,
           [HttpTags.HTTP_HOST]: host,
-          [HttpTags.HTTP_PATH]: path,
+          [HttpTags.HTTP_PATH]: path.split('?')[0],
           [HttpTags.HTTP_URL]: host + path,
           [HttpTags.QUERY_PARAMS]: queryParams,
         });

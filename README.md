@@ -5,7 +5,7 @@
 
 Instrument and profile your AWS lambda functions with zero overhead.
 
-Check out [example projects](https://github.com/thundra-io/thundra-examples-lambda-nodejs) for a quick start and [Thundra docs](https://thundra.readme.io/docs) for more information.
+Check out [example projects](https://github.com/thundra-io/thundra-examples-lambda-nodejs) for a quick start and [Thundra docs](https://docs.thundra.io/) for more information.
 
 ## Installation
 
