@@ -195,7 +195,7 @@ class ThundraWrapper {
         if (pluginContext.timeoutMargin < 1 || getRemainingTimeInMillis() < 10) {
             return undefined;
         }
-        const maxEndTime = 299900;
+        const maxEndTime = 899900;
         const configEndTime = Math.max(
             0,
             getRemainingTimeInMillis() - pluginContext.timeoutMargin,
