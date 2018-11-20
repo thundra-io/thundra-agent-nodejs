@@ -70,6 +70,7 @@ class AWSIntegration implements Integration {
               disableActiveStart: true,
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SQS,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsSQSTags.QUEUE_NAME]: queueName,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
               },
@@ -77,8 +78,7 @@ class AWSIntegration implements Integration {
           } else if (serviceName === 'sns') {
             const operationName = request.operation;
             const operationType = SNSRequesTypes[operationName];
-            const topicName = operationType ?
-            Utils.getTopicName(request.params.QueueUrl) : AWS_SERVICE_REQUEST;
+            const topicName = request.params ? request.params.TopicArn : '';
 
             activeSpan = tracer._startSpan(topicName, {
               childOf: parentSpan,
@@ -153,8 +153,7 @@ class AWSIntegration implements Integration {
             });
           } else if (serviceName === 'kinesis') {
             const operationName = request.operation;
-            const streamName = KinesisRequestTypes[operationName] ?
-              request.params.StreamName : AWS_SERVICE_REQUEST;
+            const streamName = request.params ? request.params.StreamName : '';
 
             activeSpan = tracer._startSpan(streamName, {
               childOf: parentSpan,
@@ -171,8 +170,7 @@ class AWSIntegration implements Integration {
             });
           } else if (serviceName === 'firehose') {
             const operationName = request.operation;
-            const streamName = FirehoseRequestTypes[operationName] ?
-              request.params.StreamName : AWS_SERVICE_REQUEST;
+            const streamName = request.params ? request.params.DeliveryStreamName : '';
 
             activeSpan = tracer._startSpan(streamName, {
               childOf: parentSpan,
@@ -182,7 +180,7 @@ class AWSIntegration implements Integration {
               tags: {
                 [SpanTags.OPERATION_TYPE]: FirehoseRequestTypes[operationName] ?
                   FirehoseRequestTypes[operationName] : 'READ',
-                [SpanTags.SPAN_TYPE]: SpanTypes.AWS_KINESIS,
+                [SpanTags.SPAN_TYPE]: SpanTypes.AWS_FIREHOSE,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsFirehoseTags.STREAM_NAME]: streamName,
               },
