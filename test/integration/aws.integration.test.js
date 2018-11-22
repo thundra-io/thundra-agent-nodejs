@@ -96,7 +96,7 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('Messaging');
             expect(span.tags['aws.request.name']).toBe('publish');
             expect(span.tags['aws.sns.topic.name']).toBe('TEST_TOPIC');
-            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['operation.type']).toBe('WRITE');
         });
     }); 
     

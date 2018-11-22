@@ -2,7 +2,7 @@ import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import {
   AwsSDKTags, AwsSQSTags, AwsSNSTags, SpanTags, AwsDynamoTags,
-  SNSRequesTypes, SQSRequestTypes, AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
+  SNSRequestTypes, SQSRequestTypes, AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
   SpanTypes, DynamoDBRequestTypes, KinesisRequestTypes, ClassNames, DomainNames,
   DBTags, DBTypes, FirehoseRequestTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST, S3RequestTypes, LambdaRequestType,
 } from '../../Constants';
@@ -77,7 +77,7 @@ class AWSIntegration implements Integration {
             });
           } else if (serviceName === 'sns') {
             const operationName = request.operation;
-            const operationType = SNSRequesTypes[operationName];
+            const operationType = SNSRequestTypes[operationName];
             const topicName = request.params ? request.params.TopicArn : '';
 
             activeSpan = tracer._startSpan(topicName, {

@@ -268,8 +268,9 @@ export const SQSRequestTypes: any = {
     deleteMessageBatch: 'DELETE',
 };
 
-export const SNSRequesTypes: any = {
+export const SNSRequestTypes: any = {
     write: 'WRITE',
+    publish: 'WRITE',
 };
 
 export const LambdaRequestType: any = {

@@ -16,7 +16,7 @@ describe('Redis Integration', () => {
 
             let writeCommandSpan;
             spanList.forEach((span) => {
-                if (span.tags['redis.comand.type'] === 'WRITE') {
+                if (span.tags['redis.command.type'] === 'WRITE') {
                     writeCommandSpan = span;
                 }
             });
