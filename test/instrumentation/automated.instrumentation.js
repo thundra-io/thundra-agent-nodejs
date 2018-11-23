@@ -25,6 +25,7 @@ const automatic_instrumentation_test = function () {
     const spanList = tracer.getRecorder().spanList;
 
     assert.equal(spanList.length, 2);
+    assert.equal(spanList[0].className, 'Method');
     assert.equal(spanList[0].operationName, 'test.instrumentation.utils.automated.instrumentation.util.f1');
     assert.equal(spanList[0].tags['method.args'][0].name, 'a');
     assert.equal(spanList[0].tags['method.args'][0].type, 'number');
@@ -33,6 +34,7 @@ const automatic_instrumentation_test = function () {
     assert.equal(spanList[0].tags['method.return_value'].value, 1);
 
     assert.equal(spanList[1].operationName, 'test.instrumentation.utils.automated.instrumentation.util.module.exports.test_function');
+    assert.equal(spanList[1].className, 'Method');
     assert.equal(spanList[1].tags['method.args'].length, 0);
     assert.equal(spanList[1].tags['method.return_value'].type, 'number');
     assert.equal(spanList[1].tags['method.return_value'].value, returnValue);

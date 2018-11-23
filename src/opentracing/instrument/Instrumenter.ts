@@ -8,6 +8,7 @@ import Stack from './Stack';
 import NodeWrapper from './NodeWrapper';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraTracer from '../Tracer';
+import ThundraSpan from '../Span';
 
 const Module = require('module');
 const falafel = require('falafel');
@@ -221,7 +222,9 @@ class Instrumenter {
     setGlobalFunction() {
         global.__thundraTraceEntry__ = function (args: any) {
             try {
-                const span = ThundraTracer.getInstance().startSpan(args.path + '.' + args.name);
+                const span = ThundraTracer.getInstance().startSpan(args.path + '.' + args.name) as ThundraSpan;
+                span.className = 'Method';
+
                 const spanArguments: Argument[] = [];
                 if (args.args) {
                     for (let i = 0; i < args.args.length; i++) {
