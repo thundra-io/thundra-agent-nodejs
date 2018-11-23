@@ -65,7 +65,6 @@ class ThundraRecorder {
         this.activeSpanStack.clear();
         this.spanList = [];
         this.spanOrder = 1;
-        this.listeners = [];
     }
 }
 

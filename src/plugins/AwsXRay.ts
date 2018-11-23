@@ -31,7 +31,7 @@ class AwsXRay {
 
         const tracer = ThundraTracer.getInstance();
         if (tracer) {
-            tracer.addSpanListener(new AwsXRayThundraSpanListener(this.pluginContext));
+            tracer.addSpanListener(new AwsXRayThundraSpanListener(this));
         } else {
             ThundraLogger.getInstance().error(
                 'Trace plugin is not enabled, AwsXRay plugin requires Thundra Trace Plugin.');

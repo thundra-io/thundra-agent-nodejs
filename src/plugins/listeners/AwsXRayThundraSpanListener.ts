@@ -13,10 +13,10 @@ try {
 
 class AwsXRayThundraSpanListener  implements ThundraSpanListener {
     subsegmentMap: Map<string, any>;
-    pluginContext: any;
+    xrayPlugin: any;
 
-    constructor(pluginContext: any) {
-        this.pluginContext = pluginContext;
+    constructor(xrayPlugin: any) {
+        this.xrayPlugin = xrayPlugin;
         this.subsegmentMap = new Map<string, any>();
     }
 
@@ -63,6 +63,7 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
     }
 
     normalizeAnnotationName(annotationName: string): string {
+        annotationName = annotationName.replace(/\./g, '_');
         annotationName = annotationName.replace(/[\W]+/g, '');
         annotationName = annotationName.substring(0, 500);
         return annotationName;
@@ -72,7 +73,7 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
         return operationName ? operationName.substring(0, 200) : AwsXrayConstants.DEFAULT_OPERATION_NAME;
     }
 
-    normalizeAnnotationValue(annotationValue: string): string {
+    normalizeAnnotationValue(annotationValue: any): string {
         if (typeof annotationValue === 'string') {
             annotationValue = annotationValue.substring(0, 1000);
         }
@@ -80,8 +81,8 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
     }
 
     addToAnnotations(span: ThundraSpan, subsegment: any): void {
-        this.putAnnotationIfAvailable(subsegment, 'traceId', this.pluginContext.traceId);
-        this.putAnnotationIfAvailable(subsegment, 'transactionId', this.pluginContext.transactionId);
+        this.putAnnotationIfAvailable(subsegment, 'traceId', this.xrayPlugin.pluginContext.traceId);
+        this.putAnnotationIfAvailable(subsegment, 'transactionId', this.xrayPlugin.pluginContext.transactionId);
         this.putAnnotationIfAvailable(subsegment, 'parentSpanId', span.spanContext.parentId);
         this.putAnnotationIfAvailable(subsegment, 'spanId', span.spanContext.spanId);
 
@@ -91,13 +92,23 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
         this.putAnnotationIfAvailable(subsegment, 'startTimestamp', span.startTime);
         this.putAnnotationIfAvailable(subsegment, 'finishTimestamp', span.finishTime);
         this.putAnnotationIfAvailable(subsegment, 'duration', span.getDuration());
+
+        for (const key of Object.keys(span.tags) ) {
+            if (key !== AwsXrayConstants.XRAY_SUBSEGMENTED_TAG_NAME) {
+                this.putAnnotationIfAvailable(subsegment, 'tags_' + key, span.tags[key]);
+            }
+        }
     }
 
     putAnnotationIfAvailable(subsegment: any, annotationName: string, annotationValue: any) {
-        if (annotationValue) {
-            subsegment.addAnnotation(this.normalizeAnnotationName(annotationName),
-                this.normalizeAnnotationValue(annotationValue));
+        if (!(typeof annotationValue === 'string' ||
+              typeof annotationValue === 'number' ||
+              typeof annotationValue === 'boolean' )) {
+           return;
         }
+
+        subsegment.addAnnotation(this.normalizeAnnotationName(annotationName),
+        this.normalizeAnnotationValue(annotationValue));
     }
 
     addToErrors(span: ThundraSpan, subsegment: any): void {
