@@ -1,5 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.0.6 - November 27, 2018
+#### Added
+- Aws XRay Integration
+- Tag support
+- Sampling support
+#### Fixed
+- Add missing tags data to integrations for better ui integration
 ## 2.0.5 - November 6, 2018
 #### Added
 - Enable integrations by default

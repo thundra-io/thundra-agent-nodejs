@@ -1,14 +1,3 @@
-/*
-*
-* Calculates duration of the lambda handler function.
-*
-* Generates trace report data.
-*
-* Adds the trace report to the Reporter instance if async monitoring is not enabled (environment variable
-* thundra_lambda_publish_cloudwatch_enable is not set), otherwise it logs the report for async monitoring.
-*
-*/
-
 import PluginContext from './PluginContext';
 import AwsXRayConfig from './config/AwsXRayConfig';
 import ThundraTracer from '../opentracing/Tracer';
