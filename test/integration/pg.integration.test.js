@@ -18,6 +18,7 @@ describe('PostgreSQL Integration', () => {
             expect(span.className).toBe('RDB');
             expect(span.domainName).toBe('DB');
 
+            expect(span.tags['operation.type']).toBe('READ');
             expect(span.tags['db.instance']).toBe('postgres');
             expect(span.tags['db.user']).toBe('postgres');
             expect(span.tags['db.host']).toBe('localhost');

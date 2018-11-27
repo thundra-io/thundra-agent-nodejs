@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import { DBTags, SpanTags, SpanTypes, DomainNames, ClassNames, DBTypes } from '../../Constants';
+import { DBTags, SpanTags, SpanTypes, DomainNames, ClassNames, DBTypes, SQLQueryOperationTypes } from '../../Constants';
 import Utils from '../Utils';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
@@ -68,10 +68,14 @@ class PostgreIntegration implements Integration {
         let statement = pgQuery.text;
         statement = Utils.replaceArgs(statement, pgQuery.values);
 
-        span.addTags({
-          [DBTags.DB_STATEMENT_TYPE]: statement.split(' ')[0].toUpperCase(),
-          [DBTags.DB_STATEMENT]: statement,
-        });
+        if (statement) {
+          const statementType = statement.split(' ')[0].toUpperCase();
+          span.addTags({
+            [DBTags.DB_STATEMENT_TYPE]: statementType,
+            [DBTags.DB_STATEMENT]: statement,
+            [SpanTags.OPERATION_TYPE]: SQLQueryOperationTypes[statementType] ? SQLQueryOperationTypes[statementType] : 'READ',
+          });
+        }
 
         const originalCallback = pgQuery.callback;
 

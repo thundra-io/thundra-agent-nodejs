@@ -73,6 +73,7 @@ class RedisIntegration implements Integration {
             [RedisTags.REDIS_COMMAND]: command,
             [RedisTags.REDIS_COMMAND_TYPE]: operationType,
             [RedisTags.REDIS_COMMAND_ARGS]: options.args.join(','),
+            [SpanTags.OPERATION_TYPE]: operationType,
           },
         });
 

@@ -18,6 +18,7 @@ describe('MySQL2 Integration', () => {
             expect(span.className).toBe('RDB');
             expect(span.domainName).toBe('DB');
 
+            expect(span.tags['operation.type']).toBe('READ');
             expect(span.tags['db.instance']).toBe('db');
             expect(span.tags['db.user']).toBe('user');
             expect(span.tags['db.host']).toBe('localhost');

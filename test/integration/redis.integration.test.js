@@ -26,6 +26,7 @@ describe('Redis Integration', () => {
             expect(writeCommandSpan.className).toBe('Redis');
             expect(writeCommandSpan.domainName).toBe('Cache');
 
+            expect(writeCommandSpan.tags['operation.type']).toBe('WRITE');
             expect(writeCommandSpan.tags['db.type']).toBe('redis');
             expect(writeCommandSpan.tags['db.instance']).toBe('127.0.0.1');
             expect(writeCommandSpan.tags['db.statement.type']).toBe('WRITE');

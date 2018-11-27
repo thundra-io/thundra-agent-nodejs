@@ -453,3 +453,10 @@ export const AwsXrayConstants: any = {
     DEFAULT_OPERATION_NAME: 'AWS X-Ray',
     XRAY_SUBSEGMENTED_TAG_NAME: 'THUNDRA::XRAY_SUBSEGMENTED',
 };
+
+export const SQLQueryOperationTypes: any = {
+    SELECT: 'READ',
+    INSERT: 'WRITE',
+    UPDATE: 'WRITE',
+    DELETE: 'WRITE',
+};
