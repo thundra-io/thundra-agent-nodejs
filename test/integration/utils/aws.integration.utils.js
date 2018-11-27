@@ -78,6 +78,21 @@ module.exports.sqs = (AWS) => {
     });
 };
 
+module.exports.sqs_list_queue = (AWS) => {
+    return new Promise((resolve) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const sqs = new AWS.SQS();
+        const params = {};
+        sqs.listQueues(params, function(err, data) {
+            if (err) {
+                // Resolve even though there is an error.
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    });
+};
+
 module.exports.sns = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });

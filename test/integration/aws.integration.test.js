@@ -82,7 +82,28 @@ describe('AWS Integration', () => {
             expect(span.tags['operation.type']).toBe('WRITE');
         });
     });
+
+    test('should instrument AWS sqs_list_queue calls', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {});
+        
+        const tracer = new ThundraTracer();
+
+        return AWS.sqs_list_queue(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('AWSServiceRequest');
+
+            expect(span.className).toBe('AWS-SQS');
+            expect(span.domainName).toBe('Messaging');
+            expect(span.tags['aws.request.name']).toBe('listQueues');
+            expect(span.tags['aws.sqs.queue.name']).toBe('AWSServiceRequest');
+            expect(span.tags['operation.type']).toBe('READ');
+        });
+    });
   
+    
     test('should instrument AWS SNS calls ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
