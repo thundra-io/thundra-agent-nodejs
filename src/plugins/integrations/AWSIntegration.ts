@@ -57,8 +57,9 @@ class AWSIntegration implements Integration {
 
           let activeSpan: ThundraSpan = null;
 
+          const operationName = request.operation ? request.operation  : AWS_SERVICE_REQUEST;
+
           if (serviceName === 'sqs') {
-            const operationName = request.operation;
             const operationType = SQSRequestTypes[operationName];
             const queueName = operationType ?
             Utils.getQueueName(request.params.QueueUrl) : AWS_SERVICE_REQUEST;
@@ -76,7 +77,6 @@ class AWSIntegration implements Integration {
               },
             });
           } else if (serviceName === 'sns') {
-            const operationName = request.operation;
             const operationType = SNSRequestTypes[operationName];
             const topicName = request.params ? request.params.TopicArn : '';
 
@@ -93,7 +93,6 @@ class AWSIntegration implements Integration {
               },
             });
           } else if (serviceName === 'dynamodb') {
-            const operationName = request.operation;
             const statementType = DynamoDBRequestTypes[operationName];
             const tableName = statementType ? Utils.getDynamoDBTableName(request) : AWS_SERVICE_REQUEST;
 
@@ -114,7 +113,6 @@ class AWSIntegration implements Integration {
               },
             });
           } else if (serviceName === 's3') {
-            const operationName = request.operation;
             const operationType = S3RequestTypes[operationName];
             const bucketName = operationType ? request.params.Bucket : AWS_SERVICE_REQUEST;
 
@@ -132,7 +130,6 @@ class AWSIntegration implements Integration {
               },
             });
           } else if (serviceName === 'lambda') {
-            const operationName = request.operation;
             const operationType = LambdaRequestType[operationName];
             const lambdaName = operationType ? request.params.FunctionName : AWS_SERVICE_REQUEST;
 
@@ -152,7 +149,6 @@ class AWSIntegration implements Integration {
               },
             });
           } else if (serviceName === 'kinesis') {
-            const operationName = request.operation;
             const streamName = request.params ? request.params.StreamName : '';
 
             activeSpan = tracer._startSpan(streamName, {
@@ -169,9 +165,7 @@ class AWSIntegration implements Integration {
               },
             });
           } else if (serviceName === 'firehose') {
-            const operationName = request.operation;
             const streamName = request.params ? request.params.DeliveryStreamName : '';
-
             activeSpan = tracer._startSpan(streamName, {
               childOf: parentSpan,
               domainName: DomainNames.STREAM,
