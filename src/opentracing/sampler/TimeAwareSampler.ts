@@ -14,16 +14,13 @@ class TimeAwareSampler implements Sampler<null> {
     }
 
     isSampled(): boolean {
-        while (true) {
-            const currentTimeValue = Date.now();
-            if (currentTimeValue > this.latestTime + this.timeFreq) {
-                this.latestTime = currentTimeValue;
-                return true;
-            } else {
-                break;
-            }
+        const currentTimeValue = Date.now();
+        if (currentTimeValue > this.latestTime + this.timeFreq) {
+            this.latestTime = currentTimeValue;
+            return true;
+        } else {
+            return false;
         }
-        return false;
     }
 }
 

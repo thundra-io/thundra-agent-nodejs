@@ -25,7 +25,7 @@ class TraceSamplerConfig {
                 this.durationAwareSamplerConfig.longerThan).isSampled(span);
         }
 
-        if (this.durationAwareSamplerConfig.enabled) {
+        if (this.errorAwareSamplerConfig.enabled) {
             isSampled = new ErrorAwareSampler().isSampled(span);
         }
 

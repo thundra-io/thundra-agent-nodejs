@@ -177,11 +177,11 @@ class Utils {
     }
 
     static getQueueName(url: any): string {
-        return url.split('/').pop();
+        return url ? url.split('/').pop() : '';
     }
 
     static getTopicName(topicArn: any): string {
-        return topicArn.split(':').pop();
+        return topicArn ? topicArn.split(':').pop() : '';
     }
 
     static getServiceName(endpoint: string): string {

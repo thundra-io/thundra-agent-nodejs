@@ -8,23 +8,33 @@ class MetricSamplerConfig {
     countAwareSamplerConfig: CountAwareSamplerConfig;
     timeAwareSamplerConfig: TimeAwareSamplerConfig;
     customSampler: () => Sampler<null>;
+    countAwareSampler: CountAwareSampler;
+    timeAwareSampler: TimeAwareSampler;
 
     constructor(options: any) {
         options = options ? options : {};
         this.countAwareSamplerConfig = new CountAwareSamplerConfig(options.countAwareSamplerConfig);
         this.timeAwareSamplerConfig = new TimeAwareSamplerConfig(options.timeAwareSamplerConfig);
         this.customSampler = options.customSampler;
+
+        if (this.countAwareSamplerConfig.enabled) {
+            this.countAwareSampler = new CountAwareSampler(this.countAwareSamplerConfig.countFreq);
+        }
+
+        if (this.timeAwareSamplerConfig.enabled) {
+            this.timeAwareSampler = new TimeAwareSampler(this.timeAwareSamplerConfig.timeFreq);
+        }
     }
 
     isSampled(): boolean {
         let isSampled = true;
 
-        if (this.countAwareSamplerConfig.enabled) {
-            isSampled = new CountAwareSampler(this.countAwareSamplerConfig.countFreq).isSampled();
+        if (this.countAwareSampler) {
+            isSampled = this.countAwareSampler.isSampled();
         }
 
-        if (this.timeAwareSamplerConfig.enabled) {
-            isSampled = new TimeAwareSampler(this.timeAwareSamplerConfig.timeFreq).isSampled();
+        if (this.timeAwareSampler) {
+            isSampled = this.timeAwareSampler.isSampled();
         }
 
         if (this.customSampler) {
