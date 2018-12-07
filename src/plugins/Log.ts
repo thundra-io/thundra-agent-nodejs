@@ -4,7 +4,7 @@ import LogData from './data/log/LogData';
 import PluginContext from './PluginContext';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraTracer from '../opentracing/Tracer';
-import { ConsoleShimmedMethods, logLevels, ConsoleLogContext, envVariableKeys} from '../Constants';
+import { ConsoleShimmedMethods, logLevels, StdOutLogContext, envVariableKeys, StdErrorLogContext} from '../Constants';
 import * as util from 'util';
 
 class Log {
@@ -20,6 +20,7 @@ class Log {
     logs: LogData[];
     tracer: ThundraTracer;
     pluginOrder: number = 3;
+    consoleReference: any = console;
 
     constructor(options: LogConfig) {
         this.hooks = {
@@ -30,10 +31,6 @@ class Log {
         this.tracer = ThundraTracer.getInstance();
 
         Log.instance = this;
-
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_SHIM_DISABLE) !== 'true') {
-           this.shimConsole();
-        }
     }
 
     static getInstance(): Log {
@@ -70,6 +67,10 @@ class Log {
         this.logData.tags['aws.lambda.log_group_name'] = this.originalContext.logGroupName;
         this.logData.tags['aws.lambda.log_stream_name'] = this.originalContext.logStreamName;
         this.logData.tags['aws.lambda.invocation.request_id '] = this.originalContext.awsRequestId;
+
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_SHIM_DISABLE) !== 'true') {
+            this.shimConsole();
+         }
     }
 
     afterInvocation = (data: any) => {
@@ -93,6 +94,10 @@ class Log {
             const logReportData = Utils.generateReport(log, this.apiKey);
             this.report(logReportData);
         }
+
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_SHIM_DISABLE) !== 'true') {
+            this.unShimConsole();
+         }
     }
 
     reportLog(logInfo: any): void {
@@ -106,21 +111,35 @@ class Log {
 
     shimConsole(): void {
         ConsoleShimmedMethods.forEach((method) => {
-            const consoleReference: any = console;
-            const originalConsoleMethod = consoleReference[method].bind(console);
+            const originalConsoleMethod = this.consoleReference[method].bind(console);
 
-            consoleReference[method] = (...args: any[]) => {
+            const descriptor = Object.getOwnPropertyDescriptor(console, method);
+
+            if (descriptor) {
+              Object.defineProperty(console, `original_${method}`, descriptor);
+            }
+
+            this.consoleReference[method] = (...args: any[]) => {
                 const logInfo = {
                     logMessage:  util.format.apply(util, args),
                     logLevel: method ? method.toUpperCase() : 'INFO',
                     logLevelCode: logLevels[method],
-                    logContextName: ConsoleLogContext,
+                    logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
                     logTimestamp: Date.now(),
                 };
 
                 this.reportLog(logInfo);
                 originalConsoleMethod.apply(console, args);
             };
+        });
+    }
+
+    unShimConsole(): void {
+        ConsoleShimmedMethods.forEach((method) => {
+            const descriptor = Object.getOwnPropertyDescriptor(console, `original_${method}`);
+            if (descriptor) {
+                Object.defineProperty(console, method, descriptor);
+            }
         });
     }
 }

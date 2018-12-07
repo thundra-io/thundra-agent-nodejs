@@ -464,4 +464,6 @@ export const SQLQueryOperationTypes: any = {
 
 export const ConsoleShimmedMethods = ['log', 'debug', 'info', 'warn', 'error'];
 
-export const ConsoleLogContext = 'Console';
+export const StdOutLogContext = 'STDOUT';
+
+export const StdErrorLogContext = 'STDERR';
