@@ -27,7 +27,8 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG: 'thundra_agent_lambda_trace_instrument_traceableConfig',
     THUNDRA_LAMBDA_TRACE_INSTRUMENT_FILE_PREFIX: 'thundra_agent_lambda_trace_instrument_file_prefix',
     THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE: 'thundra_agent_lambda_trace_instrument_integrations_disable',
-    THUNDRRA_LAMBDA_LOG_LOGLEVEL: 'thundra_agent_lambda_log_loglevel',
+    THUNDRA_LAMBDA_LOG_CONSOLE_SHIM_DISABLE: 'thundra_agent_lambda_log_console_shim_disable',
+    THUNDRA_LAMBDA_LOG_LOGLEVEL: 'thundra_agent_lambda_log_loglevel',
     THUNDRA_AGENT_LAMBDA_AGENT_DEBUG_ENABLE: 'thundra_agent_lambda_debug_enable',
 
     AWS_LAMBDA_APPLICATION_ID: 'AWS_LAMBDA_APPLICATION_ID',
@@ -460,3 +461,7 @@ export const SQLQueryOperationTypes: any = {
     UPDATE: 'WRITE',
     DELETE: 'WRITE',
 };
+
+export const ConsoleShimmedMethods = ['log', 'debug', 'info', 'warn', 'error'];
+
+export const ConsoleLogContext = 'Console';

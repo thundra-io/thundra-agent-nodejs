@@ -4,7 +4,8 @@ import LogData from './data/log/LogData';
 import PluginContext from './PluginContext';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraTracer from '../opentracing/Tracer';
-import LogManager from './LogManager';
+import { ConsoleShimmedMethods, logLevels, ConsoleLogContext, envVariableKeys} from '../Constants';
+import * as util from 'util';
 
 class Log {
     static instance: Log;
@@ -29,19 +30,23 @@ class Log {
         this.tracer = ThundraTracer.getInstance();
 
         Log.instance = this;
+
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_SHIM_DISABLE) !== 'true') {
+           this.shimConsole();
+        }
     }
 
     static getInstance(): Log {
         return Log.instance;
     }
 
-    report = (logReport: any) => {
+    report(logReport: any): void {
         if (this.reporter) {
             this.reporter.addReport(logReport);
         }
     }
 
-    setPluginContext = (pluginContext: PluginContext) => {
+    setPluginContext(pluginContext: PluginContext): void {
         this.pluginContext = pluginContext;
         this.apiKey = pluginContext.apiKey;
     }
@@ -90,13 +95,33 @@ class Log {
         }
     }
 
-    reportLog = (logInfo: any) => {
+    reportLog(logInfo: any): void {
         const logData = new LogData();
         const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
         const spanId = activeSpan ? activeSpan.spanContext.spanId : '';
         logData.initWithLogDataValues(this.logData, spanId, logInfo);
 
         this.logs.push(logData);
+    }
+
+    shimConsole(): void {
+        ConsoleShimmedMethods.forEach((method) => {
+            const consoleReference: any = console;
+            const originalConsoleMethod = consoleReference[method].bind(console);
+
+            consoleReference[method] = (...args: any[]) => {
+                const logInfo = {
+                    logMessage:  util.format.apply(util, args),
+                    logLevel: method ? method.toUpperCase() : 'INFO',
+                    logLevelCode: logLevels[method],
+                    logContextName: ConsoleLogContext,
+                    logTimestamp: Date.now(),
+                };
+
+                this.reportLog(logInfo);
+                originalConsoleMethod.apply(console, args);
+            };
+        });
     }
 }
 

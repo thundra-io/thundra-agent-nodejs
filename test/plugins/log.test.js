@@ -1,5 +1,5 @@
 import LogPlugin from '../../dist/plugins/Log';
-import { createMockReporter, createMockPluginContext, createMockBeforeInvocationData, createMockContext } from '../mocks/mocks';
+import { createMockReporter, createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
 
 describe('LogPlugin', () => {
     describe('constructor', () => {
