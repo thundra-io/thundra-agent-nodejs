@@ -4,7 +4,7 @@ import LogData from './data/log/LogData';
 import PluginContext from './PluginContext';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraTracer from '../opentracing/Tracer';
-import { ConsoleShimmedMethods, logLevels, StdOutLogContext, envVariableKeys, StdErrorLogContext} from '../Constants';
+import { ConsoleShimmedMethods, logLevels, StdOutLogContext, envVariableKeys, StdErrorLogContext } from '../Constants';
 import * as util from 'util';
 
 class Log {
@@ -70,7 +70,7 @@ class Log {
 
         if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_SHIM_DISABLE) !== 'true') {
             this.shimConsole();
-         }
+        }
     }
 
     afterInvocation = (data: any) => {
@@ -97,7 +97,7 @@ class Log {
 
         if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_SHIM_DISABLE) !== 'true') {
             this.unShimConsole();
-         }
+        }
     }
 
     reportLog(logInfo: any): void {
@@ -111,26 +111,31 @@ class Log {
 
     shimConsole(): void {
         ConsoleShimmedMethods.forEach((method) => {
-            const originalConsoleMethod = this.consoleReference[method].bind(console);
+            if (this.consoleReference[method]) {
+                const originalConsoleMethod = this.consoleReference[method].bind(console);
 
-            const descriptor = Object.getOwnPropertyDescriptor(console, method);
+                const descriptor = Object.getOwnPropertyDescriptor(console, method);
 
-            if (descriptor) {
-              Object.defineProperty(console, `original_${method}`, descriptor);
+                if (descriptor) {
+                    Object.defineProperty(console, `original_${method}`, descriptor);
+                }
+
+                this.consoleReference[method] = (...args: any[]) => {
+                    const logLevel = method.toUpperCase() === 'LOG' ? 'INFO' : method.toUpperCase();
+
+                    const logInfo = {
+                        logMessage: util.format.apply(util, args),
+                        logLevel,
+                        logLevelCode: method === 'log' ? 2 : logLevels[method],
+                        logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
+                        logTimestamp: Date.now(),
+                    };
+
+                    this.reportLog(logInfo);
+                    originalConsoleMethod.apply(console, args);
+                };
             }
 
-            this.consoleReference[method] = (...args: any[]) => {
-                const logInfo = {
-                    logMessage:  util.format.apply(util, args),
-                    logLevel: method ? method.toUpperCase() : 'INFO',
-                    logLevelCode: logLevels[method],
-                    logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
-                    logTimestamp: Date.now(),
-                };
-
-                this.reportLog(logInfo);
-                originalConsoleMethod.apply(console, args);
-            };
         });
     }
 
