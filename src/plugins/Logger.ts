@@ -13,7 +13,7 @@ class Logger {
     constructor(options: { loggerName: any; }) {
         this.options = options;
         this.loggerName = options && options.loggerName ? options.loggerName : 'default';
-        const levelConfig = Utils.getConfiguration(envVariableKeys.THUNDRRA_LAMBDA_LOG_LOGLEVEL);
+        const levelConfig = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_LOGLEVEL);
         this.logLevel = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
         this.levels = {          // higher number = higher priority
             trace: this.trace, // 0
