@@ -17,7 +17,7 @@ describe('Log plugin shim console', () => {
     it('should capture console.log statements', () => {  
         expect(logPlugin.logs.length).toBe(5);
 
-        expect(logPlugin.logs[0].logLevel).toBe('LOG');
+        expect(logPlugin.logs[0].logLevel).toBe('INFO');
         expect(logPlugin.logs[0].logMessage).toBe('log');
         expect(logPlugin.logs[0].logContextName).toBe('STDOUT');
 
