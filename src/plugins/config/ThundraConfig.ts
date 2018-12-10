@@ -10,6 +10,7 @@ const koalas = require('koalas');
 class ThundraConfig {
 
     trustAllCert: boolean;
+    warmupAware: boolean;
     apiKey: string;
     disableThundra: boolean;
     traceConfig: TraceConfig;
@@ -34,6 +35,8 @@ class ThundraConfig {
         this.xrayConfig = new AwsXRayConfig(options.xrayConfig);
         this.trustAllCert = koalas(Utils.getConfiguration(
             envVariableKeys.THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES), options.trustAllCert, false);
+        this.warmupAware = koalas(Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_WARMUP_AWARE) === 'true',
+                                options.warmupAware, false);
     }
 
 }

@@ -149,7 +149,8 @@ describe('Thundra library', () => {
         });
     });
 
-    describe('when it is a warmup', () => {
+    describe('when it is a warmup and thundra_lambda_warmup_warmupAware is true', () => {
+        process.env.thundra_lambda_warmup_warmupAware = 'true';
         const originalEvent = {};
         const originalContext = {};
         const originalCallback = jest.fn();
@@ -162,6 +163,25 @@ describe('Thundra library', () => {
         jest.runAllTimers();
         it('should not invoke the function', () => {
             expect(originalFunction).not.toBeCalled();
+        });
+
+    });
+
+    describe('when it is a warmup and thundra_lambda_warmup_warmupAware is not set', () => {
+        delete process.env.thundra_lambda_warmup_warmupAware;
+
+        const originalEvent = {};
+        const originalContext = {};
+        const originalCallback = jest.fn();
+        const originalFunction = jest.fn(() => originalCallback());
+        const ThundraWrapper = Thundra({ apiKey: 'apiKey' });
+        const wrappedFunction = ThundraWrapper(originalFunction);
+        console['log'] = jest.fn();
+        jest.useFakeTimers();
+        wrappedFunction(originalEvent, originalContext, originalCallback);
+        jest.runAllTimers();
+        it('should invoke the function', () => {
+            expect(originalFunction).toBeCalled();
         });
 
     });
