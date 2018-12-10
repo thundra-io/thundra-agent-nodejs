@@ -68,7 +68,7 @@ class Log {
         this.logData.tags['aws.lambda.log_stream_name'] = this.originalContext.logStreamName;
         this.logData.tags['aws.lambda.invocation.request_id '] = this.originalContext.awsRequestId;
 
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_SHIM_DISABLE) !== 'true') {
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
             this.shimConsole();
         }
     }
@@ -95,7 +95,7 @@ class Log {
             this.report(logReportData);
         }
 
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_SHIM_DISABLE) !== 'true') {
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
             this.unShimConsole();
         }
     }
