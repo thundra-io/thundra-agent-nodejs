@@ -88,7 +88,6 @@ module.exports = (options: any) => {
     });
 
     const increaseRequestCount = () => pluginContext.requestCount += 1;
-    const warmupWrapper = ThundraWarmup(increaseRequestCount);
 
     return (originalFunc: any) => {
 
@@ -107,7 +106,12 @@ module.exports = (options: any) => {
             return thundraWrapper.invoke();
         };
 
-        return warmupWrapper(thundraWrappedHandler);
+        if (config.warmupAware) {
+            const warmupWrapper = ThundraWarmup(increaseRequestCount);
+            return warmupWrapper(thundraWrappedHandler);
+        } else {
+            return thundraWrappedHandler;
+        }
     };
 };
 

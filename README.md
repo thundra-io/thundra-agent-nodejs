@@ -49,6 +49,7 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 | Name                                                            | Type   | Default Value |
 |:----------------------------------------------------------------|:------:|:-------------:|
 | thundra_apiKey                                                  | string |       -       |
+| thundra_lambda_warmup_warmupAware                               | bool   |     false     |
 | thundra_agent_lambda_application_stage                          | string |    empty      |
 | thundra_agent_lambda_application_domainName                     | string |    API        |
 | thundra_agent_lambda_application_className                      | string |    AWS-Lambda |

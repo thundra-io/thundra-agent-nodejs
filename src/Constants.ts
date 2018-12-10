@@ -6,6 +6,7 @@ import RedisIntegration from './plugins/integrations/RedisIntegration';
 import AWSIntegration from './plugins/integrations/AWSIntegration';
 
 export const envVariableKeys = {
+    THUNDRA_LAMBDA_WARMUP_AWARE: 'thundra_lambda_warmup_warmupAware',
     THUNDRA_APIKEY: 'thundra_apiKey',
     THUNDRA_DISABLE: 'thundra_agent_lambda_disable',
     THUNDRA_APPLICATION_STAGE: 'thundra_agent_lambda_application_stage',
