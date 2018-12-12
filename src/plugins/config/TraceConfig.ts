@@ -73,7 +73,8 @@ class TraceConfig extends BasePluginConfig {
             }
         }
 
-        if (!(this.disableInstrumentation)) {
+        if (!(this.disableInstrumentation) ||
+                !(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true')) {
             this.integrationsMap = new Map<string, Integration>();
 
             for (const key of Object.keys(INTEGRATIONS)) {
