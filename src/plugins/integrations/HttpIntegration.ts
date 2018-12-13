@@ -1,6 +1,7 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames } from '../../Constants';
+import * as opentracing from 'opentracing';
+import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, envVariableKeys } from '../../Constants';
 import Utils from '../Utils';
 import * as url from 'url';
 
@@ -27,20 +28,32 @@ class HttpIntegration implements Integration {
     });
   }
 
-  wrap(lib: any, config: any) {
+  static isValidUrl(host: string): boolean {
+
+    if (host.indexOf('amazonaws.com') !== -1 &&
+        host.indexOf('execute-api') !== -1) {
+      return true;
+    }
+
+    if (host === 'api.thundra.io' ||
+        host === 'serverless.com' ||
+        host.indexOf('amazonaws.com') !== -1) {
+          return false;
+    }
+
+    return true;
+  }
+
+  wrap(lib: any, config: any): void {
     function wrapper(request: any) {
       return function requestWrapper(options: any, callback: any) {
-        const tracer = ThundraTracer.getInstance();
 
+        const tracer = ThundraTracer.getInstance();
         const method = (options.method || 'GET').toUpperCase();
         options = typeof options === 'string' ? url.parse(options) : options;
         const host = options.hostname || options.host || 'localhost';
         const path = options.path || options.pathname || '/';
         const queryParams = path.split('?').length > 1 ? path.split('?')[1] : '';
-
-        if (host === 'api.thundra.io' || host === 'serverless.com' || host.indexOf('amazonaws.com') !== -1) {
-          return request.apply(this, [options, callback]);
-        }
 
         const parentSpan = tracer.getActiveSpan();
         const span = tracer._startSpan(host + path, {
@@ -49,6 +62,16 @@ class HttpIntegration implements Integration {
           className: ClassNames.HTTP,
           disableActiveStart: true,
         });
+
+        if (!(Utils.getConfiguration(envVariableKeys.DISABLE_SPAN_CONTEXT_INJECTION) === 'true') ) {
+          const headers = options.headers ? options.headers : {};
+          tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
+          options.headers = headers;
+        }
+
+        if (!HttpIntegration.isValidUrl(host)) {
+          return request.apply(this, [options, callback]);
+        }
 
         span.addTags({
           [SpanTags.OPERATION_TYPE]: 'CALL',
@@ -94,7 +117,7 @@ class HttpIntegration implements Integration {
     shimmer.wrap(lib, 'get', wrapper);
   }
 
-  unwrap() {
+  unwrap(): void {
     shimmer.unwrap(this.lib, 'request');
     shimmer.unwrap(this.lib, 'get');
     this.hook.unhook();

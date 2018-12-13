@@ -1,8 +1,14 @@
 import { Tracer } from 'opentracing';
+import * as opentracing from 'opentracing';
 import ThundraSpan, { SpanEvent } from './Span';
 import ThundraRecorder from './Recorder';
 import Utils from '../plugins/Utils';
 import ThundraSpanListener from '../plugins/listeners/ThundraSpanListener';
+import TextMapPropagator from './propagation/TextMap';
+import HttpPropagator from './propagation/Http';
+import BinaryPropagator from './propagation/Binary';
+import ThundraLogger from '../ThundraLogger';
+import ThundraSpanContext from './SpanContext';
 
 class ThundraTracer extends Tracer {
   static instance: ThundraTracer;
@@ -10,6 +16,8 @@ class ThundraTracer extends Tracer {
   tags: any;
   recorder: ThundraRecorder;
   activeSpans: Map<string, ThundraSpan>;
+  transactionId: string;
+  propagators: any;
 
   constructor(config: any = {}) {
     super();
@@ -18,6 +26,12 @@ class ThundraTracer extends Tracer {
     this.recorder = config.recorder ? config.recorder : new ThundraRecorder();
     this.activeSpans = new Map<string, ThundraSpan>();
     ThundraTracer.instance = this;
+
+    this.propagators = {
+      [opentracing.FORMAT_TEXT_MAP]: new TextMapPropagator(),
+      [opentracing.FORMAT_HTTP_HEADERS]: new HttpPropagator(),
+      [opentracing.FORMAT_BINARY]: new BinaryPropagator(),
+    };
   }
 
   static getInstance(): ThundraTracer {
@@ -91,6 +105,7 @@ class ThundraTracer extends Tracer {
         rootTraceId,
         className: fields.className,
         domainName: fields.domainName,
+        transactionId: this.transactionId,
       });
     } else {
       span = new ThundraSpan(this, {
@@ -101,6 +116,7 @@ class ThundraTracer extends Tracer {
         startTime: Date.now(),
         className: fields.className,
         domainName: fields.domainName,
+        transactionId: this.transactionId,
       });
     }
 
@@ -119,14 +135,23 @@ class ThundraTracer extends Tracer {
     this.activeSpans.delete(span.spanContext.spanId);
   }
 
-  _inject(spanContext: any, format: any, carrier: any) {
-    throw new Error('Thundra Tracer does not support inject.');
+  _inject(spanContext: any, format: any, carrier: any): ThundraTracer {
+    try {
+      this.propagators[format].inject(spanContext, carrier);
+    } catch (e) {
+      ThundraLogger.getInstance().error(e);
+    }
+
+    return this;
   }
 
-  _extract(format: any, carrier: any) {
-    throw new Error('Thundra Tracer does not support extract.');
-    // This unreachable code is for making ts-compiler happy
-    return this;
+  _extract(format: any, carrier: any): ThundraSpanContext {
+    try {
+      return this.propagators[format].extract(carrier);
+    } catch (e) {
+      ThundraLogger.getInstance().error(e);
+      return null;
+    }
   }
 
   _isSampled(span: ThundraSpan) {

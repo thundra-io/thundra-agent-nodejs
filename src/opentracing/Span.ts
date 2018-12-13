@@ -12,6 +12,7 @@ class ThundraSpan extends Span {
   finishTime: number;
   spanContext: ThundraSpanContext;
   rootTraceId: string;
+  transactionId: string;
   logs: any[];
   className: string;
   domainName: string;
@@ -31,6 +32,7 @@ class ThundraSpan extends Span {
     this.startTime = startTime;
     this.finishTime = 0;
     this.rootTraceId = fields.rootTraceId || null;
+    this.transactionId = fields.transactionId || null;
     this.spanContext = this._createContext(parent);
     this.logs = [];
     this.className = fields.className;
@@ -74,11 +76,13 @@ class ThundraSpan extends Span {
         parentId: parent.spanId,
         sampled: parent.sampled,
         baggageItems: Object.assign({}, parent.baggageItems),
+        transactionId: parent.transactionId,
       });
     } else {
       spanContext = new ThundraSpanContext({
         traceId: this.rootTraceId,
         spanId: Utils.generateId(),
+        transactionId: this.transactionId,
         sampled: this.parentTracer._isSampled(this),
       });
     }
