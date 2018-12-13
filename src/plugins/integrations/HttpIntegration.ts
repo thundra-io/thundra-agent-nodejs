@@ -55,6 +55,10 @@ class HttpIntegration implements Integration {
         const path = options.path || options.pathname || '/';
         const queryParams = path.split('?').length > 1 ? path.split('?')[1] : '';
 
+        if (!HttpIntegration.isValidUrl(host)) {
+          return request.apply(this, [options, callback]);
+        }
+
         const parentSpan = tracer.getActiveSpan();
         const span = tracer._startSpan(host + path, {
           childOf: parentSpan,
@@ -67,10 +71,6 @@ class HttpIntegration implements Integration {
           const headers = options.headers ? options.headers : {};
           tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
           options.headers = headers;
-        }
-
-        if (!HttpIntegration.isValidUrl(host)) {
-          return request.apply(this, [options, callback]);
         }
 
         span.addTags({
