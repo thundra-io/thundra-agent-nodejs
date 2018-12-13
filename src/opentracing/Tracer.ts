@@ -90,7 +90,7 @@ class ThundraTracer extends Tracer {
     let span;
     const rootTraceId = fields.rootTraceId ? fields.rootTraceId : Utils.generateId();
 
-    const parentContext = Utils.getParentContext(fields.references);
+    const parentContext = fields.parentContext ? fields.parentContext : Utils.getParentContext(fields.references);
 
     if (parentContext && !this.activeSpans.get(parentContext.spanId)) {
       throw new Error('Invalid spanId : ' + parentContext.spanId);

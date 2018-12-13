@@ -84,12 +84,11 @@ export class Trace {
             this.tracer.transactionId = this.pluginContext.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
+                parentContext : propagatedSpanContext,
                 rootTraceId: this.pluginContext.traceId,
                 domainName: DomainNames.API,
                 className: ClassNames.LAMBDA,
             });
-
-            this.rootSpan.spanContext.parentId = propagatedSpanContext.spanId;
 
         } else {
             this.tracer.transactionId = originalContext.awsRequestId;
