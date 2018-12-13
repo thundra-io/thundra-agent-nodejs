@@ -76,7 +76,7 @@ class Invocation {
         this.invocationData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
         this.invocationData.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
         const { heapUsed } = process.memoryUsage();
-        this.invocationData.tags['aws.lambda.invocation.memory_usage'] = heapUsed;
+        this.invocationData.tags['aws.lambda.invocation.memory_usage'] = Math.floor(heapUsed / (1024 * 1024));
     }
 
     afterInvocation = (data: any) => {

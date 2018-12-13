@@ -47,9 +47,13 @@ describe('Invocation', () => {
         const invocation = Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
+        process.memoryUsage = jest.fn(() => {
+            return {  
+                heapUsed: 39845888
+            };
+        });
         it('Should set variables to their initial value', async () => {
             await invocation.beforeInvocation(beforeInvocationData);
-            invocation.invocationData.tags['aws.lambda.invocation.memory_usage'] = 100;
             expect(invocation.reporter).toBe(beforeInvocationData.reporter);
             expect(invocation.apiKey).toBe(pluginContext.apiKey);
             expect(invocation.invocationData.id).toBeTruthy();
@@ -86,7 +90,7 @@ describe('Invocation', () => {
                 'aws.lambda.memory_limit': 512,
                 'aws.lambda.name': 'test',
                 'aws.region': 'region',
-                'aws.lambda.invocation.memory_usage': 100,
+                'aws.lambda.invocation.memory_usage': 38,
                 'aws.lambda.invocation.request_id': 'awsRequestId',});
         });
     });
