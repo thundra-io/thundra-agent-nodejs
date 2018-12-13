@@ -76,7 +76,7 @@ export class Trace {
         if (propagatedSpanContext) {
             this.pluginContext.transactionId = Utils.getConfiguration(
                 envVariableKeys.THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID) === 'true' ?
-                originalContext.awsRequestId : propagatedSpanContext.transactionId;
+                propagatedSpanContext.transactionId : originalContext.awsRequestId;
 
             this.pluginContext.traceId = propagatedSpanContext.traceId;
             this.pluginContext.spanId = propagatedSpanContext.spanId;
@@ -84,6 +84,7 @@ export class Trace {
             this.tracer.transactionId = this.pluginContext.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
+                propagated : true,
                 parentContext : propagatedSpanContext,
                 rootTraceId: this.pluginContext.traceId,
                 domainName: DomainNames.API,
