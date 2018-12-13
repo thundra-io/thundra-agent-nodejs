@@ -5,6 +5,7 @@ class TextMapPropagator {
     static TRANSACTION_ID_KEY: string =  'x-thundra-transaction-id';
     static SPAN_ID_KEY: string = 'x-thundra-span-id';
     static BAGGAGE_PREFIX: string = 'x-thundra-baggage-';
+    static BAGGAGE_PATTERN: RegExp = new RegExp(`^${TextMapPropagator.BAGGAGE_PREFIX}(.+)$`);
 
     inject(spanContext: ThundraSpanContext, carrier: any) {
         if (spanContext.traceId) {
@@ -50,9 +51,7 @@ class TextMapPropagator {
 
     _extractBaggageItems(carrier: any, spanContext: ThundraSpanContext) {
         Object.keys(carrier).forEach((key)  => {
-            const pattern = new RegExp(`^${TextMapPropagator.BAGGAGE_PREFIX}(.+)$`);
-            const result = key.match(pattern);
-
+            const result = key.match(TextMapPropagator.BAGGAGE_PATTERN);
             if (result) {
               spanContext.baggageItems[result[1]] = carrier[key];
             }
