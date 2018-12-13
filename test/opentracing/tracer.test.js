@@ -1,6 +1,5 @@
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import { Reference } from 'opentracing';
-import { Trace } from '../../dist/plugins/Trace';
 
 describe('Recorder', () => {
     describe('constructor', () => {
@@ -42,14 +41,6 @@ describe('Recorder', () => {
         tracer.finishSpan();
         it('should record span value to span tree', () => {
             expect(tracer.recorder.getSpanList()[0]).toBe(span);
-        });
-    });
-
-    describe('inject and extract', () => {
-        const tracer = new ThundraTracer({});
-        it('should throw exception with unsupported methods', () => {
-            expect(() => { tracer.inject(); }).toThrow(new Error('Thundra Tracer does not support inject.'));
-            expect(() => { tracer.extract(); }).toThrow(new Error('Thundra Tracer does not support extract.'));
         });
     });
 
@@ -132,22 +123,6 @@ describe('Recorder', () => {
 
         it('should store values', () => {
             expect(span.getBaggageItem('test')).toEqual('value');
-        });
-
-    });
-
-    describe('Tracer inject/extract', () => {
-        const tracer = new ThundraTracer({});
-
-        it('should throw exception', () => {
-            expect(() => {
-                tracer._extract();
-            }).toThrow();
-
-            expect(() => {
-                tracer._inject();
-            }).toThrow();
-
         });
 
     });

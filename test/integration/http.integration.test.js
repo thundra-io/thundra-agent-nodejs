@@ -26,4 +26,14 @@ describe('HTTP integration', () => {
             expect(span.tags['http.status_code']).toBe(200);
         });
     });
+
+    test('should instrument api gateway calls ', () => {  
+        const apiGatewayEndpoint = 'hivcx7cj2j.execute-api.us-west-2.amazonaws.com/dev';
+        const okEndpoint = 'google.com';
+        const awsEndPoint = 'dynamodb.us-west-2.amazonaws.com';
+
+        expect(HttpIntegration.isValidUrl(apiGatewayEndpoint)).toBe(true);
+        expect(HttpIntegration.isValidUrl(awsEndPoint)).toBe(false);
+        expect(HttpIntegration.isValidUrl(okEndpoint)).toBe(true);
+    });
 });

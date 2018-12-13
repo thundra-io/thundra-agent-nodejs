@@ -13,6 +13,7 @@ import ThundraTracer from '../opentracing/Tracer';
 import Utils from './Utils';
 import TraceData from './data/trace/TraceData';
 import { initGlobalTracer } from 'opentracing';
+import * as opentracing from 'opentracing';
 import HttpError from './error/HttpError';
 import Reporter from '../Reporter';
 import TraceConfig from './config/TraceConfig';
@@ -21,7 +22,8 @@ import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
 import TimeoutError from './error/TimeoutError';
-import { DomainNames, ClassNames } from '../Constants';
+import { DomainNames, ClassNames, envVariableKeys } from '../Constants';
+import ThundraSpanContext from '../opentracing/SpanContext';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -63,20 +65,45 @@ export class Trace {
         this.tracer.destroy();
         const { originalContext, originalEvent, reporter } = data;
 
-        this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
-            rootTraceId: this.pluginContext.traceId,
-            domainName: DomainNames.API,
-            className: ClassNames.LAMBDA,
-        });
-
         // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.
         if (!originalContext.awsRequestId || originalContext.awsRequestId === 'id') {
             originalContext.awsRequestId = Utils.generateId();
         }
 
-        this.pluginContext.transactionId = originalContext.awsRequestId;
-        this.pluginContext.traceId = Utils.generateId();
-        this.pluginContext.spanId = this.rootSpan.spanContext.spanId;
+        const propagatedSpanContext: ThundraSpanContext =
+            this.extractSpanContext(originalEvent) as ThundraSpanContext;
+
+        if (propagatedSpanContext) {
+            this.pluginContext.transactionId = Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID) === 'true' ?
+                propagatedSpanContext.transactionId : originalContext.awsRequestId;
+
+            this.pluginContext.traceId = propagatedSpanContext.traceId;
+            this.pluginContext.spanId = propagatedSpanContext.spanId;
+
+            this.tracer.transactionId = this.pluginContext.transactionId;
+
+            this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
+                propagated : true,
+                parentContext : propagatedSpanContext,
+                rootTraceId: this.pluginContext.traceId,
+                domainName: DomainNames.API,
+                className: ClassNames.LAMBDA,
+            });
+
+        } else {
+            this.tracer.transactionId = originalContext.awsRequestId;
+            this.pluginContext.traceId =  Utils.generateId();
+            this.pluginContext.transactionId = this.tracer.transactionId;
+
+            this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
+                rootTraceId: this.pluginContext.traceId,
+                domainName: DomainNames.API,
+                className: ClassNames.LAMBDA,
+            });
+
+            this.pluginContext.spanId = this.rootSpan.spanContext.spanId;
+        }
 
         this.reporter = reporter;
         this.startTimestamp = Date.now();
@@ -215,6 +242,14 @@ export class Trace {
         }
 
         return response;
+    }
+
+    private extractSpanContext(originalEvent: any): opentracing.SpanContext {
+        if (originalEvent.requestContext && originalEvent.headers) {
+            return this.tracer.extract(opentracing.FORMAT_HTTP_HEADERS, originalEvent.headers);
+        }
+
+        return null;
     }
 }
 
