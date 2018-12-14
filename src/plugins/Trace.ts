@@ -24,6 +24,7 @@ import PluginContext from './PluginContext';
 import TimeoutError from './error/TimeoutError';
 import { DomainNames, ClassNames, envVariableKeys } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
+import TextMapPropagator from '../opentracing/propagation/TextMap';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -255,33 +256,74 @@ export class Trace {
 
         if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
             originalEvent.Records[0] && originalEvent.Records[0].EventSource === 'aws:sns') {
-            const messageAttributes = originalEvent.Records[0].Sns.MessageAttributes;
-            const carrier: any = {};
-            for (const key of Object.keys(messageAttributes)) {
-                const messageAttribute = messageAttributes[key];
-                if (messageAttribute.Type === 'String') {
-                    carrier[key] = messageAttribute.Value;
+            let spanContext: ThundraSpanContext;
+
+            for (const record of originalEvent.Records) {
+                const carrier: any = {};
+                const messageAttributes = record.Sns.MessageAttributes;
+
+                for (const key of Object.keys(messageAttributes)) {
+                    const messageAttribute = messageAttributes[key];
+                    if (messageAttribute.Type === 'String') {
+                        carrier[key] = messageAttribute.Value;
+                    }
+                }
+
+                const sc: ThundraSpanContext = this.tracer.extract(
+                    opentracing.FORMAT_TEXT_MAP, carrier) as ThundraSpanContext;
+                if (sc) {
+                    if (!spanContext) {
+                        spanContext = sc;
+                    } else {
+                        if (spanContext.traceId !== sc.traceId &&
+                            spanContext.transactionId !== sc.transactionId &&
+                            spanContext.spanId !== sc.spanId) {
+                            // TODO Currently we don't support batch of SNS messages from different traces/transactions/spans
+                            return;
+                        }
+                    }
+                } else {
+                    return;
                 }
             }
-
-            return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, carrier);
+            return spanContext;
         }
 
         if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
             originalEvent.Records[0] && originalEvent.Records[0].eventSource === 'aws:sqs') {
-                const messageAttributes = originalEvent.Records[0].messageAttributes;
+                let spanContext: ThundraSpanContext;
+                for (const record of originalEvent.Records) {
+                    const carrier: any = {};
+                    const messageAttributes = record.messageAttributes;
 
-                const carrier: any = {};
-                for (const key of Object.keys(messageAttributes)) {
-                    const messageAttribute = messageAttributes[key];
-                    if (messageAttribute.dataType === 'String') {
-                        carrier[key] = messageAttribute.stringValue;
+                    for (const key of Object.keys(messageAttributes)) {
+                        const messageAttribute = messageAttributes[key];
+                        if (messageAttribute.dataType === 'String') {
+                            carrier[key] = messageAttribute.stringValue;
+                        }
+                    }
+
+                    const sc: ThundraSpanContext = this.tracer.extract(
+                        opentracing.FORMAT_TEXT_MAP, carrier) as ThundraSpanContext;
+                    if (sc) {
+                        if (!spanContext) {
+                            spanContext = sc;
+                        } else {
+                            if (spanContext.traceId !== sc.traceId &&
+                                spanContext.transactionId !== sc.transactionId &&
+                                spanContext.spanId !== sc.spanId) {
+                                // TODO Currently we don't support batch of SNS messages from different traces/transactions/spans
+                                return;
+                            }
+                        }
+                    } else {
+                        return;
                     }
                 }
-                return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, carrier);
+                return spanContext;
         }
 
-        return null;
+        return;
     }
 }
 

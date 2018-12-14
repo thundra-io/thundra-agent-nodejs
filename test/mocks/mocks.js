@@ -128,9 +128,301 @@ const createMockSQSEvent = () => {
     };
 };
 
+const createBatchMockSQSEventDifferentIds = () => {
+    return {
+        Records: [
+            {
+                messageId: '19dd0b57-b21e-4ac1-bd88-01bbb068cb78',
+                receiptHandle: 'MessageReceiptHandle',
+                body: 'Hello from SQS!',
+                attributes: {
+                    ApproximateReceiveCount: '1',
+                    SentTimestamp: '1523232000000',
+                    SenderId: '123456789012',
+                    ApproximateFirstReceiveTimestamp: '1523232000001'
+                },
+                messageAttributes:  {
+                    'x-thundra-span-id': {
+                        stringValue: 'spanId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    },
+                    'x-thundra-transaction-id': {
+                        stringValue: 'transactionId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    },
+                    'x-thundra-trace-id': {
+                        stringValue: 'traceId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    }
+                },
+                md5OfBody: '7b270e59b47ff90a553787216d55d91d',
+                eventSource: 'aws:sqs',
+                eventSourceARN: 'arn:aws:sqs:us-west-2:123456789012:MyQueue',
+                awsRegion: 'us-west-2'
+            },
+            {
+                messageId: '19dd0b57-b21e-4ac1-bd88-01bbb068cb78',
+                receiptHandle: 'MessageReceiptHandle',
+                body: 'Hello from SQS!',
+                attributes: {
+                    ApproximateReceiveCount: '1',
+                    SentTimestamp: '1523232000000',
+                    SenderId: '123456789012',
+                    ApproximateFirstReceiveTimestamp: '1523232000001'
+                },
+                messageAttributes:  {
+                    'x-thundra-span-id': {
+                        stringValue: 'differentSpanId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    },
+                    'x-thundra-transaction-id': {
+                        stringValue: 'differentTransactionId2',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    },
+                    'x-thundra-trace-id': {
+                        stringValue: 'differentTraceId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    }
+                },
+                md5OfBody: '7b270e59b47ff90a553787216d55d91d',
+                eventSource: 'aws:sqs',
+                eventSourceARN: 'arn:aws:sqs:us-west-2:123456789012:MyQueue',
+                awsRegion: 'us-west-2'
+            }
+        ]
+    };
+};
+
+const createBatchMockSQSEventSameIds = () => {
+    return {
+        Records: [
+            {
+                messageId: '19dd0b57-b21e-4ac1-bd88-01bbb068cb78',
+                receiptHandle: 'MessageReceiptHandle',
+                body: 'Hello from SQS!',
+                attributes: {
+                    ApproximateReceiveCount: '1',
+                    SentTimestamp: '1523232000000',
+                    SenderId: '123456789012',
+                    ApproximateFirstReceiveTimestamp: '1523232000001'
+                },
+                messageAttributes:  {
+                    'x-thundra-span-id': {
+                        stringValue: 'spanId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    },
+                    'x-thundra-transaction-id': {
+                        stringValue: 'transactionId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    },
+                    'x-thundra-trace-id': {
+                        stringValue: 'traceId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    }
+                },
+                md5OfBody: '7b270e59b47ff90a553787216d55d91d',
+                eventSource: 'aws:sqs',
+                eventSourceARN: 'arn:aws:sqs:us-west-2:123456789012:MyQueue',
+                awsRegion: 'us-west-2'
+            },
+            {
+                messageId: '19dd0b57-b21e-4ac1-bd88-01bbb068cb78',
+                receiptHandle: 'MessageReceiptHandle',
+                body: 'Hello from SQS!',
+                attributes: {
+                    ApproximateReceiveCount: '1',
+                    SentTimestamp: '1523232000000',
+                    SenderId: '123456789012',
+                    ApproximateFirstReceiveTimestamp: '1523232000001'
+                },
+                messageAttributes:  {
+                    'x-thundra-span-id': {
+                        stringValue: 'spanId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    },
+                    'x-thundra-transaction-id': {
+                        stringValue: 'transactionId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    },
+                    'x-thundra-trace-id': {
+                        stringValue: 'traceId',
+                        stringListValues: [],
+                        binaryListValues: [],
+                        dataType: 'String'
+                    }
+                },
+                md5OfBody: '7b270e59b47ff90a553787216d55d91d',
+                eventSource: 'aws:sqs',
+                eventSourceARN: 'arn:aws:sqs:us-west-2:123456789012:MyQueue',
+                awsRegion: 'us-west-2'
+            }
+        ]
+    };
+};
+
 const createMockSNSEvent = () => {
     return {
         Records: [
+            {
+                EventSource: 'aws:sns',
+                EventVersion: '1.0',
+                EventSubscriptionArn: 'arn:aws:sns:us-west-2:{{accountId}}:ExampleTopic',
+                Sns: {
+                    Type: 'Notification',
+                    MessageId: '95df01b4-ee98-5cb9-9903-4c221d41eb5e',
+                    TopicArn: 'arn:aws:sns:us-west-2:123456789012:ExampleTopic',
+                    Subject: 'example subject',
+                    Message: 'example message',
+                    Timestamp: '1970-01-01T00:00:00.000Z',
+                    SignatureVersion: '1',
+                    Signature: 'EXAMPLE',
+                    SigningCertUrl: 'EXAMPLE',
+                    UnsubscribeUrl: 'EXAMPLE',
+                    MessageAttributes: {
+                        'x-thundra-trace-id' : {
+                            Type: 'String',
+                            Value: 'traceId'
+                        },
+                        'x-thundra-transaction-id': {
+                            Type: 'String',
+                            Value: 'transactionId'
+                        },
+                        'x-thundra-span-id': {
+                            Type: 'String',
+                            Value: 'spanId'
+                        }
+                    }
+                }
+            }
+        ]
+    };
+};
+
+const createBatchMockSNSEventWithDifferentIds = () => {
+    return {
+        Records: [
+            {
+                EventSource: 'aws:sns',
+                EventVersion: '1.0',
+                EventSubscriptionArn: 'arn:aws:sns:us-west-2:{{accountId}}:ExampleTopic',
+                Sns: {
+                    Type: 'Notification',
+                    MessageId: '95df01b4-ee98-5cb9-9903-4c221d41eb5e',
+                    TopicArn: 'arn:aws:sns:us-west-2:123456789012:ExampleTopic',
+                    Subject: 'example subject',
+                    Message: 'example message',
+                    Timestamp: '1970-01-01T00:00:00.000Z',
+                    SignatureVersion: '1',
+                    Signature: 'EXAMPLE',
+                    SigningCertUrl: 'EXAMPLE',
+                    UnsubscribeUrl: 'EXAMPLE',
+                    MessageAttributes: {
+                        'x-thundra-trace-id' : {
+                            Type: 'String',
+                            Value: 'differentTraceId'
+                        },
+                        'x-thundra-transaction-id': {
+                            Type: 'String',
+                            Value: 'differentTransactionId'
+                        },
+                        'x-thundra-span-id': {
+                            Type: 'String',
+                            Value: 'differentSpanId'
+                        }
+                    }
+                }
+            },
+            {
+                EventSource: 'aws:sns',
+                EventVersion: '1.0',
+                EventSubscriptionArn: 'arn:aws:sns:us-west-2:{{accountId}}:ExampleTopic',
+                Sns: {
+                    Type: 'Notification',
+                    MessageId: '95df01b4-ee98-5cb9-9903-4c221d41eb5e',
+                    TopicArn: 'arn:aws:sns:us-west-2:123456789012:ExampleTopic',
+                    Subject: 'example subject',
+                    Message: 'example message',
+                    Timestamp: '1970-01-01T00:00:00.000Z',
+                    SignatureVersion: '1',
+                    Signature: 'EXAMPLE',
+                    SigningCertUrl: 'EXAMPLE',
+                    UnsubscribeUrl: 'EXAMPLE',
+                    MessageAttributes: {
+                        'x-thundra-trace-id' : {
+                            Type: 'String',
+                            Value: 'traceId'
+                        },
+                        'x-thundra-transaction-id': {
+                            Type: 'String',
+                            Value: 'transactionId'
+                        },
+                        'x-thundra-span-id': {
+                            Type: 'String',
+                            Value: 'spanId'
+                        }
+                    }
+                }
+            }
+        ]
+    };
+};
+
+const createBatchMockSNSEventWithSameIds = () => {
+    return {
+        Records: [
+            {
+                EventSource: 'aws:sns',
+                EventVersion: '1.0',
+                EventSubscriptionArn: 'arn:aws:sns:us-west-2:{{accountId}}:ExampleTopic',
+                Sns: {
+                    Type: 'Notification',
+                    MessageId: '95df01b4-ee98-5cb9-9903-4c221d41eb5e',
+                    TopicArn: 'arn:aws:sns:us-west-2:123456789012:ExampleTopic',
+                    Subject: 'example subject',
+                    Message: 'example message',
+                    Timestamp: '1970-01-01T00:00:00.000Z',
+                    SignatureVersion: '1',
+                    Signature: 'EXAMPLE',
+                    SigningCertUrl: 'EXAMPLE',
+                    UnsubscribeUrl: 'EXAMPLE',
+                    MessageAttributes: {
+                        'x-thundra-trace-id' : {
+                            Type: 'String',
+                            Value: 'traceId'
+                        },
+                        'x-thundra-transaction-id': {
+                            Type: 'String',
+                            Value: 'transactionId'
+                        },
+                        'x-thundra-span-id': {
+                            Type: 'String',
+                            Value: 'spanId'
+                        }
+                    }
+                }
+            },
             {
                 EventSource: 'aws:sns',
                 EventVersion: '1.0',
@@ -208,4 +500,8 @@ module.exports = {
     createMockSNSEvent,
     createMockApiGatewayProxy,
     createMockClientContext,
+    createBatchMockSQSEventDifferentIds,
+    createBatchMockSQSEventSameIds, 
+    createBatchMockSNSEventWithDifferentIds, 
+    createBatchMockSNSEventWithSameIds
 };
