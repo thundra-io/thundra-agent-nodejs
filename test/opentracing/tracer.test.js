@@ -116,7 +116,7 @@ describe('Recorder', () => {
 
     });
 
-    describe('Tracer set/get beggage item', () => {
+    describe('Tracer set/get baggage item', () => {
         const tracer = new ThundraTracer({});
         const span = tracer.startSpan('f1');
         span.setBaggageItem('test', 'value');

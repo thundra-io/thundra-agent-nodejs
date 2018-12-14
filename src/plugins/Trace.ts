@@ -71,7 +71,7 @@ export class Trace {
         }
 
         const propagatedSpanContext: ThundraSpanContext =
-            this.extractSpanContext(originalEvent) as ThundraSpanContext;
+            this.extractSpanContext(originalEvent, originalContext) as ThundraSpanContext;
 
         if (propagatedSpanContext) {
             this.pluginContext.transactionId = Utils.getConfiguration(
@@ -244,9 +244,41 @@ export class Trace {
         return response;
     }
 
-    private extractSpanContext(originalEvent: any): opentracing.SpanContext {
+    private extractSpanContext(originalEvent: any, originalContext: any): opentracing.SpanContext {
+        if (originalContext.clientContext) {
+            return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, originalContext.clientContext.custom);
+        }
+
         if (originalEvent.requestContext && originalEvent.headers) {
             return this.tracer.extract(opentracing.FORMAT_HTTP_HEADERS, originalEvent.headers);
+        }
+
+        if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
+            originalEvent.Records[0] && originalEvent.Records[0].EventSource === 'aws:sns') {
+            const messageAttributes = originalEvent.Records[0].Sns.MessageAttributes;
+            const carrier: any = {};
+            for (const key of Object.keys(messageAttributes)) {
+                const messageAttribute = messageAttributes[key];
+                if (messageAttribute.Type === 'String') {
+                    carrier[key] = messageAttribute.Value;
+                }
+            }
+
+            return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, carrier);
+        }
+
+        if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
+            originalEvent.Records[0] && originalEvent.Records[0].eventSource === 'aws:sqs') {
+                const messageAttributes = originalEvent.Records[0].messageAttributes;
+
+                const carrier: any = {};
+                for (const key of Object.keys(messageAttributes)) {
+                    const messageAttribute = messageAttributes[key];
+                    if (messageAttribute.dataType === 'String') {
+                        carrier[key] = messageAttribute.stringValue;
+                    }
+                }
+                return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, carrier);
         }
 
         return null;
