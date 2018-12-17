@@ -96,8 +96,12 @@ class Reporter {
             request.on('error', (error: any) => {
                 reject(error);
             });
-            request.write(JSON.stringify(this.reports));
-            request.end();
+            try {
+                request.write(JSON.stringify(this.reports));
+                request.end();
+            } catch (error) {
+                ThundraLogger.getInstance().error('Cannot serialize report data. ' + error);
+            }
         });
     }
 

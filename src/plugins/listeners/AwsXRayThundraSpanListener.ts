@@ -51,6 +51,7 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
                     this.addToErrors(span, subsegment);
                     this.addToMetadatas(span, subsegment);
                     subsegment.close();
+                    this.subsegmentMap.delete(span.spanContext.spanId);
                 }
             }
         } catch (err) {

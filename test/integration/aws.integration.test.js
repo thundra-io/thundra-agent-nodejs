@@ -57,8 +57,8 @@ describe('AWS Integration', () => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.className).toBe('AWS-Lambda');
             expect(span.domainName).toBe('API');
-            expect(span.tags['aws.lambda.function.name']).toBe('Test');
-            expect(span.tags['aws.lambda.function.qualifier']).toBe(undefined);
+            expect(span.tags['aws.lambda.name']).toBe('Test');
+            expect(span.tags['aws.lambda.qualifier']).toBe(undefined);
             expect(span.tags['aws.lambda.invocation.payload']).toEqual('{ "name" : "thundra" }');
             expect(span.tags['aws.request.name']).toBe('invoke');
             expect(span.tags['aws.lambda.invocation.type']).toBe('RequestResponse');
