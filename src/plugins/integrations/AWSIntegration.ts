@@ -4,13 +4,15 @@ import {
   AwsSDKTags, AwsSQSTags, AwsSNSTags, SpanTags, AwsDynamoTags,
   SNSRequestTypes, SQSRequestTypes, AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
   SpanTypes, DynamoDBRequestTypes, KinesisRequestTypes, ClassNames, DomainNames,
-  DBTags, DBTypes, FirehoseRequestTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST, S3RequestTypes, LambdaRequestType,
+  DBTags, DBTypes, FirehoseRequestTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST, S3RequestTypes, LambdaRequestType, envVariableKeys,
 } from '../../Constants';
 import Utils from '../Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraSpan from '../../opentracing/Span';
+import * as opentracing from 'opentracing';
+import { ClientRequest } from 'http';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -41,6 +43,29 @@ class AWSIntegration implements Integration {
       }
       return exp;
     });
+  }
+
+  static injectSpanContextIntoMessageAttributes(tracer: ThundraTracer, span: ThundraSpan): any {
+    if (!(Utils.getConfiguration(envVariableKeys.DISABLE_SPAN_CONTEXT_INJECTION) === 'true') ) {
+      const attributes: any = {};
+      tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, attributes);
+      const messageAttributes: any = {};
+      for (const key of Object.keys(attributes)) {
+          messageAttributes[key] = {
+            DataType: 'String',
+            StringValue: attributes[key],
+          };
+      }
+      return messageAttributes;
+    }
+  }
+
+  static injectSpanContexIntoLambdaClientContext(tracer: ThundraTracer, span: ThundraSpan): any {
+    if (!(Utils.getConfiguration(envVariableKeys.DISABLE_SPAN_CONTEXT_INJECTION) === 'true') ) {
+      const custom: any = {};
+      tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, custom);
+      return custom;
+    }
   }
 
   wrap(lib: any, config: any) {
@@ -76,6 +101,20 @@ class AWSIntegration implements Integration {
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
               },
             });
+
+            const messageAttributes = AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan);
+            if (messageAttributes) {
+              if (operationName === 'sendMessage') {
+                const requestMessageAttributes = request.params.MessageAttributes ? request.params.MessageAttributes : {};
+                request.params.MessageAttributes = {...requestMessageAttributes, ...messageAttributes};
+              } else if (operationName === 'sendMessageBatch' &&
+                        request.params.Entries && Array.isArray(request.params.Entries)) {
+                  for (const entry of request.params.Entries) {
+                    const requestMessageAttributes = entry.MessageAttributes ? entry.MessageAttributes  : {};
+                    entry.MessageAttributes = {...requestMessageAttributes, ...messageAttributes};
+                  }
+              }
+            }
           } else if (serviceName === 'sns') {
             const operationType = SNSRequestTypes[operationName];
             const topicName = request.params ? request.params.TopicArn : '';
@@ -92,6 +131,15 @@ class AWSIntegration implements Integration {
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
               },
             });
+
+            if (operationName === 'publish') {
+              const messageAttributes = AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan);
+              if (messageAttributes) {
+                  const requestMessageAttributes = request.params.MessageAttributes ?
+                                                  request.params.MessageAttributes : {};
+                  request.params.MessageAttributes = {...requestMessageAttributes, ...messageAttributes};
+              }
+            }
           } else if (serviceName === 'dynamodb') {
             const statementType = DynamoDBRequestTypes[operationName];
             const tableName = statementType ? Utils.getDynamoDBTableName(request) : AWS_SERVICE_REQUEST;
@@ -148,6 +196,22 @@ class AWSIntegration implements Integration {
                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
               },
             });
+
+            const custom = AWSIntegration.injectSpanContexIntoLambdaClientContext(tracer, activeSpan);
+            if (custom) {
+              if (request.params.ClientContext) {
+                const context = Buffer.from(request.params.ClientContext, 'base64').toString('utf8');
+                try {
+                  const clientContext = JSON.parse(context);
+                  clientContext.custom = custom;
+                  request.params.ClientContext = Buffer.from(JSON.stringify({custom: clientContext})).toString('base64');
+                } catch (err) {
+                  ThundraLogger.getInstance().debug('Cannot parse lambda client context not a valid JSON');
+                }
+              } else {
+                request.params.ClientContext = Buffer.from(JSON.stringify({custom})).toString('base64');
+              }
+            }
           } else if (serviceName === 'kinesis') {
             const streamName = request.params ? request.params.StreamName : '';
 

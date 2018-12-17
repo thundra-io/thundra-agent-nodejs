@@ -1,5 +1,7 @@
 import Trace from '../../dist/plugins/Trace';
-import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
+import { createMockPluginContext, createMockBeforeInvocationData, createMockApiGatewayProxy,
+    createMockSNSEvent, createMockSQSEvent, createMockClientContext,createBatchMockSQSEventDifferentIds,
+    createBatchMockSQSEventSameIds, createBatchMockSNSEventWithDifferentIds, createBatchMockSNSEventWithSameIds } from '../mocks/mocks';
 import { DATA_MODEL_VERSION } from '../../dist/Constants';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
 import ThundraTracer from '../../dist/opentracing/Tracer';
@@ -184,6 +186,135 @@ describe('Trace', () => {
                 'aws.lambda.log_group_name': beforeInvocationData.originalContext.logGroupName,
                 'aws.lambda.log_stream_name': beforeInvocationData.originalContext.logStreamName,
             });
+        });
+    });
+
+    describe('beforeInvocation with SQS event', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = createMockSQSEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set propagated ids in plugin context', () => {
+            expect(pluginContext.transactionId).toBe('awsRequestId');
+            expect(pluginContext.traceId).toBe('traceId');
+            expect(pluginContext.spanId).toBe('spanId');
+        });
+    });
+
+    describe('beforeInvocation with batch SQS event from multiple triggers', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = createBatchMockSQSEventDifferentIds();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set propagated ids in plugin context', () => {
+            expect(pluginContext.transactionId).toBe('awsRequestId');
+            expect(pluginContext.traceId).not.toBe('traceId');
+            expect(pluginContext.spanId).not.toBe('spanId');
+        });
+    });
+
+    describe('beforeInvocation with batch SQS event from same trigger', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = createBatchMockSNSEventWithSameIds();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set propagated ids in plugin context', () => {
+            expect(pluginContext.transactionId).toBe('awsRequestId');
+            expect(pluginContext.traceId).toBe('traceId');
+            expect(pluginContext.spanId).toBe('spanId');
+        });
+    });
+
+    describe('beforeInvocation with SNS event', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = createMockSNSEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set propagated ids in plugin context', () => {
+            expect(pluginContext.transactionId).toBe('awsRequestId');
+            expect(pluginContext.traceId).toBe('traceId');
+            expect(pluginContext.spanId).toBe('spanId');
+        });
+    });
+
+
+    describe('beforeInvocation with batch SNS event from multiple triggers', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = createBatchMockSNSEventWithDifferentIds();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set propagated ids in plugin context', () => {
+            expect(pluginContext.transactionId).toBe('awsRequestId');
+            expect(pluginContext.traceId).not.toBe('traceId');
+            expect(pluginContext.spanId).not.toBe('spanId');
+        });
+    });
+
+    describe('beforeInvocation with batch SNS event from same trigger', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = createBatchMockSNSEventWithSameIds();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set propagated ids in plugin context', () => {
+            expect(pluginContext.transactionId).toBe('awsRequestId');
+            expect(pluginContext.traceId).toBe('traceId');
+            expect(pluginContext.spanId).toBe('spanId');
+        });
+    });
+
+    describe('beforeInvocation with ApiGateway event', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = createMockApiGatewayProxy();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set propagated ids in plugin context', () => {
+            expect(pluginContext.transactionId).toBe('awsRequestId');
+            expect(pluginContext.traceId).toBe('traceId');
+            expect(pluginContext.spanId).toBe('spanId');
+        });
+    });
+
+    describe('beforeInvocation with Lambda trigger', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalContext.clientContext = createMockClientContext();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set propagated ids in plugin context', () => {
+            expect(pluginContext.transactionId).toBe('awsRequestId');
+            expect(pluginContext.traceId).toBe('traceId');
+            expect(pluginContext.spanId).toBe('spanId');
         });
     });
 
