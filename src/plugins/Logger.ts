@@ -1,6 +1,6 @@
 import {logLevels, envVariableKeys} from '../Constants';
 import * as util from 'util';
-import Utils from './Utils';
+import Utils from './utils/Utils';
 import LogManager from './LogManager';
 
 class Logger {

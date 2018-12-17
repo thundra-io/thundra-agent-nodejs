@@ -4,21 +4,21 @@ import * as os from 'os';
 import {
     DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys,
-} from '../Constants';
-import ThundraSpanContext from '../opentracing/SpanContext';
+} from '../../Constants';
+import ThundraSpanContext from '../../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
-import MonitorDataType from './data/base/MonitoringDataType';
-import BaseMonitoringData from './data/base/BaseMonitoringData';
-import BuildInfoLoader from '../BuildInfoLoader';
-import MonitoringDataType from './data/base/MonitoringDataType';
-import InvocationData from './data/invocation/InvocationData';
-import MetricData from './data/metric/MetricData';
-import TraceData from './data/trace/TraceData';
-import SpanData from './data/trace/SpanData';
-import LogData from './data/log/LogData';
-import ThundraLogger from '../ThundraLogger';
-import ApplicationSupport from './support/ApplicationSupport';
+import MonitorDataType from '../data/base/MonitoringDataType';
+import BaseMonitoringData from '../data/base/BaseMonitoringData';
+import BuildInfoLoader from '../../BuildInfoLoader';
+import MonitoringDataType from '../data/base/MonitoringDataType';
+import InvocationData from '../data/invocation/InvocationData';
+import MetricData from '../data/metric/MetricData';
+import TraceData from '../data/trace/TraceData';
+import SpanData from '../data/trace/SpanData';
+import LogData from '../data/log/LogData';
+import ThundraLogger from '../../ThundraLogger';
+import ApplicationSupport from '../support/ApplicationSupport';
 
 class Utils {
     static generateId(): string {

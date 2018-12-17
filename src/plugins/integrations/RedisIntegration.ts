@@ -1,7 +1,8 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import { SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames, ClassNames, DBTypes, DBTags } from '../../Constants';
-import Utils from '../Utils';
+import { SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames,
+  ClassNames, DBTypes, DBTags, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME } from '../../Constants';
+import Utils from '../utils/Utils';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
@@ -74,6 +75,10 @@ class RedisIntegration implements Integration {
             [RedisTags.REDIS_COMMAND_TYPE]: operationType,
             [RedisTags.REDIS_COMMAND_ARGS]: options.args.join(','),
             [SpanTags.OPERATION_TYPE]: operationType,
+            [SpanTags.TOPOLOGY_VERTEX]: true,
+            [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
+            [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
+            [SpanTags.TRIGGER_OPERATION_NAMES]: [host],
           },
         });
 

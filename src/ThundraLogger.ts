@@ -1,4 +1,4 @@
-import Utils from './plugins/Utils';
+import Utils from './plugins/utils/Utils';
 import { envVariableKeys } from './Constants';
 
 class ThundraLogger {

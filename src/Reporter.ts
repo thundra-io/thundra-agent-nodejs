@@ -3,7 +3,7 @@ import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
 import { URL, MONITORING_DATA_PATH, envVariableKeys } from './Constants';
-import Utils from './plugins/Utils';
+import Utils from './plugins/utils/Utils';
 import ThundraLogger from './ThundraLogger';
 
 const httpAgent = new http.Agent({

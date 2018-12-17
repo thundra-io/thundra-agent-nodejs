@@ -26,6 +26,10 @@ describe('MySQL2 Integration', () => {
             expect(span.tags['db.type']).toBe('mysql');
             expect(span.tags['db.statement.type']).toBe('SELECT');
             expect(span.tags['db.statement']).toBe('SELECT 1 + 1 AS solution');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['localhost']);
         });
     });
 });

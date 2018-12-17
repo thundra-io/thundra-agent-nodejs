@@ -24,6 +24,10 @@ describe('HTTP integration', () => {
             expect(span.tags['http.url']).toBe('jsonplaceholder.typicode.com/users/1?q=123');
             expect(span.tags['http.query_params']).toBe('q=123');
             expect(span.tags['http.status_code']).toBe(200);
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['/users/1']);
         });
     });
 

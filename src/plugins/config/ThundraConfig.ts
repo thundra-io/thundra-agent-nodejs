@@ -3,7 +3,7 @@ import MetricConfig from './MetricConfig';
 import InvocationConfig from './InvocationConfig';
 import { TIMEOUT_MARGIN, envVariableKeys } from '../../Constants';
 import LogConfig from './LogConfig';
-import Utils from '../Utils';
+import Utils from '../utils/Utils';
 import AwsXRayConfig from './AwsXRayConfig';
 const koalas = require('koalas');
 

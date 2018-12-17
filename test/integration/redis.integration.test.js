@@ -35,6 +35,10 @@ describe('Redis Integration', () => {
             expect(writeCommandSpan.tags['redis.command']).toBe('SET');
             expect(writeCommandSpan.tags['redis.command.type']).toBe('WRITE');
             expect(writeCommandSpan.tags['redis.command.args']).toBe('string key,string val');
+            expect(writeCommandSpan.tags['topology.vertex']).toEqual(true);
+            expect(writeCommandSpan.tags['trigger.domainName']).toEqual('API');
+            expect(writeCommandSpan.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(writeCommandSpan.tags['trigger.operationNames']).toEqual(['127.0.0.1']);
         
         });
     });

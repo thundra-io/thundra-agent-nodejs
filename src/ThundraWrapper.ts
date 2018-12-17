@@ -19,7 +19,7 @@
 import Reporter from './Reporter';
 import TimeoutError from './plugins/error/TimeoutError';
 import HttpError from './plugins/error/HttpError';
-import Utils from './plugins/Utils';
+import Utils from './plugins/utils/Utils';
 import { envVariableKeys } from './Constants';
 
 class ThundraWrapper {

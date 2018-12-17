@@ -4,9 +4,10 @@ import {
   AwsSDKTags, AwsSQSTags, AwsSNSTags, SpanTags, AwsDynamoTags,
   SNSRequestTypes, SQSRequestTypes, AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
   SpanTypes, DynamoDBRequestTypes, KinesisRequestTypes, ClassNames, DomainNames,
-  DBTags, DBTypes, FirehoseRequestTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST, S3RequestTypes, LambdaRequestType, envVariableKeys,
+  DBTags, DBTypes, FirehoseRequestTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST, S3RequestTypes,
+  LambdaRequestType, envVariableKeys, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
 } from '../../Constants';
-import Utils from '../Utils';
+import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import ModuleVersionValidator from './ModuleVersionValidator';
@@ -99,6 +100,7 @@ class AWSIntegration implements Integration {
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsSQSTags.QUEUE_NAME]: queueName,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
+                [SpanTags.TRIGGER_OPERATION_NAMES]: [queueName],
               },
             });
 
@@ -129,6 +131,7 @@ class AWSIntegration implements Integration {
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsSNSTags.TOPIC_NAME]: topicName,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
+                [SpanTags.TRIGGER_OPERATION_NAMES]: [topicName],
               },
             });
 
@@ -158,6 +161,7 @@ class AWSIntegration implements Integration {
                 [AwsDynamoTags.TABLE_NAME]: tableName,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [DBTags.DB_STATEMENT]: request.params,
+                [SpanTags.TRIGGER_OPERATION_NAMES]: [tableName],
               },
             });
           } else if (serviceName === 's3') {
@@ -175,6 +179,7 @@ class AWSIntegration implements Integration {
                 [AwsS3Tags.BUCKET_NAME]: request.params.Bucket,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsS3Tags.OBJECT_NAME]: request.params.Key,
+                [SpanTags.TRIGGER_OPERATION_NAMES]: [bucketName],
               },
             });
           } else if (serviceName === 'lambda') {
@@ -194,6 +199,7 @@ class AWSIntegration implements Integration {
                 [AwsLambdaTags.INVOCATION_PAYLOAD]: request.params.Payload,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
+                [SpanTags.TRIGGER_OPERATION_NAMES]: [lambdaName],
               },
             });
 
@@ -226,6 +232,7 @@ class AWSIntegration implements Integration {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_KINESIS,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsKinesisTags.STREAM_NAME]: streamName,
+                [SpanTags.TRIGGER_OPERATION_NAMES]: [streamName],
               },
             });
           } else if (serviceName === 'firehose') {
@@ -241,6 +248,7 @@ class AWSIntegration implements Integration {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_FIREHOSE,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsFirehoseTags.STREAM_NAME]: streamName,
+                [SpanTags.TRIGGER_OPERATION_NAMES]: [streamName],
               },
             });
           } else {
@@ -254,6 +262,12 @@ class AWSIntegration implements Integration {
                 [AwsSDKTags.REQUEST_NAME]: request.operation,
               },
             });
+          }
+
+          if (activeSpan) {
+              activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+              activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+              activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
           }
 
           request.on('complete', (response: any) => {

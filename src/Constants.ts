@@ -242,6 +242,10 @@ export const AwsSQSTags = {
 export const SpanTags = {
     SPAN_TYPE: 'span.type',
     OPERATION_TYPE: 'operation.type',
+    TRIGGER_DOMAIN_NAME: 'trigger.domainName',
+    TRIGGER_CLASS_NAME: 'trigger.className',
+    TRIGGER_OPERATION_NAMES: 'trigger.operationNames',
+    TOPOLOGY_VERTEX: 'topology.vertex',
 };
 
 export const SpanTypes = {

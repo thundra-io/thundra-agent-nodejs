@@ -2,7 +2,7 @@ import BasePluginConfig from './BasePluginConfig';
 import TraceableConfig from './TraceableConfig';
 import {envVariableKeys, INTEGRATIONS } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
-import Utils from '../Utils';
+import Utils from '../utils/Utils';
 import ThundraLogger from '../../ThundraLogger';
 import TraceSamplerConfig from './TraceSamplerConfig';
 import Integration from '../integrations/Integration';
