@@ -116,10 +116,10 @@ describe('AWS Integration', () => {
             expect(span.tags['aws.request.name']).toBe('listQueues');
             expect(span.tags['aws.sqs.queue.name']).toBe('AWSServiceRequest');
             expect(span.tags['operation.type']).toBe('READ');
-            expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['AWSServiceRequest']);
+            expect(span.tags['topology.vertex']).not.toBeTruthy();
+            expect(span.tags['trigger.domainName']).not.toBeTruthy();
+            expect(span.tags['trigger.className']).not.toBeTruthy();
+            expect(span.tags['trigger.operationNames']).not.toBeTruthy();
         });
     });
   

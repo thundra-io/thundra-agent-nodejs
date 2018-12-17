@@ -100,9 +100,15 @@ class AWSIntegration implements Integration {
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsSQSTags.QUEUE_NAME]: queueName,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
-                [SpanTags.TRIGGER_OPERATION_NAMES]: [queueName],
               },
             });
+
+            if (operationType) {
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [queueName]);
+              activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+              activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+              activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+            }
 
             const messageAttributes = AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan);
             if (messageAttributes) {
@@ -119,7 +125,7 @@ class AWSIntegration implements Integration {
             }
           } else if (serviceName === 'sns') {
             const operationType = SNSRequestTypes[operationName];
-            const topicName = request.params ? request.params.TopicArn : '';
+            const topicName = request.params ? request.params.TopicArn : AWS_SERVICE_REQUEST;
 
             activeSpan = tracer._startSpan(topicName, {
               childOf: parentSpan,
@@ -131,9 +137,15 @@ class AWSIntegration implements Integration {
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsSNSTags.TOPIC_NAME]: topicName,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
-                [SpanTags.TRIGGER_OPERATION_NAMES]: [topicName],
               },
             });
+
+            if (operationType) {
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [topicName]);
+              activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+              activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+              activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+            }
 
             if (operationName === 'publish') {
               const messageAttributes = AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan);
@@ -161,9 +173,15 @@ class AWSIntegration implements Integration {
                 [AwsDynamoTags.TABLE_NAME]: tableName,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [DBTags.DB_STATEMENT]: request.params,
-                [SpanTags.TRIGGER_OPERATION_NAMES]: [tableName],
               },
             });
+
+            if (statementType) {
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tableName]);
+              activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+              activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+              activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+            }
           } else if (serviceName === 's3') {
             const operationType = S3RequestTypes[operationName];
             const bucketName = operationType ? request.params.Bucket : AWS_SERVICE_REQUEST;
@@ -179,9 +197,15 @@ class AWSIntegration implements Integration {
                 [AwsS3Tags.BUCKET_NAME]: request.params.Bucket,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsS3Tags.OBJECT_NAME]: request.params.Key,
-                [SpanTags.TRIGGER_OPERATION_NAMES]: [bucketName],
               },
             });
+
+            if (operationType) {
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [bucketName]);
+              activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+              activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+              activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+            }
           } else if (serviceName === 'lambda') {
             const operationType = LambdaRequestType[operationName];
             const lambdaName = operationType ? request.params.FunctionName : AWS_SERVICE_REQUEST;
@@ -199,9 +223,15 @@ class AWSIntegration implements Integration {
                 [AwsLambdaTags.INVOCATION_PAYLOAD]: request.params.Payload,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
-                [SpanTags.TRIGGER_OPERATION_NAMES]: [lambdaName],
               },
             });
+
+            if (operationType) {
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [lambdaName]);
+              activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+              activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+              activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+            }
 
             const custom = AWSIntegration.injectSpanContexIntoLambdaClientContext(tracer, activeSpan);
             if (custom) {
@@ -219,7 +249,7 @@ class AWSIntegration implements Integration {
               }
             }
           } else if (serviceName === 'kinesis') {
-            const streamName = request.params ? request.params.StreamName : '';
+            const streamName = request.params ? request.params.StreamName : AWS_SERVICE_REQUEST;
 
             activeSpan = tracer._startSpan(streamName, {
               childOf: parentSpan,
@@ -232,11 +262,17 @@ class AWSIntegration implements Integration {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_KINESIS,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsKinesisTags.STREAM_NAME]: streamName,
-                [SpanTags.TRIGGER_OPERATION_NAMES]: [streamName],
               },
             });
+
+            if (request.params.StreamName) {
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [streamName]);
+              activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+              activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+              activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+            }
           } else if (serviceName === 'firehose') {
-            const streamName = request.params ? request.params.DeliveryStreamName : '';
+            const streamName = request.params ? request.params.DeliveryStreamName : AWS_SERVICE_REQUEST;
             activeSpan = tracer._startSpan(streamName, {
               childOf: parentSpan,
               domainName: DomainNames.STREAM,
@@ -248,9 +284,15 @@ class AWSIntegration implements Integration {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_FIREHOSE,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [AwsFirehoseTags.STREAM_NAME]: streamName,
-                [SpanTags.TRIGGER_OPERATION_NAMES]: [streamName],
               },
             });
+
+            if (request.params.DeliveryStreamName) {
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [streamName]);
+              activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+              activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+              activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+            }
           } else {
             activeSpan = tracer._startSpan(AWS_SERVICE_REQUEST, {
               childOf: parentSpan,
@@ -262,12 +304,6 @@ class AWSIntegration implements Integration {
                 [AwsSDKTags.REQUEST_NAME]: request.operation,
               },
             });
-          }
-
-          if (activeSpan) {
-              activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-              activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-              activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
           }
 
           request.on('complete', (response: any) => {
