@@ -229,7 +229,7 @@ class AWSIntegration implements Integration {
                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
               },
             });
- 
+
             const custom = AWSIntegration.injectSpanContexIntoLambdaClientContext(tracer, activeSpan);
 
             if (operationType) {
