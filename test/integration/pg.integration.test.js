@@ -11,6 +11,7 @@ describe('PostgreSQL Integration', () => {
         integration.wrap(sdk, {});
 
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return PG.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
@@ -25,6 +26,10 @@ describe('PostgreSQL Integration', () => {
             expect(span.tags['db.port']).toBe(5432);
             expect(span.tags['db.type']).toBe('pg');
             expect(span.tags['db.statement']).toBe('SELECT Hello world!::text as message');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 });

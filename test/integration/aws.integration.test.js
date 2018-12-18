@@ -11,6 +11,7 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return AWS.dynamo(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -26,7 +27,7 @@ describe('AWS Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['test-table']);
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 
@@ -37,6 +38,7 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return AWS.s3(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -49,7 +51,7 @@ describe('AWS Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['test']);
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 
@@ -60,6 +62,7 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return AWS.lambda(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -73,7 +76,7 @@ describe('AWS Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['Test']);
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
     
@@ -84,6 +87,7 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return AWS.sqs(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -95,7 +99,7 @@ describe('AWS Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['testqueue']);
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 
@@ -106,6 +110,7 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return AWS.sqs_list_queue(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -131,6 +136,8 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
+
         return AWS.sns(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.className).toBe('AWS-SNS');
@@ -141,7 +148,7 @@ describe('AWS Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['TEST_TOPIC']);
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     }); 
     
@@ -152,6 +159,7 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return AWS.kinesis(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -163,7 +171,7 @@ describe('AWS Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['STRING_VALUE']);
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 
@@ -174,6 +182,7 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return AWS.firehose(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -185,7 +194,7 @@ describe('AWS Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['STRING_VALUE']); 
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']); 
         });
     });
 });

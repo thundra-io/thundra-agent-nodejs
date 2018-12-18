@@ -332,6 +332,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Stream');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-Kinesis');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'arn:aws:kinesis:EXAMPLE' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 
@@ -348,6 +349,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Stream');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-Firehose');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'arn:aws:kinesis:EXAMPLE' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 
@@ -364,6 +366,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('DB');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-DynamoDB');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'ExampleTableWithStream' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 
@@ -380,6 +383,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Messaging');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-SNS');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'ExampleTopic' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 
@@ -396,6 +400,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Messaging');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-SQS');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'MyQueue' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 
@@ -412,6 +417,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Storage');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-S3');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'example-bucket' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 
@@ -428,6 +434,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Schedule');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-CloudWatch-Schedule');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'ExampleRule' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 
@@ -444,6 +451,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Log');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-CloudWatch-Log');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'testLogGroup' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 
@@ -460,6 +468,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('CDN');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-CloudFront');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ '/test' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 
@@ -476,6 +485,24 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('API');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-APIGateway');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ '/path/to/resource' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with Lambda event', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalContext.clientContext = createMockClientContext();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for Lambda to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('API');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-Lambda');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'lambda-function' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 

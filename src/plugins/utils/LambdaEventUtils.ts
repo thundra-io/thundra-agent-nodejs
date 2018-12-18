@@ -7,7 +7,9 @@ import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 
 class LambdaEventUtils {
-    static getLambdaEventType(originalEvent: any): LambdaEventType {
+    static LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
+
+    static getLambdaEventType(originalEvent: any, originalContext: any): LambdaEventType {
         if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
             originalEvent.Records[0] && originalEvent.Records[0].kinesis) {
             return LambdaEventType.Kinesis;
@@ -35,12 +37,15 @@ class LambdaEventUtils {
             return LambdaEventType.CloudFront;
         } else if (originalEvent.requestContext && originalEvent.headers) {
             return LambdaEventType.APIGatewayProxy;
+        } else if (originalContext.clientContext) {
+            return LambdaEventType.Lambda;
         }
     }
 
     static injectTriggerTagsForKinesis(span: ThundraSpan, originalEvent: any): void {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'Stream');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-Kinesis');
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         const streamNames = new Set();
         for (const record of originalEvent.Records) {
             const evenSourceARN = record.eventSourceARN;
@@ -53,6 +58,7 @@ class LambdaEventUtils {
     static injectTriggerTagsForFirehose(span: ThundraSpan, originalEvent: any): void {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'Stream');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-Firehose');
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         const streamARN = originalEvent.deliveryStreamArn;
         const streamName = streamARN.substring(streamARN.indexOf('/') + 1);
         span.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [streamName]);
@@ -61,6 +67,7 @@ class LambdaEventUtils {
     static injectTriggerTagsForDynamoDB(span: ThundraSpan, originalEvent: any): void {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'DB');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-DynamoDB');
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         const tableNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const evenSourceARN = record.eventSourceARN;
@@ -75,6 +82,7 @@ class LambdaEventUtils {
     static injectTriggerTagsForSNS(span: ThundraSpan, originalEvent: any): void {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'Messaging');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-SNS');
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         const topicNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const topicARN = record.Sns.TopicArn;
@@ -87,6 +95,7 @@ class LambdaEventUtils {
     static injectTriggerTagsForSQS(span: ThundraSpan, originalEvent: any) {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'Messaging');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-SQS');
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         const queueNames: Set<string> = new Set<string>();
         for (const message of originalEvent.Records) {
             const queueARN = message.eventSourceARN;
@@ -99,6 +108,7 @@ class LambdaEventUtils {
     static injectTriggerTagsForS3(span: ThundraSpan, originalEvent: any) {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'Storage');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-S3');
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         const bucketNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const bucketName = record.s3.bucket.name;
@@ -110,6 +120,7 @@ class LambdaEventUtils {
     static injectTriggerTagsForCloudWatchSchedule(span: ThundraSpan, originalEvent: any) {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'Schedule');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-CloudWatch-Schedule');
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         const scheduleNames: Set<string> = new Set<string>();
         for (const resource of originalEvent.resources) {
             const scheduleName = resource.substring(resource.indexOf('/') + 1);
@@ -125,6 +136,7 @@ class LambdaEventUtils {
             span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'Log');
             span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-CloudWatch-Log');
             span.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [logData.logGroup]);
+            span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         } catch (error) {
             ThundraLogger.getInstance().error('Cannot read CloudWatch log data. ' + error);
         }
@@ -133,6 +145,7 @@ class LambdaEventUtils {
     static injectTriggerTagsForCloudFront(span: ThundraSpan, originalEvent: any) {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'CDN');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-CloudFront');
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         const uris: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const uri = record.cf.request.uri;
@@ -145,6 +158,18 @@ class LambdaEventUtils {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'API');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-APIGateway');
         span.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [originalEvent.path]);
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+    }
+
+    static injectTriggerTagsForLambda(span: ThundraSpan, originalContext: any) {
+        if (originalContext && originalContext.clientContext && originalContext.clientContext.custom &&
+            originalContext.clientContext.custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME]) {
+            span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'API');
+            span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-Lambda');
+            span.setTag(SpanTags.TRIGGER_OPERATION_NAMES,
+                [originalContext.clientContext.custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME]]);
+            span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+        }
     }
 
     static extractSpanContextFromSNSEvent(tracer: ThundraTracer, originalEvent: any): ThundraSpanContext {
@@ -227,4 +252,5 @@ export enum LambdaEventType {
     CloudWatchLog,
     CloudFront,
     APIGatewayProxy,
+    Lambda,
 }

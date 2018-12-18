@@ -72,6 +72,8 @@ export class Trace {
             originalContext.awsRequestId = Utils.generateId();
         }
 
+        this.tracer.functionName = originalContext.functionName;
+
         const propagatedSpanContext: ThundraSpanContext =
             this.extractSpanContext(originalEvent, originalContext) as ThundraSpanContext;
 
@@ -138,7 +140,7 @@ export class Trace {
         this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.rootSpan.tags['aws.lambda.invocation.request'] = this.getRequest(originalEvent);
 
-        this.injectTriggerTags(this.rootSpan, originalEvent);
+        this.injectTriggerTags(this.rootSpan, originalEvent, originalContext);
     }
 
     afterInvocation = (data: any) => {
@@ -249,8 +251,8 @@ export class Trace {
     }
 
     private extractSpanContext(originalEvent: any, originalContext: any): opentracing.SpanContext {
-        const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent);
-        if (originalContext.clientContext) {
+        const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
+        if (lambdaEventType === LambdaEventType.Lambda) {
             return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, originalContext.clientContext.custom);
         } else if (lambdaEventType === LambdaEventType.APIGatewayProxy) {
             return this.tracer.extract(opentracing.FORMAT_HTTP_HEADERS, originalEvent.headers);
@@ -261,9 +263,10 @@ export class Trace {
         }
     }
 
-    private injectTriggerTags(span: ThundraSpan, originalEvent: any) {
+    private injectTriggerTags(span: ThundraSpan, originalEvent: any, originalContext: any) {
         try {
-            const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent);
+            const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
+
             if (lambdaEventType === LambdaEventType.Kinesis) {
                 LambdaEventUtils.injectTriggerTagsForKinesis(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.FireHose) {
@@ -284,6 +287,8 @@ export class Trace {
                 LambdaEventUtils.injectTriggerTagsForCloudFront(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.APIGatewayProxy) {
                 LambdaEventUtils.injectTriggerTagsForAPIGatewayProxy(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.Lambda) {
+                LambdaEventUtils.injectTriggerTagsForLambda(span, originalContext);
             }
         } catch (error) {
             ThundraLogger.getInstance().error('Cannot inject trigger tags. ' + error);

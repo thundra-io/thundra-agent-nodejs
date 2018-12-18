@@ -18,6 +18,7 @@ class ThundraTracer extends Tracer {
   activeSpans: Map<string, ThundraSpan>;
   transactionId: string;
   propagators: any;
+  functionName: string;
 
   constructor(config: any = {}) {
     super();

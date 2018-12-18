@@ -12,6 +12,7 @@ describe('MySQL2 Integration', () => {
         integration.wrap(connection, {});
 
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return mysql.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
@@ -29,7 +30,7 @@ describe('MySQL2 Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['db']);
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 });

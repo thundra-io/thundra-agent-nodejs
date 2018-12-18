@@ -14,6 +14,7 @@ import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraSpan from '../../opentracing/Span';
 import * as opentracing from 'opentracing';
 import { ClientRequest } from 'http';
+import LambdaEventUtils from '../utils/LambdaEventUtils';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -87,8 +88,10 @@ class AWSIntegration implements Integration {
 
           if (serviceName === 'sqs') {
             const operationType = SQSRequestTypes[operationName];
-            const queueName = operationType ?
+            let queueName = operationType ?
             Utils.getQueueName(request.params.QueueUrl) : AWS_SERVICE_REQUEST;
+
+            queueName = queueName.substring(queueName.lastIndexOf('/') + 1);
 
             activeSpan = tracer._startSpan(queueName, {
               childOf: parentSpan,
@@ -104,7 +107,7 @@ class AWSIntegration implements Integration {
             });
 
             if (operationType) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [queueName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -125,7 +128,8 @@ class AWSIntegration implements Integration {
             }
           } else if (serviceName === 'sns') {
             const operationType = SNSRequestTypes[operationName];
-            const topicName = request.params ? request.params.TopicArn : AWS_SERVICE_REQUEST;
+            let topicName = request.params ? request.params.TopicArn : AWS_SERVICE_REQUEST;
+            topicName = topicName.substring(topicName.lastIndexOf(':') + 1);
 
             activeSpan = tracer._startSpan(topicName, {
               childOf: parentSpan,
@@ -141,7 +145,7 @@ class AWSIntegration implements Integration {
             });
 
             if (operationType) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [topicName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -177,7 +181,7 @@ class AWSIntegration implements Integration {
             });
 
             if (statementType) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tableName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -201,7 +205,7 @@ class AWSIntegration implements Integration {
             });
 
             if (operationType) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [bucketName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -225,15 +229,17 @@ class AWSIntegration implements Integration {
                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
               },
             });
+ 
+            const custom = AWSIntegration.injectSpanContexIntoLambdaClientContext(tracer, activeSpan);
 
             if (operationType) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [lambdaName]);
+              custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME] = tracer.functionName;
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
             }
 
-            const custom = AWSIntegration.injectSpanContexIntoLambdaClientContext(tracer, activeSpan);
             if (custom) {
               if (request.params.ClientContext) {
                 const context = Buffer.from(request.params.ClientContext, 'base64').toString('utf8');
@@ -266,7 +272,7 @@ class AWSIntegration implements Integration {
             });
 
             if (request.params.StreamName) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [streamName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -288,7 +294,7 @@ class AWSIntegration implements Integration {
             });
 
             if (request.params.DeliveryStreamName) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [streamName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -311,7 +317,7 @@ class AWSIntegration implements Integration {
               activeSpan.close();
             }
             if (response.error !== null) {
-              const parseError = Utils.parseError(response.error );
+              const parseError = Utils.parseError(response.error);
               activeSpan.setTag('error', true);
               activeSpan.setTag('error.kind', parseError.errorType);
               activeSpan.setTag('error.message', parseError.errorMessage);

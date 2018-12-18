@@ -10,6 +10,7 @@ describe('HTTP integration', () => {
         integration.wrap(sdk, {});
 
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return Http.get(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -27,7 +28,7 @@ describe('HTTP integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['jsonplaceholder.typicode.com/users/1?q=123']);
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 

@@ -78,7 +78,7 @@ class RedisIntegration implements Integration {
             [SpanTags.TOPOLOGY_VERTEX]: true,
             [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
             [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-            [SpanTags.TRIGGER_OPERATION_NAMES]: [host],
+            [SpanTags.TRIGGER_OPERATION_NAMES]: [tracer.functionName],
           },
         });
 

@@ -481,6 +481,7 @@ const createMockClientContext = () => {
             'x-thundra-trace-id' : 'traceId',
             'x-thundra-transaction-id': 'transactionId',
             'x-thundra-span-id': 'spanId',
+            'x-thundra-lambda-trigger-operation-name' : 'lambda-function',
         }
     };    
 };
