@@ -29,7 +29,7 @@ describe('MySQL2 Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['localhost']);
+            expect(span.tags['trigger.operationNames']).toEqual(['db']);
         });
     });
 });
