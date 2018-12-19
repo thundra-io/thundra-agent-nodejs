@@ -157,7 +157,8 @@ class LambdaEventUtils {
     static injectTriggerTagsForAPIGatewayProxy(span: ThundraSpan, originalEvent: any) {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'API');
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-APIGateway');
-        span.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [originalEvent.path]);
+        const operationName = originalEvent.headers.Host + '/' + originalEvent.requestContext.stage + originalEvent.path;
+        span.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [operationName]);
         span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
     }
 
