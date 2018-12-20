@@ -2,6 +2,7 @@ import Trace from '../../dist/plugins/Trace';
 import { createMockPluginContext, createMockBeforeInvocationData, createMockApiGatewayProxy,
     createMockSNSEvent, createMockSQSEvent, createMockClientContext,createBatchMockSQSEventDifferentIds,
     createBatchMockSQSEventSameIds, createBatchMockSNSEventWithDifferentIds, createBatchMockSNSEventWithSameIds } from '../mocks/mocks';
+import * as mockAWSEvents from '../mocks/aws.events.mocks';    
 import { DATA_MODEL_VERSION } from '../../dist/Constants';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
 import ThundraTracer from '../../dist/opentracing/Tracer';
@@ -227,7 +228,7 @@ describe('Trace', () => {
 
         tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = createBatchMockSNSEventWithSameIds();
+        beforeInvocationData.originalEvent = createBatchMockSQSEventSameIds();
         tracer.beforeInvocation(beforeInvocationData);
 
         it('should set propagated ids in plugin context', () => {
@@ -315,6 +316,193 @@ describe('Trace', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
             expect(pluginContext.traceId).toBe('traceId');
             expect(pluginContext.spanId).toBe('spanId');
+        });
+    });
+
+    describe('beforeInvocation with Kinesis event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createKinesisMockEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for Kinesis to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Stream');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-Kinesis');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'arn:aws:kinesis:EXAMPLE' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with FireHose event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createFirehoseMockEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for FireHose to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Stream');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-Firehose');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'arn:aws:kinesis:EXAMPLE' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with DynamoDB event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createDynamoDBMockEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for DynamoDB to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('DB');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-DynamoDB');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'ExampleTableWithStream' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with SNS event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockSNSEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for SNS to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Messaging');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-SNS');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'ExampleTopic' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with SQS event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockSQSEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for SNS to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Messaging');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-SQS');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'MyQueue' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with S3 event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockS3Event();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for S3 to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Storage');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-S3');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'example-bucket' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with CloudWatchSchedule event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockCloudWatchScheduledEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for CloudWatchSchedule to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Schedule');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-CloudWatch-Schedule');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'ExampleRule' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with CloudWatchLog event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockCloudWatchLogEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for CloudWatchLog to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Log');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-CloudWatch-Log');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'testLogGroup' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with CloudFront event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockCloudFrontEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for CloudFront to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('CDN');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-CloudFront');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ '/test' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with APIGatewayProxy event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockAPIGatewayProxyEvent();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for APIGatewayProxy to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('API');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-APIGateway');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ '1234567890.execute-api.us-west-2.amazonaws.com/prod/path/to/resource' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
+    describe('beforeInvocation with Lambda event', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalContext.clientContext = createMockClientContext();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for Lambda to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('API');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-Lambda');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'lambda-function' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
 

@@ -1,5 +1,5 @@
 import { DATA_MODEL_VERSION } from '../../dist/Constants';
-import Utils from '../../dist/plugins/Utils';
+import Utils from '../../dist/plugins/utils/Utils';
 
 jest.mock('os', () => ({
     cpus: () => {

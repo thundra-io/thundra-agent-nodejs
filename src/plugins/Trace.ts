@@ -10,7 +10,7 @@
 */
 
 import ThundraTracer from '../opentracing/Tracer';
-import Utils from './Utils';
+import Utils from './utils/Utils';
 import TraceData from './data/trace/TraceData';
 import { initGlobalTracer } from 'opentracing';
 import * as opentracing from 'opentracing';
@@ -24,7 +24,8 @@ import PluginContext from './PluginContext';
 import TimeoutError from './error/TimeoutError';
 import { DomainNames, ClassNames, envVariableKeys } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
-import TextMapPropagator from '../opentracing/propagation/TextMap';
+import LambdaEventUtils, { LambdaEventType } from './utils/LambdaEventUtils';
+import ThundraLogger from '../ThundraLogger';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -71,6 +72,8 @@ export class Trace {
             originalContext.awsRequestId = Utils.generateId();
         }
 
+        this.tracer.functionName = originalContext.functionName;
+
         const propagatedSpanContext: ThundraSpanContext =
             this.extractSpanContext(originalEvent, originalContext) as ThundraSpanContext;
 
@@ -85,8 +88,8 @@ export class Trace {
             this.tracer.transactionId = this.pluginContext.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
-                propagated : true,
-                parentContext : propagatedSpanContext,
+                propagated: true,
+                parentContext: propagatedSpanContext,
                 rootTraceId: this.pluginContext.traceId,
                 domainName: DomainNames.API,
                 className: ClassNames.LAMBDA,
@@ -94,7 +97,7 @@ export class Trace {
 
         } else {
             this.tracer.transactionId = originalContext.awsRequestId;
-            this.pluginContext.traceId =  Utils.generateId();
+            this.pluginContext.traceId = Utils.generateId();
             this.pluginContext.transactionId = this.tracer.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
@@ -136,6 +139,8 @@ export class Trace {
         this.rootSpan.tags['aws.lambda.invocation.request_id '] = originalContext.awsRequestId;
         this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.rootSpan.tags['aws.lambda.invocation.request'] = this.getRequest(originalEvent);
+
+        this.injectTriggerTags(this.rootSpan, originalEvent, originalContext);
     }
 
     afterInvocation = (data: any) => {
@@ -246,84 +251,48 @@ export class Trace {
     }
 
     private extractSpanContext(originalEvent: any, originalContext: any): opentracing.SpanContext {
-        if (originalContext.clientContext) {
+        const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
+        if (lambdaEventType === LambdaEventType.Lambda) {
             return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, originalContext.clientContext.custom);
-        }
-
-        if (originalEvent.requestContext && originalEvent.headers) {
+        } else if (lambdaEventType === LambdaEventType.APIGatewayProxy) {
             return this.tracer.extract(opentracing.FORMAT_HTTP_HEADERS, originalEvent.headers);
+        } else if (lambdaEventType === LambdaEventType.SNS) {
+            return LambdaEventUtils.extractSpanContextFromSNSEvent(this.tracer, originalEvent);
+        } else if (lambdaEventType === LambdaEventType.SQS) {
+            return LambdaEventUtils.extractSpanContextFromSQSEvent(this.tracer, originalEvent);
         }
+    }
 
-        if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
-            originalEvent.Records[0] && originalEvent.Records[0].EventSource === 'aws:sns') {
-            let spanContext: ThundraSpanContext;
+    private injectTriggerTags(span: ThundraSpan, originalEvent: any, originalContext: any) {
+        try {
+            const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
 
-            for (const record of originalEvent.Records) {
-                const carrier: any = {};
-                const messageAttributes = record.Sns.MessageAttributes;
-
-                for (const key of Object.keys(messageAttributes)) {
-                    const messageAttribute = messageAttributes[key];
-                    if (messageAttribute.Type === 'String') {
-                        carrier[key] = messageAttribute.Value;
-                    }
-                }
-
-                const sc: ThundraSpanContext = this.tracer.extract(
-                    opentracing.FORMAT_TEXT_MAP, carrier) as ThundraSpanContext;
-                if (sc) {
-                    if (!spanContext) {
-                        spanContext = sc;
-                    } else {
-                        if (spanContext.traceId !== sc.traceId &&
-                            spanContext.transactionId !== sc.transactionId &&
-                            spanContext.spanId !== sc.spanId) {
-                            // TODO Currently we don't support batch of SNS messages from different traces/transactions/spans
-                            return;
-                        }
-                    }
-                } else {
-                    return;
-                }
+            if (lambdaEventType === LambdaEventType.Kinesis) {
+                LambdaEventUtils.injectTriggerTagsForKinesis(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.FireHose) {
+                LambdaEventUtils.injectTriggerTagsForFirehose(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.DynamoDB) {
+                LambdaEventUtils.injectTriggerTagsForDynamoDB(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.SNS) {
+                LambdaEventUtils.injectTriggerTagsForSNS(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.SQS) {
+                LambdaEventUtils.injectTriggerTagsForSQS(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.S3) {
+                LambdaEventUtils.injectTriggerTagsForS3(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.CloudWatchSchedule) {
+                LambdaEventUtils.injectTriggerTagsForCloudWatchSchedule(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.CloudWatchLog) {
+                LambdaEventUtils.injectTriggerTagsForCloudWatchLogs(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.CloudFront) {
+                LambdaEventUtils.injectTriggerTagsForCloudFront(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.APIGatewayProxy) {
+                LambdaEventUtils.injectTriggerTagsForAPIGatewayProxy(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.Lambda) {
+                LambdaEventUtils.injectTriggerTagsForLambda(span, originalContext);
             }
-            return spanContext;
+        } catch (error) {
+            ThundraLogger.getInstance().error('Cannot inject trigger tags. ' + error);
         }
-
-        if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
-            originalEvent.Records[0] && originalEvent.Records[0].eventSource === 'aws:sqs') {
-                let spanContext: ThundraSpanContext;
-                for (const record of originalEvent.Records) {
-                    const carrier: any = {};
-                    const messageAttributes = record.messageAttributes;
-
-                    for (const key of Object.keys(messageAttributes)) {
-                        const messageAttribute = messageAttributes[key];
-                        if (messageAttribute.dataType === 'String') {
-                            carrier[key] = messageAttribute.stringValue;
-                        }
-                    }
-
-                    const sc: ThundraSpanContext = this.tracer.extract(
-                        opentracing.FORMAT_TEXT_MAP, carrier) as ThundraSpanContext;
-                    if (sc) {
-                        if (!spanContext) {
-                            spanContext = sc;
-                        } else {
-                            if (spanContext.traceId !== sc.traceId &&
-                                spanContext.transactionId !== sc.transactionId &&
-                                spanContext.spanId !== sc.spanId) {
-                                // TODO Currently we don't support batch of SNS messages from different traces/transactions/spans
-                                return;
-                            }
-                        }
-                    } else {
-                        return;
-                    }
-                }
-                return spanContext;
-        }
-
-        return;
     }
 }
 

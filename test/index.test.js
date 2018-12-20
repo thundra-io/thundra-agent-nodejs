@@ -1,5 +1,5 @@
 const Thundra = require('../dist/index');
-import Utils from '../dist/plugins/Utils.js';
+import Utils from '../dist/plugins/utils/Utils.js';
 import { createMockContext } from './mocks/mocks';
 
 Utils.readProcIoPromise = jest.fn(() => {

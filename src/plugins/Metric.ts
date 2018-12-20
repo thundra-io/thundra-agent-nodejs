@@ -1,7 +1,7 @@
 import * as os from 'os';
 import { execSync } from 'child_process';
 import MetricData from './data/metric/MetricData';
-import Utils from './Utils';
+import Utils from './utils/Utils';
 import ThreadMetric from './data/metric/ThreadMetric';
 import MemoryMetric from './data/metric/MemoryMetric';
 import IOMetric from './data/metric/IOMetric';

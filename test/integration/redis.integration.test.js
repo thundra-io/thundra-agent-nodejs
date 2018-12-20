@@ -10,6 +10,7 @@ describe('Redis Integration', () => {
         integration.wrap(sdk, {});
 
         const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
 
         return Redis.set(sdk).then((data) => {
             const spanList = tracer.getRecorder().spanList;
@@ -35,6 +36,10 @@ describe('Redis Integration', () => {
             expect(writeCommandSpan.tags['redis.command']).toBe('SET');
             expect(writeCommandSpan.tags['redis.command.type']).toBe('WRITE');
             expect(writeCommandSpan.tags['redis.command.args']).toBe('string key,string val');
+            expect(writeCommandSpan.tags['topology.vertex']).toEqual(true);
+            expect(writeCommandSpan.tags['trigger.domainName']).toEqual('API');
+            expect(writeCommandSpan.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(writeCommandSpan.tags['trigger.operationNames']).toEqual(['functionName']);
         
         });
     });

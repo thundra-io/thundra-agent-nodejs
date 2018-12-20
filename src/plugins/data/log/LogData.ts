@@ -1,6 +1,6 @@
 import BaseMonitoringData from '../base/BaseMonitoringData';
 import MonitorDataType from '../base/MonitoringDataType';
-import Utils from '../../Utils';
+import Utils from '../../utils/Utils';
 
 class LogData extends BaseMonitoringData {
     traceId: string;

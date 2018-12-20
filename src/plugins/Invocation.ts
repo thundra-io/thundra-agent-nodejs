@@ -1,6 +1,6 @@
 
 import InvocationData from './data/invocation/InvocationData';
-import Utils from './Utils';
+import Utils from './utils/Utils';
 import TimeoutError from './error/TimeoutError';
 import InvocationConfig from './config/InvocationConfig';
 import {LAMBDA_FUNCTION_PLATFORM} from '../Constants';

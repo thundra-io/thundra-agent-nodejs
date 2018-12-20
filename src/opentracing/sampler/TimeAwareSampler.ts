@@ -1,5 +1,5 @@
 import Sampler from './Sampler';
-import Utils from '../../plugins/Utils';
+import Utils from '../../plugins/utils/Utils';
 import { envVariableKeys } from '../../Constants';
 const koalas = require('koalas');
 

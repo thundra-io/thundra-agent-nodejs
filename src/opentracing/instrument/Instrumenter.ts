@@ -3,7 +3,7 @@ import TraceableConfig, { TracableConfigCheckLevel } from '../../plugins/config/
 import { envVariableKeys, TRACE_DEF_SEPERATOR, Syntax, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
-import Utils from '../../plugins/Utils';
+import Utils from '../../plugins/utils/Utils';
 import Stack from './Stack';
 import NodeWrapper from './NodeWrapper';
 import ThundraLogger from '../../ThundraLogger';

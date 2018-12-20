@@ -1,8 +1,9 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
-import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, envVariableKeys } from '../../Constants';
-import Utils from '../Utils';
+import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, envVariableKeys,
+  LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME } from '../../Constants';
+import Utils from '../utils/Utils';
 import * as url from 'url';
 
 const shimmer = require('shimmer');
@@ -81,6 +82,10 @@ class HttpIntegration implements Integration {
           [HttpTags.HTTP_PATH]: path.split('?')[0],
           [HttpTags.HTTP_URL]: host + path,
           [HttpTags.QUERY_PARAMS]: queryParams,
+          [SpanTags.TOPOLOGY_VERTEX]: true,
+          [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
+          [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
+          [SpanTags.TRIGGER_OPERATION_NAMES]: [tracer.functionName],
         });
 
         const req = request.call(this, options, callback);
