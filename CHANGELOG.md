@@ -1,5 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.0.7 - December 20, 2018
+- Integrated Thundra Log Plugin with NodeJS console
+- Warmup plugin is disabled by default
+- Added trigger tags for AWS Event
+- Implemented trace propagation with opentracing
 ## 2.0.6 - November 27, 2018
 #### Added
 - Aws XRay Integration
