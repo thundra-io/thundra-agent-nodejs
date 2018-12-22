@@ -13,7 +13,6 @@ import ThundraLogger from '../../ThundraLogger';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraSpan from '../../opentracing/Span';
 import * as opentracing from 'opentracing';
-import { ClientRequest } from 'http';
 import LambdaEventUtils from '../utils/LambdaEventUtils';
 
 const shimmer = require('shimmer');
@@ -91,7 +90,7 @@ class AWSIntegration implements Integration {
             let queueName = operationType ?
             Utils.getQueueName(request.params.QueueUrl) : AWS_SERVICE_REQUEST;
 
-            queueName = queueName.substring(queueName.lastIndexOf('/') + 1);
+            queueName = queueName ? queueName.substring(queueName.lastIndexOf('/') + 1) : queueName;
 
             activeSpan = tracer._startSpan(queueName, {
               childOf: parentSpan,
@@ -129,7 +128,7 @@ class AWSIntegration implements Integration {
           } else if (serviceName === 'sns') {
             const operationType = SNSRequestTypes[operationName];
             let topicName = request.params ? request.params.TopicArn : AWS_SERVICE_REQUEST;
-            topicName = topicName.substring(topicName.lastIndexOf(':') + 1);
+            topicName = topicName ? topicName.substring(topicName.lastIndexOf(':') + 1) : topicName;
 
             activeSpan = tracer._startSpan(topicName, {
               childOf: parentSpan,

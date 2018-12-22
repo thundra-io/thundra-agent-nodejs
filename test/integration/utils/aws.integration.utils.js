@@ -112,6 +112,24 @@ module.exports.sns = (AWS) => {
     });
 };
 
+module.exports.sns_checkIfPhoneNumberIsOptedOut = (AWS) => {
+    return new Promise((resolve) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
+        const params = {
+            phoneNumber: 'STRING_VALUE' /* required */
+        };
+
+        sns.checkIfPhoneNumberIsOptedOut(params, function (err, data) {
+            if (err) {
+                // Resolve even though there is an error.
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    });
+};
+
 module.exports.kinesis = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });

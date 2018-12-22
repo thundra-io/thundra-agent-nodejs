@@ -129,7 +129,7 @@ describe('AWS Integration', () => {
     });
   
     
-    test('should instrument AWS SNS calls ', () => { 
+    test('should instrument AWS SNS publish calls ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
@@ -149,6 +149,26 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+        });
+    }); 
+
+
+    test('should instrument AWS SNS  call without publish', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {});
+        
+        const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
+
+        return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.className).toBe('AWS-SNS');
+            expect(span.domainName).toBe('Messaging');
+            expect(span.tags['aws.request.name']).toBe('checkIfPhoneNumberIsOptedOut');
+            expect(span.tags['aws.sns.topic.name']).toBe(undefined);
+            expect(span.tags['operation.type']).toBe('READ');
         });
     }); 
     
