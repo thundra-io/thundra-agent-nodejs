@@ -100,7 +100,7 @@ class AWSIntegration implements Integration {
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SQS,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                [AwsSQSTags.QUEUE_NAME]: queueName,
+                [AwsSQSTags.QUEUE_NAME]: queueName !== AWS_SERVICE_REQUEST ? queueName : undefined,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
               },
             });
@@ -127,7 +127,7 @@ class AWSIntegration implements Integration {
             }
           } else if (serviceName === 'sns') {
             const operationType = SNSRequestTypes[operationName];
-            let topicName = request.params ? request.params.TopicArn : AWS_SERVICE_REQUEST;
+            let topicName = operationType ? request.params.TopicArn : AWS_SERVICE_REQUEST;
             topicName = topicName ? topicName.substring(topicName.lastIndexOf(':') + 1) : topicName;
 
             activeSpan = tracer._startSpan(topicName, {
@@ -138,7 +138,7 @@ class AWSIntegration implements Integration {
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SNS,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                [AwsSNSTags.TOPIC_NAME]: topicName,
+                [AwsSNSTags.TOPIC_NAME]: topicName !== AWS_SERVICE_REQUEST ? topicName : undefined,
                 [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
               },
             });

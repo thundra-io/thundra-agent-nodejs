@@ -119,7 +119,7 @@ describe('AWS Integration', () => {
             expect(span.className).toBe('AWS-SQS');
             expect(span.domainName).toBe('Messaging');
             expect(span.tags['aws.request.name']).toBe('listQueues');
-            expect(span.tags['aws.sqs.queue.name']).toBe('AWSServiceRequest');
+            expect(span.tags['aws.sqs.queue.name']).not.toBeTruthy();
             expect(span.tags['operation.type']).toBe('READ');
             expect(span.tags['topology.vertex']).not.toBeTruthy();
             expect(span.tags['trigger.domainName']).not.toBeTruthy();
@@ -164,6 +164,7 @@ describe('AWS Integration', () => {
 
         return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('AWSServiceRequest');
             expect(span.className).toBe('AWS-SNS');
             expect(span.domainName).toBe('Messaging');
             expect(span.tags['aws.request.name']).toBe('checkIfPhoneNumberIsOptedOut');
