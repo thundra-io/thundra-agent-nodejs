@@ -66,7 +66,6 @@ class Invocation {
         this.invocationData.traceId = this.pluginContext.traceId;
 
         this.invocationData.tags['aws.lambda.memory_limit'] = this.pluginContext.maxMemory;
-        this.invocationData.tags['aws.lambda.invocation.request_id '] = originalContext.awsRequestId;
         this.invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
         this.invocationData.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.invocationData.tags['aws.region'] = this.pluginContext.applicationRegion;

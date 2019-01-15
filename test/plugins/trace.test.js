@@ -325,7 +325,7 @@ describe('Trace', () => {
 
         tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createKinesisMockEvent();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockKinesisEvent();
         tracer.beforeInvocation(beforeInvocationData);
 
         it('should set trigger tags for Kinesis to root span', () => {
@@ -342,7 +342,7 @@ describe('Trace', () => {
 
         tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createFirehoseMockEvent();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockFirehoseEvent();
         tracer.beforeInvocation(beforeInvocationData);
 
         it('should set trigger tags for FireHose to root span', () => {
@@ -359,7 +359,7 @@ describe('Trace', () => {
 
         tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createDynamoDBMockEvent();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockDynamoDBEvent();
         tracer.beforeInvocation(beforeInvocationData);
 
         it('should set trigger tags for DynamoDB to root span', () => {
@@ -488,6 +488,24 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
     });
+
+    describe('beforeInvocation with APIGatewayPassThrough event ', () => {
+        const tracer = Trace();
+        const pluginContext = createMockPluginContext();
+
+        tracer.setPluginContext(pluginContext);
+        const beforeInvocationData = createMockBeforeInvocationData();
+        beforeInvocationData.originalEvent = mockAWSEvents.createMockAPIGatewayPassThroughRequest();
+        tracer.beforeInvocation(beforeInvocationData);
+
+        it('should set trigger tags for APIGatewayProxy to root span', () => {
+            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('API');
+            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-APIGateway');
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'random.execute-api.us-west-2.amazonaws.com/dev/hello' ]);
+            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+    });
+
 
     describe('beforeInvocation with Lambda event', () => {
         const tracer = Trace();

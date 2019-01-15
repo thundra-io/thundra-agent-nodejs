@@ -136,7 +136,7 @@ export class Trace {
         this.rootSpan.tags['aws.lambda.log_group_name'] = originalContext.logGroupName;
         this.rootSpan.tags['aws.lambda.name'] = originalContext.functionName;
         this.rootSpan.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
-        this.rootSpan.tags['aws.lambda.invocation.request_id '] = originalContext.awsRequestId;
+        this.rootSpan.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
         this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.rootSpan.tags['aws.lambda.invocation.request'] = this.getRequest(originalEvent);
 
@@ -289,6 +289,8 @@ export class Trace {
                 LambdaEventUtils.injectTriggerTagsForAPIGatewayProxy(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.Lambda) {
                 LambdaEventUtils.injectTriggerTagsForLambda(span, originalContext);
+            } else if (lambdaEventType === LambdaEventType.APIGatewayPassThrough) {
+                LambdaEventUtils.injectTriggerTagsForAPIGatewayPassThrough(span, originalEvent);
             }
         } catch (error) {
             ThundraLogger.getInstance().error('Cannot inject trigger tags. ' + error);

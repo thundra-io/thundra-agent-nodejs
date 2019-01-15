@@ -37,6 +37,9 @@ class LambdaEventUtils {
             return LambdaEventType.CloudFront;
         } else if (originalEvent.requestContext && originalEvent.headers) {
             return LambdaEventType.APIGatewayProxy;
+        } else if (originalEvent.context && originalEvent['stage-variables'] &&
+            originalEvent.params && originalEvent['body-json']) {
+                return LambdaEventType.APIGatewayPassThrough;
         } else if (originalContext.clientContext) {
             return LambdaEventType.Lambda;
         }
@@ -162,6 +165,15 @@ class LambdaEventUtils {
         span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
     }
 
+    static injectTriggerTagsForAPIGatewayPassThrough(span: ThundraSpan, originalEvent: any) {
+        span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, 'API');
+        span.setTag(SpanTags.TRIGGER_CLASS_NAME, 'AWS-APIGateway');
+        const operationName = originalEvent.params.header.Host + '/' + originalEvent.context.stage +
+                             originalEvent.context['resource-path'];
+        span.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [operationName]);
+        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+    }
+
     static injectTriggerTagsForLambda(span: ThundraSpan, originalContext: any) {
         if (originalContext && originalContext.clientContext && originalContext.clientContext.custom &&
             originalContext.clientContext.custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME]) {
@@ -253,5 +265,6 @@ export enum LambdaEventType {
     CloudWatchLog,
     CloudFront,
     APIGatewayProxy,
+    APIGatewayPassThrough,
     Lambda,
 }
