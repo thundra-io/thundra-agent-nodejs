@@ -8,6 +8,8 @@ import ErrorAwareSampler from '../../opentracing/sampler/ErrorAwareSampler';
 class TraceSamplerConfig {
     durationAwareSamplerConfig: DurationAwareSamplerConfig;
     errorAwareSamplerConfig: ErrorAwareSamplerConfig;
+    durationAwareSampler: DurationAwareSampler;
+    errorAwareSampler: ErrorAwareSampler;
     customSampler: () => Sampler<ThundraSpan>;
 
     constructor(options: any) {
@@ -15,23 +17,36 @@ class TraceSamplerConfig {
         this.durationAwareSamplerConfig = new DurationAwareSamplerConfig(options.durationAwareSamplerConfig);
         this.errorAwareSamplerConfig = new ErrorAwareSamplerConfig(options.errorAwareSamplerConfig);
         this.customSampler = options.customSampler;
-    }
-
-    isSampled(span: ThundraSpan): boolean {
-        let isSampled = true;
 
         if (this.durationAwareSamplerConfig.enabled) {
-            isSampled = new DurationAwareSampler(this.durationAwareSamplerConfig.duration,
-                this.durationAwareSamplerConfig.longerThan).isSampled(span);
+            this.durationAwareSampler = new DurationAwareSampler(this.durationAwareSamplerConfig.duration,
+                this.durationAwareSamplerConfig.longerThan);
         }
 
         if (this.errorAwareSamplerConfig.enabled) {
-            isSampled = new ErrorAwareSampler().isSampled(span);
+            this.errorAwareSampler = new ErrorAwareSampler();
+        }
+    }
+
+    isSampled(span: ThundraSpan): boolean {
+        if (!this.durationAwareSampler &&
+            !this.errorAwareSampler && !this.customSampler) {
+                return true;
+        }
+
+        let isSampled = false;
+
+        if (this.durationAwareSampler) {
+            isSampled = isSampled || this.durationAwareSampler.isSampled(span);
+        }
+
+        if (this.errorAwareSampler) {
+            isSampled = isSampled || this.errorAwareSampler.isSampled(span);
         }
 
         if (this.customSampler) {
             if (typeof this.customSampler === 'function' && this.customSampler().isSampled) {
-                isSampled = this.customSampler().isSampled();
+                isSampled = isSampled || this.customSampler().isSampled();
             }
         }
 

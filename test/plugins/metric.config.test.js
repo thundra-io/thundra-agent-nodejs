@@ -34,3 +34,14 @@ describe('default Metric Config', () => {
         process.env[envVariableKeys.THUNDRA_AGENT_METRIC_TIME_AWARE_SAMPLER_TIME_FREQ] =  null;
     });
 });
+
+describe('Metric with no sampler configured', () => {
+    const config = new MetricConfig(); 
+    config.samplerConfig.countAwareSampler = undefined;
+    config.samplerConfig.timeAwareSampler = undefined;
+    config.samplerConfig.customSampler = undefined;
+
+    it('Should true when is sampled called',() => {
+        expect(config.samplerConfig.isSampled()).toBe(true);
+    });
+});
