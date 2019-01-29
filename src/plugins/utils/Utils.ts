@@ -166,7 +166,7 @@ class Utils {
     }
 
     static getDynamoDBTableName(request: any): string {
-        let tableName = 'DynamoEngine';
+        let tableName;
 
         if (request.params && request.params.TableName) {
             tableName = request.params.TableName;

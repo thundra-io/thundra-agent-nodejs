@@ -7,6 +7,7 @@ import {
 import Utils from '../utils/Utils';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
+import ThundraSpan from '../../opentracing/Span';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -41,15 +42,17 @@ class MySQL2Integration implements Integration {
 
   wrap(lib: any, config: any) {
     function wrapper(query: any) {
+      let span: ThundraSpan;
+
       return function queryWrapper(sql: any, values: any, cb: any) {
         try {
           const tracer = ThundraTracer.getInstance();
           const parentSpan = tracer.getActiveSpan();
 
-          const span = tracer._startSpan(this.config.database, {
+          span = tracer._startSpan(this.config.database, {
             childOf: parentSpan,
             domainName: DomainNames.DB,
-            className: ClassNames.RDB,
+            className: DBTypes.MYSQL.toUpperCase(),
             disableActiveStart: true,
           });
 
@@ -75,7 +78,7 @@ class MySQL2Integration implements Integration {
             span.addTags({
               [DBTags.DB_STATEMENT_TYPE]: statementType,
               [DBTags.DB_STATEMENT]: statement,
-              [SpanTags.OPERATION_TYPE]: SQLQueryOperationTypes[statementType] ? SQLQueryOperationTypes[statementType] : 'READ',
+              [SpanTags.OPERATION_TYPE]: SQLQueryOperationTypes[statementType] ? SQLQueryOperationTypes[statementType] : '',
             });
           }
 
@@ -106,6 +109,10 @@ class MySQL2Integration implements Integration {
 
           return sequence;
         } catch (error) {
+          if (span) {
+            span.close();
+          }
+
           ThundraLogger.getInstance().error(error);
           query.call(this, sql, values, cb);
         }

@@ -166,7 +166,7 @@ describe('AWS Integration', () => {
 
             expect(span.tags['aws.request.name']).toBe('listQueues');
             expect(span.tags['aws.sqs.queue.name']).not.toBeTruthy();
-            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['operation.type']).toBe('');
             expect(span.tags['topology.vertex']).not.toBeTruthy();
             expect(span.tags['trigger.domainName']).not.toBeTruthy();
             expect(span.tags['trigger.className']).not.toBeTruthy();
@@ -222,7 +222,7 @@ describe('AWS Integration', () => {
 
             expect(span.tags['aws.request.name']).toBe('checkIfPhoneNumberIsOptedOut');
             expect(span.tags['aws.sns.topic.name']).toBe(undefined);
-            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['operation.type']).toBe('');
         });
     }); 
     

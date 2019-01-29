@@ -8,6 +8,7 @@ import Utils from '../utils/Utils';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
+import ThundraSpan from '../../opentracing/Span';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -42,6 +43,7 @@ class RedisIntegration implements Integration {
 
     function wrapper(internalSendCommand: any) {
       return function internalSendCommandWrapper(options: any) {
+        let span: ThundraSpan;
         try {
           const tracer = ThundraTracer.getInstance();
 
@@ -60,9 +62,9 @@ class RedisIntegration implements Integration {
             command = options.command.toUpperCase();
           }
 
-          const operationType = RedisCommandTypes[command] ? RedisCommandTypes[command] : 'READ';
+          const operationType = RedisCommandTypes[command] ? RedisCommandTypes[command] : '';
 
-          const span = tracer._startSpan(host, {
+          span = tracer._startSpan(host, {
             childOf: parentSpan,
             domainName: DomainNames.CACHE,
             className: ClassNames.REDIS,
@@ -104,6 +106,11 @@ class RedisIntegration implements Integration {
 
           return internalSendCommand.call(this, options);
         } catch (error) {
+
+          if (span) {
+            span.close();
+          }
+
           ThundraLogger.getInstance().error(error);
           internalSendCommand.call(this, options);
         }

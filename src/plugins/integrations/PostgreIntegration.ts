@@ -7,6 +7,7 @@ import {
 import Utils from '../utils/Utils';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
+import ThundraSpan from '../../opentracing/Span';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -43,15 +44,16 @@ class PostgreIntegration implements Integration {
   wrap(lib: any, config: any) {
     function wrapper(query: any, args: any) {
       return function queryWrapper() {
+        let span: ThundraSpan;
         try {
           const tracer = ThundraTracer.getInstance();
           const parentSpan = tracer.getActiveSpan();
 
           const params = this.connectionParameters;
-          const span = tracer._startSpan(params.database, {
+          span = tracer._startSpan(params.database, {
             childOf: parentSpan,
             domainName: DomainNames.DB,
-            className: ClassNames.RDB,
+            className: DBTypes.PG.toUpperCase(),
             disableActiveStart: true,
           });
 
@@ -80,7 +82,7 @@ class PostgreIntegration implements Integration {
             span.addTags({
               [DBTags.DB_STATEMENT_TYPE]: statementType,
               [DBTags.DB_STATEMENT]: statement,
-              [SpanTags.OPERATION_TYPE]: SQLQueryOperationTypes[statementType] ? SQLQueryOperationTypes[statementType] : 'READ',
+              [SpanTags.OPERATION_TYPE]: SQLQueryOperationTypes[statementType] ? SQLQueryOperationTypes[statementType] : '',
             });
           }
 
@@ -103,6 +105,10 @@ class PostgreIntegration implements Integration {
 
           return pgQuery;
         } catch (error) {
+          if (span) {
+            span.close();
+          }
+
           ThundraLogger.getInstance().error(error);
           query.apply(this, arguments);
         }

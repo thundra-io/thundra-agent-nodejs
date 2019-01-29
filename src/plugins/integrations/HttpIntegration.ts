@@ -78,7 +78,7 @@ class HttpIntegration implements Integration {
           }
 
           span.addTags({
-            [SpanTags.OPERATION_TYPE]: 'CALL',
+            [SpanTags.OPERATION_TYPE]: method,
             [SpanTags.SPAN_TYPE]: SpanTypes.HTTP,
             [HttpTags.HTTP_METHOD]: method,
             [HttpTags.HTTP_HOST]: host,

@@ -74,8 +74,10 @@ class AWSIntegration implements Integration {
     function wrapper(wrappedFunction: any) {
       return function AWSSDKWrapper(callback: any) {
 
-        const tracer = ThundraTracer.getInstance();
+        let activeSpan: ThundraSpan;
         try {
+          const tracer = ThundraTracer.getInstance();
+
           const request = this;
           const serviceEndpoint = request.service.config.endpoint;
           const serviceName = Utils.getServiceName(serviceEndpoint as string);
@@ -84,17 +86,15 @@ class AWSIntegration implements Integration {
 
           request.params = request.params ? request.params : {};
 
-          let activeSpan: ThundraSpan = null;
-
           const operationName = request.operation ? request.operation  : AWS_SERVICE_REQUEST;
 
           if (serviceName === 'sqs') {
             const operationType = SQSRequestTypes[operationName];
-            let queueName = koalas(Utils.getQueueName(request.params.QueueUrl), AWS_SERVICE_REQUEST);
+            let queueName = Utils.getQueueName(request.params.QueueUrl);
+            queueName = queueName ? queueName.substring(queueName.lastIndexOf('/') + 1) : queueName;
 
-            queueName = queueName.substring(queueName.lastIndexOf('/') + 1);
-
-            activeSpan = tracer._startSpan(queueName, {
+            const spanName = koalas(queueName, AWS_SERVICE_REQUEST);
+            activeSpan = tracer._startSpan(spanName, {
               childOf: parentSpan,
               domainName: DomainNames.MESSAGING,
               className: ClassNames.SQS,
@@ -102,7 +102,7 @@ class AWSIntegration implements Integration {
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SQS,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
+                [SpanTags.OPERATION_TYPE]: operationType ? operationType : '',
               },
             });
 
@@ -130,11 +130,13 @@ class AWSIntegration implements Integration {
             }
           } else if (serviceName === 'sns') {
             const operationType = SNSRequestTypes[operationName];
-            let topicName = koalas(request.params.TopicArn, AWS_SERVICE_REQUEST);
 
+            let topicName = koalas(request.params.TopicArn, AWS_SERVICE_REQUEST);
             topicName = topicName.substring(topicName.lastIndexOf(':') + 1);
 
-            activeSpan = tracer._startSpan(topicName, {
+            const spanName = koalas(topicName, AWS_SERVICE_REQUEST);
+
+            activeSpan = tracer._startSpan(spanName, {
               childOf: parentSpan,
               domainName: DomainNames.MESSAGING,
               className: ClassNames.SNS,
@@ -142,7 +144,7 @@ class AWSIntegration implements Integration {
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SNS,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
+                [SpanTags.OPERATION_TYPE]: operationType ? operationType : '',
               },
             });
 
@@ -165,9 +167,11 @@ class AWSIntegration implements Integration {
             }
           } else if (serviceName === 'dynamodb') {
             const statementType = DynamoDBRequestTypes[operationName];
-            const tableName = koalas(Utils.getDynamoDBTableName(request), AWS_SERVICE_REQUEST);
+            const tableName = Utils.getDynamoDBTableName(request);
 
-            activeSpan = tracer._startSpan(tableName, {
+            const spanName = koalas(tableName, AWS_SERVICE_REQUEST);
+
+            activeSpan = tracer._startSpan(spanName, {
               childOf: parentSpan,
               domainName: DomainNames.DB,
               className: ClassNames.DYNAMODB,
@@ -175,8 +179,8 @@ class AWSIntegration implements Integration {
               tags: {
                 [DB_TYPE]: DBTypes.DYNAMODB,
                 [DB_INSTANCE]: serviceEndpoint,
-                [DBTags.DB_STATEMENT_TYPE]: statementType ? statementType : 'READ',
-                [SpanTags.OPERATION_TYPE]: statementType ? statementType : 'READ',
+                [DBTags.DB_STATEMENT_TYPE]: statementType ? statementType : '',
+                [SpanTags.OPERATION_TYPE]: statementType ? statementType : '',
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_DYNAMO,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [DBTags.DB_STATEMENT]: request.params,
@@ -192,16 +196,16 @@ class AWSIntegration implements Integration {
             }
           } else if (serviceName === 's3') {
             const operationType = S3RequestTypes[operationName];
-            const bucketName = koalas(request.params.Bucket, AWS_SERVICE_REQUEST);
+            const spanName = koalas(request.params.Bucket, AWS_SERVICE_REQUEST);
 
-            activeSpan = tracer._startSpan(bucketName, {
+            activeSpan = tracer._startSpan(spanName, {
               childOf: parentSpan,
               domainName: DomainNames.STORAGE,
               className: ClassNames.S3,
               disableActiveStart: true,
               tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_S3,
-                [SpanTags.OPERATION_TYPE]: operationType ? operationType : 'READ',
+                [SpanTags.OPERATION_TYPE]: operationType ? operationType : '',
                 [AwsS3Tags.BUCKET_NAME]: request.params.Bucket,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
               },
@@ -216,9 +220,9 @@ class AWSIntegration implements Integration {
             }
           } else if (serviceName === 'lambda') {
             const operationType = LambdaRequestType[operationName];
-            const lambdaName = koalas(request.params.FunctionName, AWS_SERVICE_REQUEST);
+            const spanName = koalas(request.params.FunctionName, AWS_SERVICE_REQUEST);
 
-            activeSpan = tracer._startSpan(lambdaName, {
+            activeSpan = tracer._startSpan(spanName, {
               childOf: parentSpan,
               disableActiveStart: true,
               domainName: DomainNames.API,
@@ -242,7 +246,7 @@ class AWSIntegration implements Integration {
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
 
-              activeSpan.setTag(AwsLambdaTags.FUNCTION_NAME, lambdaName);
+              activeSpan.setTag(AwsLambdaTags.FUNCTION_NAME, spanName);
             }
 
             if (custom) {
@@ -260,16 +264,16 @@ class AWSIntegration implements Integration {
               }
             }
           } else if (serviceName === 'kinesis') {
-            const streamName = koalas(request.params.StreamName, AWS_SERVICE_REQUEST);
+            const spanName = koalas(request.params.StreamName, AWS_SERVICE_REQUEST);
 
-            activeSpan = tracer._startSpan(streamName, {
+            activeSpan = tracer._startSpan(spanName, {
               childOf: parentSpan,
               domainName: DomainNames.STREAM,
               className: ClassNames.KINESIS,
               disableActiveStart: true,
               tags: {
                 [SpanTags.OPERATION_TYPE]: KinesisRequestTypes[operationName] ?
-                  KinesisRequestTypes[operationName] : 'READ',
+                  KinesisRequestTypes[operationName] : '',
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_KINESIS,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
               },
@@ -281,19 +285,19 @@ class AWSIntegration implements Integration {
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
 
-              activeSpan.setTag(AwsKinesisTags.STREAM_NAME, streamName);
+              activeSpan.setTag(AwsKinesisTags.STREAM_NAME, request.params.StreamName);
             }
           } else if (serviceName === 'firehose') {
-            const streamName = koalas(request.params.DeliveryStreamName, AWS_SERVICE_REQUEST);
+            const spanName = koalas(request.params.DeliveryStreamName, AWS_SERVICE_REQUEST);
 
-            activeSpan = tracer._startSpan(streamName, {
+            activeSpan = tracer._startSpan(spanName, {
               childOf: parentSpan,
               domainName: DomainNames.STREAM,
               className: ClassNames.FIREHOSE,
               disableActiveStart: true,
               tags: {
                 [SpanTags.OPERATION_TYPE]: FirehoseRequestTypes[operationName] ?
-                  FirehoseRequestTypes[operationName] : 'READ',
+                  FirehoseRequestTypes[operationName] : '',
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_FIREHOSE,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
               },
@@ -305,7 +309,7 @@ class AWSIntegration implements Integration {
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
 
-              activeSpan.setTag(AwsFirehoseTags.STREAM_NAME, streamName);
+              activeSpan.setTag(AwsFirehoseTags.STREAM_NAME, request.params.DeliveryStreamName);
             }
           } else {
             activeSpan = tracer._startSpan(AWS_SERVICE_REQUEST, {
@@ -337,6 +341,10 @@ class AWSIntegration implements Integration {
           return wrappedFunction.apply(this, [originalCallback]);
 
         } catch (error) {
+          if (activeSpan) {
+            activeSpan.close();
+          }
+
           ThundraLogger.getInstance().error(error);
           return wrappedFunction.apply(this, [callback]);
         }
