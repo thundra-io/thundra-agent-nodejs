@@ -18,7 +18,7 @@ describe('HTTP integration', () => {
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
 
-            expect(span.tags['operation.type']).toBe('CALL');
+            expect(span.tags['operation.type']).toBe('GET');
             expect(span.tags['http.method']).toBe('GET');
             expect(span.tags['http.host']).toBe('jsonplaceholder.typicode.com');
             expect(span.tags['http.path']).toBe('/users/1');

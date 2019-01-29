@@ -16,7 +16,7 @@ describe('PostgreSQL Integration', () => {
         return PG.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
 
-            expect(span.className).toBe('RDB');
+            expect(span.className).toBe('PG');
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['operation.type']).toBe('READ');

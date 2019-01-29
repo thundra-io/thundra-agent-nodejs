@@ -166,18 +166,21 @@ class Utils {
     }
 
     static getDynamoDBTableName(request: any): string {
-        let tableName = 'DynamoEngine';
-        if (request.params.TableName) {
+        let tableName;
+
+        if (request.params && request.params.TableName) {
             tableName = request.params.TableName;
         }
-        if (request.params.RequestItems) {
+
+        if (request.params && request.params.RequestItems) {
             tableName = Object.keys(request.params.RequestItems).join(',');
         }
+
         return tableName;
     }
 
     static getQueueName(url: any): string {
-        return url ? url.split('/').pop() : '';
+        return url ? url.split('/').pop() : null;
     }
 
     static getTopicName(topicArn: any): string {

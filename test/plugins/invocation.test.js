@@ -83,7 +83,6 @@ describe('Invocation', () => {
             expect(invocation.invocationData.tags).toEqual({
                 'aws.lambda.arn': 'arn:aws:lambda:us-west-2:123456789123:function:test',
                 'aws.lambda.invocation.coldstart': true,
-                'aws.lambda.invocation.request_id ': 'awsRequestId',
                 'aws.lambda.invocation.timeout': false,
                 'aws.lambda.log_group_name': '/aws/lambda/test',
                 'aws.lambda.log_stream_name': '2018/03/07/[$LATEST]test',

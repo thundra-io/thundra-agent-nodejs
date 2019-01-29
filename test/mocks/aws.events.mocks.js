@@ -1,4 +1,4 @@
-const createKinesisMockEvent = () => {
+const createMockKinesisEvent = () => {
     return {
         Records: [
             {
@@ -21,7 +21,7 @@ const createKinesisMockEvent = () => {
     };
 };
 
-const createFirehoseMockEvent = () => {
+const createMockFirehoseEvent = () => {
     return {
         invocationId: 'invocationIdExample',
         deliveryStreamArn: 'arn:aws:kinesis:EXAMPLE',
@@ -36,7 +36,7 @@ const createFirehoseMockEvent = () => {
     };
 };
 
-const createDynamoDBMockEvent = () => {
+const createMockDynamoDBEvent = () => {
     return {
         Records: [
             {
@@ -287,16 +287,66 @@ const createMockAPIGatewayProxyEvent = () => {
     };
 };
 
+const createMockAPIGatewayPassThroughRequest = () => {
+    return {
+        'body-json': {},
+        'params': {
+            'path': {},
+            'querystring': {},
+            'header': {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Encoding': 'br, gzip, deflate',
+                'Accept-Language': 'tr-tr',
+                'CloudFront-Forwarded-Proto': 'https',
+                'CloudFront-Is-Desktop-Viewer': 'true',
+                'CloudFront-Is-Mobile-Viewer': 'false',
+                'CloudFront-Is-SmartTV-Viewer': 'false',
+                'CloudFront-Is-Tablet-Viewer': 'false',
+                'CloudFront-Viewer-Country': 'TR',
+                'Host': 'random.execute-api.us-west-2.amazonaws.com',
+                'User-Agent': 'Mozilla/5.0 ',
+                'Via': '2.0 7c2d73d3cd46e357090188fa2946f746.cloudfront.net (CloudFront)',
+                'X-Amz-Cf-Id': '2oERVyfE28F7rylVV0ZOdEBnmogTSblZNOrSON_vGJFBweD1tIM-dg==',
+                'X-Amzn-Trace-Id': 'Root=1-5c3d8b9e-794ee8faf33ffce551c0146b',
+                'X-Forwarded-Port': '443',
+                'X-Forwarded-Proto': 'https'
+            }
+        },
+        'stage-variables': {},
+        'context': {
+            'account-id': '',
+            'api-id': 'random',
+            'api-key': '',
+            'authorizer-principal-id': '',
+            'caller': '',
+            'cognito-authentication-provider': '',
+            'cognito-authentication-type': '',
+            'cognito-identity-id': '',
+            'cognito-identity-pool-id': '',
+            'http-method': 'GET',
+            'stage': 'dev',
+            'source-ip': '',
+            'user': '',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14)',
+            'user-arn': '',
+            'request-id': '27eca8d1-1897-11e9-9eed-0d1fbe8bcba6',
+            'resource-id': '3ggrja',
+            'resource-path': '/hello'
+        }
+    };
+};
+
 
 module.exports = {
     createMockAPIGatewayProxyEvent,
+    createMockAPIGatewayPassThroughRequest,
     createMockCloudFrontEvent,
     createMockCloudWatchLogEvent,
     createMockCloudWatchScheduledEvent,
     createMockS3Event,
     createMockSQSEvent,
     createMockSNSEvent,
-    createDynamoDBMockEvent,
-    createFirehoseMockEvent,
-    createKinesisMockEvent,
+    createMockDynamoDBEvent,
+    createMockFirehoseEvent,
+    createMockKinesisEvent,
 };

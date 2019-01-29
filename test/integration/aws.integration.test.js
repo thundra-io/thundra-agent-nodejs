@@ -15,8 +15,12 @@ describe('AWS Integration', () => {
 
         return AWS.dynamo(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
+            
+            expect(span.operationName).toBe('test-table');
+
             expect(span.className).toBe('AWS-DynamoDB');
             expect(span.domainName).toBe('DB');
+
             expect(span.tags['db.type']).toBe('aws-dynamodb');
             expect(span.tags['db.instance']).toBe('dynamodb.us-west-2.amazonaws.com');
             expect(span.tags['db.statement.type']).toBe('READ');
@@ -31,7 +35,7 @@ describe('AWS Integration', () => {
         });
     });
 
-    test('should instrument AWS S3 calls ', () => { 
+    test('should instrument AWS S3 GetObject call ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
@@ -40,14 +44,46 @@ describe('AWS Integration', () => {
         const tracer = new ThundraTracer();
         tracer.functionName = 'functionName';
 
-        return AWS.s3(sdk).then(() => {
+        return AWS.s3GetObject(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('test');
+
             expect(span.className).toBe('AWS-S3');
             expect(span.domainName).toBe('Storage');
+
             expect(span.tags['operation.type']).toBe('READ');
             expect(span.tags['aws.s3.bucket.name']).toBe('test');
             expect(span.tags['aws.request.name']).toBe('getObject');
             expect(span.tags['aws.s3.object.name']).toBe('test.txt');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+        });
+    });
+
+    test('should instrument AWS S3 ListBucket call ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {});
+        
+        const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
+
+        return AWS.s3ListBuckets(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('AWSServiceRequest');
+
+            expect(span.className).toBe('AWS-S3');
+            expect(span.domainName).toBe('Storage');
+
+            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['aws.s3.bucket.name']).not.toBeTruthy();
+            expect(span.tags['aws.request.name']).toBe('listBuckets');
+            expect(span.tags['aws.s3.object.name']).not.toBeTruthy();
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
@@ -66,8 +102,12 @@ describe('AWS Integration', () => {
 
         return AWS.lambda(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('Test');
+
             expect(span.className).toBe('AWS-Lambda');
             expect(span.domainName).toBe('API');
+
             expect(span.tags['aws.lambda.name']).toBe('Test');
             expect(span.tags['aws.lambda.qualifier']).toBe(undefined);
             expect(span.tags['aws.lambda.invocation.payload']).toEqual('{ "name" : "thundra" }');
@@ -91,8 +131,12 @@ describe('AWS Integration', () => {
 
         return AWS.sqs(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('testqueue');
+
             expect(span.className).toBe('AWS-SQS');
             expect(span.domainName).toBe('Messaging');
+
             expect(span.tags['aws.request.name']).toBe('sendMessage');
             expect(span.tags['aws.sqs.queue.name']).toBe('testqueue');
             expect(span.tags['operation.type']).toBe('WRITE');
@@ -114,13 +158,15 @@ describe('AWS Integration', () => {
 
         return AWS.sqs_list_queue(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
+            
             expect(span.operationName).toBe('AWSServiceRequest');
 
             expect(span.className).toBe('AWS-SQS');
             expect(span.domainName).toBe('Messaging');
+
             expect(span.tags['aws.request.name']).toBe('listQueues');
-            expect(span.tags['aws.sqs.queue.name']).toBe('AWSServiceRequest');
-            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['aws.sqs.queue.name']).not.toBeTruthy();
+            expect(span.tags['operation.type']).toBe('');
             expect(span.tags['topology.vertex']).not.toBeTruthy();
             expect(span.tags['trigger.domainName']).not.toBeTruthy();
             expect(span.tags['trigger.className']).not.toBeTruthy();
@@ -129,7 +175,7 @@ describe('AWS Integration', () => {
     });
   
     
-    test('should instrument AWS SNS calls ', () => { 
+    test('should instrument AWS SNS publish calls ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
@@ -140,8 +186,12 @@ describe('AWS Integration', () => {
 
         return AWS.sns(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('TEST_TOPIC');
+
             expect(span.className).toBe('AWS-SNS');
             expect(span.domainName).toBe('Messaging');
+
             expect(span.tags['aws.request.name']).toBe('publish');
             expect(span.tags['aws.sns.topic.name']).toBe('TEST_TOPIC');
             expect(span.tags['operation.type']).toBe('WRITE');
@@ -149,6 +199,30 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+        });
+    }); 
+
+
+    test('should instrument AWS SNS  call without publish', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {});
+        
+        const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
+
+        return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('AWSServiceRequest');
+
+            expect(span.className).toBe('AWS-SNS');
+            expect(span.domainName).toBe('Messaging');
+
+            expect(span.tags['aws.request.name']).toBe('checkIfPhoneNumberIsOptedOut');
+            expect(span.tags['aws.sns.topic.name']).toBe(undefined);
+            expect(span.tags['operation.type']).toBe('');
         });
     }); 
     
@@ -163,8 +237,11 @@ describe('AWS Integration', () => {
 
         return AWS.kinesis(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('STRING_VALUE');
+
             expect(span.className).toBe('AWS-Kinesis');
             expect(span.domainName).toBe('Stream');
+
             expect(span.tags['aws.request.name']).toBe('putRecord');
             expect(span.tags['aws.kinesis.stream.name']).toBe('STRING_VALUE');
             expect(span.tags['operation.type']).toBe('WRITE');
@@ -186,8 +263,11 @@ describe('AWS Integration', () => {
 
         return AWS.firehose(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('STRING_VALUE');
+
             expect(span.className).toBe('AWS-Firehose');
             expect(span.domainName).toBe('Stream');
+
             expect(span.tags['aws.request.name']).toBe('putRecord');
             expect(span.tags['aws.firehose.stream.name']).toBe('STRING_VALUE');
             expect(span.tags['operation.type']).toBe('WRITE');

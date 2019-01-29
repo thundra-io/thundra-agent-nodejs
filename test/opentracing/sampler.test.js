@@ -65,7 +65,7 @@ describe('CountAwareSampler with count frequency 5', () => {
     let sampledCount = 0;
 
     test('should sample 2 of 10 calls', () => {
-        for (let sample = 0; sample <= 10; sample++) {
+        for (let sample = 0; sample < 10; sample++) {
             if (sampler.isSampled()) {
                 sampledCount++;
             }

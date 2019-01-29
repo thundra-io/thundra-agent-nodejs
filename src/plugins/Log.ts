@@ -66,7 +66,7 @@ class Log {
         this.logData.tags['aws.lambda.memory_limit'] = parseInt(this.originalContext.memoryLimitInMB, 10);
         this.logData.tags['aws.lambda.log_group_name'] = this.originalContext.logGroupName;
         this.logData.tags['aws.lambda.log_stream_name'] = this.originalContext.logStreamName;
-        this.logData.tags['aws.lambda.invocation.request_id '] = this.originalContext.awsRequestId;
+        this.logData.tags['aws.lambda.invocation.request_id'] = this.originalContext.awsRequestId;
 
         if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
             this.shimConsole();

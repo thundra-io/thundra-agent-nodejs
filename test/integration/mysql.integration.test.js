@@ -16,7 +16,7 @@ describe('MySQL2 Integration', () => {
 
         return mysql.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
-            expect(span.className).toBe('RDB');
+            expect(span.className).toBe('MYSQL');
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['operation.type']).toBe('READ');

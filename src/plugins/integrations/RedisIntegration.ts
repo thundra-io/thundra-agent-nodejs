@@ -1,11 +1,14 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import { SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames,
-  ClassNames, DBTypes, DBTags, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME } from '../../Constants';
+import {
+  SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames,
+  ClassNames, DBTypes, DBTags, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+} from '../../Constants';
 import Utils from '../utils/Utils';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
+import ThundraSpan from '../../opentracing/Span';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -40,66 +43,77 @@ class RedisIntegration implements Integration {
 
     function wrapper(internalSendCommand: any) {
       return function internalSendCommandWrapper(options: any) {
-        const tracer = ThundraTracer.getInstance();
+        let span: ThundraSpan;
+        try {
+          const tracer = ThundraTracer.getInstance();
 
-        if (!options) {
-          return internalSendCommand.call(this, options);
-        }
-
-        const parentSpan = tracer.getActiveSpan();
-        let host = 'localhost';
-        let port = '6379';
-        let command = '';
-
-        if (this.connection_options) {
-          host = String(this.connection_options.host);
-          port = String(this.connection_options.port);
-          command = options.command.toUpperCase();
-        }
-
-        const operationType = RedisCommandTypes[command] ? RedisCommandTypes[command] : 'READ';
-
-        const span = tracer._startSpan(host, {
-          childOf: parentSpan,
-          domainName: DomainNames.CACHE,
-          className: ClassNames.REDIS,
-          disableActiveStart: true,
-          tags: {
-            [SpanTags.SPAN_TYPE]: SpanTypes.REDIS,
-            [DB_TYPE]: DBTypes.REDIS,
-            [DB_INSTANCE]: host,
-            [DBTags.DB_STATEMENT_TYPE]: operationType,
-            [RedisTags.REDIS_HOST]: host,
-            [RedisTags.REDIS_PORT]: port,
-            [RedisTags.REDIS_COMMAND]: command,
-            [RedisTags.REDIS_COMMAND_TYPE]: operationType,
-            [RedisTags.REDIS_COMMAND_ARGS]: options.args.join(','),
-            [SpanTags.OPERATION_TYPE]: operationType,
-            [SpanTags.TOPOLOGY_VERTEX]: true,
-            [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
-            [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-            [SpanTags.TRIGGER_OPERATION_NAMES]: [tracer.functionName],
-          },
-        });
-
-        const originalCallback = options.callback;
-
-        const wrappedCallback = (err: any, res: any) => {
-          if (err) {
-            const parseError = Utils.parseError(err);
-            span.setTag('error', true);
-            span.setTag('error.kind', parseError.errorType);
-            span.setTag('error.message', parseError.errorMessage);
+          if (!options) {
+            return internalSendCommand.call(this, options);
           }
 
-          span.close();
+          const parentSpan = tracer.getActiveSpan();
+          let host = 'localhost';
+          let port = '6379';
+          let command = '';
 
-          originalCallback(err, res);
-        };
+          if (this.connection_options) {
+            host = String(this.connection_options.host);
+            port = String(this.connection_options.port);
+            command = options.command.toUpperCase();
+          }
 
-        options.callback = wrappedCallback;
+          const operationType = RedisCommandTypes[command] ? RedisCommandTypes[command] : '';
 
-        return internalSendCommand.call(this, options);
+          span = tracer._startSpan(host, {
+            childOf: parentSpan,
+            domainName: DomainNames.CACHE,
+            className: ClassNames.REDIS,
+            disableActiveStart: true,
+            tags: {
+              [SpanTags.SPAN_TYPE]: SpanTypes.REDIS,
+              [DB_TYPE]: DBTypes.REDIS,
+              [DB_INSTANCE]: host,
+              [DBTags.DB_STATEMENT_TYPE]: operationType,
+              [RedisTags.REDIS_HOST]: host,
+              [RedisTags.REDIS_PORT]: port,
+              [RedisTags.REDIS_COMMAND]: command,
+              [RedisTags.REDIS_COMMAND_TYPE]: operationType,
+              [RedisTags.REDIS_COMMAND_ARGS]: options.args.join(','),
+              [SpanTags.OPERATION_TYPE]: operationType,
+              [SpanTags.TOPOLOGY_VERTEX]: true,
+              [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
+              [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
+              [SpanTags.TRIGGER_OPERATION_NAMES]: [tracer.functionName],
+            },
+          });
+
+          const originalCallback = options.callback;
+
+          const wrappedCallback = (err: any, res: any) => {
+            if (err) {
+              const parseError = Utils.parseError(err);
+              span.setTag('error', true);
+              span.setTag('error.kind', parseError.errorType);
+              span.setTag('error.message', parseError.errorMessage);
+            }
+
+            span.close();
+
+            originalCallback(err, res);
+          };
+
+          options.callback = wrappedCallback;
+
+          return internalSendCommand.call(this, options);
+        } catch (error) {
+
+          if (span) {
+            span.close();
+          }
+
+          ThundraLogger.getInstance().error(error);
+          internalSendCommand.call(this, options);
+        }
       };
     }
 

@@ -19,7 +19,7 @@ module.exports.dynamo = (AWS) => {
     });
 };
 
-module.exports.s3 = (AWS) => {
+module.exports.s3GetObject = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
         const s3 = new AWS.S3();
@@ -29,6 +29,22 @@ module.exports.s3 = (AWS) => {
         };
 
         s3.getObject(getParams, function (err, data) {
+            if (err) {
+                // Resolve even though there is an error.
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    });
+};
+
+module.exports.s3ListBuckets = (AWS) => {
+    return new Promise((resolve) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const s3 = new AWS.S3();
+        var params = {};
+
+        s3.listBuckets(params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);
@@ -112,6 +128,24 @@ module.exports.sns = (AWS) => {
     });
 };
 
+module.exports.sns_checkIfPhoneNumberIsOptedOut = (AWS) => {
+    return new Promise((resolve) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
+        const params = {
+            phoneNumber: 'STRING_VALUE' /* required */
+        };
+
+        sns.checkIfPhoneNumberIsOptedOut(params, function (err, data) {
+            if (err) {
+                // Resolve even though there is an error.
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    });
+};
+
 module.exports.kinesis = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
@@ -154,5 +188,3 @@ module.exports.firehose = (AWS) => {
         });
     });
 };
-
-

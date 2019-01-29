@@ -27,19 +27,24 @@ class MetricSamplerConfig {
     }
 
     isSampled(): boolean {
-        let isSampled = true;
+        if (!this.countAwareSampler &&
+            !this.timeAwareSampler && !this.customSampler) {
+                return true;
+        }
+
+        let isSampled = false;
 
         if (this.countAwareSampler) {
-            isSampled = this.countAwareSampler.isSampled();
+            isSampled = isSampled || this.countAwareSampler.isSampled();
         }
 
         if (this.timeAwareSampler) {
-            isSampled = this.timeAwareSampler.isSampled();
+            isSampled = isSampled || this.timeAwareSampler.isSampled();
         }
 
         if (this.customSampler) {
             if (typeof this.customSampler === 'function' && this.customSampler().isSampled) {
-                isSampled = this.customSampler().isSampled();
+                isSampled = isSampled || this.customSampler().isSampled();
             }
         }
 
