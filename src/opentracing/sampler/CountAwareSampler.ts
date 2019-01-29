@@ -16,8 +16,9 @@ class CountAwareSampler implements Sampler<null> {
     }
 
     isSampled(): boolean {
+        const result = this.counter % this.countFreq === 0;
         this.counter++;
-        return this.counter % this.countFreq === 0;
+        return result;
     }
 }
 
