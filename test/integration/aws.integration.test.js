@@ -277,4 +277,24 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']); 
         });
     });
+
+    test('should instrument AWS KMS calls ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {});
+        
+        const tracer = new ThundraTracer();
+        tracer.functionName = 'functionName';
+
+        return AWS.kms(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('AWSServiceRequest');
+
+            expect(span.className).toBe('AWSService');
+            expect(span.domainName).toBe('AWS');
+
+            expect(span.tags['aws.request.name']).toBe('createKey');
+        });
+    });
 });

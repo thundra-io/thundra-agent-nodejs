@@ -99,7 +99,7 @@ module.exports.sqs_list_queue = (AWS) => {
         AWS.config.update({ region: 'us-west-2' });
         const sqs = new AWS.SQS();
         const params = {};
-        sqs.listQueues(params, function(err, data) {
+        sqs.listQueues(params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);
@@ -173,7 +173,7 @@ module.exports.firehose = (AWS) => {
         AWS.config.update({ region: 'us-west-2' });
         const firehose = new AWS.Firehose({ apiVersion: '2015-08-04' });
         const params = {
-            DeliveryStreamName: 'STRING_VALUE', 
+            DeliveryStreamName: 'STRING_VALUE',
             Record: {
                 Data: 'STRING_VALUE'
             }
@@ -188,3 +188,30 @@ module.exports.firehose = (AWS) => {
         });
     });
 };
+
+
+module.exports.kms = (AWS) => {
+    return new Promise((resolve) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const kms = new AWS.KMS({ apiVersion: '2015-08-04' });
+        var params = {
+            BypassPolicyLockoutSafetyCheck: true || false,
+            CustomKeyStoreId: 'STRING_VALUE',
+            Description: 'STRING_VALUE',
+            Policy: 'STRING_VALUE',
+            Tags: [
+                {
+                    TagKey: 'STRING_VALUE', /* required */
+                    TagValue: 'STRING_VALUE' /* required */
+                },
+                /* more items */
+            ]
+        };
+        kms.createKey(params, function (err, data) {
+            if (err) return resolve(err); // an error occurred
+            else return resolve(data);         // successful response
+        });
+    });
+};
+
+
