@@ -1,5 +1,8 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.0.8 - January 30, 2019
+- Bug fixes in AWS Integrations
+- Enable default sampling for Metric Plugin
 ## 2.0.7 - December 20, 2018
 - Integrated Thundra Log Plugin with NodeJS console
 - Warmup plugin is disabled by default
