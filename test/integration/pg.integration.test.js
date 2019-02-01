@@ -16,7 +16,7 @@ describe('PostgreSQL Integration', () => {
         return PG.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
 
-            expect(span.className).toBe('PG');
+            expect(span.className).toBe('POSTGRESQL');
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['operation.type']).toBe('READ');
@@ -24,7 +24,7 @@ describe('PostgreSQL Integration', () => {
             expect(span.tags['db.user']).toBe('postgres');
             expect(span.tags['db.host']).toBe('localhost');
             expect(span.tags['db.port']).toBe(5432);
-            expect(span.tags['db.type']).toBe('pg');
+            expect(span.tags['db.type']).toBe('postgresql');
             expect(span.tags['db.statement']).toBe('SELECT Hello world!::text as message');
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
