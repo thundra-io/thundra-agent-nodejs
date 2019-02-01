@@ -178,7 +178,7 @@ export const DBTags = {
 export const DBTypes = {
     DYNAMODB: 'aws-dynamodb',
     REDIS: 'redis',
-    PG: 'pg',
+    PG: 'postgresql',
     MYSQL: 'mysql',
 };
 
