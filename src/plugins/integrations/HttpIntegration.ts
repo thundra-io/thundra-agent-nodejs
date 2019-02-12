@@ -53,6 +53,11 @@ class HttpIntegration implements Integration {
       return function requestWrapper(options: any, callback: any) {
         try {
           const tracer = ThundraTracer.getInstance();
+
+          if (!tracer) {
+            return request.apply(this, [options, callback]);
+          }
+
           const method = (options.method || 'GET').toUpperCase();
           options = typeof options === 'string' ? url.parse(options) : options;
           const host = options.hostname || options.host || 'localhost';

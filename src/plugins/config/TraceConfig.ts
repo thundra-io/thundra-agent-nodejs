@@ -25,17 +25,20 @@ class TraceConfig extends BasePluginConfig {
     constructor(options: any) {
         options = options ? options : {};
         super(koalas(options.enabled, true));
-        this.disableRequest = koalas(Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP) === 'true', options.disableRequest, false);
-        this.disableResponse = koalas(Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) === 'true', options.disableResponse, false);
+        this.disableRequest = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP) === 'true' : options.disableRequest;
+        this.disableResponse = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) === 'true' : options.disableResponse;
         this.maskRequest = koalas(options.maskRequest, null);
         this.maskResponse = koalas(options.maskResponse, null);
         this.disabledIntegrations = koalas([]);
         this.tracerConfig = koalas(options.tracerConfig, {});
         this.traceableConfigs = [];
-        this.disableInstrumentation = koalas(Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) === 'true',  options.disableInstrumentation, true);
+        this.disableInstrumentation = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) === 'true' : options.disableInstrumentation;
         this.samplerConfig = new TraceSamplerConfig(options.samplerConfig);
 
         for (const key of Object.keys(process.env)) {

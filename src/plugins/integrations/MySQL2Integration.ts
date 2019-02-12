@@ -47,6 +47,11 @@ class MySQL2Integration implements Integration {
       return function queryWrapper(sql: any, values: any, cb: any) {
         try {
           const tracer = ThundraTracer.getInstance();
+
+          if (!tracer) {
+            return query.call(this, sql, values, cb);
+          }
+
           const parentSpan = tracer.getActiveSpan();
 
           span = tracer._startSpan(this.config.database, {
