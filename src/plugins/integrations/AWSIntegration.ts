@@ -78,6 +78,10 @@ class AWSIntegration implements Integration {
         try {
           const tracer = ThundraTracer.getInstance();
 
+          if (!tracer) {
+            return wrappedFunction.apply(this, [callback]);
+          }
+
           const request = this;
           const serviceEndpoint = request.service.config.endpoint;
           const serviceName = Utils.getServiceName(serviceEndpoint as string);

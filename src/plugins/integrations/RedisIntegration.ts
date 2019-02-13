@@ -47,6 +47,10 @@ class RedisIntegration implements Integration {
         try {
           const tracer = ThundraTracer.getInstance();
 
+          if (!tracer) {
+            return internalSendCommand.call(this, options);
+          }
+
           if (!options) {
             return internalSendCommand.call(this, options);
           }

@@ -10,6 +10,7 @@ import * as url from 'url';
 import ThundraLogger from '../../ThundraLogger';
 
 const shimmer = require('shimmer');
+const semver = require('semver');
 const Hook = require('require-in-the-middle');
 
 class HttpIntegration implements Integration {
@@ -20,13 +21,23 @@ class HttpIntegration implements Integration {
   basedir: string;
 
   constructor(config: any) {
-    this.hook = Hook('http', { internals: true }, (exp: any, name: string, basedir: string) => {
+    this.hook = Hook(['http', 'https'], { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'http') {
         this.lib = exp;
         this.config = config;
         this.basedir = basedir;
-
         this.wrap.call(this, exp, config);
+      }
+
+      if (name === 'https') {
+        if (semver.satisfies(process.version, '>=9')) {
+          this.lib = exp;
+          this.config = config;
+          this.basedir = basedir;
+          this.wrap.call(this, exp, config);
+        } else {
+          require('http');
+        }
       }
       return exp;
     });
@@ -53,6 +64,11 @@ class HttpIntegration implements Integration {
       return function requestWrapper(options: any, callback: any) {
         try {
           const tracer = ThundraTracer.getInstance();
+
+          if (!tracer) {
+            return request.apply(this, [options, callback]);
+          }
+
           const method = (options.method || 'GET').toUpperCase();
           options = typeof options === 'string' ? url.parse(options) : options;
           const host = options.hostname || options.host || 'localhost';

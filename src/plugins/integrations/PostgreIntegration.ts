@@ -47,6 +47,10 @@ class PostgreIntegration implements Integration {
         let span: ThundraSpan;
         try {
           const tracer = ThundraTracer.getInstance();
+
+          if (!tracer) {
+            return query.apply(this, arguments);
+          }
           const parentSpan = tracer.getActiveSpan();
 
           const params = this.connectionParameters;
