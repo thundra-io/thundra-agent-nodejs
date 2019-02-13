@@ -1,5 +1,8 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.0.9 - February 13, 2019
+- Trace HTTPS calls
+- Bug fix in in TraceConfig programmatic config
 ## 2.0.8 - January 30, 2019
 - Bug fixes in AWS Integrations
 - Enable default sampling for Metric Plugin
