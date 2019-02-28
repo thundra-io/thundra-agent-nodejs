@@ -1,18 +1,19 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import {
-  DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes,
+  DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, ESTags,
   LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
 } from '../../Constants';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
+import * as url from 'url';
 import InvocationSupport from '../support/InvocationSupport';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
 
-class MySQL2Integration implements Integration {
+class ESIntegration implements Integration {
   config: any;
   lib: any;
   version: string;
@@ -20,13 +21,13 @@ class MySQL2Integration implements Integration {
   basedir: string;
 
   constructor(config: any) {
-    this.version = '^1.5';
-    this.hook = Hook('mysql2', { internals: true }, (exp: any, name: string, basedir: string) => {
-      if (name === 'mysql2/lib/connection.js') {
+    this.version = '>=10.5';
+    this.hook = Hook('elasticsearch', { internals: true }, (exp: any, name: string, basedir: string) => {
+      if (name === 'elasticsearch/src/lib/transport.js' || name === 'src/lib/transport.js') {
         const moduleValidator = new ModuleVersionValidator();
         const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
         if (!isValidVersion) {
-          ThundraLogger.getInstance().error(`Invalid module version for mysql2 integration.
+          ThundraLogger.getInstance().error(`Invalid module version for ES integration.
                                              Supported version is ${this.version}`);
         } else {
           this.lib = exp;
@@ -41,55 +42,60 @@ class MySQL2Integration implements Integration {
   }
 
   wrap(lib: any, config: any) {
-    function wrapper(query: any) {
+    function wrapRequest(request: any) {
       let span: ThundraSpan;
 
-      return function queryWrapper(sql: any, values: any, cb: any) {
+      return function requestWithTrace(params: any, cb: any) {
         try {
           const tracer = ThundraTracer.getInstance();
 
           if (!tracer) {
-            return query.call(this, sql, values, cb);
+            return request.call(this, params, cb);
           }
 
           const me = this;
           const functionName = InvocationSupport.getFunctionName();
           const parentSpan = tracer.getActiveSpan();
+          let configHost = this._config.host ? this._config.host : 'localhost';
+          configHost = configHost.startsWith('http') ? configHost : 'http://' + configHost;
+          const URL: url.UrlWithStringQuery = url.parse(configHost);
 
-          span = tracer._startSpan(this.config.database, {
+          span = tracer._startSpan(URL.hostname, {
             childOf: parentSpan,
             domainName: DomainNames.DB,
-            className: DBTypes.MYSQL.toUpperCase(),
+            className: DBTypes.ELASTICSEARCH.toUpperCase(),
             disableActiveStart: true,
           });
 
           span.addTags({
-            [SpanTags.SPAN_TYPE]: SpanTypes.RDB,
-            [DBTags.DB_INSTANCE]: this.config.database,
-            [DBTags.DB_USER]: this.config.user,
-            [DBTags.DB_HOST]: this.config.host,
-            [DBTags.DB_PORT]: this.config.port,
-            [DBTags.DB_TYPE]: DBTypes.MYSQL,
+            [SpanTags.SPAN_TYPE]: SpanTypes.ELASTIC,
+            [DBTags.DB_INSTANCE]: URL.hostname,
+            [DBTags.DB_HOST]: URL.hostname,
+            [DBTags.DB_PORT]: URL.port,
+            [DBTags.DB_TYPE]: DBTypes.ELASTICSEARCH,
             [SpanTags.TOPOLOGY_VERTEX]: true,
             [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
             [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
             [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
+            [ESTags.ES_URL]: params.path,
+            [ESTags.ES_METHOD]: params.method,
+            [ESTags.ES_PARAMS]: JSON.stringify(params.query),
           });
 
-          const sequence = query.call(this, sql, values, cb);
+          if (JSON.stringify(params.body)) {
+            span.setTag(ESTags.ES_BODY, JSON.stringify(params.body));
+          }
 
-          const statement = sequence.sql;
-
-          if (statement) {
-            const statementType = statement.split(' ')[0].toUpperCase();
+          if (params.path) {
+            const statementType = params.path.includes('_search') ? 'READ' : 'WRITE';
             span.addTags({
               [DBTags.DB_STATEMENT_TYPE]: statementType,
-              [DBTags.DB_STATEMENT]: statement,
-              [SpanTags.OPERATION_TYPE]: SQLQueryOperationTypes[statementType] ? SQLQueryOperationTypes[statementType] : '',
+              [DBTags.DB_STATEMENT]: JSON.stringify(params.query),
+              [SpanTags.OPERATION_TYPE]: statementType,
             });
           }
 
-          const originalCallback = sequence.onResult;
+          const originalCallback = cb;
 
           const wrappedCallback = (err: any, res: any) => {
             if (err) {
@@ -99,33 +105,39 @@ class MySQL2Integration implements Integration {
             span.closeWithCallback(me, originalCallback, [err, res]);
           };
 
-          if (sequence.onResult) {
-            sequence.onResult = wrappedCallback;
+          if (typeof cb === 'function') {
+            return request.call(this, params, wrappedCallback);
           } else {
-            sequence.on('end', () => {
-              span.close();
+            const promise = request.apply(this, arguments);
+
+            promise.then(() => {
+              span.finish();
+            }).catch((err: any) => {
+              span.setErrorTag(err);
+              span.finish();
             });
+
+            return promise;
           }
 
-          return sequence;
         } catch (error) {
           if (span) {
             span.close();
           }
 
           ThundraLogger.getInstance().error(error);
-          query.call(this, sql, values, cb);
+          return request.call(this, params, cb);
         }
       };
     }
 
-    shimmer.wrap(lib.prototype, 'query', wrapper);
+    shimmer.wrap(lib.prototype, 'request', wrapRequest);
   }
 
   unwrap() {
-    shimmer.unwrap(this.lib.prototype, 'query');
+    shimmer.unwrap(this.lib.prototype, 'request');
     this.hook.unhook();
   }
 }
 
-export default MySQL2Integration;
+export default ESIntegration;

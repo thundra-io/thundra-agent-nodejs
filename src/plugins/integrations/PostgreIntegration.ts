@@ -8,6 +8,7 @@ import Utils from '../utils/Utils';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
+import InvocationSupport from '../support/InvocationSupport';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -51,14 +52,21 @@ class PostgreIntegration implements Integration {
           if (!tracer) {
             return query.apply(this, arguments);
           }
+
+          const functionName = InvocationSupport.getFunctionName();
           const parentSpan = tracer.getActiveSpan();
 
           const params = this.connectionParameters;
+          const me = this;
+
           span = tracer._startSpan(params.database, {
             childOf: parentSpan,
             domainName: DomainNames.DB,
             className: DBTypes.PG.toUpperCase(),
             disableActiveStart: true,
+            me,
+            callback: arguments[2],
+            args: [],
           });
 
           if (params) {
@@ -72,7 +80,7 @@ class PostgreIntegration implements Integration {
               [SpanTags.TOPOLOGY_VERTEX]: true,
               [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
               [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-              [SpanTags.TRIGGER_OPERATION_NAMES]: [tracer.functionName],
+              [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
             });
           }
 
@@ -94,17 +102,10 @@ class PostgreIntegration implements Integration {
 
           pgQuery.callback = (err: any, res: any) => {
             if (err) {
-              const parseError = Utils.parseError(err);
-              span.setTag('error', true);
-              span.setTag('error.kind', parseError.errorType);
-              span.setTag('error.message', parseError.errorMessage);
+              span.setErrorTag(err);
             }
 
-            span.close();
-
-            if (originalCallback) {
-              originalCallback(err, res);
-            }
+            span.closeWithCallback(me, originalCallback, [err, res]);
           };
 
           return pgQuery;

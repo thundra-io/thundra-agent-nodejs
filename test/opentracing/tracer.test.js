@@ -53,15 +53,15 @@ describe('Recorder', () => {
 
         const childSpan = tracer.startSpan('child', { childOf: parentSpan });
 
-        childSpan.finish();
         parentSpan.finish();
+        childSpan.finish();
 
         it('should set log and tag relations', () => {
-            expect(tracer.recorder.getSpanList()[1].getOperationName()).toEqual('parent');
-            expect(tracer.recorder.getSpanList()[1].getTag('tag-key')).toEqual('tagValue');
-            expect(tracer.recorder.getSpanList()[1].logs[0].timestamp).not.toBeNull();
+            expect(tracer.recorder.getSpanList()[0].getOperationName()).toEqual('parent');
+            expect(tracer.recorder.getSpanList()[0].getTag('tag-key')).toEqual('tagValue');
+            expect(tracer.recorder.getSpanList()[0].logs[0].timestamp).not.toBeNull();
             expect(tracer.recorder.getSpanList().length).toEqual(2);
-            expect(tracer.recorder.getSpanList()[0].getOperationName()).toEqual('child');
+            expect(tracer.recorder.getSpanList()[1].getOperationName()).toEqual('child');
         });
 
     });
@@ -74,13 +74,13 @@ describe('Recorder', () => {
             references: [new Reference('follows_from', parentSpan.context())]
         });
 
-        childSpan.finish();
         parentSpan.finish();
-
+        childSpan.finish();
+        
         it('should set log and tag relations', () => {
-            expect(tracer.recorder.getSpanList()[1].getOperationName()).toEqual('parent');
+            expect(tracer.recorder.getSpanList()[0].getOperationName()).toEqual('parent');
             expect(tracer.recorder.getSpanList().length).toEqual(2);
-            expect(tracer.recorder.getSpanList()[0].getOperationName()).toEqual('child');
+            expect(tracer.recorder.getSpanList()[1].getOperationName()).toEqual('child');
         });
 
     });

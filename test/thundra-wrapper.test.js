@@ -257,10 +257,54 @@ describe('ThundraWrapper', () => {
         thundraWrapper.reporter = createMockReporterInstance();
         thundraWrapper.invoke();
         it('should call originalCallback', () => {
-            expect(originalCallback).toBeCalledWith(null, 'test');
+            expect(originalContext.succeed).toBeCalledWith('test');
         });
         it('should call reporter.sendReports', () => {
             expect(thundraWrapper.reporter.sendReports).toBeCalled();
+        });
+    });
+
+    describe('timeout sampling configured and TimeutError occurs', () => {
+        const originalCallback = jest.fn();
+        const originalFunction = jest.fn();
+        const pc = createMockPluginContext();
+        jest.useFakeTimers();
+        originalContext.getRemainingTimeInMillis = () => 5000;
+        pc.timeoutMargin = 200;
+        pc.config = {
+            sampleTimedOutInvocations: true
+        };
+
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pc, apiKey);
+        thundraWrapper.executeAfteInvocationAndReport = jest.fn();
+        jest.runAllTimers();
+        originalContext.getRemainingTimeInMillis = null;
+        pc.timeoutMargin = null;
+        let afterInvocationData = {
+            error: new TimeoutError('Lambda is timed out.'),
+            response: null,
+        };
+
+        it('should call report when it is enabled and timeout occurs.', () => {
+            expect(thundraWrapper.executeAfteInvocationAndReport).toBeCalledWith(afterInvocationData);
+        });
+    });
+
+    describe('timeout sampling configured and TimeutError does not occur', () => {
+        const originalCallback = jest.fn();
+        const originalFunction = jest.fn(() => originalCallback());
+        const pc = createMockPluginContext();
+        pc.config = {
+            sampleTimedOutInvocations: true
+        };
+        originalContext.getRemainingTimeInMillis = () => 0;
+
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pc, apiKey);
+        thundraWrapper.executeAfteInvocationAndReport = jest.fn();
+        thundraWrapper.report(null, {result: 'result'}, thundraWrapper.originalCallback);
+        
+        test('should not send reports', () => {
+            expect(thundraWrapper.executeAfteInvocationAndReport).not.toBeCalled();
         });
     });
 

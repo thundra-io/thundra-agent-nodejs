@@ -19,13 +19,16 @@ class ThundraConfig {
     logConfig: LogConfig;
     xrayConfig: AwsXRayConfig;
     timeoutMargin: number;
+    sampleTimedOutInvocations: boolean;
     plugins: any[];
 
     constructor(options: any) {
         options = options ? options : {};
         this.plugins = koalas(options.plugins, []);
         this.apiKey = koalas(Utils.getConfiguration(envVariableKeys.THUNDRA_APIKEY), options.apiKey, null);
-        this.disableThundra = koalas(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE), options.disableThundra, false);
+        this.disableThundra = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_DISABLE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_DISABLE) === 'true' : options.disableThundra;
         this.timeoutMargin = koalas(parseInt(Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TIMEOUT_MARGIN), 10),
             options.timeoutMargin, TIMEOUT_MARGIN);
         this.traceConfig = new TraceConfig(options.traceConfig);
@@ -33,11 +36,21 @@ class ThundraConfig {
         this.logConfig = new LogConfig(options.logConfig);
         this.invocationConfig = new InvocationConfig(options.invocationConfig);
         this.xrayConfig = new AwsXRayConfig(options.xrayConfig);
+
         this.trustAllCert = koalas(Utils.getConfiguration(
             envVariableKeys.THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES), options.trustAllCert, false);
+
+        this.trustAllCert = Utils.getConfiguration(
+                envVariableKeys.THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES) ? Utils.getConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES) === 'true' : options.trustAllCert;
+
         this.warmupAware = Utils.getConfiguration(
                 envVariableKeys.THUNDRA_LAMBDA_WARMUP_AWARE) ? Utils.getConfiguration(
                     envVariableKeys.THUNDRA_LAMBDA_WARMUP_AWARE) === 'true' : options.warmupAware;
+
+        this.sampleTimedOutInvocations = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_AGENT_LAMBDA_SAMPLE_TIMED_OUT_INVOCATIONS) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_AGENT_LAMBDA_SAMPLE_TIMED_OUT_INVOCATIONS) === 'true' : options.sampleTimedOutInvocations;
     }
 
 }

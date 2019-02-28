@@ -2,8 +2,13 @@ import * as url from 'url';
 import HttpIntegration from './plugins/integrations/HttpIntegration';
 import PostgreIntegration from './plugins/integrations/PostgreIntegration';
 import MySQL2Integration from './plugins/integrations/MySQL2Integration';
+import MySQLIntegration from './plugins/integrations/MySQLIntegration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
 import AWSIntegration from './plugins/integrations/AWSIntegration';
+import ESIntegration from './plugins/integrations/ESIntegration';
+import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
+import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
+import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
 
 export const envVariableKeys = {
     THUNDRA_LAMBDA_WARMUP_AWARE: 'thundra_lambda_warmup_warmupAware',
@@ -47,6 +52,9 @@ export const envVariableKeys = {
     THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX: 'thundra_agent_lambda_application_tag_',
     THUNDRA_APPLICATION_ID: 'thundra_agent_lambda_application_id',
     THUNDRA_APPLICATION_NAME: 'thundra_agent_lambda_application_name',
+    THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF : 'thundra_agent_lambda_trace_span_listener',
+
+    THUNDRA_AGENT_LAMBDA_SAMPLE_TIMED_OUT_INVOCATIONS: 'thundra_agent_lambda_sample_timed_out_invocations',
 
 };
 
@@ -180,6 +188,7 @@ export const DBTypes = {
     REDIS: 'redis',
     PG: 'postgresql',
     MYSQL: 'mysql',
+    ELASTICSEARCH: 'elasticsearch',
 };
 
 export const HttpTags = {
@@ -198,6 +207,13 @@ export const RedisTags = {
     REDIS_COMMANDS: 'redis.commands',
     REDIS_COMMAND_TYPE: 'redis.command.type',
     REDIS_COMMAND_ARGS: 'redis.command.args',
+};
+
+export const ESTags = {
+    ES_URL: 'elasticsearch.url',
+    ES_METHOD: 'elasticsearch.method',
+    ES_PARAMS: 'elasticsearch.params',
+    ES_BODY: 'elasticsearch.body',
 };
 
 export const AwsSDKTags = {
@@ -250,6 +266,7 @@ export const SpanTags = {
 
 export const SpanTypes = {
     REDIS: 'Redis',
+    ELASTIC: 'Elastic',
     RDB: 'RDB',
     HTTP: 'HTTP',
     AWS_DYNAMO: 'AWS-DynamoDB',
@@ -265,8 +282,16 @@ export const INTEGRATIONS: any = {
     http: HttpIntegration,
     pg: PostgreIntegration,
     mysql2: MySQL2Integration,
+    mysql: MySQLIntegration,
     redis: RedisIntegration,
     aws: AWSIntegration,
+    es: ESIntegration,
+};
+
+export const LISTENERS: any = {
+    FilteringSpanListener,
+    ErrorInjectorSpanListener,
+    LatencyInjectorSpanListener,
 };
 
 export const SQSRequestTypes: any = {

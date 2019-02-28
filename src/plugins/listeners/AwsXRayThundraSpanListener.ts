@@ -20,7 +20,7 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
         this.subsegmentMap = new Map<string, any>();
     }
 
-    onSpanStarted(span: ThundraSpan): void {
+    onSpanStarted(span: ThundraSpan): boolean {
         try {
             if (!AWSXRay) {
                 ThundraLogger.getInstance().error('XRay plugin is enabled but cannot load module aws-xray-sdk-core.');
@@ -36,9 +36,11 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
         } catch (err) {
             ThundraLogger.getInstance().error('Error occurred while beginning XRay sub-segment for span ' + err);
         }
+
+        return false;
     }
 
-    onSpanFinished(span: ThundraSpan): void {
+    onSpanFinished(span: ThundraSpan): boolean {
         try {
             if (!AWSXRay) {
                 ThundraLogger.getInstance().error('XRay plugin is enabled but cannot load module aws-xray-sdk-core.');
@@ -57,6 +59,11 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
         } catch (err) {
             ThundraLogger.getInstance().error('Error occurred while ending XRay sub-segment for span ' + err);
         }
+        return false;
+    }
+
+    failOnError(): boolean {
+        return false;
     }
 
     onDestroy(): void {

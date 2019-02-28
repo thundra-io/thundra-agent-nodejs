@@ -12,7 +12,7 @@ import InvocationSupport from '../support/InvocationSupport';
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
 
-class MySQL2Integration implements Integration {
+class MySQLIntegration implements Integration {
   config: any;
   lib: any;
   version: string;
@@ -20,13 +20,13 @@ class MySQL2Integration implements Integration {
   basedir: string;
 
   constructor(config: any) {
-    this.version = '^1.5';
-    this.hook = Hook('mysql2', { internals: true }, (exp: any, name: string, basedir: string) => {
-      if (name === 'mysql2/lib/connection.js') {
+    this.version = '>=2';
+    this.hook = Hook('mysql', { internals: true }, (exp: any, name: string, basedir: string) => {
+      if (name === 'mysql/lib/Connection.js' || name === 'lib/Connection.js') {
         const moduleValidator = new ModuleVersionValidator();
         const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
         if (!isValidVersion) {
-          ThundraLogger.getInstance().error(`Invalid module version for mysql2 integration.
+          ThundraLogger.getInstance().error(`Invalid module version for mysql integration.
                                              Supported version is ${this.version}`);
         } else {
           this.lib = exp;
@@ -128,4 +128,4 @@ class MySQL2Integration implements Integration {
   }
 }
 
-export default MySQL2Integration;
+export default MySQLIntegration;

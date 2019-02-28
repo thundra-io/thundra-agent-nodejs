@@ -4,6 +4,7 @@ import * as os from 'os';
 import {
     DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys,
+    LISTENERS,
 } from '../../Constants';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
@@ -19,6 +20,7 @@ import SpanData from '../data/trace/SpanData';
 import LogData from '../data/log/LogData';
 import ThundraLogger from '../../ThundraLogger';
 import ApplicationSupport from '../support/ApplicationSupport';
+import ThundraTracer from '../../opentracing/Tracer';
 
 class Utils {
     static generateId(): string {
@@ -208,16 +210,16 @@ class Utils {
         monitoringData.agentVersion = BuildInfoLoader.getAgentVersion();
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
         monitoringData.applicationId = applicationId ? applicationId : (pluginContext ? pluginContext.applicationId : '');
-        monitoringData.applicationDomainName =  domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
+        monitoringData.applicationDomainName = domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
         monitoringData.applicationClassName = className ? className : LAMBDA_APPLICATION_CLASS_NAME;
         monitoringData.applicationName = applicationName ? applicationName :
-                                        (originalContext ? originalContext.functionName : '');
+            (originalContext ? originalContext.functionName : '');
         monitoringData.applicationVersion = applicationVersion ? applicationVersion :
-                                            (pluginContext ? pluginContext.applicationVersion : '');
+            (pluginContext ? pluginContext.applicationVersion : '');
         monitoringData.applicationStage = stage ? stage : '';
         monitoringData.applicationRuntimeVersion = process.version;
 
-        monitoringData.applicationTags = {...monitoringData.applicationTags, ...ApplicationSupport.applicationTags};
+        monitoringData.applicationTags = { ...monitoringData.applicationTags, ...ApplicationSupport.applicationTags };
 
         return monitoringData;
     }
@@ -244,6 +246,71 @@ class Utils {
         }
 
         return monitoringData;
+    }
+
+    static sleep(milliseconds: number): Promise<number> {
+        return new Promise((resolve) => setTimeout(resolve, milliseconds));
+    }
+
+    static getRandomInt(bound: number): number {
+        return 1 + Math.floor(Math.random() * bound);
+    }
+
+    static registerSpanListenersFromConfigurations(tracer: ThundraTracer): any {
+        const listeners: any[] = [];
+        for (const key of Object.keys(process.env)) {
+            if (key.startsWith(envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF)) {
+                try {
+                    const value = process.env[key];
+                    const configStartIndex = value.indexOf('[');
+                    const configEndIndex = value.lastIndexOf(']');
+
+                    if (configStartIndex > 0 && configEndIndex > 0) {
+                        const listenerClassName = value.substring(0, configStartIndex);
+                        const configDefs = value.substring(configStartIndex + 1, configEndIndex).split(',');
+                        const configs: any = {};
+                        for (let configDef of configDefs) {
+                            if (!configDef || configDef === '') {
+                                continue;
+                            }
+
+                            configDef = configDef.trim();
+                            const separatorIndex = configDef.indexOf('=');
+                            if (separatorIndex < 1) {
+                                throw new Error(
+                                    'Span listener config definitions must ' +
+                                    'be in \'key=value\' format where \'value\' can be empty');
+                            }
+                            const paramName = configDef.substring(0, separatorIndex);
+                            const paramValue = configDef.substring(separatorIndex + 1);
+                            configs[paramName.trim()] = paramValue.trim();
+                        }
+
+                        const listenerClass = LISTENERS[listenerClassName];
+                        if (!listenerClass) {
+                            throw new Error('No listener found with name: ' + listenerClassName);
+                        }
+
+                        const listener = new listenerClass(configs);
+                        tracer.addSpanListener(listener);
+                        listeners.push(listener);
+                    } else {
+                        const listenerClass = LISTENERS[value];
+                        if (!listenerClass) {
+                            throw new Error('No listener found with name: ' + value);
+                        }
+                        const listener = new listenerClass({});
+                        tracer.addSpanListener(listener);
+                        listeners.push(listener);
+                    }
+                } catch (ex) {
+                    ThundraLogger.getInstance().error(
+                        `Cannot parse span listener def ${key} with reason: ${ex.message}`);
+                }
+
+                return listeners;
+            }
+        }
     }
 }
 

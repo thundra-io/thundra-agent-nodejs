@@ -2,6 +2,7 @@ import ThundraLogger from '../../ThundraLogger';
 
 class InvocationSupport {
     static tags: any = {};
+    static functionName = '';
 
     static setTag(key: string, value: any): void {
         try {
@@ -27,6 +28,14 @@ class InvocationSupport {
 
     static removeTags(): void {
         InvocationSupport.tags = {};
+    }
+
+    static setFunctionName(functionName: string): void {
+        InvocationSupport.functionName = functionName;
+    }
+
+    static getFunctionName(): string {
+        return InvocationSupport.functionName;
     }
 }
 

@@ -1,8 +1,8 @@
 import PluginContext from './PluginContext';
 import AwsXRayConfig from './config/AwsXRayConfig';
 import ThundraTracer from '../opentracing/Tracer';
-import AwsXRayThundraSpanListener from './listeners/AwsXRayThundraSpanListener';
 import ThundraLogger from '../ThundraLogger';
+import AwsXRayThundraSpanListener from './listeners/AwsXRayThundraSpanListener';
 
 class AwsXRay {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };

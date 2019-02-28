@@ -1,9 +1,11 @@
 import AWS from './utils/aws.integration.utils';
 import AWSIntegration from '../../dist/plugins/integrations/AWSIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
+import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('AWS Integration', () => {
-    
+    InvocationSupport.setFunctionName('functionName');
+
     test('should instrument AWS DynamoDB calls ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
@@ -11,7 +13,7 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
+        
 
         return AWS.dynamo(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -42,7 +44,6 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.s3GetObject(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -70,7 +71,6 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.s3ListBuckets(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -91,14 +91,13 @@ describe('AWS Integration', () => {
         });
     });
 
-    test('should instrument AWS Lambda calls ', () => { 
+    test('should instrument AWS Lambda invoke call ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.lambda(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -119,6 +118,19 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
+
+    test('should instrument AWS Lambda calls ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {});
+        
+        const tracer = new ThundraTracer();
+
+        return AWS.lambdaGetAccountSettings(sdk).then(() => {
+            expect(tracer.getRecorder().spanList[0]).toBeTruthy();
+        });
+    });
     
     test('should instrument AWS SQS calls ', () => { 
         const integration = new AWSIntegration({});
@@ -127,7 +139,6 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.sqs(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -154,7 +165,6 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.sqs_list_queue(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -182,7 +192,6 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.sns(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -210,7 +219,6 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -233,7 +241,6 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.kinesis(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -259,7 +266,6 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.firehose(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -285,7 +291,6 @@ describe('AWS Integration', () => {
         integration.wrap(sdk, {});
         
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return AWS.kms(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];

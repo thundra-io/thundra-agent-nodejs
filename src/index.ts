@@ -25,6 +25,11 @@ import Log from './plugins/Log';
 import AwsXRayConfig from './plugins/config/AwsXRayConfig';
 import InvocationSupport from './plugins/support/InvocationSupport';
 import ApplicationSupport from './plugins/support/ApplicationSupport';
+import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
+import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
+import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
+import SpanFilter from './plugins/listeners/SpanFilter';
+import StandardSpanFilterer from './plugins/listeners/StandardSpanFilterer';
 
 const ThundraWarmup = require('@thundra/warmup');
 
@@ -81,6 +86,7 @@ module.exports = (options: any) => {
         apiKey: config.apiKey,
         timeoutMargin: config.timeoutMargin,
         transactionId: null,
+        config,
     };
 
     config.plugins.forEach((plugin: any) => {
@@ -150,3 +156,11 @@ module.exports.config = {
 };
 
 module.exports.InvocationSupport = InvocationSupport;
+
+module.exports.listeners = {
+    ErrorInjectorSpanListener,
+    FilteringSpanListener,
+    LatencyInjectorSpanListener,
+    SpanFilter,
+    StandardSpanFilterer,
+};

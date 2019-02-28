@@ -8,9 +8,9 @@ import {
 import Utils from '../utils/Utils';
 import * as url from 'url';
 import ThundraLogger from '../../ThundraLogger';
+import InvocationSupport from '../support/InvocationSupport';
 
 const shimmer = require('shimmer');
-const semver = require('semver');
 const Hook = require('require-in-the-middle');
 
 class HttpIntegration implements Integration {
@@ -19,25 +19,16 @@ class HttpIntegration implements Integration {
   config: any;
   hook: any;
   basedir: string;
+  instrumented: boolean = false;
 
   constructor(config: any) {
     this.hook = Hook(['http', 'https'], { internals: true }, (exp: any, name: string, basedir: string) => {
-      if (name === 'http') {
+      if (!this.instrumented) {
         this.lib = exp;
         this.config = config;
         this.basedir = basedir;
         this.wrap.call(this, exp, config);
-      }
-
-      if (name === 'https') {
-        if (semver.satisfies(process.version, '>=9')) {
-          this.lib = exp;
-          this.config = config;
-          this.basedir = basedir;
-          this.wrap.call(this, exp, config);
-        } else {
-          require('http');
-        }
+        this.instrumented = true;
       }
       return exp;
     });
@@ -68,6 +59,8 @@ class HttpIntegration implements Integration {
           if (!tracer) {
             return request.apply(this, [options, callback]);
           }
+
+          const functionName = InvocationSupport.getFunctionName();
 
           const method = (options.method || 'GET').toUpperCase();
           options = typeof options === 'string' ? url.parse(options) : options;
@@ -104,10 +97,20 @@ class HttpIntegration implements Integration {
             [SpanTags.TOPOLOGY_VERTEX]: true,
             [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
             [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-            [SpanTags.TRIGGER_OPERATION_NAMES]: [tracer.functionName],
+            [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
           });
 
-          const req = request.call(this, options, callback);
+          const me = this;
+          const wrappedCallback = (err: any, res: any) => {
+            if (err && span) {
+              span.setErrorTag(err);
+            }
+            if (span) {
+              span.closeWithCallback(me, callback, [err, res]);
+            }
+          };
+
+          const req = request.call(this, options, wrappedCallback);
 
           req.on('socket', () => {
             if (req.listenerCount('response') === 1) {
@@ -117,23 +120,10 @@ class HttpIntegration implements Integration {
 
           req.on('response', (res: any) => {
             span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
-            res.on('end', () => span.close());
-            span.close();
-          });
-
-          req.on('error', (err: any) => {
-            const parseError = Utils.parseError(err);
-
-            span.setTag('error', true);
-            span.setTag('error.kind', parseError.errorType);
-            span.setTag('error.message', parseError.errorMessage);
-            span.setTag('error.stack', parseError.stack);
-            span.setTag('error.code', parseError.code);
-
-            span.close();
           });
 
           return req;
+
         } catch (error) {
           ThundraLogger.getInstance().error(error);
           return request.apply(this, [options, callback]);
