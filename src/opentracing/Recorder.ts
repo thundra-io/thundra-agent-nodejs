@@ -32,7 +32,9 @@ class ThundraRecorder {
             let shouldInvokeCallback = true;
             for (const listener of this.listeners) {
                 const isCallbackCalled = listener.onSpanStarted(span, options.me, options.callback, options.args);
-                shouldInvokeCallback = !isCallbackCalled;
+                if (shouldInvokeCallback) {
+                    shouldInvokeCallback = !isCallbackCalled;
+                }
             }
             if (shouldInvokeCallback) {
                 if (typeof(options.callback) === 'function') {
@@ -48,7 +50,9 @@ class ThundraRecorder {
             let shouldInvokeCallback = true;
             for (const listener of this.listeners) {
                 const isCallbackCalled = listener.onSpanFinished(span, options.me, options.callback, options.args);
-                shouldInvokeCallback = !isCallbackCalled;
+                if (shouldInvokeCallback) {
+                    shouldInvokeCallback = !isCallbackCalled;
+                }
             }
             if (shouldInvokeCallback) {
                 if (typeof(options.callback) === 'function') {

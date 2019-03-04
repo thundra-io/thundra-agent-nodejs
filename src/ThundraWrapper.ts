@@ -158,7 +158,6 @@ class ThundraWrapper {
             if (this.config.sampleTimedOutInvocations) {
                 if (error instanceof TimeoutError) {
                     this.executeAfteInvocationAndReport(afterInvocationData);
-                    this.executeAfteInvocationAndReport(afterInvocationData);
                 }
             } else {
                 this.executeAfteInvocationAndReport(afterInvocationData);
