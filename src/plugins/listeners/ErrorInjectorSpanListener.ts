@@ -25,10 +25,14 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
         this.counter = 0;
     }
 
-    onSpanStarted(span: ThundraSpan, me: any, callback: () => any, args: any[]): boolean {
+    onSpanStarted(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callback && !this.injectOnFinish) {
-            this._injectErrorWithCallback(span, me, callback);
-            return true;
+            if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
+                this._injectErrorWithCallback(span, me, callback);
+                return true;
+            }
+
+            return false;
         }
 
         if (!callback && !this.injectOnFinish && this.failOnError()) {
@@ -37,10 +41,14 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
         }
     }
 
-    onSpanFinished(span: ThundraSpan, me: any, callback: () => any, args: any[]): boolean {
+    onSpanFinished(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callback && this.injectOnFinish) {
-            this._injectErrorWithCallback(span, me, callback);
-            return true;
+            if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
+                this._injectErrorWithCallback(span, me, callback);
+                return true;
+            }
+
+            return false;
         }
 
         if (!callback && this.injectOnFinish && this.failOnError()) {

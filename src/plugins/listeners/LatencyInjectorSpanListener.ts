@@ -19,16 +19,20 @@ class LatencyInjectorSpanListener implements ThundraSpanListener {
         this.randomizeDelay = JSON.parse(koalas(opt.randomizeDelay, this.DEFAULT_RANDOMIZE_DELAY));
     }
 
-    onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[]): boolean {
-        if (callback && !this.injectOnFinish) {
-            const sleep = this.randomizeDelay ? Utils.getRandomInt(this.delay) : this.delay;
-            Utils.sleep(sleep).then(() => {
-                if (typeof(callback) === 'function') {
-                    callback.apply(me, args);
-                }
-            });
+    onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
+        if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
+            if (callback && !this.injectOnFinish) {
+                const sleep = this.randomizeDelay ? Utils.getRandomInt(this.delay) : this.delay;
+                Utils.sleep(sleep).then(() => {
+                    if (typeof(callback) === 'function') {
+                        callback.apply(me, args);
+                    }
+                });
+            }
+            return true;
         }
-        return true;
+
+        return false;
     }
 
     onSpanFinished(span: ThundraSpan, me?: any, callback?: () => any, args?: any[]): boolean {

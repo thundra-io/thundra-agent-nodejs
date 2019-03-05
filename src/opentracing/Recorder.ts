@@ -21,6 +21,8 @@ class ThundraRecorder {
             return;
         }
 
+        let shouldInvokeCallback = true;
+
         if (spanEvent === SpanEvent.SPAN_START) {
             ThundraLogger.getInstance().debug(`Span with name ${span.operationName} started.`);
             if (!(options && options.disableActiveSpanHandling === true)) {
@@ -29,9 +31,9 @@ class ThundraRecorder {
             span.order = this.spanOrder++;
             this.spanList.push(span);
 
-            let shouldInvokeCallback = true;
             for (const listener of this.listeners) {
-                const isCallbackCalled = listener.onSpanStarted(span, options.me, options.callback, options.args);
+                const isCallbackCalled = listener.onSpanStarted(span, options.me,
+                    options.callback, options.args, !shouldInvokeCallback);
                 if (shouldInvokeCallback) {
                     shouldInvokeCallback = !isCallbackCalled;
                 }
@@ -47,9 +49,9 @@ class ThundraRecorder {
                 this.activeSpanStack.pop();
             }
 
-            let shouldInvokeCallback = true;
             for (const listener of this.listeners) {
-                const isCallbackCalled = listener.onSpanFinished(span, options.me, options.callback, options.args);
+                const isCallbackCalled = listener.onSpanStarted(span, options.me,
+                    options.callback, options.args, !shouldInvokeCallback);
                 if (shouldInvokeCallback) {
                     shouldInvokeCallback = !isCallbackCalled;
                 }

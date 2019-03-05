@@ -24,17 +24,17 @@ class FilteringSpanListener implements ThundraSpanListener {
         }
     }
 
-    onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[]): boolean {
+    onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (this.spanFilterer.accept(span)) {
-            return this.listener.onSpanStarted(span, me, callback, args);
+            return this.listener.onSpanStarted(span, me, callback, args, callbackAlreadyCalled);
         }
 
         return false;
     }
 
-    onSpanFinished(span: ThundraSpan, me?: any, callback?: () => any, args?: any[]): boolean {
+    onSpanFinished(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (this.spanFilterer.accept(span)) {
-            this.listener.onSpanFinished(span, me, callback, args);
+            this.listener.onSpanFinished(span, me, callback, args, callbackAlreadyCalled);
             return true;
         }
 
