@@ -66,7 +66,8 @@ export class Trace {
     }
 
     beforeInvocation = (data: any) => {
-        this.tracer.destroy();
+        this.destroy();
+
         const { originalContext, originalEvent, reporter } = data;
 
         // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.
@@ -197,12 +198,7 @@ export class Trace {
             }
         }
 
-        if (this.config && !(this.config.disableInstrumentation)) {
-            this.tracer.destroy();
-            if (typeof this.config.unhookModuleCompile === 'function') {
-                this.config.unhookModuleCompile();
-            }
-        }
+        this.destroy();
     }
 
     buildSpanData(span: ThundraSpan, pluginContext: PluginContext): SpanData {
@@ -225,6 +221,15 @@ export class Trace {
         spanData.logs = span.logs;
 
         return spanData;
+    }
+
+    destroy(): void {
+        if (this.config && !(this.config.disableInstrumentation)) {
+            this.tracer.destroy();
+            if (typeof this.config.unhookModuleCompile === 'function') {
+                this.config.unhookModuleCompile();
+            }
+        }
     }
 
     private getRequest(originalEvent: any): any {

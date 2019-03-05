@@ -158,6 +158,12 @@ class ThundraWrapper {
             if (this.config.sampleTimedOutInvocations) {
                 if (error instanceof TimeoutError) {
                     this.executeAfteInvocationAndReport(afterInvocationData);
+                } else {
+                    this.plugins.map((plugin: any) => {
+                        if (plugin.destroy && typeof (plugin.destroy) === 'function') {
+                            plugin.destroy();
+                        }
+                    });
                 }
             } else {
                 this.executeAfteInvocationAndReport(afterInvocationData);
