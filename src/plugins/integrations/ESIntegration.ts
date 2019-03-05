@@ -1,7 +1,7 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import {
-  DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, ESTags,
+  DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags,
   LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
 } from '../../Constants';
 import ModuleVersionValidator from './ModuleVersionValidator';
@@ -80,17 +80,30 @@ class ESIntegration implements Integration {
             [ESTags.ES_URL]: params.path,
             [ESTags.ES_METHOD]: params.method,
             [ESTags.ES_PARAMS]: JSON.stringify(params.query),
+            [DBTags.DB_STATEMENT]: JSON.stringify(params.query),
           });
 
           if (JSON.stringify(params.body)) {
             span.setTag(ESTags.ES_BODY, JSON.stringify(params.body));
           }
 
-          if (params.path) {
-            const statementType = params.path.includes('_search') ? 'READ' : 'WRITE';
+          if (params.method) {
+            let statementType;
+
+            switch (params.method) {
+              case 'PUT':
+                statementType = 'WRITE';
+                break;
+              case 'DELETE':
+                statementType = 'DELETE';
+                break;
+              default:
+                statementType = 'READ';
+                break;
+            }
+
             span.addTags({
               [DBTags.DB_STATEMENT_TYPE]: statementType,
-              [DBTags.DB_STATEMENT]: JSON.stringify(params.query),
               [SpanTags.OPERATION_TYPE]: statementType,
             });
           }
