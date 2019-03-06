@@ -21,6 +21,7 @@ import TimeoutError from './plugins/error/TimeoutError';
 import HttpError from './plugins/error/HttpError';
 import Utils from './plugins/utils/Utils';
 import { envVariableKeys } from './Constants';
+import ThundraConfig from './plugins/config/ThundraConfig';
 
 class ThundraWrapper {
 
@@ -29,6 +30,7 @@ class ThundraWrapper {
     private originalContext: any;
     private originalCallback: any;
     private originalFunction: any;
+    private config: ThundraConfig;
     private plugins: any;
     private pluginContext: any;
     private reported: boolean;
@@ -43,6 +45,7 @@ class ThundraWrapper {
         this.originalContext = context;
         this.originalCallback = callback;
         this.originalFunction = originalFunction;
+        this.config = pluginContext.config ? pluginContext.config : {};
         this.plugins = plugins;
         this.pluginContext = pluginContext;
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
@@ -100,19 +103,11 @@ class ThundraWrapper {
                         this.wrappedContext,
                         this.wrappedCallback,
                     );
-                    if (result instanceof Promise) {
-                        result.then(
-                            (data) => {
-                                this.report(null, data, () => {
-                                    this.invokeCallback(null, data);
-                                });
-                            },
-                            (err) => {
-                                this.report(err, null, () => {
-                                    this.invokeCallback(err, null);
-                                });
-                            });
+
+                    if (result && result.then !== undefined && typeof result.then === 'function') {
+                        result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
                     }
+
                     return result;
                 } catch (error) {
                     this.report(error, null, null);
@@ -137,6 +132,13 @@ class ThundraWrapper {
         );
     }
 
+    async executeAfteInvocationAndReport(afterInvocationData: any) {
+        await this.executeHook('after-invocation', afterInvocationData, true);
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) !== 'true') {
+            await this.reporter.sendReports();
+        }
+    }
+
     async report(error: any, result: any, callback: any) {
         if (!this.reported) {
             this.reported = true;
@@ -153,9 +155,18 @@ class ThundraWrapper {
                 };
             }
 
-            await this.executeHook('after-invocation', afterInvocationData, true);
-            if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) !== 'true') {
-                await this.reporter.sendReports();
+            if (this.config.sampleTimedOutInvocations) {
+                if (error instanceof TimeoutError) {
+                    this.executeAfteInvocationAndReport(afterInvocationData);
+                } else {
+                    this.plugins.map((plugin: any) => {
+                        if (plugin.destroy && typeof (plugin.destroy) === 'function') {
+                            plugin.destroy();
+                        }
+                    });
+                }
+            } else {
+                this.executeAfteInvocationAndReport(afterInvocationData);
             }
 
             if (this.timeout) {

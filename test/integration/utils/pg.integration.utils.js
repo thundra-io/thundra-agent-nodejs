@@ -11,8 +11,8 @@ module.exports.select = (pg) => {
 
         client.connect();
         
-        client.query('SELECT $1::text as message', ['Hello world!'], () => {
-            client.end((err, data) => {
+        client.query('SELECT $1::text as message', ['Hello world!'], (err, data) => {
+            client.end(() => {
                 if (err) {
                     // Resolve even though there is an error.
                     return resolve(err);

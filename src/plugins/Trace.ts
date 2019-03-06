@@ -26,6 +26,7 @@ import { DomainNames, ClassNames, envVariableKeys } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import LambdaEventUtils, { LambdaEventType } from './utils/LambdaEventUtils';
 import ThundraLogger from '../ThundraLogger';
+import InvocationSupport from './support/InvocationSupport';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -52,6 +53,7 @@ export class Trace {
 
         this.tracer = new ThundraTracer(tracerConfig);
         initGlobalTracer(this.tracer);
+        Utils.registerSpanListenersFromConfigurations(this.tracer);
     }
 
     report(data: any): void {
@@ -64,7 +66,8 @@ export class Trace {
     }
 
     beforeInvocation = (data: any) => {
-        this.tracer.destroy();
+        this.destroy();
+
         const { originalContext, originalEvent, reporter } = data;
 
         // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.
@@ -72,7 +75,7 @@ export class Trace {
             originalContext.awsRequestId = Utils.generateId();
         }
 
-        this.tracer.functionName = originalContext.functionName;
+        InvocationSupport.setFunctionName(originalContext.functionName);
 
         const propagatedSpanContext: ThundraSpanContext =
             this.extractSpanContext(originalEvent, originalContext) as ThundraSpanContext;
@@ -195,9 +198,7 @@ export class Trace {
             }
         }
 
-        if (this.config && !(this.config.disableInstrumentation)) {
-            this.tracer.destroy();
-        }
+        this.destroy();
     }
 
     buildSpanData(span: ThundraSpan, pluginContext: PluginContext): SpanData {
@@ -220,6 +221,15 @@ export class Trace {
         spanData.logs = span.logs;
 
         return spanData;
+    }
+
+    destroy(): void {
+        if (this.config && !(this.config.disableInstrumentation)) {
+            this.tracer.destroy();
+            if (typeof this.config.unhookModuleCompile === 'function') {
+                this.config.unhookModuleCompile();
+            }
+        }
     }
 
     private getRequest(originalEvent: any): any {

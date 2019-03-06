@@ -14,6 +14,7 @@ import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraSpan from '../../opentracing/Span';
 import * as opentracing from 'opentracing';
 import LambdaEventUtils from '../utils/LambdaEventUtils';
+import InvocationSupport from '../support/InvocationSupport';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -87,6 +88,7 @@ class AWSIntegration implements Integration {
           const serviceName = Utils.getServiceName(serviceEndpoint as string);
           const parentSpan = tracer.getActiveSpan();
           const originalCallback = callback;
+          const functionName = InvocationSupport.getFunctionName();
 
           request.params = request.params ? request.params : {};
 
@@ -111,7 +113,7 @@ class AWSIntegration implements Integration {
             });
 
             if (operationType) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -153,7 +155,7 @@ class AWSIntegration implements Integration {
             });
 
             if (operationType) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -192,7 +194,7 @@ class AWSIntegration implements Integration {
             });
 
             if (statementType) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -216,7 +218,7 @@ class AWSIntegration implements Integration {
             });
 
             if (operationType) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -244,8 +246,8 @@ class AWSIntegration implements Integration {
             const custom = AWSIntegration.injectSpanContexIntoLambdaClientContext(tracer, activeSpan);
 
             if (operationType) {
-              custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME] = tracer.functionName;
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
+              custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME] = functionName;
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -253,7 +255,7 @@ class AWSIntegration implements Integration {
               activeSpan.setTag(AwsLambdaTags.FUNCTION_NAME, spanName);
             }
 
-            if (custom) {
+            if (custom && operationName && operationName.includes && operationName.includes('invoke') ) {
               if (request.params.ClientContext) {
                 const context = Buffer.from(request.params.ClientContext, 'base64').toString('utf8');
                 try {
@@ -284,7 +286,7 @@ class AWSIntegration implements Integration {
             });
 
             if (request.params.StreamName) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -308,7 +310,7 @@ class AWSIntegration implements Integration {
             });
 
             if (request.params.DeliveryStreamName) {
-              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [tracer.functionName]);
+              activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
               activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
               activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
@@ -328,21 +330,17 @@ class AWSIntegration implements Integration {
             });
           }
 
-          request.on('complete', (response: any) => {
+          const me = this;
+          const wrappedCallback = (err: any, res: any) => {
+            if (err && activeSpan) {
+              activeSpan.setErrorTag(err);
+            }
             if (activeSpan) {
-              activeSpan.close();
+              activeSpan.closeWithCallback(me, originalCallback, [err, res]);
             }
-            if (response.error !== null) {
-              const parseError = Utils.parseError(response.error);
-              activeSpan.setTag('error', true);
-              activeSpan.setTag('error.kind', parseError.errorType);
-              activeSpan.setTag('error.message', parseError.errorMessage);
-              activeSpan.setTag('error.stack', parseError.stack);
-              activeSpan.setTag('error.code', parseError.code);
-            }
-          });
+          };
 
-          return wrappedFunction.apply(this, [originalCallback]);
+          return wrappedFunction.apply(this, [wrappedCallback]);
 
         } catch (error) {
           if (activeSpan) {

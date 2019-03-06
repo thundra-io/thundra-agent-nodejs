@@ -95,9 +95,7 @@ class Log {
             this.report(logReportData);
         }
 
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
-            this.unShimConsole();
-        }
+        this.destroy();
     }
 
     reportLog(logInfo: any): void {
@@ -146,6 +144,12 @@ class Log {
                 Object.defineProperty(console, method, descriptor);
             }
         });
+    }
+
+    destroy(): void {
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
+            this.unShimConsole();
+        }
     }
 }
 

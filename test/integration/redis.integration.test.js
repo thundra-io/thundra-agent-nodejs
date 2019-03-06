@@ -1,8 +1,11 @@
 import RedisIntegration from '../../dist/plugins/integrations/RedisIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import Redis from './utils/redis.integration.utils';
+import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('Redis Integration', () => {
+    InvocationSupport.setFunctionName('functionName');
+    
     test('should instrument Redis calls ', () => {
         const integration = new RedisIntegration({});
         const sdk = require('redis');
@@ -10,7 +13,6 @@ describe('Redis Integration', () => {
         integration.wrap(sdk, {});
 
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return Redis.set(sdk).then((data) => {
             const spanList = tracer.getRecorder().spanList;
@@ -22,7 +24,7 @@ describe('Redis Integration', () => {
                 }
             });
 
-            expect(spanList.length).toBe(3);
+            expect(spanList.length).toBe(4);
 
             expect(writeCommandSpan.className).toBe('Redis');
             expect(writeCommandSpan.domainName).toBe('Cache');

@@ -1,6 +1,7 @@
 import HttpIntegration from '../../dist/plugins/integrations/HttpIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import Http from './utils/http.integration.utils';
+import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('HTTP integration', () => {
     test('should instrument HTTP calls ', () => {
@@ -10,7 +11,7 @@ describe('HTTP integration', () => {
         integration.wrap(sdk, {});
 
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
+        InvocationSupport.setFunctionName('functionName');
 
         return Http.get(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];

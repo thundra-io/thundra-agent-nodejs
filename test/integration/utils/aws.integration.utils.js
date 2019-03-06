@@ -74,6 +74,19 @@ module.exports.lambda = (AWS) => {
     });
 };
 
+module.exports.lambdaGetAccountSettings = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const lambda = new AWS.Lambda();
+
+        lambda.getAccountSettings().promise().then((data) => {
+            return resolve(data);
+        }).catch((err) => {
+            return reject(err);
+        });
+    });
+};
+
 module.exports.sqs = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });

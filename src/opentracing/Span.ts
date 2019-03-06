@@ -130,7 +130,7 @@ class ThundraSpan extends Span {
 
     this.finishTime = finishTime;
     if (this.spanContext.sampled) {
-      this.parentTracer._record(this);
+      this.parentTracer._record(this, {disableActiveSpanHandling: false});
     }
   }
 
@@ -143,6 +143,18 @@ class ThundraSpan extends Span {
     this.finishTime = finishTime;
     if (this.spanContext.sampled) {
       this.parentTracer._record(this, {disableActiveSpanHandling: true});
+    }
+  }
+
+  closeWithCallback(me: any, callback: () => any, args: any[] , finishTime: number = Date.now()) {
+    if (this.finishTime !== 0) {
+      ThundraLogger.getInstance().debug('Span is already closed.');
+      return;
+    }
+
+    this.finishTime = finishTime;
+    if (this.spanContext.sampled) {
+      this.parentTracer._record(this, {disableActiveSpanHandling: true, me, callback, args});
     }
   }
 

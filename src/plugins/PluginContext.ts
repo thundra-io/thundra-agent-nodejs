@@ -1,3 +1,5 @@
+import ThundraConfig from './config/ThundraConfig';
+
 class PluginContext {
     applicationId: string;
     applicationRegion: string;
@@ -11,6 +13,7 @@ class PluginContext {
     transactionId?: string;
     error?: Error;
     maxMemory?: number;
+    config: ThundraConfig;
 }
 
 export default PluginContext;

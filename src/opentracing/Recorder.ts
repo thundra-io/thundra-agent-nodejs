@@ -7,35 +7,58 @@ class ThundraRecorder {
     private activeSpanStack: Stack<ThundraSpan>;
     private spanList: ThundraSpan[];
     private spanOrder = 1;
-    private listeners: ThundraSpanListener[];
+    private listeners: ThundraSpanListener[] = [];
 
     constructor() {
         this.activeSpanStack = new Stack<ThundraSpan>();
         this.spanList = [];
-        this.listeners = [];
     }
 
     record(span: ThundraSpan, spanEvent: SpanEvent, options?: any): void {
+        options = options ? options : {};
         if (!span) {
             ThundraLogger.getInstance().error('Undefined span.');
-        } else {
-            if (spanEvent === SpanEvent.SPAN_START) {
-                ThundraLogger.getInstance().debug(`Span with name ${span.operationName} started.`);
-                if (!(options && options.disableActiveSpanHandling === true)) {
-                    this.activeSpanStack.push(span);
+            return;
+        }
+
+        let shouldInvokeCallback = true;
+
+        if (spanEvent === SpanEvent.SPAN_START) {
+            ThundraLogger.getInstance().debug(`Span with name ${span.operationName} started.`);
+            if (!(options && options.disableActiveSpanHandling === true)) {
+                this.activeSpanStack.push(span);
+            }
+            span.order = this.spanOrder++;
+            this.spanList.push(span);
+
+            for (const listener of this.listeners) {
+                const isCallbackCalled = listener.onSpanStarted(span, options.me,
+                    options.callback, options.args, !shouldInvokeCallback);
+                if (shouldInvokeCallback) {
+                    shouldInvokeCallback = !isCallbackCalled;
                 }
-                span.order = this.spanOrder++;
-                for (const listener of this.listeners) {
-                    listener.onSpanStarted(span);
+            }
+            if (shouldInvokeCallback) {
+                if (typeof(options.callback) === 'function') {
+                    options.callback.apply(options.me, options.args);
                 }
-            } else if (spanEvent === SpanEvent.SPAN_FINISH) {
-                ThundraLogger.getInstance().debug(`Span with name ${span.operationName} finished.`);
-                if (!(options && options.disableActiveSpanHandling === true)) {
-                    this.activeSpanStack.pop();
+            }
+        } else if (spanEvent === SpanEvent.SPAN_FINISH) {
+            ThundraLogger.getInstance().debug(`Span with name ${span.operationName} finished.`);
+            if (!(options && options.disableActiveSpanHandling === true)) {
+                this.activeSpanStack.pop();
+            }
+
+            for (const listener of this.listeners) {
+                const isCallbackCalled = listener.onSpanStarted(span, options.me,
+                    options.callback, options.args, !shouldInvokeCallback);
+                if (shouldInvokeCallback) {
+                    shouldInvokeCallback = !isCallbackCalled;
                 }
-                this.spanList.push(span);
-                for (const listener of this.listeners) {
-                    listener.onSpanFinished(span);
+            }
+            if (shouldInvokeCallback) {
+                if (typeof(options.callback) === 'function') {
+                    options.callback.apply(options.me, options.args);
                 }
             }
         }
@@ -57,14 +80,15 @@ class ThundraRecorder {
         return this.activeSpanStack.pop();
     }
 
-    addListener(listener: ThundraSpanListener): void {
-        this.listeners.push(listener);
-    }
-
     destroy() {
         this.activeSpanStack.clear();
         this.spanList = [];
         this.spanOrder = 1;
+        this.listeners = [];
+    }
+
+    addSpanListener(listener: ThundraSpanListener) {
+        this.listeners.push(listener);
     }
 }
 

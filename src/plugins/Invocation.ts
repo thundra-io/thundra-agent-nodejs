@@ -37,7 +37,7 @@ class Invocation {
     }
 
     beforeInvocation = (data: any) => {
-        InvocationSupport.removeTags();
+        this.destroy();
         const { originalContext, reporter } = data;
         this.reporter = reporter;
         this.finishTimestamp = null;
@@ -107,6 +107,10 @@ class Invocation {
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);
+        this.destroy();
+    }
+
+    destroy(): void {
         InvocationSupport.removeTags();
     }
 }

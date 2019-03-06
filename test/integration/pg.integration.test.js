@@ -2,16 +2,18 @@
 import PostgreIntegration from '../../dist/plugins/integrations/PostgreIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import PG from './utils/pg.integration.utils';
+import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 
 describe('PostgreSQL Integration', () => {
+    InvocationSupport.setFunctionName('functionName');
+
     test('should instrument PostgreSQL calls ', () => {
         const integration = new PostgreIntegration({});
         const sdk = require('pg');
         integration.wrap(sdk, {});
 
         const tracer = new ThundraTracer();
-        tracer.functionName = 'functionName';
 
         return PG.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];

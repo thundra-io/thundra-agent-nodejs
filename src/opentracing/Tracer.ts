@@ -18,7 +18,8 @@ class ThundraTracer extends Tracer {
   activeSpans: Map<string, ThundraSpan>;
   transactionId: string;
   propagators: any;
-  functionName: string;
+
+  private invokeCallback = true;
 
   constructor(config: any = {}) {
     super();
@@ -67,7 +68,16 @@ class ThundraTracer extends Tracer {
   }
 
   addSpanListener(listener: ThundraSpanListener) {
-    this.recorder.addListener(listener);
+    if (!listener) {
+      throw new Error('No listener provided.');
+    }
+
+    if (this.shouldInvokeCallback()) {
+      this.recorder.addSpanListener(listener);
+      this.recorder.addSpanListener(listener);
+    } else {
+      throw new Error('There can be only one Span Listener which is responsible for invoking span callback');
+    }
   }
 
   wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
@@ -122,11 +132,14 @@ class ThundraTracer extends Tracer {
     }
 
     this.recorder.record(
-        span,
-        SpanEvent.SPAN_START,
-        {
-          disableActiveSpanHandling: fields.disableActiveStart === true,
-        });
+      span,
+      SpanEvent.SPAN_START,
+      {
+        disableActiveSpanHandling: fields.disableActiveStart === true,
+        me: fields.me,
+        callback: fields.callback,
+        args: fields.args,
+      });
     this.activeSpans.set(span.spanContext.spanId, span);
     return span;
   }
@@ -157,6 +170,14 @@ class ThundraTracer extends Tracer {
 
   _isSampled(span: ThundraSpan) {
     return true;
+  }
+
+  shouldInvokeCallback(): boolean {
+    return this.invokeCallback;
+  }
+
+  disableInvokeCallback(): void {
+    this.invokeCallback = false;
   }
 }
 
