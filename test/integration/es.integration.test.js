@@ -19,7 +19,6 @@ describe('Elastic Search Integration', () => {
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['operation.type']).toBe('READ');
-            expect(span.tags['db.instance']).toBe('localhost');
             expect(span.tags['db.host']).toBe('localhost');
             expect(span.tags['db.port']).toBe('9200');
             expect(span.tags['db.type']).toBe('elasticsearch');

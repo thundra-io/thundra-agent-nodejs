@@ -74,7 +74,6 @@ class ThundraTracer extends Tracer {
 
     if (this.shouldInvokeCallback()) {
       this.recorder.addSpanListener(listener);
-      this.recorder.addSpanListener(listener);
     } else {
       throw new Error('There can be only one Span Listener which is responsible for invoking span callback');
     }

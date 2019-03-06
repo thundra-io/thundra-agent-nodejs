@@ -69,7 +69,6 @@ class ESIntegration implements Integration {
 
           span.addTags({
             [SpanTags.SPAN_TYPE]: SpanTypes.ELASTIC,
-            [DBTags.DB_INSTANCE]: URL.hostname,
             [DBTags.DB_HOST]: URL.hostname,
             [DBTags.DB_PORT]: URL.port,
             [DBTags.DB_TYPE]: DBTypes.ELASTICSEARCH,
@@ -80,11 +79,11 @@ class ESIntegration implements Integration {
             [ESTags.ES_URL]: params.path,
             [ESTags.ES_METHOD]: params.method,
             [ESTags.ES_PARAMS]: JSON.stringify(params.query),
-            [DBTags.DB_STATEMENT]: JSON.stringify(params.query),
           });
 
           if (JSON.stringify(params.body)) {
             span.setTag(ESTags.ES_BODY, JSON.stringify(params.body));
+            span.setTag(DBTags.DB_STATEMENT, JSON.stringify(params.body));
           }
 
           if (params.method) {

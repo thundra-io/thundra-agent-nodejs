@@ -64,9 +64,6 @@ class PostgreIntegration implements Integration {
             domainName: DomainNames.DB,
             className: DBTypes.PG.toUpperCase(),
             disableActiveStart: true,
-            me,
-            callback: arguments[2],
-            args: [],
           });
 
           if (params) {

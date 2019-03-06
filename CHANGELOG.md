@@ -1,5 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.1.0 - March 6, 2019
+- Implement `ErrorInjectorSpanListener`,  `FilteringSpanListener` and `LatencyInjectorSpanListener`
+- Fixes #47 
+- Implement ES and MySQL V1 integrations
+- Use InvocationSupport to pass functionName to Integrations
+- Implement sampling only Timed  out Invocations
+- Fix lambda timing out when used with https://www.npmjs.com/package/serverless-mysql  
 ## 2.0.9 - February 13, 2019
 - Trace HTTPS calls
 - Bug fix in in TraceConfig programmatic config

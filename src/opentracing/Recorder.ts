@@ -50,7 +50,7 @@ class ThundraRecorder {
             }
 
             for (const listener of this.listeners) {
-                const isCallbackCalled = listener.onSpanStarted(span, options.me,
+                const isCallbackCalled = listener.onSpanFinished(span, options.me,
                     options.callback, options.args, !shouldInvokeCallback);
                 if (shouldInvokeCallback) {
                     shouldInvokeCallback = !isCallbackCalled;
@@ -84,7 +84,6 @@ class ThundraRecorder {
         this.activeSpanStack.clear();
         this.spanList = [];
         this.spanOrder = 1;
-        this.listeners = [];
     }
 
     addSpanListener(listener: ThundraSpanListener) {

@@ -75,6 +75,8 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 | thundra_agent_lambda_log_console_shim_disable                   | bool   |    false      |
 | thundra_agent_trace_instrument_integrations_spanContext_disable | bool   |    false      |
 | thundra_agent_lambda_xray_disable                               | bool   |    false      |
+| thundra_agent_lambda_trace_span_listener                        | string |    empty      |
+| thundra_agent_lambda_sample_timed_out_invocations               | bool   |    false      |    
 
 #### 2. Module initialization parameters
 
