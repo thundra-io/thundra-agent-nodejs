@@ -37,6 +37,7 @@ class Invocation {
     }
 
     beforeInvocation = (data: any) => {
+        this.destroy();
         const { originalContext, reporter } = data;
         this.reporter = reporter;
         this.finishTimestamp = null;
