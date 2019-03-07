@@ -7,7 +7,6 @@ import {
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
-import * as url from 'url';
 import InvocationSupport from '../support/InvocationSupport';
 
 const shimmer = require('shimmer');
@@ -40,12 +39,31 @@ class ESIntegration implements Integration {
       return exp;
     });
   }
+  static hostSelect(me: any): Promise<any> {
+    const defaultHost = {
+      host: 'unknown',
+      port: 0,
+    };
+
+    return new Promise((resolve, reject) => {
+      if (!me || !me.connectionPool || !me.connectionPool.select) {
+        return resolve(defaultHost);
+      }
+      me.connectionPool.select((err: any , data: any) => {
+            if (err) {
+              console.log(err);
+              return resolve(defaultHost);
+            }
+            return resolve(data.host);
+      });
+    });
+  }
 
   wrap(lib: any, config: any) {
     function wrapRequest(request: any) {
       let span: ThundraSpan;
 
-      return function requestWithTrace(params: any, cb: any) {
+      return async function requestWithTrace(params: any, cb: any) {
         try {
           const tracer = ThundraTracer.getInstance();
 
@@ -56,11 +74,9 @@ class ESIntegration implements Integration {
           const me = this;
           const functionName = InvocationSupport.getFunctionName();
           const parentSpan = tracer.getActiveSpan();
-          let configHost = this._config.host ? this._config.host : 'localhost';
-          configHost = configHost.startsWith('http') ? configHost : 'http://' + configHost;
-          const URL: url.UrlWithStringQuery = url.parse(configHost);
+          const host = await ESIntegration.hostSelect(me);
 
-          span = tracer._startSpan(URL.hostname, {
+          span = tracer._startSpan(params.path, {
             childOf: parentSpan,
             domainName: DomainNames.DB,
             className: DBTypes.ELASTICSEARCH.toUpperCase(),
@@ -69,8 +85,8 @@ class ESIntegration implements Integration {
 
           span.addTags({
             [SpanTags.SPAN_TYPE]: SpanTypes.ELASTIC,
-            [DBTags.DB_HOST]: URL.hostname,
-            [DBTags.DB_PORT]: URL.port,
+            [DBTags.DB_HOST]: host ? host.host : undefined,
+            [DBTags.DB_PORT]: host ? host.port : undefined,
             [DBTags.DB_TYPE]: DBTypes.ELASTICSEARCH,
             [SpanTags.TOPOLOGY_VERTEX]: true,
             [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
