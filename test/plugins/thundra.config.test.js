@@ -1,7 +1,7 @@
 import ThundraConfig from '../../dist/plugins/config/ThundraConfig';
 
 describe('Trace Config Test', () => {
-    it('with programmatic config',() => {
+    test('with programmatic config',() => {
         const config = new ThundraConfig({
             warmupAware: true,
             traceConfig: {
@@ -17,7 +17,7 @@ describe('Trace Config Test', () => {
         expect(config.traceConfig.disableInstrumentation).toEqual(true);
     });
 
-    it('with environment variable overrides programmatic with false value',() => {
+    test('with environment variable overrides programmatic with false value',() => {
         process.env.thundra_agent_lambda_trace_request_skip = 'false';
         process.env.thundra_agent_lambda_trace_response_skip = 'false';
         process.env.thundra_agent_lambda_trace_instrument_disable = 'false';
@@ -42,7 +42,7 @@ describe('Trace Config Test', () => {
         process.env.thundra_lambda_warmup_warmupAware = undefined;
     });
 
-    it('with environment variable overrides programmatic with true value',() => {
+    test('with environment variable overrides programmatic with true value',() => {
         process.env.thundra_agent_lambda_trace_request_skip = 'true';
         process.env.thundra_agent_lambda_trace_response_skip = 'true';
         process.env.thundra_agent_lambda_trace_instrument_disable = 'true';
@@ -67,5 +67,23 @@ describe('Trace Config Test', () => {
         process.env.thundra_agent_lambda_trace_instrument_disable = undefined;
         process.env.thundra_lambda_warmup_warmupAware = undefined;
     });
+
+    describe('TraceConfig', () => {    
+        test('with mask integration statements configuration programmatically',() => {
+            const config = new ThundraConfig({
+                traceConfig: {
+                    maskRedisStatement: true,
+                    maskRdbStatement: true,
+                    maskDynamoDBStatement: true,
+                    maskElasticSearchStatement: true
+                }   
+            });
+            
+            expect(config.traceConfig.maskRedisStatement).toEqual(true);
+            expect(config.traceConfig.maskRdbStatement).toEqual(true);
+            expect(config.traceConfig.maskDynamoDBStatement).toEqual(true);
+            expect(config.traceConfig.maskElasticSearchStatement).toEqual(true);
+        });
+    }); 
 });
 

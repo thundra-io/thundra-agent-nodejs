@@ -21,6 +21,10 @@ class TraceConfig extends BasePluginConfig {
     samplerConfig: TraceSamplerConfig;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
+    maskRedisStatement: boolean;
+    maskRdbStatement: boolean;
+    maskDynamoDBStatement: boolean;
+    maskElasticSearchStatement: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -40,6 +44,22 @@ class TraceConfig extends BasePluginConfig {
             envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) === 'true' : options.disableInstrumentation;
         this.samplerConfig = new TraceSamplerConfig(options.samplerConfig);
+
+        this.maskRedisStatement = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_REDIS_STATEMENT) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_REDIS_STATEMENT) === 'true' : options.maskRedisStatement;
+
+        this.maskRdbStatement = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_RDB_STATEMENT) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_RDB_STATEMENT) === 'true' : options.maskRdbStatement;
+
+        this.maskDynamoDBStatement = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_DYNAMODB_STATEMENT) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_DYNAMODB_STATEMENT) === 'true' : options.maskDynamoDBStatement;
+
+        this.maskElasticSearchStatement = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_ELASTIC_STATEMENT) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_ELASTIC_STATEMENT) === 'true' : options.maskElasticSearchStatement;
 
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {
@@ -85,7 +105,7 @@ class TraceConfig extends BasePluginConfig {
                 if (clazz) {
                     if (!this.integrationsMap.get(key)) {
                         if (!this.isConfigDisabled(key)) {
-                            const instance = new clazz(key);
+                            const instance = new clazz(this);
                             this.integrationsMap.set(key, instance);
                         }
                     }

@@ -17,7 +17,7 @@ class Invocation {
     apiKey: any;
     finishTimestamp: any;
     startTimestamp: number;
-    pluginOrder: number = 4;
+    pluginOrder: number = 2;
 
     constructor(options: any) {
         this.hooks = {

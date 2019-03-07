@@ -94,12 +94,12 @@ class ESIntegration implements Integration {
             [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
             [ESTags.ES_URL]: params.path,
             [ESTags.ES_METHOD]: params.method,
-            [ESTags.ES_PARAMS]: JSON.stringify(params.query),
+            [ESTags.ES_PARAMS]: config.maskElasticSearchStatement ? undefined : JSON.stringify(params.query),
           });
 
           if (JSON.stringify(params.body)) {
-            span.setTag(ESTags.ES_BODY, JSON.stringify(params.body));
-            span.setTag(DBTags.DB_STATEMENT, JSON.stringify(params.body));
+            span.setTag(ESTags.ES_BODY, config.maskElasticSearchStatement ? undefined : JSON.stringify(params.body));
+            span.setTag(DBTags.DB_STATEMENT, config.maskElasticSearchStatement ? undefined : JSON.stringify(params.body));
           }
 
           if (params.method) {

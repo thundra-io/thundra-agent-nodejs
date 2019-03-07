@@ -19,7 +19,7 @@ class Log {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
     logs: LogData[];
     tracer: ThundraTracer;
-    pluginOrder: number = 3;
+    pluginOrder: number = 4;
     consoleReference: any = console;
 
     constructor(options: LogConfig) {
