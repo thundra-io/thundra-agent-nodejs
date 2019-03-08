@@ -98,6 +98,7 @@ class ThundraWrapper {
             .then(() => {
                 this.pluginContext.requestCount += 1;
                 this.pluginContext.invocationStartTimestamp = Date.now();
+
                 try {
                     const result = this.originalFunction.call(
                         this.originalThis,
@@ -137,6 +138,8 @@ class ThundraWrapper {
     }
 
     async executeAfteInvocationAndReport(afterInvocationData: any) {
+        this.pluginContext.invocationFinishTimestamp = Date.now();
+
         await this.executeHook('after-invocation', afterInvocationData, true);
         if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) !== 'true') {
             await this.reporter.sendReports();
