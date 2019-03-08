@@ -19,7 +19,7 @@ describe('Elastic Search Integration', () => {
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
 
-            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['operation.type']).toBe('POST');
             expect(span.tags['db.host']).toBe('localhost');
             expect(span.tags['db.port']).toBe(9200);
             expect(span.tags['db.type']).toBe('elasticsearch');
@@ -53,7 +53,7 @@ describe('Elastic Search Integration', () => {
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
 
-            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['operation.type']).toBe('POST');
             expect(hostList).toContain(span.tags['db.host']);
             expect(portList).toContain(span.tags['db.port']);
             expect(span.tags['db.type']).toBe('elasticsearch');
@@ -95,7 +95,7 @@ describe('Elastic Search Integration', () => {
             expect(span.operationName).toBe('/twitter/tweets/_search');
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
-            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['operation.type']).toBe('POST');
             expect(span.tags['db.host']).toBe('localhost');
             expect(span.tags['db.port']).toBe(9200);
             expect(span.tags['db.type']).toBe('elasticsearch');

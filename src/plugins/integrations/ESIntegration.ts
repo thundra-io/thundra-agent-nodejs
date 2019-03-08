@@ -102,26 +102,10 @@ class ESIntegration implements Integration {
             span.setTag(DBTags.DB_STATEMENT, config.maskElasticSearchStatement ? undefined : JSON.stringify(params.body));
           }
 
-          if (params.method) {
-            let statementType;
-
-            switch (params.method) {
-              case 'PUT':
-                statementType = 'WRITE';
-                break;
-              case 'DELETE':
-                statementType = 'DELETE';
-                break;
-              default:
-                statementType = 'READ';
-                break;
-            }
-
-            span.addTags({
-              [DBTags.DB_STATEMENT_TYPE]: statementType,
-              [SpanTags.OPERATION_TYPE]: statementType,
-            });
-          }
+          span.addTags({
+            [DBTags.DB_STATEMENT_TYPE]: params.method,
+            [SpanTags.OPERATION_TYPE]: params.method,
+          });
 
           const originalCallback = cb;
 
