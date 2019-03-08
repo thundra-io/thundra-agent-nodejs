@@ -82,7 +82,7 @@ describe('TraceConfig', () => {
     test('with mask integration statements configuration from environment variable',() => {
         process.env.thundra_agent_lambda_trace_integrations_redis_command_mask = 'true';
         process.env.thundra_agent_lambda_trace_integrations_rdb_statement_mask = 'true';
-        process.env.thundra_agent_lambda_trace_integrations_dynamodb_statement_mask = 'true';
+        process.env.thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask = 'true';
         process.env.thundra_agent_lambda_trace_integrations_elastic_statement_mask = 'true';
     
         const config = new TraceConfig({});

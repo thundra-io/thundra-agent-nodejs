@@ -97,10 +97,14 @@ describe('Reporter', () => {
             const mockReport1 = {data: 'data1'};
             const mockReport2 = {data: 'data2'};
 
+            const reports = [];
+            reports.push(mockReport1);
+            reports.push(mockReport2);
+
             reporter.addReport(mockReport1);
             reporter.addReport(mockReport2);
             reporter.sendReports();
-
+            
             it('should make https request', () => {
                 expect(httpsRequestCalled).toEqual(true);
                 expect(httpsRequestOnCalled).toEqual(true);
@@ -109,35 +113,11 @@ describe('Reporter', () => {
             });
 
             it('should JSON.stringify reports on https.request', () => {
-                expect(httpsSentData).toEqual(JSON.stringify(reporter.reports));
-            });
-        });
-
-        describe('http', () => {
-            // noinspection JSAnnotator
-            const url = new URL('http://api.thundra.io/api');
-            const reporter = new Reporter('apiKey', url);
-            const mockReport1 = {data: 'data1'};
-            const mockReport2 = {data: 'data2'};
-
-            test('should make http request', () => {
-                reporter.addReport(mockReport1);
-                reporter.addReport(mockReport2);
-                reporter.sendReports();
-                expect(httpRequestCalled).toEqual(true);
-                expect(httpRequestOnCalled).toEqual(true);
-                expect(httpRequestWriteCalled).toEqual(true);
-                expect(httpRequestEndCalled).toEqual(true);
-
-            });
-
-            test('should JSON.stringify reports on https.request', () => {
-                expect(httpSentData).toEqual(JSON.stringify(reporter.reports));
+                expect(httpsSentData).toEqual(JSON.stringify(reports));
             });
         });
     });
-
-
+    
     describe('sendReports success', () => {
 
         const reporter = new Reporter('apiKey');
@@ -158,32 +138,6 @@ describe('Reporter', () => {
 
     });
 
-    describe('sendReports failure', () => {
-        
-        process.env.thundra_agent_lambda_debug_enable = 'true';
-        let consoleOutput;
-
-        const reporter = new Reporter('apiKey');
-        const mockReport1 = {data: 'data1'};
-        const mockReport2 = {data: 'data2'};
-
-        console['log'] = jest.fn(input => (consoleOutput = input));
-
-        reporter.request = jest.fn(async () => {
-            return {status: 400};
-        });
-
-        reporter.addReport(mockReport1);
-        reporter.addReport(mockReport2);
-        reporter.sendReports();
-
-        it('should log reports on failure', () => {
-            expect(reporter.request.mock.calls.length).toBe(1);
-            expect(consoleOutput).toEqual(JSON.stringify(reporter.reports));
-        });
-
-    });
-
     describe('addReports async', () => {
         let stdout = null;
         process.env.thundra_agent_lambda_report_cloudwatch_enable = true;
@@ -197,7 +151,6 @@ describe('Reporter', () => {
         it('should write report to process.stdout', () => {
             expect(stdout).toBeTruthy();
         });
-
     });
 
 });

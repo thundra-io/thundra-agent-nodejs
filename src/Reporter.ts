@@ -15,7 +15,7 @@ const httpsAgent = new https.Agent({
 });
 
 class Reporter {
-
+    private readonly MAX_MONITOR_DATA_BATCH_SIZE: number = 100;
     private reports: any[];
     private apiKey: string;
     private useHttps: boolean;
@@ -64,19 +64,33 @@ class Reporter {
     }
 
     async sendReports(): Promise<void> {
-        await this.request()
-            .then((response: any) => {
-                if (response.status !== 200) {
-                    ThundraLogger.getInstance().debug(JSON.stringify(this.reports));
-                    ThundraLogger.getInstance().error(response);
+        const batchedReports: any[] = [];
+        const batchCount = Math.ceil(this.reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
+
+        for (let i = 0; i < batchCount; i++) {
+            const batch: any[] = [];
+            for (let j = 1; j < this.MAX_MONITOR_DATA_BATCH_SIZE; j++) {
+                const report = this.reports.shift();
+                if (!report) {
+                    break;
                 }
-            })
-            .catch((err: any) => {
-                ThundraLogger.getInstance().error(err);
-            });
+
+                batch.push(report);
+            }
+            batchedReports.push(batch);
+        }
+
+        const requestPromises: any[] = [];
+        batchedReports.forEach((batch: any) => {
+            requestPromises.push(this.request(batch));
+        });
+
+        await Promise.all(requestPromises).catch((err) => {
+            ThundraLogger.getInstance().error(err);
+        });
     }
 
-    request(): Promise<any> {
+    request(batch: any[]): Promise<any> {
         return new Promise((resolve, reject) => {
             let request: http.ClientRequest;
             const responseHandler = (response: http.IncomingMessage) => {
@@ -85,7 +99,11 @@ class Reporter {
                     responseData += chunk;
                 });
                 response.on('end', () => {
-                    resolve({ status: response.statusCode, data: responseData });
+                    if (response.statusCode !== 200) {
+                        ThundraLogger.getInstance().debug(JSON.stringify(this.reports));
+                        return reject({ status: response.statusCode, data: responseData });
+                    }
+                    return resolve({ status: response.statusCode, data: responseData });
                 });
             };
 
@@ -94,10 +112,10 @@ class Reporter {
                 : request = http.request(this.requestOptions, responseHandler);
 
             request.on('error', (error: any) => {
-                reject(error);
+                return reject(error);
             });
             try {
-                request.write(JSON.stringify(this.reports));
+                request.write(JSON.stringify(batch));
                 request.end();
             } catch (error) {
                 ThundraLogger.getInstance().error('Cannot serialize report data. ' + error);
