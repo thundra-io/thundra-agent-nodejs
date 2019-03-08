@@ -22,6 +22,7 @@ import HttpError from './plugins/error/HttpError';
 import Utils from './plugins/utils/Utils';
 import { envVariableKeys } from './Constants';
 import ThundraConfig from './plugins/config/ThundraConfig';
+import PluginContext from './plugins/PluginContext';
 
 class ThundraWrapper {
 
@@ -32,7 +33,7 @@ class ThundraWrapper {
     private originalFunction: any;
     private config: ThundraConfig;
     private plugins: any;
-    private pluginContext: any;
+    private pluginContext: PluginContext;
     private reported: boolean;
     private reporter: Reporter;
     private wrappedContext: any;
@@ -96,6 +97,7 @@ class ThundraWrapper {
         this.executeHook('before-invocation', beforeInvocationData, false)
             .then(() => {
                 this.pluginContext.requestCount += 1;
+                this.pluginContext.invocationStartTimestamp = Date.now();
                 try {
                     const result = this.originalFunction.call(
                         this.originalThis,
@@ -103,6 +105,8 @@ class ThundraWrapper {
                         this.wrappedContext,
                         this.wrappedCallback,
                     );
+
+                    this.pluginContext.invocationFinishTimestamp = Date.now();
 
                     if (result && result.then !== undefined && typeof result.then === 'function') {
                         result.then(this.wrappedContext.succeed, this.wrappedContext.fail);

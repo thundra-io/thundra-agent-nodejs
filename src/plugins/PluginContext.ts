@@ -7,13 +7,15 @@ class PluginContext {
     requestCount: number;
     apiKey: string;
     timeoutMargin: number;
+    config: ThundraConfig;
     reporter?: any;
     spanId?: string;
     traceId?: string;
     transactionId?: string;
     error?: Error;
     maxMemory?: number;
-    config: ThundraConfig;
+    invocationStartTimestamp?: number;
+    invocationFinishTimestamp?: number;
 }
 
 export default PluginContext;

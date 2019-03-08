@@ -41,7 +41,7 @@ class Invocation {
         const { originalContext, reporter } = data;
         this.reporter = reporter;
         this.finishTimestamp = null;
-        this.startTimestamp = Date.now();
+        this.startTimestamp = this.pluginContext.invocationStartTimestamp;
 
         this.invocationData = Utils.initMonitoringData(this.pluginContext,
             originalContext, MonitoringDataType.INVOCATION) as InvocationData;
@@ -102,7 +102,7 @@ class Invocation {
         }
 
         this.invocationData.setTags(InvocationSupport.tags);
-        this.finishTimestamp = Date.now();
+        this.finishTimestamp = this.pluginContext.invocationFinishTimestamp;
         this.invocationData.finishTimestamp = this.finishTimestamp;
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);

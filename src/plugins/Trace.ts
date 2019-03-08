@@ -113,13 +113,14 @@ export class Trace {
         }
 
         this.reporter = reporter;
-        this.startTimestamp = Date.now();
+        this.startTimestamp = this.pluginContext.invocationStartTimestamp;
+        this.rootSpan.startTime = this.pluginContext.invocationStartTimestamp;
 
         this.traceData = Utils.initMonitoringData(this.pluginContext,
             originalContext, MonitoringDataType.TRACE) as TraceData;
 
         this.traceData.id = this.pluginContext.traceId;
-        this.traceData.startTimestamp = Date.now();
+        this.traceData.startTimestamp = this.pluginContext.invocationStartTimestamp;
         this.traceData.rootSpanId = this.rootSpan ? this.rootSpan.spanContext.spanId : '';
 
         this.traceData.tags = {};
@@ -178,10 +179,11 @@ export class Trace {
 
         this.rootSpan.tags['aws.lambda.invocation.response'] = this.getResponse(response);
 
-        this.finishTimestamp = Date.now();
+        this.finishTimestamp = this.pluginContext.invocationFinishTimestamp;
         this.traceData.finishTimestamp = this.finishTimestamp;
         this.traceData.duration = this.finishTimestamp - this.startTimestamp;
         this.rootSpan.finish();
+        this.rootSpan.finishTime = this.pluginContext.invocationFinishTimestamp;
 
         const reportData = Utils.generateReport(this.traceData, this.apiKey);
         this.report(reportData);

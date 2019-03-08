@@ -8,5 +8,4 @@ const clearEnvironmentVariables = () => {
 
 module.exports = {
     clearEnvironmentVariables
-};  
-  
+};
