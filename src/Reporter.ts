@@ -71,15 +71,17 @@ class Reporter {
 
     getCompositeBatchedReports(): any[] {
         const batchedReports: any[] = [];
-        const batchCount = Math.ceil(this.reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
+        const reports = this.reports.slice(0);
+        const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
         const invocationReport =
             this.reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
+        const initialCompositeData = Utils.initCompositeMonitoringData(invocationReport.data);
 
         for (let i = 0; i < batchCount; i++) {
-            const compositeData = Utils.initCompositeMonitoringData(invocationReport.data);
+            const compositeData = Utils.initCompositeMonitoringData(initialCompositeData);
             const batch: any[] = [];
             for (let j = 1; j < this.MAX_MONITOR_DATA_BATCH_SIZE; j++) {
-                const report = this.reports.shift();
+                const report = reports.shift();
                 if (!report) {
                     break;
                 }
@@ -97,12 +99,13 @@ class Reporter {
 
     getBatchedReports(): any[] {
         const batchedReports: any[] = [];
-        const batchCount = Math.ceil(this.reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
+        const reports = this.reports.slice(0);
+        const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
 
         for (let i = 0; i < batchCount; i++) {
             const batch: any[] = [];
             for (let j = 1; j < this.MAX_MONITOR_DATA_BATCH_SIZE; j++) {
-                const report = this.reports.shift();
+                const report = reports.shift();
                 if (!report) {
                     break;
                 }
