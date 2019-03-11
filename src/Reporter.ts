@@ -7,7 +7,6 @@ import Utils from './plugins/utils/Utils';
 import ThundraLogger from './ThundraLogger';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import BaseMonitoringData from './plugins/data/base/BaseMonitoringData';
-import CompositeMonitoringData from './plugins/data/composite/CompositeMonitoringData';
 import MonitoringDataType from './plugins/data/base/MonitoringDataType';
 
 const httpAgent = new http.Agent({
@@ -122,7 +121,7 @@ class Reporter {
             batchedReports = this.config.enableCompositeData ?
                 this.getCompositeBatchedReports() : this.getBatchedReports();
         } catch (err) {
-            ThundraLogger.getInstance().error(`Cannot create batch request. ${err}`);
+            ThundraLogger.getInstance().error(`Cannot create batch request will send no report. ${err}`);
         }
 
         const requestPromises: any[] = [];
