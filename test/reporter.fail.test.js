@@ -55,7 +55,7 @@ describe('Reporter', () => {
     describe('http', () => {
         // noinspection JSAnnotator
         const url = new URL('http://api.thundra.io/api');
-        const reporter = new Reporter('apiKey', url);
+        const reporter = new Reporter({apiKey: 'apiKey'}, url);
         const mockReport1 = {data: 'data1'};
         const mockReport2 = {data: 'data2'};
 
@@ -83,7 +83,7 @@ describe('Reporter', () => {
         process.env.thundra_agent_lambda_debug_enable = 'true';
         let consoleOutput;
 
-        const reporter = new Reporter('apiKey');
+        const reporter = new Reporter({apiKey: 'apiKey'});
         const mockReport1 = {data: 'data1'};
         const mockReport2 = {data: 'data2'};
 

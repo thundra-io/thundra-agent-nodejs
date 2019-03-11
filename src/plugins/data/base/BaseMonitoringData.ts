@@ -11,7 +11,7 @@ class BaseMonitoringData {
     applicationName: string;
     applicationVersion: string;
     applicationStage: string;
-    readonly applicationRuntime: string = 'node';
+    applicationRuntime: string = 'node';
     applicationRuntimeVersion: string;
     applicationTags: any;
 

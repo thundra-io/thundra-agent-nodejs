@@ -1,31 +1,19 @@
 import Reporter from '../dist/Reporter.js';
-import {URL} from 'url';
 
-let httpRequestCalled = false;
 let httpsRequestCalled = false;
-
-let httpRequestOnCalled = false;
 let httpsRequestOnCalled = false;
-
-let httpRequestWriteCalled = false;
 let httpsRequestWriteCalled = false;
-
-let httpRequestEndCalled = false;
 let httpsRequestEndCalled = false;
 
-let httpSentData;
 let httpsSentData;
 
 jest.mock('http', () => ({
     request: (options, response) => {
-        httpRequestCalled = true;
         return {
-            on: jest.fn(() => httpRequestOnCalled = true),
+            on: jest.fn(() => true),
             write: jest.fn(data => {
-                httpRequestWriteCalled = true;
-                httpSentData = data;
             }),
-            end: jest.fn(() => httpRequestEndCalled = true)
+            end: jest.fn(() => true)
         };
     },
     Agent: () => {
@@ -52,10 +40,10 @@ jest.mock('https', () => ({
 
 describe('constructor', () => {
 
-    const reporter = new Reporter('apiKey');
+    const reporter = new Reporter({apiKey: 'apiKey'});
 
     it('should set api key', () => {
-        expect(reporter.apiKey).toEqual('apiKey');
+        expect(reporter.config.apiKey).toEqual('apiKey');
     });
 
     it('should set reports to empty array', () => {
@@ -68,10 +56,10 @@ describe('Reporter', () => {
 
     describe('constructor', () => {
 
-        const reporter = new Reporter('apiKey');
+        const reporter = new Reporter({apiKey: 'apiKey'});
 
         it('should set api key', () => {
-            expect(reporter.apiKey).toEqual('apiKey');
+            expect(reporter.config.apiKey).toEqual('apiKey');
         });
 
         it('should set reports to empty array', () => {
@@ -81,7 +69,7 @@ describe('Reporter', () => {
     });
 
     describe('addReports', () => {
-        const reporter = new Reporter('apiKey');
+        const reporter = new Reporter({apiKey: 'apiKey'});
         const mockReport = {data: 'data'};
         reporter.addReport(mockReport);
 
@@ -93,7 +81,7 @@ describe('Reporter', () => {
 
     describe('request', () => {
         describe('https', () => {
-            const reporter = new Reporter('apiKey');
+            const reporter = new Reporter({apiKey: 'apiKey'});
             const mockReport1 = {data: 'data1'};
             const mockReport2 = {data: 'data2'};
 
@@ -120,7 +108,7 @@ describe('Reporter', () => {
     
     describe('sendReports success', () => {
 
-        const reporter = new Reporter('apiKey');
+        const reporter = new Reporter({apiKey: 'apiKey'});
         const mockReport1 = {data: 'data1'};
         const mockReport2 = {data: 'data2'};
 
@@ -142,7 +130,7 @@ describe('Reporter', () => {
         let stdout = null;
         process.env.thundra_agent_lambda_report_cloudwatch_enable = true;
         process.stdout.write = jest.fn(input => stdout = input);
-        const reporter = new Reporter('apiKey');
+        const reporter = new Reporter({apiKey: 'apiKey'});
         const mockReport = {data: 'data'};
         reporter.addReport(mockReport);
         it('should not add report to reports array', () => {
