@@ -7,6 +7,7 @@ import {LAMBDA_FUNCTION_PLATFORM} from '../Constants';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 import InvocationSupport from './support/InvocationSupport';
+import InvocationTraceSupport from './support/InvocationTraceSupport';
 
 class Invocation {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -105,6 +106,7 @@ class Invocation {
         this.finishTimestamp = this.pluginContext.invocationFinishTimestamp;
         this.invocationData.finishTimestamp = this.finishTimestamp;
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
+        this.invocationData.resources = InvocationTraceSupport.getResources(this.pluginContext.spanId);
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);
         this.destroy();
