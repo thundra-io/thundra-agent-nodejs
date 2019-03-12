@@ -1,13 +1,13 @@
 import ThundraSpan from '../../../opentracing/Span';
 import { SpanTags } from '../../../Constants';
 
-class Resource  {
+class Resource {
     resourceType: string;
     resourceName: string;
     resourceOperation: string;
     resourceCount: number;
     resourceErrorCount: number;
-    resourceErrors: Set<string>;
+    resourceErrors: string[];
     resourceDuration: number;
 
     constructor(opt: any = {}) {
@@ -16,7 +16,7 @@ class Resource  {
         this.resourceOperation = opt.resourceOperation;
         this.resourceCount = opt.resourceCount;
         this.resourceErrorCount = opt.resourceErrorCount;
-        this.resourceErrors = opt.resourceErrors ? opt.resourceErrors : new Set<string>();
+        this.resourceErrors = opt.resourceErrors ? opt.resourceErrors : [];
         this.resourceDuration = opt.resourceDuration;
     }
 
@@ -26,7 +26,11 @@ class Resource  {
         this.resourceOperation = span.getTag(SpanTags.OPERATION_TYPE);
         this.resourceCount = 1;
         this.resourceErrorCount = span.getTag('error') ? 1 : 0;
-        this.resourceErrors = this.resourceErrors.add(span.getTag('error.kind'));
+        if (span.getTag('error.kind') &&
+            this.resourceErrors.indexOf(span.getTag('error.kind')) > -1) {
+
+            this.resourceErrors.push(span.getTag('error.kind'));
+        }
         this.resourceDuration = span.getDuration();
     }
 
@@ -34,13 +38,15 @@ class Resource  {
         if (this.resourceType === resource.resourceType &&
             this.resourceName === resource.resourceName &&
             this.resourceOperation === resource.resourceOperation
-            ) {
+        ) {
 
             this.resourceCount += resource.resourceCount;
             this.resourceErrorCount += resource.resourceErrorCount;
             if (resource.resourceErrors) {
                 resource.resourceErrors.forEach((error: string) => {
-                    this.resourceErrors.add(error);
+                    if (error && this.resourceErrors.indexOf(error) > -1) {
+                        this.resourceErrors.push(error);
+                    }
                 });
             }
             this.resourceDuration += resource.resourceDuration;
