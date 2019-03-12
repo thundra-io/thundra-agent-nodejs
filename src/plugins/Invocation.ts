@@ -38,7 +38,6 @@ class Invocation {
     }
 
     beforeInvocation = (data: any) => {
-        this.destroy();
         const { originalContext, reporter } = data;
         this.reporter = reporter;
         this.finishTimestamp = null;
@@ -109,6 +108,7 @@ class Invocation {
         this.invocationData.resources = InvocationTraceSupport.getResources(this.pluginContext.spanId);
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);
+
         this.destroy();
     }
 

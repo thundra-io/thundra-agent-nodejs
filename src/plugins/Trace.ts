@@ -98,6 +98,8 @@ export class Trace {
                 className: ClassNames.LAMBDA,
             });
 
+            this.rootSpan.spanContext.spanId = this.pluginContext.spanId;
+
         } else {
             this.tracer.transactionId = originalContext.awsRequestId;
             this.pluginContext.traceId = Utils.generateId();
