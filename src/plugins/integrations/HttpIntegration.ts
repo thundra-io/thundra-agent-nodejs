@@ -20,9 +20,11 @@ class HttpIntegration implements Integration {
   hook: any;
   basedir: string;
   instrumented: boolean = false;
+  name: string;
 
   constructor(config: any) {
     this.hook = Hook(['http', 'https'], { internals: true }, (exp: any, name: string, basedir: string) => {
+      this.name = name;
       if (!this.instrumented) {
         this.lib = exp;
         this.config = config;
@@ -132,7 +134,9 @@ class HttpIntegration implements Integration {
     }
 
     shimmer.wrap(lib, 'request', wrapper);
-    shimmer.wrap(lib, 'get', wrapper);
+    if (this.name === 'http') {
+      shimmer.wrap(lib, 'get', wrapper);
+    }
   }
 
   unwrap(): void {

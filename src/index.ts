@@ -107,7 +107,6 @@ module.exports = (options: any) => {
                 originalFunc,
                 config.plugins,
                 pluginContext,
-                config.apiKey,
             );
             return thundraWrapper.invoke();
         };

@@ -40,13 +40,13 @@ class ThundraWrapper {
     private timeout: NodeJS.Timer;
 
     constructor(self: any, event: any, context: any, callback: any,
-                originalFunction: any, plugins: any, pluginContext: any, apiKey: any) {
+                originalFunction: any, plugins: any, pluginContext: PluginContext) {
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
         this.originalCallback = callback;
         this.originalFunction = originalFunction;
-        this.config = pluginContext.config ? pluginContext.config : {};
+        this.config = pluginContext.config ? pluginContext.config : new ThundraConfig({});
         this.plugins = plugins;
         this.pluginContext = pluginContext;
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
@@ -141,9 +141,16 @@ class ThundraWrapper {
         this.pluginContext.invocationFinishTimestamp = Date.now();
 
         await this.executeHook('after-invocation', afterInvocationData, true);
+        this.resetTime();
+
         if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) !== 'true') {
             await this.reporter.sendReports();
         }
+    }
+
+    resetTime() {
+        this.pluginContext.invocationStartTimestamp = undefined;
+        this.pluginContext.invocationFinishTimestamp = undefined;
     }
 
     async report(error: any, result: any, callback: any) {

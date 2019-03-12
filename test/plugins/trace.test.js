@@ -202,7 +202,7 @@ describe('Trace', () => {
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
             expect(pluginContext.traceId).toBe('traceId');
-            expect(pluginContext.spanId).toBe('spanId');
+            expect(pluginContext.spanId).toBeTruthy();
         });
     });
 
@@ -234,7 +234,7 @@ describe('Trace', () => {
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
             expect(pluginContext.traceId).toBe('traceId');
-            expect(pluginContext.spanId).toBe('spanId');
+            expect(pluginContext.spanId).toBeTruthy();
         });
     });
 
@@ -250,7 +250,7 @@ describe('Trace', () => {
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
             expect(pluginContext.traceId).toBe('traceId');
-            expect(pluginContext.spanId).toBe('spanId');
+            expect(pluginContext.spanId).toBeTruthy();
         });
     });
 
@@ -283,7 +283,7 @@ describe('Trace', () => {
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
             expect(pluginContext.traceId).toBe('traceId');
-            expect(pluginContext.spanId).toBe('spanId');
+            expect(pluginContext.spanId).toBeTruthy();
         });
     });
 
@@ -299,7 +299,7 @@ describe('Trace', () => {
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
             expect(pluginContext.traceId).toBe('traceId');
-            expect(pluginContext.spanId).toBe('spanId');
+            expect(pluginContext.spanId).toBeTruthy();
         });
     });
 
@@ -315,7 +315,7 @@ describe('Trace', () => {
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
             expect(pluginContext.traceId).toBe('traceId');
-            expect(pluginContext.spanId).toBe('spanId');
+            expect(pluginContext.spanId).toBeTruthy();
         });
     });
 

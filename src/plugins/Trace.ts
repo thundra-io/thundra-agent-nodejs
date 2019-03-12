@@ -86,8 +86,6 @@ export class Trace {
                 propagatedSpanContext.transactionId : originalContext.awsRequestId;
 
             this.pluginContext.traceId = propagatedSpanContext.traceId;
-            this.pluginContext.spanId = propagatedSpanContext.spanId;
-
             this.tracer.transactionId = this.pluginContext.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
@@ -97,8 +95,6 @@ export class Trace {
                 domainName: DomainNames.API,
                 className: ClassNames.LAMBDA,
             });
-
-            this.rootSpan.spanContext.spanId = this.pluginContext.spanId;
 
         } else {
             this.tracer.transactionId = originalContext.awsRequestId;
@@ -110,9 +106,9 @@ export class Trace {
                 domainName: DomainNames.API,
                 className: ClassNames.LAMBDA,
             });
-
-            this.pluginContext.spanId = this.rootSpan.spanContext.spanId;
         }
+
+        this.pluginContext.spanId = this.rootSpan.spanContext.spanId;
 
         this.reporter = reporter;
         this.startTimestamp = this.pluginContext.invocationStartTimestamp;
