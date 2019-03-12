@@ -99,11 +99,7 @@ describe('Invocation Trace Support', () => {
         expect(resource.resourceDuration).toBe(60);
         expect(resource.resourceCount).toBe(3);
         expect(resource.resourceErrorCount).toBe(3);
-
-        const expectedSet = new Set();
-        expectedSet.add('Database Error1');
-        expectedSet.add('Database Error2');
-
-        expect(resource.resourceErrors).toEqual(expectedSet);
+        
+        expect(resource.resourceErrors).toEqual(['Database Error1', 'Database Error2']);
     });
 });

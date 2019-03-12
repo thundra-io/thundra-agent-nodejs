@@ -27,7 +27,7 @@ class Resource {
         this.resourceCount = 1;
         this.resourceErrorCount = span.getTag('error') ? 1 : 0;
         if (span.getTag('error.kind') &&
-            this.resourceErrors.indexOf(span.getTag('error.kind')) > -1) {
+            this.resourceErrors.indexOf(span.getTag('error.kind')) === -1) {
 
             this.resourceErrors.push(span.getTag('error.kind'));
         }
@@ -44,7 +44,7 @@ class Resource {
             this.resourceErrorCount += resource.resourceErrorCount;
             if (resource.resourceErrors) {
                 resource.resourceErrors.forEach((error: string) => {
-                    if (error && this.resourceErrors.indexOf(error) > -1) {
+                    if (error && this.resourceErrors.indexOf(error) === -1) {
                         this.resourceErrors.push(error);
                     }
                 });
