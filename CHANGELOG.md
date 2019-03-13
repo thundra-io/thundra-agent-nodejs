@@ -1,5 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## 2.1.1 - March 13, 2019
+#### Added
+- Ability to mask db statements in integrations
+- Send resource infromation in invocation data
+- Composite data model and batch reporting support
+#### Fixed
+- Elasticsearch fix getting host when multiple host is configured
+- Root span and invocation duration are compatible
 
 ## 2.1.0 - March 6, 2019
 #### Added
