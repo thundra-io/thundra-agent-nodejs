@@ -4,6 +4,7 @@ enum MonitoringDataType {
     SPAN = 'Span',
     METRIC = 'Metric',
     LOG = 'Log',
+    COMPOSITE = 'Composite',
 }
 
 export default MonitoringDataType;

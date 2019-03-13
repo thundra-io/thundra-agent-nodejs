@@ -20,6 +20,7 @@ export const envVariableKeys = {
     THUNDRA_APPLICATION_VERSION: 'thundra_agent_lambda_application_version',
     THUNDRA_LAMBDA_TIMEOUT_MARGIN: 'thundra_agent_lambda_timeout_margin',
     THUNDRA_LAMBDA_REPORT_REST_BASEURL: 'thundra_agent_lambda_report_rest_baseUrl',
+    THUNDRA_LAMBDA_REPORT_REST_COMPOSITE_ENABLED: 'thundra_agent_lambda_report_rest_composite_enabled',
     THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE: 'thundra_agent_lambda_report_cloudwatch_enable',
     THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES: 'thundra_agent_lambda_publish_report_rest_trustAllCertificates',
     THUNDRA_DISABLE_TRACE: 'thundra_agent_lambda_trace_disable',
@@ -55,7 +56,10 @@ export const envVariableKeys = {
     THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF : 'thundra_agent_lambda_trace_span_listener',
 
     THUNDRA_AGENT_LAMBDA_SAMPLE_TIMED_OUT_INVOCATIONS: 'thundra_agent_lambda_sample_timed_out_invocations',
-
+    THUNDRA_MASK_REDIS_STATEMENT: 'thundra_agent_lambda_trace_integrations_redis_command_mask',
+    THUNDRA_MASK_RDB_STATEMENT: 'thundra_agent_lambda_trace_integrations_rdb_statement_mask',
+    THUNDRA_MASK_DYNAMODB_STATEMENT: 'thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask',
+    THUNDRA_MASK_ELASTIC_STATEMENT: 'thundra_agent_lambda_trace_integrations_elastic_statement_mask',
 };
 
 export function getTimeoutMargin(region: string) {
@@ -101,6 +105,7 @@ export const URL: url.UrlWithStringQuery = url.parse(
 );
 
 export const MONITORING_DATA_PATH = '/monitoring-data';
+export const COMPOSITE_MONITORING_DATA_PATH = '/composite-monitoring-data';
 
 export const PROC_STAT_PATH: string = '/proc/self/stat';
 export const PROC_IO_PATH: string = '/proc/self/io';

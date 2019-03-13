@@ -21,13 +21,14 @@ import LogData from '../data/log/LogData';
 import ThundraLogger from '../../ThundraLogger';
 import ApplicationSupport from '../support/ApplicationSupport';
 import ThundraTracer from '../../opentracing/Tracer';
+import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
 
 class Utils {
     static generateId(): string {
         return uuidv4();
     }
 
-    static generateReport(data: any, apiKey: String) {
+    static generateReport(data: any, apiKey: string) {
         return {
             data,
             type: data.type,
@@ -224,6 +225,25 @@ class Utils {
         return monitoringData;
     }
 
+    static initCompositeMonitoringData(data: BaseMonitoringData): CompositeMonitoringData {
+        const monitoringData = this.createMonitoringData(MonitorDataType.COMPOSITE);
+
+        monitoringData.id = Utils.generateId();
+        monitoringData.agentVersion = data.agentVersion;
+        monitoringData.dataModelVersion = data.dataModelVersion;
+        monitoringData.applicationId = data.applicationId;
+        monitoringData.applicationDomainName = data.applicationDomainName;
+        monitoringData.applicationClassName = data.applicationClassName;
+        monitoringData.applicationName = data.applicationName;
+        monitoringData.applicationVersion = data.applicationVersion;
+        monitoringData.applicationStage = data.applicationStage;
+        monitoringData.applicationRuntime = data.applicationRuntime;
+        monitoringData.applicationRuntimeVersion = data.applicationRuntimeVersion;
+        monitoringData.applicationTags = data.applicationTags;
+
+        return monitoringData as CompositeMonitoringData;
+    }
+
     static createMonitoringData(type: MonitoringDataType): BaseMonitoringData {
         let monitoringData: BaseMonitoringData;
 
@@ -243,6 +263,8 @@ class Utils {
             case MonitorDataType.LOG:
                 monitoringData = new LogData();
                 break;
+            case MonitorDataType.COMPOSITE:
+                monitoringData = new CompositeMonitoringData();
         }
 
         return monitoringData;
@@ -311,6 +333,22 @@ class Utils {
                 return listeners;
             }
         }
+    }
+
+    static stripCommonFields(monitoringData: BaseMonitoringData) {
+        monitoringData.agentVersion = undefined;
+        monitoringData.dataModelVersion = undefined;
+        monitoringData.applicationId = undefined;
+        monitoringData.applicationClassName = undefined;
+        monitoringData.applicationDomainName = undefined;
+        monitoringData.applicationName = undefined;
+        monitoringData.applicationVersion = undefined;
+        monitoringData.applicationStage = undefined;
+        monitoringData.applicationRuntime = undefined;
+        monitoringData.applicationRuntimeVersion = undefined;
+        monitoringData.applicationTags = undefined;
+
+        return monitoringData;
     }
 }
 

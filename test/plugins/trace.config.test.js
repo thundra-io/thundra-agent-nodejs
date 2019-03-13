@@ -1,5 +1,6 @@
 import TraceConfig  from '../../dist/plugins/config/TraceConfig';
 import TraceableConfig from '../../dist/plugins/config/TraceableConfig';
+import Utils from '../utils';
 
 describe('TraceConfig', () => {
     it('should parse single envirenment variable', () => {
@@ -66,5 +67,29 @@ describe('TraceOption', () => {
     it('should test shouldTraceFile', () => {
         const traceableConfigs = new TraceableConfig('business.go');
         expect(traceableConfigs.shouldTraceFile('business.*')).toBeTruthy();
+    });
+});
+
+describe('TraceConfig', () => {
+    beforeEach(() => {
+        Utils.clearEnvironmentVariables();
+    });
+
+    afterEach(() => {
+        Utils.clearEnvironmentVariables();
+    });
+    
+    test('with mask integration statements configuration from environment variable',() => {
+        process.env.thundra_agent_lambda_trace_integrations_redis_command_mask = 'true';
+        process.env.thundra_agent_lambda_trace_integrations_rdb_statement_mask = 'true';
+        process.env.thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask = 'true';
+        process.env.thundra_agent_lambda_trace_integrations_elastic_statement_mask = 'true';
+    
+        const config = new TraceConfig({});
+        
+        expect(config.maskRedisStatement).toEqual(true);
+        expect(config.maskRdbStatement).toEqual(true);
+        expect(config.maskDynamoDBStatement).toEqual(true);
+        expect(config.maskElasticSearchStatement).toEqual(true);
     });
 });

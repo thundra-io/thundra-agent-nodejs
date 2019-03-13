@@ -84,7 +84,7 @@ class MySQLIntegration implements Integration {
             const statementType = statement.split(' ')[0].toUpperCase();
             span.addTags({
               [DBTags.DB_STATEMENT_TYPE]: statementType,
-              [DBTags.DB_STATEMENT]: statement,
+              [DBTags.DB_STATEMENT]: config.maskRdbStatement ? undefined : statement,
               [SpanTags.OPERATION_TYPE]: SQLQueryOperationTypes[statementType] ? SQLQueryOperationTypes[statementType] : '',
             });
           }

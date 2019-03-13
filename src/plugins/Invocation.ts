@@ -7,6 +7,7 @@ import {LAMBDA_FUNCTION_PLATFORM} from '../Constants';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 import InvocationSupport from './support/InvocationSupport';
+import InvocationTraceSupport from './support/InvocationTraceSupport';
 
 class Invocation {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -17,7 +18,7 @@ class Invocation {
     apiKey: any;
     finishTimestamp: any;
     startTimestamp: number;
-    pluginOrder: number = 4;
+    pluginOrder: number = 2;
 
     constructor(options: any) {
         this.hooks = {
@@ -37,11 +38,10 @@ class Invocation {
     }
 
     beforeInvocation = (data: any) => {
-        this.destroy();
         const { originalContext, reporter } = data;
         this.reporter = reporter;
         this.finishTimestamp = null;
-        this.startTimestamp = Date.now();
+        this.startTimestamp = this.pluginContext.invocationStartTimestamp;
 
         this.invocationData = Utils.initMonitoringData(this.pluginContext,
             originalContext, MonitoringDataType.INVOCATION) as InvocationData;
@@ -102,11 +102,13 @@ class Invocation {
         }
 
         this.invocationData.setTags(InvocationSupport.tags);
-        this.finishTimestamp = Date.now();
+        this.finishTimestamp = this.pluginContext.invocationFinishTimestamp;
         this.invocationData.finishTimestamp = this.finishTimestamp;
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
+        this.invocationData.resources = InvocationTraceSupport.getResources(this.pluginContext.spanId);
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);
+
         this.destroy();
     }
 

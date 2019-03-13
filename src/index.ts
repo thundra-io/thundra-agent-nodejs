@@ -78,7 +78,7 @@ module.exports = (options: any) => {
     const functionVersion = Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
     const applicationId = logStreamName ? logStreamName.split(']').pop() : Utils.generateId();
 
-    const pluginContext: PluginContext = {
+    const pluginContext: PluginContext = new PluginContext({
         applicationId,
         applicationRegion: region ? region : '',
         applicationVersion: functionVersion ? functionVersion : '',
@@ -87,7 +87,7 @@ module.exports = (options: any) => {
         timeoutMargin: config.timeoutMargin,
         transactionId: null,
         config,
-    };
+    });
 
     config.plugins.forEach((plugin: any) => {
         plugin.setPluginContext(pluginContext);
@@ -107,7 +107,6 @@ module.exports = (options: any) => {
                 originalFunc,
                 config.plugins,
                 pluginContext,
-                config.apiKey,
             );
             return thundraWrapper.invoke();
         };

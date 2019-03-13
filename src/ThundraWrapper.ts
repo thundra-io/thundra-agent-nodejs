@@ -22,6 +22,7 @@ import HttpError from './plugins/error/HttpError';
 import Utils from './plugins/utils/Utils';
 import { envVariableKeys } from './Constants';
 import ThundraConfig from './plugins/config/ThundraConfig';
+import PluginContext from './plugins/PluginContext';
 
 class ThundraWrapper {
 
@@ -32,25 +33,25 @@ class ThundraWrapper {
     private originalFunction: any;
     private config: ThundraConfig;
     private plugins: any;
-    private pluginContext: any;
+    private pluginContext: PluginContext;
     private reported: boolean;
     private reporter: Reporter;
     private wrappedContext: any;
     private timeout: NodeJS.Timer;
 
     constructor(self: any, event: any, context: any, callback: any,
-                originalFunction: any, plugins: any, pluginContext: any, apiKey: any) {
+                originalFunction: any, plugins: any, pluginContext: PluginContext) {
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
         this.originalCallback = callback;
         this.originalFunction = originalFunction;
-        this.config = pluginContext.config ? pluginContext.config : {};
+        this.config = pluginContext.config ? pluginContext.config : new ThundraConfig({});
         this.plugins = plugins;
         this.pluginContext = pluginContext;
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
         this.reported = false;
-        this.reporter = new Reporter(apiKey);
+        this.reporter = new Reporter(pluginContext.config);
         this.wrappedContext = {
             ...context,
             done: (error: any, result: any) => {
@@ -96,6 +97,8 @@ class ThundraWrapper {
         this.executeHook('before-invocation', beforeInvocationData, false)
             .then(() => {
                 this.pluginContext.requestCount += 1;
+                this.pluginContext.invocationStartTimestamp = Date.now();
+
                 try {
                     const result = this.originalFunction.call(
                         this.originalThis,
@@ -103,6 +106,8 @@ class ThundraWrapper {
                         this.wrappedContext,
                         this.wrappedCallback,
                     );
+
+                    this.pluginContext.invocationFinishTimestamp = Date.now();
 
                     if (result && result.then !== undefined && typeof result.then === 'function') {
                         result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
@@ -133,10 +138,19 @@ class ThundraWrapper {
     }
 
     async executeAfteInvocationAndReport(afterInvocationData: any) {
+        this.pluginContext.invocationFinishTimestamp = Date.now();
+
         await this.executeHook('after-invocation', afterInvocationData, true);
+        this.resetTime();
+
         if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) !== 'true') {
             await this.reporter.sendReports();
         }
+    }
+
+    resetTime() {
+        this.pluginContext.invocationStartTimestamp = undefined;
+        this.pluginContext.invocationFinishTimestamp = undefined;
     }
 
     async report(error: any, result: any, callback: any) {

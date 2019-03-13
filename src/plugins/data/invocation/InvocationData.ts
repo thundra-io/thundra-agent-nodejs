@@ -1,6 +1,7 @@
 import BaseMonitoringData from '../base/BaseMonitoringData';
 import MonitorDataType from '../base/MonitoringDataType';
 import ThundraLogger from '../../../ThundraLogger';
+import Resource from './Resource';
 
 class InvocationData extends BaseMonitoringData {
     traceId: string;
@@ -18,6 +19,7 @@ class InvocationData extends BaseMonitoringData {
     coldStart: boolean;
     timeout: boolean;
     tags: any;
+    resources: Resource[];
 
     constructor() {
         super(MonitorDataType.INVOCATION);

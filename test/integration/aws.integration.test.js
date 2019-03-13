@@ -2,6 +2,7 @@ import AWS from './utils/aws.integration.utils';
 import AWSIntegration from '../../dist/plugins/integrations/AWSIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
 describe('AWS Integration', () => {
     InvocationSupport.setFunctionName('functionName');
@@ -14,7 +15,6 @@ describe('AWS Integration', () => {
         
         const tracer = new ThundraTracer();
         
-
         return AWS.dynamo(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             
@@ -30,6 +30,40 @@ describe('AWS Integration', () => {
             expect(span.tags['operation.type']).toBe('READ');
             expect(span.tags['aws.request.name']).toBe('getItem');
             expect(span.tags['db.statement']).toEqual({ TableName: 'test-table', Key: {id:{S:'1'}}});
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+        });
+    });
+
+    test('should mask AWS DynamoDB statements ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        const traceConfig = new TraceConfig({
+            disableInstrumentation: true,
+            maskDynamoDBStatement: true
+        });
+
+        integration.wrap(sdk, traceConfig);
+        
+        const tracer = new ThundraTracer();
+    
+        return AWS.dynamo(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            
+            expect(span.tags['db.statement']).not.toBeTruthy();
+
+            expect(span.operationName).toBe('test-table');
+            expect(span.className).toBe('AWS-DynamoDB');
+            expect(span.domainName).toBe('DB');
+            expect(span.tags['db.type']).toBe('aws-dynamodb');
+            expect(span.tags['db.instance']).toBe('dynamodb.us-west-2.amazonaws.com');
+            expect(span.tags['db.statement.type']).toBe('READ');
+            expect(span.tags['aws.dynamodb.table.name']).toBe('test-table');
+            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['aws.request.name']).toBe('getItem');
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');

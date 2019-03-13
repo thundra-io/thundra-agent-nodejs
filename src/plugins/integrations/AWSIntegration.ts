@@ -189,7 +189,7 @@ class AWSIntegration implements Integration {
                 [SpanTags.OPERATION_TYPE]: statementType ? statementType : '',
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_DYNAMO,
                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                [DBTags.DB_STATEMENT]: request.params,
+                [DBTags.DB_STATEMENT]: config.maskDynamoDBStatement ? undefined : request.params,
               },
             });
 

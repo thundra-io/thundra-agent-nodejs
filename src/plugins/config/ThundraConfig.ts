@@ -20,6 +20,7 @@ class ThundraConfig {
     xrayConfig: AwsXRayConfig;
     timeoutMargin: number;
     sampleTimedOutInvocations: boolean;
+    enableCompositeData: boolean;
     plugins: any[];
 
     constructor(options: any) {
@@ -51,6 +52,11 @@ class ThundraConfig {
         this.sampleTimedOutInvocations = Utils.getConfiguration(
             envVariableKeys.THUNDRA_AGENT_LAMBDA_SAMPLE_TIMED_OUT_INVOCATIONS) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_AGENT_LAMBDA_SAMPLE_TIMED_OUT_INVOCATIONS) === 'true' : options.sampleTimedOutInvocations;
+
+        this.enableCompositeData = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_COMPOSITE_ENABLED) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_COMPOSITE_ENABLED) === 'true' : options.enableCompositeData;
+
     }
 
 }

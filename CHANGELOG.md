@@ -1,23 +1,30 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+
 ## 2.1.0 - March 6, 2019
+#### Added
 - Implement `ErrorInjectorSpanListener`,  `FilteringSpanListener` and `LatencyInjectorSpanListener`
-- Fixes #47 
 - Implement ES and MySQL V1 integrations
-- Use InvocationSupport to pass functionName to Integrations
 - Implement sampling only Timed  out Invocations
-- Fix lambda timing out when used with https://www.npmjs.com/package/serverless-mysql  
+#### Fixed
+- Fixes #47 
+- Use InvocationSupport to pass functionName to Integrations
+- Fix lambda timing out when used with https://www.npmjs.com/package/serverless-mysql
+
 ## 2.0.9 - February 13, 2019
 - Trace HTTPS calls
 - Bug fix in in TraceConfig programmatic config
+
 ## 2.0.8 - January 30, 2019
 - Bug fixes in AWS Integrations
 - Enable default sampling for Metric Plugin
+
 ## 2.0.7 - December 20, 2018
 - Integrated Thundra Log Plugin with NodeJS console
 - Warmup plugin is disabled by default
 - Added trigger tags for AWS Event
 - Implemented trace propagation with opentracing
+
 ## 2.0.6 - November 27, 2018
 #### Added
 - Aws XRay Integration
@@ -25,17 +32,20 @@ All notable changes to this project will be documented in this file.
 - Sampling support
 #### Fixed
 - Add missing tags data to integrations for better ui integration
+
 ## 2.0.5 - November 6, 2018
 #### Added
 - Enable integrations by default
 #### Fixed
 - Propagated span from trace entry to exit through entry data
+
 ## 2.0.4 - October 26, 2018
 #### Fixed
 - Cleanup LogManager after each invocation
 ## 2.0.3 - October 24, 2018
 #### Fixed
 - AWS and HTTP integrations spans were not closed correctly fixed now. Removed HTTPS integration, it is not needed `https` module is using `http` underneath.
+
 ## 2.0.2 - October 23, 2018
 #### Fixed
 - Enable log plugin to be used before initialising Thundra Agent

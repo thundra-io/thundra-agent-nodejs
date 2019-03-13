@@ -40,7 +40,6 @@ class RedisIntegration implements Integration {
   }
 
   wrap(lib: any, config: any) {
-
     function wrapper(internalSendCommand: any) {
       return function internalSendCommandWrapper(options: any) {
         let span: ThundraSpan;
@@ -84,9 +83,9 @@ class RedisIntegration implements Integration {
               [DBTags.DB_STATEMENT_TYPE]: operationType,
               [RedisTags.REDIS_HOST]: host,
               [RedisTags.REDIS_PORT]: port,
-              [RedisTags.REDIS_COMMAND]: command,
+              [RedisTags.REDIS_COMMAND]: config.maskRedisStatement ? undefined : command,
+              [RedisTags.REDIS_COMMAND_ARGS]: config.maskRedisStatement ? undefined : options.args.join(','),
               [RedisTags.REDIS_COMMAND_TYPE]: operationType,
-              [RedisTags.REDIS_COMMAND_ARGS]: options.args.join(','),
               [SpanTags.OPERATION_TYPE]: operationType,
               [SpanTags.TOPOLOGY_VERTEX]: true,
               [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
