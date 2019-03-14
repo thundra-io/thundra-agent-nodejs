@@ -71,6 +71,16 @@ class ThundraWrapper {
             },
         };
 
+        const me = this;
+        this.wrappedContext = Object.assign({
+            set callbackWaitsForEmptyEventLoop(value) {
+                me.originalContext.callbackWaitsForEmptyEventLoop = value;
+            },
+            get callbackWaitsForEmptyEventLoop() {
+                return me.originalContext.callbackWaitsForEmptyEventLoop;
+            },
+        }, this.wrappedContext);
+
         this.timeout = this.setupTimeoutHandler(this);
     }
 
