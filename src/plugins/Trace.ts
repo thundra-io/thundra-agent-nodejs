@@ -196,7 +196,7 @@ export class Trace {
                 if (span) {
                     if (customSampler && !customSampler.isSampled(span)) {
                         ThundraLogger.getInstance().debug(
-                            'Applying custom sampling to span:' + span.getOperationName());
+                            `Filtering span with name ${span.getOperationName()} due to custom sampling configration`);
                         continue;
                     }
 
