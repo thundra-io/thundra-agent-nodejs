@@ -10,7 +10,7 @@ class TraceSamplerConfig {
     errorAwareSamplerConfig: ErrorAwareSamplerConfig;
     durationAwareSampler: DurationAwareSampler;
     errorAwareSampler: ErrorAwareSampler;
-    customSampler: () => Sampler<ThundraSpan>;
+    customSampler: Sampler<ThundraSpan>;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -45,14 +45,6 @@ class TraceSamplerConfig {
         }
 
         return isSampled;
-    }
-
-    createCustomSampler(): Sampler<ThundraSpan> {
-        if (this.customSampler &&
-            typeof this.customSampler === 'function') {
-
-            return this.customSampler();
-        }
     }
 }
 
