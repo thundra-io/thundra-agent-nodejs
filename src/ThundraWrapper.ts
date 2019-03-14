@@ -97,6 +97,7 @@ class ThundraWrapper {
         this.executeHook('before-invocation', beforeInvocationData, false)
             .then(() => {
                 this.pluginContext.requestCount += 1;
+                this.resetTime();
                 this.pluginContext.invocationStartTimestamp = Date.now();
 
                 try {
@@ -138,8 +139,6 @@ class ThundraWrapper {
     }
 
     async executeAfteInvocationAndReport(afterInvocationData: any) {
-        this.pluginContext.invocationFinishTimestamp = Date.now();
-
         await this.executeHook('after-invocation', afterInvocationData, true);
         this.resetTime();
 
@@ -171,7 +170,7 @@ class ThundraWrapper {
 
             if (this.config.sampleTimedOutInvocations) {
                 if (error instanceof TimeoutError) {
-                    this.executeAfteInvocationAndReport(afterInvocationData);
+                    await this.executeAfteInvocationAndReport(afterInvocationData);
                 } else {
                     this.plugins.map((plugin: any) => {
                         if (plugin.destroy && typeof (plugin.destroy) === 'function') {
@@ -180,7 +179,7 @@ class ThundraWrapper {
                     });
                 }
             } else {
-                this.executeAfteInvocationAndReport(afterInvocationData);
+                await this.executeAfteInvocationAndReport(afterInvocationData);
             }
 
             if (this.timeout) {

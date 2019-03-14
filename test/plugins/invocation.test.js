@@ -58,7 +58,7 @@ describe('Invocation', () => {
             expect(invocation.apiKey).toBe(pluginContext.apiKey);
             expect(invocation.invocationData.id).toBeTruthy();
             expect(invocation.invocationData.type).toEqual('Invocation');
-            expect(semver.inc(invocation.invocationData.agentVersion, 'patch')).toEqual(buildInfo.version);
+            expect(invocation.invocationData.agentVersion).toEqual(buildInfo.version);
             expect(invocation.invocationData.dataModelVersion).toEqual(DATA_MODEL_VERSION);
             expect(invocation.invocationData.applicationId).toEqual(pluginContext.applicationId);
             expect(invocation.invocationData.applicationDomainName).toEqual(LAMBDA_APPLICATION_DOMAIN_NAME);

@@ -6,7 +6,7 @@
   "scripts": {
     "precompile": "node create-build-info.js",
     "compile": "tsc",
-    "build": "node create-build-info.js;webpack;",
+    "build": "node create-build-info.js; mv ./dist/BuildInfo.js ./src; webpack; rm ./src/BuildInfo.js",
     "start": "npm-run-all --parallel watch:server watch:build",
     "test-automatic-instrumentation": "node ./test/instrumentation/automated.instrumentation.js",
     "test": "npm run compile; npm run test-automatic-instrumentation; docker-compose up -d; jest --coverage; docker-compose stop",

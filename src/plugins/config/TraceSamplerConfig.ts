@@ -30,7 +30,7 @@ class TraceSamplerConfig {
 
     isSampled(span: ThundraSpan): boolean {
         if (!this.durationAwareSampler &&
-            !this.errorAwareSampler && !this.customSampler) {
+            !this.errorAwareSampler) {
                 return true;
         }
 
@@ -44,13 +44,15 @@ class TraceSamplerConfig {
             isSampled = isSampled || this.errorAwareSampler.isSampled(span);
         }
 
-        if (this.customSampler) {
-            if (typeof this.customSampler === 'function' && this.customSampler().isSampled) {
-                isSampled = isSampled || this.customSampler().isSampled();
-            }
-        }
-
         return isSampled;
+    }
+
+    createCustomSampler(): Sampler<ThundraSpan> {
+        if (this.customSampler &&
+            typeof this.customSampler === 'function') {
+
+            return this.customSampler();
+        }
     }
 }
 

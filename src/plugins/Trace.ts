@@ -188,9 +188,18 @@ export class Trace {
 
         const spanList = this.tracer.getRecorder().getSpanList();
         const sampled = (this.config && this.config.samplerConfig) ? this.config.samplerConfig.isSampled(this.rootSpan) : true;
+        const customSampler = (this.config && this.config.samplerConfig) ?
+            this.config.samplerConfig.createCustomSampler() : false;
+
         if (sampled) {
             for (const span of spanList) {
                 if (span) {
+                    if (customSampler && !customSampler.isSampled(span)) {
+                        ThundraLogger.getInstance().debug(
+                            'Applying custom sampling to span:' + span.getOperationName());
+                        continue;
+                    }
+
                     const spanData = this.buildSpanData(span, this.pluginContext);
                     const spanReportData = Utils.generateReport(spanData, this.apiKey);
                     this.report(spanReportData);
