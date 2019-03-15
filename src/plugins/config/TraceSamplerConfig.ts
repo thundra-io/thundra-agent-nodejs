@@ -11,6 +11,7 @@ class TraceSamplerConfig {
     durationAwareSampler: DurationAwareSampler;
     errorAwareSampler: ErrorAwareSampler;
     customSampler: Sampler<ThundraSpan>;
+    runCustomSamplerOnEachSpan: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -26,15 +27,19 @@ class TraceSamplerConfig {
         if (this.errorAwareSamplerConfig.enabled) {
             this.errorAwareSampler = new ErrorAwareSampler();
         }
+
+        this.runCustomSamplerOnEachSpan = options.runCustomSamplerOnEachSpan
+                                            ? options.runCustomSamplerOnEachSpan : false;
     }
 
     isSampled(span: ThundraSpan): boolean {
-        if (!this.durationAwareSampler &&
-            !this.errorAwareSampler) {
-                return true;
-        }
-
         let isSampled = false;
+
+        if (!this.durationAwareSampler &&
+            !this.errorAwareSampler &&
+            !this.customSampler) {
+                isSampled = true;
+        }
 
         if (this.durationAwareSampler) {
             isSampled = isSampled || this.durationAwareSampler.isSampled(span);
@@ -42,6 +47,14 @@ class TraceSamplerConfig {
 
         if (this.errorAwareSampler) {
             isSampled = isSampled || this.errorAwareSampler.isSampled(span);
+        }
+
+        if (this.customSampler) {
+            if (this.runCustomSamplerOnEachSpan) {
+                isSampled = true;
+            } else {
+                isSampled = isSampled || this.customSampler.isSampled(span);
+            }
         }
 
         return isSampled;
