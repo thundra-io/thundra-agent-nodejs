@@ -104,11 +104,11 @@ class ThundraWrapper {
             reporter: this.reporter,
         };
 
+        this.resetTime();
+
         this.executeHook('before-invocation', beforeInvocationData, false)
             .then(() => {
                 this.pluginContext.requestCount += 1;
-                this.resetTime();
-                this.pluginContext.invocationStartTimestamp = Date.now();
 
                 try {
                     const result = this.originalFunction.call(
@@ -117,8 +117,6 @@ class ThundraWrapper {
                         this.wrappedContext,
                         this.wrappedCallback,
                     );
-
-                    this.pluginContext.invocationFinishTimestamp = Date.now();
 
                     if (result && result.then !== undefined && typeof result.then === 'function') {
                         result.then(this.wrappedContext.succeed, this.wrappedContext.fail);

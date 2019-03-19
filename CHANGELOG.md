@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## 2.2.2 - March 19, 2019
+## 2.2.3 - March 19, 2019
 #### Added
 - Ability to apply custom span sampler to all spans
 #### Fixed
