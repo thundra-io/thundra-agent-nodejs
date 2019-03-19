@@ -1,5 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+
+## 2.2.2 - March 19, 2019
+#### Added
+- Ability to apply custom span sampler to all spans
+#### Fixed
+- Agent version is set to wrong value
+- Wrapped context does not override callbackWaitsForEmptyEventLoop correctly
+
 ## 2.2.1 - March 13, 2019
 #### Added
 - Ability to mask db statements in integrations
