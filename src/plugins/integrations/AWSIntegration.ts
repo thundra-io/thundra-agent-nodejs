@@ -71,6 +71,15 @@ class AWSIntegration implements Integration {
     }
   }
 
+  static injectDynamoDBTraceLinkOnPut(requestParams: any, span: ThundraSpan): any {
+    const spanId = span.spanContext.spanId;
+    requestParams.Item = Object.assign({},
+      {'x-thundra-span-id': { S: spanId }},
+      requestParams.Item,
+    );
+    span.setTag(SpanTags.TRACE_LINKS, ['SAVE:' + spanId]);
+  }
+
   wrap(lib: any, config: any) {
     function wrapper(wrappedFunction: any) {
       return function AWSSDKWrapper(callback: any) {
@@ -202,6 +211,11 @@ class AWSIntegration implements Integration {
             }
 
             // Inject outgoing trace links into spans
+            if (config.dynamoDBTraceInjectionEnabled) {
+              if (operationName === 'putItem') {
+                AWSIntegration.injectDynamoDBTraceLinkOnPut(request.params, activeSpan);
+              }
+            }
           } else if (serviceName === 's3') {
             const operationType = S3RequestTypes[operationName];
             const spanName = koalas(request.params.Bucket, AWS_SERVICE_REQUEST);
