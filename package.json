@@ -83,6 +83,8 @@
     "@thundra/warmup": "1.0.0",
     "falafel": "^2.1.0",
     "koalas": "^1.0.2",
+    "lodash": "^4.17.11",
+    "md5": "^2.2.1",
     "minimatch": "^3.0.4",
     "require-in-the-middle": "^3.1.0",
     "semver": "^5.5.0",
