@@ -80,6 +80,19 @@ class AWSIntegration implements Integration {
     span.setTag(SpanTags.TRACE_LINKS, ['SAVE:' + spanId]);
   }
 
+  static injectDynamoDBTraceLinkOnUpdate(requestParams: any, span: ThundraSpan): any {
+    const spanId = span.spanContext.spanId;
+    const thundraAttr = {
+      Action: 'PUT',
+      Value: { S: spanId },
+    };
+    requestParams.AttributeUpdates = Object.assign({},
+      {'x-thundra-span-id': thundraAttr},
+      requestParams.AttributeUpdates,
+    );
+    span.setTag(SpanTags.TRACE_LINKS, ['SAVE:' + spanId]);
+  }
+
   wrap(lib: any, config: any) {
     function wrapper(wrappedFunction: any) {
       return function AWSSDKWrapper(callback: any) {
@@ -214,6 +227,8 @@ class AWSIntegration implements Integration {
             if (config.dynamoDBTraceInjectionEnabled) {
               if (operationName === 'putItem') {
                 AWSIntegration.injectDynamoDBTraceLinkOnPut(request.params, activeSpan);
+              } else if (operationName === 'updateItem') {
+                AWSIntegration.injectDynamoDBTraceLinkOnUpdate(request.params, activeSpan);
               }
             }
           } else if (serviceName === 's3') {
