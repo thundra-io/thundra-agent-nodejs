@@ -25,6 +25,7 @@ class TraceConfig extends BasePluginConfig {
     maskRdbStatement: boolean;
     maskDynamoDBStatement: boolean;
     maskElasticSearchStatement: boolean;
+    dynamoDBTraceInjectionEnabled: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -60,6 +61,10 @@ class TraceConfig extends BasePluginConfig {
         this.maskElasticSearchStatement = Utils.getConfiguration(
             envVariableKeys.THUNDRA_MASK_ELASTIC_STATEMENT) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_MASK_ELASTIC_STATEMENT) === 'true' : options.maskElasticSearchStatement;
+
+        this.dynamoDBTraceInjectionEnabled = Utils.getConfiguration(
+            envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) ? Utils.getConfiguration(
+                envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) === 'true' : options.maskElasticSearchStatement;
 
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {

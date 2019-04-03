@@ -200,6 +200,8 @@ class AWSIntegration implements Integration {
               activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
               activeSpan.setTag(AwsDynamoTags.TABLE_NAME, tableName);
             }
+
+            // Inject outgoing trace links into spans
           } else if (serviceName === 's3') {
             const operationType = S3RequestTypes[operationName];
             const spanName = koalas(request.params.Bucket, AWS_SERVICE_REQUEST);
