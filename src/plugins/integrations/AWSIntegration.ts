@@ -71,7 +71,7 @@ class AWSIntegration implements Integration {
     }
   }
 
-  static injectDynamoDBTraceLinkOnPut(requestParams: any, span: ThundraSpan): any {
+  static injectDynamoDBTraceLinkOnPut(requestParams: any, span: ThundraSpan): void {
     const spanId = span.spanContext.spanId;
     requestParams.Item = Object.assign({},
       {'x-thundra-span-id': { S: spanId }},
@@ -80,7 +80,7 @@ class AWSIntegration implements Integration {
     span.setTag(SpanTags.TRACE_LINKS, ['SAVE:' + spanId]);
   }
 
-  static injectDynamoDBTraceLinkOnUpdate(requestParams: any, span: ThundraSpan): any {
+  static injectDynamoDBTraceLinkOnUpdate(requestParams: any, span: ThundraSpan): void {
     const spanId = span.spanContext.spanId;
     const thundraAttr = {
       Action: 'PUT',
@@ -91,6 +91,10 @@ class AWSIntegration implements Integration {
       requestParams.AttributeUpdates,
     );
     span.setTag(SpanTags.TRACE_LINKS, ['SAVE:' + spanId]);
+  }
+
+  static injectDynamoDBTraceLinkOnDelete(requestParams: any): void {
+    requestParams.ReturnValues = 'ALL_OLD';
   }
 
   wrap(lib: any, config: any) {
@@ -229,6 +233,8 @@ class AWSIntegration implements Integration {
                 AWSIntegration.injectDynamoDBTraceLinkOnPut(request.params, activeSpan);
               } else if (operationName === 'updateItem') {
                 AWSIntegration.injectDynamoDBTraceLinkOnUpdate(request.params, activeSpan);
+              } else if (operationName === 'deleteItem') {
+                AWSIntegration.injectDynamoDBTraceLinkOnDelete(request.params);
               }
             }
           } else if (serviceName === 's3') {
