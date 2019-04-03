@@ -19,6 +19,8 @@ import InvocationSupport from '../support/InvocationSupport';
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
 const koalas = require('koalas');
+const _ = require('lodash');
+const md5 = require('md5');
 
 class AWSIntegration implements Integration {
   version: string;
@@ -93,8 +95,51 @@ class AWSIntegration implements Integration {
     span.setTag(SpanTags.TRACE_LINKS, ['SAVE:' + spanId]);
   }
 
+  static serializeAttributes(attributes: any): string {
+    return Object.keys(attributes).sort().map((attrKey) => {
+      const attrType = Object.keys(attributes[attrKey])[0];
+      const attrVal = _.trim(JSON.stringify(attributes[attrKey][attrType]), '"');
+      return `${attrKey}={${attrType}: ${attrVal}}`;
+    }).join(', ');
+  }
+
   static injectDynamoDBTraceLinkOnDelete(requestParams: any): void {
     requestParams.ReturnValues = 'ALL_OLD';
+  }
+
+  static injectTraceLink(span: ThundraSpan, req: any): void {
+    if (span.getTag(SpanTags.TRACE_LINKS)) {
+      return;
+    }
+    const serviceEndpoint = req.service.config.endpoint;
+    const serviceName = Utils.getServiceName(serviceEndpoint as string);
+    const operationName = req.operation;
+    const response = req.response;
+    let traceLinks: any[] = [];
+
+    if (serviceName === 'dynamodb') {
+      const region = req.service.config.region;
+      const tableName = Utils.getDynamoDBTableName(req);
+      const params = Object.assign({}, req.params);
+      let timestamp: number;
+      if (_.has(response, 'httpResponse.headers.date')) {
+        timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
+      } else {
+        timestamp = Math.floor(Date.now() / 1000);
+      }
+      
+      if (operationName === 'putItem') {
+        const operationType = 'PUT';
+        const attrHash = md5(AWSIntegration.serializeAttributes(params.Item));
+        traceLinks = [1, 2, 3].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
+      } else if (operationName === 'updateItem') {
+      } else if (operationName === 'deleteItem') {
+      }
+    }
+
+    if (traceLinks.length > 0) {
+      span.setTag(SpanTags.TRACE_LINKS, traceLinks);
+    }
   }
 
   wrap(lib: any, config: any) {
@@ -368,12 +413,15 @@ class AWSIntegration implements Integration {
           }
 
           const me = this;
-          const wrappedCallback = (err: any, res: any) => {
+          const wrappedCallback = (err: any, data: any) => {
             if (err && activeSpan) {
               activeSpan.setErrorTag(err);
             }
+            if (data) {
+              AWSIntegration.injectTraceLink(activeSpan, request);
+            }
             if (activeSpan) {
-              activeSpan.closeWithCallback(me, originalCallback, [err, res]);
+              activeSpan.closeWithCallback(me, originalCallback, [err, data]);
             }
           };
 
