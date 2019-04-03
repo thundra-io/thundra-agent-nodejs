@@ -2,7 +2,7 @@
   "name": "@thundra/core",
   "version": "2.2.3",
   "description": "Thundra Lambda Node.js Agent",
-  "main": "dist/thundra.js",
+  "main": "dist/index.js",
   "scripts": {
     "precompile": "node create-build-info.js",
     "compile": "tsc",
