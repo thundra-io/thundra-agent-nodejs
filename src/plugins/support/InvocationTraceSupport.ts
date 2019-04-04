@@ -54,13 +54,22 @@ class InvocationTraceSupport {
     }
 
     static getOutgoingTraceLinks(): any[] {
-        const spans = ThundraTracer.getInstance().recorder.getSpanList();
-        const outgoingTraceLinks = _.flatten(
-            spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
-                .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
-        );
+        if (!ThundraTracer.getInstance()) {
+            return undefined;
+        }
 
-        return [...new Set(outgoingTraceLinks)];
+        try {
+            const spans = ThundraTracer.getInstance().recorder.getSpanList();
+            const outgoingTraceLinks = _.flatten(
+                spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
+                    .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
+            );
+
+            return [...new Set(outgoingTraceLinks)];
+        } catch (e) {
+            ThundraLogger.getInstance().error(
+                `Error while getting the outgoing trace links for invocation. ${e}`);
+        }
     }
 
     static clear(): void {
