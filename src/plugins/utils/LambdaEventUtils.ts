@@ -6,6 +6,10 @@ import ThundraSpanContext from '../../opentracing/SpanContext';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../support/InvocationSupport';
+import AWSIntegration from '../integrations/AWSIntegration';
+import InvocationTraceSupport from '../support/InvocationTraceSupport';
+
+const _ = require('lodash');
 
 class LambdaEventUtils {
     static LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
@@ -74,16 +78,58 @@ class LambdaEventUtils {
     static injectTriggerTagsForDynamoDB(span: ThundraSpan, originalEvent: any): void {
         const domainName = 'DB';
         const className = 'AWS-DynamoDB';
-
+        const traceLinks: any[] = [];
         const tableNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const evenSourceARN = record.eventSourceARN;
             const idx1 = evenSourceARN.indexOf('/');
             const idx2 = evenSourceARN.indexOf('/', idx1 + 1);
             const tableName = evenSourceARN.substring(idx1 + 1, idx2);
+            const region = record.awsRegion || '';
             tableNames.add(tableName);
-        }
 
+            // Find trace links
+            let traceLinkFound: boolean = false;
+            if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
+                const spanId = _.get(record, 'dynamodb.NewImage.x-thundra-span-id', false);
+                if (spanId) {
+                    traceLinkFound = true;
+                    traceLinks.push(`SAVE:${spanId}`);
+                }
+            } else if (record.eventName === 'REMOVE') {
+                const spanId = _.get(record, 'dynamodb.OldImage.x-thundra-span-id', false);
+                if (spanId) {
+                    traceLinkFound = true;
+                    traceLinks.push(`DELETE:${spanId}`);
+                }
+            }
+
+            if (!traceLinkFound) {
+                const creationTime = _.get(record, 'dynamodb.ApproximateCreationDateTime', false);
+                if (creationTime) {
+                    const NewImage = _.get(record, 'dynamodb.NewImage', {});
+                    const Keys = _.get(record, 'dynamodb.Keys', {});
+                    const timestamp = creationTime - 1;
+                    if (record.eventName === 'INSERT') {
+                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                            NewImage, 'PUT', tableName, region, timestamp,
+                        ));
+                    } else if (record.eventName === 'MODIFY') {
+                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                            NewImage, 'PUT', tableName, region, timestamp,
+                        ));
+                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                            Keys, 'UPDATE', tableName, region, timestamp,
+                        ));
+                    } else if (record.eventName === 'REMOVE') {
+                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                            Keys, 'DELETE', tableName, region, timestamp,
+                        ));
+                    }
+                }
+            }
+        }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(tableNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(tableNames));
     }
