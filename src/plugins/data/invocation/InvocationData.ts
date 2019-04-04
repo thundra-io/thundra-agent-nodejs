@@ -20,6 +20,8 @@ class InvocationData extends BaseMonitoringData {
     timeout: boolean;
     tags: any;
     resources: Resource[];
+    incomingTraceLinks: any[];
+    outgoingTraceLinks: any[];
 
     constructor() {
         super(MonitorDataType.INVOCATION);

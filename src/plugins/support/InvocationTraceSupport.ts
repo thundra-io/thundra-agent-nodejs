@@ -49,18 +49,18 @@ class InvocationTraceSupport {
         InvocationTraceSupport.incomingTraceLinks.push(...traceLinks);
     }
 
-    static getIncomingTraceLinks(): any {
-        return {incomingTraceLinks: [...new Set(InvocationTraceSupport.incomingTraceLinks)]};
+    static getIncomingTraceLinks(): any[] {
+        return [...new Set(InvocationTraceSupport.incomingTraceLinks)];
     }
 
-    static getOutgoingTraceLinks(): any {
+    static getOutgoingTraceLinks(): any[] {
         const spans = ThundraTracer.getInstance().recorder.getSpanList();
         const outgoingTraceLinks = _.flatten(
             spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
                 .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
         );
 
-        return {outgoingTraceLinks: [...new Set(outgoingTraceLinks)]};
+        return [...new Set(outgoingTraceLinks)];
     }
 
     static clear(): void {
