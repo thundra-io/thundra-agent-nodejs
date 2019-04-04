@@ -107,6 +107,15 @@ class AWSIntegration implements Integration {
     requestParams.ReturnValues = 'ALL_OLD';
   }
 
+  static generateDynamoTraceLinks(attributes: any, operationType: string, tableName: string,
+                                  region: string, timestamp: number): any[] {
+    if (attributes) {
+      const attrHash = md5(AWSIntegration.serializeAttributes(attributes));
+      return [1, 2, 3].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
+    }
+    return [];
+  }
+
   static injectTraceLink(span: ThundraSpan, req: any): void {
     if (span.getTag(SpanTags.TRACE_LINKS)) {
       return;
@@ -129,10 +138,9 @@ class AWSIntegration implements Integration {
       }
       
       if (operationName === 'putItem') {
-        const operationType = 'PUT';
-        const attrHash = md5(AWSIntegration.serializeAttributes(params.Item));
-        traceLinks = [1, 2, 3].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
+        traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Item, 'PUT', tableName, region, timestamp);
       } else if (operationName === 'updateItem') {
+        traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'UPDATE', tableName, region, timestamp);
       } else if (operationName === 'deleteItem') {
       }
     }
