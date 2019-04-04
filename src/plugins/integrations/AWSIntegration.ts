@@ -79,20 +79,39 @@ class AWSIntegration implements Integration {
       {'x-thundra-span-id': { S: spanId }},
       requestParams.Item,
     );
-    span.setTag(SpanTags.TRACE_LINKS, ['SAVE:' + spanId]);
+    span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
   }
 
   static injectDynamoDBTraceLinkOnUpdate(requestParams: any, span: ThundraSpan): void {
     const spanId = span.spanContext.spanId;
-    const thundraAttr = {
-      Action: 'PUT',
-      Value: { S: spanId },
-    };
-    requestParams.AttributeUpdates = Object.assign({},
-      {'x-thundra-span-id': thundraAttr},
-      requestParams.AttributeUpdates,
-    );
-    span.setTag(SpanTags.TRACE_LINKS, ['SAVE:' + spanId]);
+    if (_.has(requestParams, 'AttributeUpdates')) {
+      const thundraAttr = {
+        Action: 'PUT',
+        Value: { S: spanId },
+      };
+
+      requestParams.AttributeUpdates = Object.assign({},
+        {'x-thundra-span-id': thundraAttr},
+        requestParams.AttributeUpdates,
+      );
+
+      span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
+    } else if (_.has(requestParams, 'UpdateExpression')) {
+      const exp: string = requestParams.UpdateExpression;
+      const thundraAttrName = {'#xThundraSpanId': 'x-thundra-span-id'};
+      const thundraAttrVal = {':xThundraSpanId': {S: spanId }};
+
+      requestParams.ExpressionAttributeNames = Object.assign({}, requestParams.ExpressionAttributeNames, thundraAttrName);
+      requestParams.ExpressionAttributeValues = Object.assign({}, requestParams.ExpressionAttributeValues, thundraAttrVal);
+
+      if (exp.indexOf('SET') < 0) {
+        requestParams.UpdateExpression = `SET #xThundraSpanId = :xThundraSpanId ${exp}`;
+      } else {
+        requestParams.UpdateExpression = exp.replace(/SET (.+)/, `SET #xThundraSpanId = :xThundraSpanId, $1`);
+      }
+
+      span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
+    }
   }
 
   static serializeAttributes(attributes: any): string {
@@ -116,7 +135,7 @@ class AWSIntegration implements Integration {
     return [];
   }
 
-  static injectTraceLink(span: ThundraSpan, req: any): void {
+  static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
     if (span.getTag(SpanTags.TRACE_LINKS)) {
       return;
     }
@@ -136,12 +155,18 @@ class AWSIntegration implements Integration {
       } else {
         timestamp = Math.floor(Date.now() / 1000);
       }
-      
+
       if (operationName === 'putItem') {
         traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Item, 'PUT', tableName, region, timestamp);
       } else if (operationName === 'updateItem') {
         traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'UPDATE', tableName, region, timestamp);
       } else if (operationName === 'deleteItem') {
+        if (config.dynamoDBTraceInjectionEnabled && _.has(response, 'data.Attributes.x-thundra-span-id.S')) {
+          const spanId = response.data.Attributes['x-thundra-span-id'].S;
+          traceLinks = [`DELETE:${spanId}`];
+        } else {
+          traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'DELETE', tableName, region, timestamp);
+        }
       }
     }
 
@@ -426,7 +451,7 @@ class AWSIntegration implements Integration {
               activeSpan.setErrorTag(err);
             }
             if (data) {
-              AWSIntegration.injectTraceLink(activeSpan, request);
+              AWSIntegration.injectTraceLink(activeSpan, request, config);
             }
             if (activeSpan) {
               activeSpan.closeWithCallback(me, originalCallback, [err, data]);
