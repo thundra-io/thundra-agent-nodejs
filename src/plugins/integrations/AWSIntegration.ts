@@ -28,6 +28,7 @@ class AWSIntegration implements Integration {
     config: any;
     hook: any;
     basedir: string;
+    wrappedFuncs: any;
 
     constructor(config: any) {
         this.version = '2.x';
@@ -48,6 +49,8 @@ class AWSIntegration implements Integration {
             }
             return exp;
         });
+
+        this.wrappedFuncs = {};
     }
 
     static injectSpanContextIntoMessageAttributes(tracer: ThundraTracer, span: ThundraSpan): any {
@@ -253,7 +256,10 @@ class AWSIntegration implements Integration {
     }
 
     wrap(lib: any, config: any) {
-        function wrapper(wrappedFunction: any) {
+        const integration = this;
+        function wrapper(wrappedFunction: any, wrappedFunctionName: string) {
+            integration.wrappedFuncs[wrappedFunctionName] = wrappedFunction;
+            const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
             return function AWSSDKWrapper(callback: any) {
 
                 let activeSpan: ThundraSpan;
@@ -536,7 +542,7 @@ class AWSIntegration implements Integration {
                         }
                     };
 
-                    return wrappedFunction.apply(this, [wrappedCallback]);
+                    return originalFunction.apply(this, [wrappedCallback]);
 
                 } catch (error) {
                     if (activeSpan) {
@@ -544,13 +550,13 @@ class AWSIntegration implements Integration {
                     }
 
                     ThundraLogger.getInstance().error(error);
-                    return wrappedFunction.apply(this, [callback]);
+                    return originalFunction.apply(this, [callback]);
                 }
             };
         }
 
-        shimmer.wrap(lib.Request.prototype, 'send', wrapper);
-        shimmer.wrap(lib.Request.prototype, 'promise', wrapper);
+        shimmer.wrap(lib.Request.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));
+        shimmer.wrap(lib.Request.prototype, 'promise', (wrapped: Function) => wrapper(wrapped, 'promise'));
     }
 
     unwrap() {
