@@ -1,15 +1,9 @@
-module.exports.dynamo = (AWS) => {
+module.exports.dynamo = (AWS, params) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
         const ddb = new AWS.DynamoDB({ apiVersion: '2012-10-08', dynamoDbCrc32: false });
-        const params = {
-            TableName: 'test-table',
-            Key: {
-                'id': { S: '1' },
-            },
-        };
 
-        ddb.getItem(params, function (err, data) {
+        ddb.putItem(params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);

@@ -11,29 +11,37 @@ describe('AWS Integration', () => {
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
-        integration.wrap(sdk, {});
+        const traceConfig = new TraceConfig({
+            dynamoDBTraceInjectionEnabled: true,
+        });
+
+        const putParams = {
+            Item: {"id": {S: "1"}},
+            TableName: 'test-table',
+        };
+
+        integration.wrap(sdk, traceConfig);
         
         const tracer = new ThundraTracer();
         
-        return AWS.dynamo(sdk).then(() => {
+        return AWS.dynamo(sdk, putParams).then(() => {
             const span = tracer.getRecorder().spanList[0];
             
             expect(span.operationName).toBe('test-table');
-
             expect(span.className).toBe('AWS-DynamoDB');
             expect(span.domainName).toBe('DB');
-
             expect(span.tags['db.type']).toBe('aws-dynamodb');
             expect(span.tags['db.instance']).toBe('dynamodb.us-west-2.amazonaws.com');
-            expect(span.tags['db.statement.type']).toBe('READ');
+            expect(span.tags['db.statement.type']).toBe('WRITE');
             expect(span.tags['aws.dynamodb.table.name']).toBe('test-table');
-            expect(span.tags['operation.type']).toBe('READ');
-            expect(span.tags['aws.request.name']).toBe('getItem');
-            expect(span.tags['db.statement']).toEqual({ TableName: 'test-table', Key: {id:{S:'1'}}});
+            expect(span.tags['operation.type']).toBe('WRITE');
+            expect(span.tags['aws.request.name']).toBe('putItem');
+            expect(span.tags['db.statement']).toEqual({ TableName: 'test-table', Item: {id:{S:'1'}}});
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`])
         });
     });
 
@@ -43,14 +51,20 @@ describe('AWS Integration', () => {
 
         const traceConfig = new TraceConfig({
             disableInstrumentation: true,
-            maskDynamoDBStatement: true
+            maskDynamoDBStatement: true,
+            dynamoDBTraceInjectionEnabled: true,
         });
+
+        const putParams = {
+            Item: {"id": {S: "1"}},
+            TableName: 'test-table',
+        };
 
         integration.wrap(sdk, traceConfig);
         
         const tracer = new ThundraTracer();
     
-        return AWS.dynamo(sdk).then(() => {
+        return AWS.dynamo(sdk, putParams).then(() => {
             const span = tracer.getRecorder().spanList[0];
             
             expect(span.tags['db.statement']).not.toBeTruthy();
@@ -60,14 +74,15 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('DB');
             expect(span.tags['db.type']).toBe('aws-dynamodb');
             expect(span.tags['db.instance']).toBe('dynamodb.us-west-2.amazonaws.com');
-            expect(span.tags['db.statement.type']).toBe('READ');
+            expect(span.tags['db.statement.type']).toBe('WRITE');
             expect(span.tags['aws.dynamodb.table.name']).toBe('test-table');
-            expect(span.tags['operation.type']).toBe('READ');
-            expect(span.tags['aws.request.name']).toBe('getItem');
+            expect(span.tags['operation.type']).toBe('WRITE');
+            expect(span.tags['aws.request.name']).toBe('putItem');
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`])
         });
     });
 
