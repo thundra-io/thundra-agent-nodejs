@@ -137,14 +137,16 @@ class LambdaEventUtils {
     static injectTriggerTagsForSNS(span: ThundraSpan, originalEvent: any): void {
         const domainName = 'Messaging';
         const className = 'AWS-SNS';
-
+        const traceLinks: any[] = [];
         const topicNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const topicARN = record.Sns.TopicArn;
             const topicName = topicARN.substring(topicARN.lastIndexOf(':') + 1);
+            const messageId = record.Sns.messageId;
             topicNames.add(topicName);
+            traceLinks.push(messageId);
         }
-
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(topicNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(topicNames));
     }
@@ -157,7 +159,7 @@ class LambdaEventUtils {
         for (const message of originalEvent.Records) {
             const queueARN = message.eventSourceARN;
             const queueName = queueARN.substring(queueARN.lastIndexOf(':') + 1);
-            const messageId = message.messageId || '';
+            const messageId = message.messageId;
             queueNames.add(queueName);
             traceLinks.push(messageId);
         }
