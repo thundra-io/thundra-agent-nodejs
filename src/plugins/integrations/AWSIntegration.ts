@@ -168,6 +168,14 @@ class AWSIntegration implements Integration {
           traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'DELETE', tableName, region, timestamp);
         }
       }
+    } else if (serviceName === 'sqs') {
+      if (operationName === 'sendMessage') {
+        const messageId = response.data.MessageId || '';
+        traceLinks = [messageId];
+      } else if (operationName === 'sendMessageBatch') {
+        const entries = response.data.Successful || [];
+        entries.map((entry: any) => traceLinks.push(entry.MessageId));
+      }
     }
 
     if (traceLinks.length > 0) {
