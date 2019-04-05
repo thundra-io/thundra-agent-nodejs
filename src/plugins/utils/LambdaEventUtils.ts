@@ -152,13 +152,16 @@ class LambdaEventUtils {
     static injectTriggerTagsForSQS(span: ThundraSpan, originalEvent: any) {
         const domainName = 'Messaging';
         const className = 'AWS-SQS';
-
+        const traceLinks: any[] = [];
         const queueNames: Set<string> = new Set<string>();
         for (const message of originalEvent.Records) {
             const queueARN = message.eventSourceARN;
             const queueName = queueARN.substring(queueARN.lastIndexOf(':') + 1);
+            const messageId = message.messageId || '';
             queueNames.add(queueName);
+            traceLinks.push(messageId);
         }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(queueNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(queueNames));
     }
