@@ -260,7 +260,9 @@ class LambdaEventUtils {
             const domainName = 'API';
             const className = 'AWS-Lambda';
             const operationNames = [originalContext.clientContext.custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME]];
+            const requestId = originalContext.awsRequestId;
 
+            InvocationTraceSupport.addIncomingTraceLinks([requestId]);
             this.injectTrigerTragsForInvocation(domainName, className, operationNames);
             this.injectTrigerTragsForSpan(span, domainName, className, operationNames);
         }
