@@ -76,7 +76,20 @@ class LambdaEventUtils {
         const className = 'AWS-Firehose';
         const streamARN = originalEvent.deliveryStreamArn;
         const streamName = streamARN.substring(streamARN.indexOf('/') + 1);
+        const region = originalEvent.region || '';
+        const records  = originalEvent.records || [];
+        const traceLinks: any[] = [];
 
+        for (const record of records) {
+            const arriveTime = record.approximateArrivalTimestamp;
+            const data = record.data;
+            if (arriveTime && data) {
+                traceLinks.push(...AWSIntegration
+                    .generateFirehoseTraceLinks(region, streamName,
+                        arriveTime - 1, Buffer.from(data, 'base64')));
+            }
+        }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, [streamName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [streamName]);
     }
