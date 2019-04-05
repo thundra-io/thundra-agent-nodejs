@@ -259,7 +259,6 @@ class AWSIntegration implements Integration {
         const integration = this;
         function wrapper(wrappedFunction: any, wrappedFunctionName: string) {
             integration.wrappedFuncs[wrappedFunctionName] = wrappedFunction;
-            const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
             return function AWSSDKWrapper(callback: any) {
 
                 let activeSpan: ThundraSpan;
@@ -530,6 +529,7 @@ class AWSIntegration implements Integration {
                     }
 
                     const me = this;
+                    const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
                     const wrappedCallback = (err: any, data: any) => {
                         if (err && activeSpan) {
                             activeSpan.setErrorTag(err);
@@ -545,10 +545,10 @@ class AWSIntegration implements Integration {
                     return originalFunction.apply(this, [wrappedCallback]);
 
                 } catch (error) {
+                    const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
                     if (activeSpan) {
                         activeSpan.close();
                     }
-
                     ThundraLogger.getInstance().error(error);
                     return originalFunction.apply(this, [callback]);
                 }

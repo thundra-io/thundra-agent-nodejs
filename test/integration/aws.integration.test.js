@@ -4,6 +4,8 @@ import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
+const md5 = require('md5');
+
 describe('AWS Integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
@@ -89,19 +91,29 @@ describe('AWS Integration', () => {
     test('should instrument AWS S3 GetObject call ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
-
         integration.wrap(sdk, {});
         
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                httpResponse: {
+                    headers: {'x-amz-request-id': 'EXAMPLE_REQUEST_ID_123'}
+                }
+            }
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
+
         const tracer = new ThundraTracer();
 
         return AWS.s3GetObject(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
             expect(span.operationName).toBe('test');
-
             expect(span.className).toBe('AWS-S3');
             expect(span.domainName).toBe('Storage');
-
             expect(span.tags['operation.type']).toBe('READ');
             expect(span.tags['aws.s3.bucket.name']).toBe('test');
             expect(span.tags['aws.request.name']).toBe('getObject');
@@ -110,14 +122,27 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
         });
     });
 
     test('should instrument AWS S3 ListBucket call ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
-
         integration.wrap(sdk, {});
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                httpResponse: {
+                    headers: {'x-amz-request-id': 'EXAMPLE_REQUEST_ID_123'}
+                }
+            }
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
         
         const tracer = new ThundraTracer();
 
@@ -137,6 +162,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
         });
     });
 
@@ -145,6 +171,19 @@ describe('AWS Integration', () => {
         const sdk = require('aws-sdk');
 
         integration.wrap(sdk, {});
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                httpResponse: {
+                    headers: {'x-amzn-requestid': 'EXAMPLE_REQUEST_ID_123'}
+                }
+            }
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
         
         const tracer = new ThundraTracer();
 
@@ -165,6 +204,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
         });
     });
 
@@ -186,6 +226,19 @@ describe('AWS Integration', () => {
         const sdk = require('aws-sdk');
 
         integration.wrap(sdk, {});
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                data: {
+                    MessageId: 'EXAMPLE_MESSAGE_ID_123',
+                }
+            }
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
         
         const tracer = new ThundraTracer();
 
@@ -204,6 +257,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
         });
     });
 
@@ -239,6 +293,19 @@ describe('AWS Integration', () => {
         const sdk = require('aws-sdk');
 
         integration.wrap(sdk, {});
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                data: {
+                    MessageId: 'EXAMPLE_MESSAGE_ID_123',
+                }
+            }
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
         
         const tracer = new ThundraTracer();
 
@@ -257,6 +324,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
         });
     }); 
 
@@ -288,6 +356,22 @@ describe('AWS Integration', () => {
         const sdk = require('aws-sdk');
 
         integration.wrap(sdk, {});
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                data: {
+                    Records: [
+                        {ShardId: 'SHARD_ID_1', SequenceNumber: 'SEQUENCE_NUMBER_1'},
+                        {ShardId: 'SHARD_ID_2', SequenceNumber: 'SEQUENCE_NUMBER_2'},
+                    ],
+                }
+            }
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
         
         const tracer = new ThundraTracer();
 
@@ -305,6 +389,8 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(['us-west-2:STRING_VALUE:SHARD_ID_1:SEQUENCE_NUMBER_1',
+                                                        'us-west-2:STRING_VALUE:SHARD_ID_2:SEQUENCE_NUMBER_2']);
         });
     });
 
@@ -313,7 +399,24 @@ describe('AWS Integration', () => {
         const sdk = require('aws-sdk');
 
         integration.wrap(sdk, {});
-        
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const date = 'Tue, 5 Apr 2019 22:12:31 GMT';
+        const timestamp = Date.parse(date) / 1000;
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                httpResponse: {
+                    headers: {date: date},
+                },
+            }
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
+
+        const dataHash = md5('STRING_VALUE');
+        const traceLinks = [1, 2, 3].map((i) => `us-west-2:STRING_VALUE:${timestamp + i}:${dataHash}`);
         const tracer = new ThundraTracer();
 
         return AWS.firehose(sdk).then(() => {
@@ -329,7 +432,8 @@ describe('AWS Integration', () => {
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']); 
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(traceLinks);
         });
     });
 
