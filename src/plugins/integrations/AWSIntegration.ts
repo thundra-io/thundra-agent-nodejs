@@ -176,6 +176,11 @@ class AWSIntegration implements Integration {
                 const entries = response.data.Successful || [];
                 entries.map((entry: any) => traceLinks.push(entry.MessageId));
             }
+        } else if (serviceName === 'sns') {
+            const messageId = _.get(response, 'data.MessageId', false);
+            if (messageId) {
+                traceLinks = [messageId];
+            }
         }
 
         if (traceLinks.length > 0) {
