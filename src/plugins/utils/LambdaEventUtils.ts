@@ -53,14 +53,20 @@ class LambdaEventUtils {
     static injectTriggerTagsForKinesis(span: ThundraSpan, originalEvent: any): void {
         const domainName = 'Stream';
         const className = 'AWS-Kinesis';
-
+        const traceLinks: any[] = [];
         const streamNames = new Set();
         for (const record of originalEvent.Records) {
+            const region = record.awsRegion || '';
+            const eventID = record.eventID || false;
             const evenSourceARN = record.eventSourceARN;
             const streamName = evenSourceARN.substring(evenSourceARN.indexOf('/') + 1);
             streamNames.add(streamName);
-        }
 
+            if (eventID) {
+                traceLinks.push(`${region}:${streamName}:${eventID}`);
+            }
+        }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(streamNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(streamNames));
     }
