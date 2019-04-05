@@ -177,13 +177,18 @@ class LambdaEventUtils {
     static injectTriggerTagsForS3(span: ThundraSpan, originalEvent: any) {
         const domainName = 'Storage';
         const className = 'AWS-S3';
-
+        const traceLinks: any[] = [];
         const bucketNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const bucketName = record.s3.bucket.name;
+            const requestId = _.get(record, 'responseElements.x-amz-request-id', false);
             bucketNames.add(bucketName);
-        }
 
+            if (requestId) {
+                traceLinks.push(requestId);
+            }
+        }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(bucketNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(bucketNames));
     }
