@@ -196,8 +196,13 @@ class AWSIntegration implements Integration {
                 const shardId = _.get(response, 'data.ShardId', false);
                 const seqNumber = _.get(response, 'data.SequenceNumber', false);
                 if (shardId && seqNumber) {
-                    traceLinks.push(`${region}:${streamName}:${shardId}:${seqNumber}`);
+                    traceLinks = [`${region}:${streamName}:${shardId}:${seqNumber}`];
                 }
+            }
+        } else if (serviceName === 's3') {
+            const requestId = _.get(response, 'httpResponse.headers.x-amz-request-id', false);
+            if (requestId) {
+                traceLinks = [requestId];
             }
         }
 
