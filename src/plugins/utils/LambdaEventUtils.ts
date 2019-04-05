@@ -142,7 +142,7 @@ class LambdaEventUtils {
         for (const record of originalEvent.Records) {
             const topicARN = record.Sns.TopicArn;
             const topicName = topicARN.substring(topicARN.lastIndexOf(':') + 1);
-            const messageId = record.Sns.messageId;
+            const messageId = record.Sns.MessageId;
             topicNames.add(topicName);
             traceLinks.push(messageId);
         }

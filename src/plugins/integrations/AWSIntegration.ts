@@ -136,19 +136,19 @@ class AWSIntegration implements Integration {
     }
 
     static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
-        if (span.getTag(SpanTags.TRACE_LINKS)) {
+        if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
             return;
         }
-        const serviceEndpoint = req.service.config.endpoint;
+        const region = _.get(req, 'service.config.region', '');
+        const serviceEndpoint = _.get(req, 'service.config.endpoint', '');
         const serviceName = Utils.getServiceName(serviceEndpoint as string);
         const operationName = req.operation;
         const response = req.response;
+        const params = Object.assign({}, req.params);
         let traceLinks: any[] = [];
 
         if (serviceName === 'dynamodb') {
-            const region = req.service.config.region;
             const tableName = Utils.getDynamoDBTableName(req);
-            const params = Object.assign({}, req.params);
             let timestamp: number;
             if (_.has(response, 'httpResponse.headers.date')) {
                 timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
@@ -180,6 +180,24 @@ class AWSIntegration implements Integration {
             const messageId = _.get(response, 'data.MessageId', false);
             if (messageId) {
                 traceLinks = [messageId];
+            }
+        } else if (serviceName === 'kinesis') {
+            const records = _.get(response, 'data.Records', false);
+            const streamName = params.StreamName || '';
+            if (records) {
+                for (const record of records) {
+                    const shardId = _.get(record, 'ShardId', false);
+                    const seqNumber = _.get(record, 'SequenceNumber', false);
+                    if (shardId && seqNumber) {
+                        traceLinks.push(`${region}:${streamName}:${shardId}:${seqNumber}`);
+                    }
+                }
+            } else {
+                const shardId = _.get(response, 'data.ShardId', false);
+                const seqNumber = _.get(response, 'data.SequenceNumber', false);
+                if (shardId && seqNumber) {
+                    traceLinks.push(`${region}:${streamName}:${shardId}:${seqNumber}`);
+                }
             }
         }
 

@@ -50,7 +50,7 @@ class InvocationTraceSupport {
     }
 
     static getIncomingTraceLinks(): any[] {
-        return [...new Set(InvocationTraceSupport.incomingTraceLinks)];
+        return [...new Set(InvocationTraceSupport.incomingTraceLinks)].filter((e) => e);
     }
 
     static getOutgoingTraceLinks(): any[] {
