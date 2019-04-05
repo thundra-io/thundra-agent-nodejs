@@ -135,6 +135,18 @@ class AWSIntegration implements Integration {
         return [];
     }
 
+    static generateFirehoseTraceLinks(region: string, deliveryStreamName: string, timestamp: number, data: any) {
+        try {
+            if (data) {
+                const dataHash = md5(data);
+                return [1, 2, 3].map((i) => `${region}:${deliveryStreamName}:${timestamp + i}:${dataHash}`);
+            }
+        } catch (e) {
+            // Pass
+        }
+        return [];
+    }
+
     static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
         if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
             return;
@@ -153,7 +165,7 @@ class AWSIntegration implements Integration {
             if (_.has(response, 'httpResponse.headers.date')) {
                 timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
             } else {
-                timestamp = Math.floor(Date.now() / 1000);
+                timestamp = Math.floor(Date.now() / 1000) - 1;
             }
 
             if (operationName === 'putItem') {
@@ -208,6 +220,30 @@ class AWSIntegration implements Integration {
             const requestId = _.get(response, 'httpResponse.headers.x-amzn-requestid', false);
             if (requestId) {
                 traceLinks = [requestId];
+            }
+        } else if (serviceName === 'firehose') {
+            const deliveryStreamName = params.DeliveryStreamName || '';
+            let timestamp: number;
+            if (_.has(response, 'httpResponse.headers.date')) {
+                timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
+            } else {
+                timestamp = Math.floor(Date.now() / 1000) - 1;
+            }
+
+            if (operationName === 'putRecord') {
+                const data = _.get(params, 'Record.Data', false);
+                if (data) {
+                    traceLinks = AWSIntegration.generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data);
+                }
+            } else if (operationName === 'putRecordBatch') {
+                const records = params.Records || [];
+                for (const record of records) {
+                    const data = record.Data;
+                    if (data) {
+                        traceLinks.push(...AWSIntegration.
+                            generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data));
+                    }
+                }
             }
         }
 
