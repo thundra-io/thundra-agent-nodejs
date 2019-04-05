@@ -64,7 +64,7 @@ class TraceConfig extends BasePluginConfig {
 
         this.dynamoDBTraceInjectionEnabled = Utils.getConfiguration(
             envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) ? Utils.getConfiguration(
-                envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) === 'true' : options.maskElasticSearchStatement;
+                envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) === 'true' : options.dynamoDBTraceInjectionEnabled;
 
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {
