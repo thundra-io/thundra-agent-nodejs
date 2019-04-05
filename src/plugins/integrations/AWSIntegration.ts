@@ -204,6 +204,11 @@ class AWSIntegration implements Integration {
             if (requestId) {
                 traceLinks = [requestId];
             }
+        } else if (serviceName === 'lambda') {
+            const requestId = _.get(response, 'httpResponse.headers.x-amzn-requestid', false);
+            if (requestId) {
+                traceLinks = [requestId];
+            }
         }
 
         if (traceLinks.length > 0) {
