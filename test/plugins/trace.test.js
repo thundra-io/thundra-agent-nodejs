@@ -6,6 +6,11 @@ import * as mockAWSEvents from '../mocks/aws.events.mocks';
 import { DATA_MODEL_VERSION } from '../../dist/Constants';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
 import ThundraTracer from '../../dist/opentracing/Tracer';
+import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import InvocationTraceSupport from '../../dist/plugins/support/InvocationTraceSupport';
+
+const md5 = require('md5');
+const _ = require('lodash');
 
 const pluginContext = createMockPluginContext();
 describe('Trace', () => {
@@ -356,17 +361,39 @@ describe('Trace', () => {
     describe('beforeInvocation with DynamoDB event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
         tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         beforeInvocationData.originalEvent = mockAWSEvents.createMockDynamoDBEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for DynamoDB to root span', () => {
-            expect(tracer.rootSpan.tags['trigger.domainName']).toBe('DB');
-            expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-DynamoDB');
-            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'ExampleTableWithStream' ]);
-            expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+            expect(InvocationSupport.getTag('trigger.domainName')).toBe('DB');
+            expect(InvocationSupport.getTag('trigger.className')).toBe('AWS-DynamoDB');
+            expect(InvocationSupport.getTag('trigger.operationNames')).toEqual([ 'ExampleTableWithStream' ]);
+        });
+        
+        it('should create incoming dynamodb trace links', () => {
+            const region = 'eu-west-2';
+            const keyHash = md5('Id={N: 101}');
+            const newItemHash = md5('Id={N: 101}, Message={S: New item!}');
+            const updatedItemHash = md5('Id={N: 101}, Message={S: This item has changed}');
+            const tableName = 'ExampleTableWithStream';
+            const timestamp = 1480642019;
+
+            const expIncomingTraceLinks = _.flatten([0, 1, 2].map((i) => {
+                return [
+                    `${region}:${tableName}:${timestamp+i}:DELETE:${keyHash}`,
+                    `${region}:${tableName}:${timestamp+i}:UPDATE:${keyHash}`,
+                    `${region}:${tableName}:${timestamp+i}:PUT:${newItemHash}`,
+                    `${region}:${tableName}:${timestamp+i}:PUT:${updatedItemHash}`,
+                ]
+            }));
+            expect(InvocationTraceSupport.getIncomingTraceLinks().sort()).toEqual(expIncomingTraceLinks.sort());
         });
     });
 

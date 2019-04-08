@@ -121,7 +121,7 @@ class AWSIntegration implements Integration {
         return Object.keys(attributes).sort().map((attrKey) => {
             const attrType = Object.keys(attributes[attrKey])[0];
             const attrVal = _.trim(JSON.stringify(attributes[attrKey][attrType]), '"');
-            return `${attrKey}={${attrType}: ${attrVal}}`;
+            return `${attrKey}={${attrType}: ${attrVal}}`;
         }).join(', ');
     }
 
@@ -133,7 +133,7 @@ class AWSIntegration implements Integration {
                                     region: string, timestamp: number): any[] {
         if (attributes) {
             const attrHash = md5(AWSIntegration.serializeAttributes(attributes));
-            return [1, 2, 3].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
+            return [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
         }
         return [];
     }
@@ -142,7 +142,7 @@ class AWSIntegration implements Integration {
         try {
             if (data) {
                 const dataHash = md5(data);
-                return [1, 2, 3].map((i) => `${region}:${deliveryStreamName}:${timestamp + i}:${dataHash}`);
+                return [0, 1, 2].map((i) => `${region}:${deliveryStreamName}:${timestamp + i}:${dataHash}`);
             }
         } catch (e) {
             // Pass
