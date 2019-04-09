@@ -483,11 +483,16 @@ describe('Trace', () => {
     describe('beforeInvocation with CloudWatchSchedule event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockCloudWatchScheduledEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockCloudWatchScheduledEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for CloudWatchSchedule to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Schedule');
@@ -500,11 +505,16 @@ describe('Trace', () => {
     describe('beforeInvocation with CloudWatchLog event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockCloudWatchLogEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockCloudWatchLogEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for CloudWatchLog to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Log');
@@ -517,11 +527,16 @@ describe('Trace', () => {
     describe('beforeInvocation with CloudFront event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockCloudFrontEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockCloudFrontEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for CloudFront to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('CDN');
@@ -534,11 +549,16 @@ describe('Trace', () => {
     describe('beforeInvocation with APIGatewayProxy event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockAPIGatewayProxyEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockAPIGatewayProxyEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for APIGatewayProxy to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('API');
@@ -551,11 +571,16 @@ describe('Trace', () => {
     describe('beforeInvocation with APIGatewayPassThrough event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockAPIGatewayPassThroughRequest();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockAPIGatewayPassThroughRequest();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for APIGatewayProxy to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('API');
@@ -569,17 +594,27 @@ describe('Trace', () => {
     describe('beforeInvocation with Lambda event', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalContext.clientContext = createMockClientContext();
-        tracer.beforeInvocation(beforeInvocationData);
+        
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalContext.clientContext = createMockClientContext();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for Lambda to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('API');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-Lambda');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'lambda-function' ]);
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+
+        it('should create incoming lambda trace links', () => {
+            const expTraceLinks = ['awsRequestId']
+            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
 
