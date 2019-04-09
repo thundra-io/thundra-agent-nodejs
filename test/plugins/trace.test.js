@@ -361,13 +361,14 @@ describe('Trace', () => {
     describe('beforeInvocation with DynamoDB event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockDynamoDBEvent();
 
         beforeAll(() => {
             InvocationSupport.removeTags();
             InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockDynamoDBEvent();
             tracer.beforeInvocation(beforeInvocationData);
         });
 
@@ -385,7 +386,7 @@ describe('Trace', () => {
             const tableName = 'ExampleTableWithStream';
             const timestamp = 1480642019;
 
-            const expIncomingTraceLinks = _.flatten([0, 1, 2].map((i) => {
+            const expTraceLinks = _.flatten([0, 1, 2].map((i) => {
                 return [
                     `${region}:${tableName}:${timestamp+i}:DELETE:${keyHash}`,
                     `${region}:${tableName}:${timestamp+i}:UPDATE:${keyHash}`,
@@ -393,24 +394,34 @@ describe('Trace', () => {
                     `${region}:${tableName}:${timestamp+i}:PUT:${updatedItemHash}`,
                 ]
             }));
-            expect(InvocationTraceSupport.getIncomingTraceLinks().sort()).toEqual(expIncomingTraceLinks.sort());
+            expect(InvocationTraceSupport.getIncomingTraceLinks().sort()).toEqual(expTraceLinks.sort());
         });
     });
 
     describe('beforeInvocation with SNS event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockSNSEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockSNSEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for SNS to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Messaging');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-SNS');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'ExampleTopic' ]);
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+
+        it('should create incoming sns trace links', () => {
+            const expTraceLinks = ['95df01b4-ee98-5cb9-9903-4c221d41eb5e']
+            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
 
