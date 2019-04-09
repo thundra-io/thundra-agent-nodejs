@@ -84,9 +84,10 @@ class LambdaEventUtils {
             const arriveTime = record.approximateArrivalTimestamp;
             const data = record.data;
             if (arriveTime && data) {
+                const timestamp = Math.floor(arriveTime / 1000) - 1;
                 traceLinks.push(...AWSIntegration
                     .generateFirehoseTraceLinks(region, streamName,
-                        arriveTime - 1, Buffer.from(data, 'base64')));
+                        timestamp, Buffer.from(data, 'base64')));
             }
         }
         InvocationTraceSupport.addIncomingTraceLinks(traceLinks);

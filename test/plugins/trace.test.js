@@ -376,7 +376,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
         
-        it('should create incoming sns trace links', () => {
+        it('should create incoming kinesis trace links', () => {
             const expTraceLinks = ['eu-west-2:example_stream:shardId-000000000000:49545115243490985018280067714973144582180062593244200961']
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
@@ -399,8 +399,17 @@ describe('Trace', () => {
         it('should set trigger tags for FireHose to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Stream');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-Firehose');
-            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'arn:aws:kinesis:EXAMPLE' ]);
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'exampleStream' ]);
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+
+        it('should create incoming firehose trace links', () => {
+            const expTraceLinks = [
+                "eu-west-2:exampleStream:1495072948:75c5afa1146857f64e92e6bb6e561ded",
+                "eu-west-2:exampleStream:1495072949:75c5afa1146857f64e92e6bb6e561ded",
+                "eu-west-2:exampleStream:1495072950:75c5afa1146857f64e92e6bb6e561ded",
+            ]
+            expect(InvocationTraceSupport.getIncomingTraceLinks().sort()).toEqual(expTraceLinks.sort());
         });
     });
 

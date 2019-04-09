@@ -24,8 +24,8 @@ const createMockKinesisEvent = () => {
 const createMockFirehoseEvent = () => {
     return {
         invocationId: 'invocationIdExample',
-        deliveryStreamArn: 'arn:aws:kinesis:EXAMPLE',
-        region: 'us-west-2',
+        deliveryStreamArn: 'arn:aws:kinesis:EXAMPLE/exampleStream',
+        region: 'eu-west-2',
         records: [
             {
                 recordId: '49546986683135544286507457936321625675700192471156785154',
