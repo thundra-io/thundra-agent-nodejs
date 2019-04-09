@@ -327,11 +327,16 @@ describe('Trace', () => {
     describe('beforeInvocation with Kinesis event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockKinesisEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockKinesisEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for Kinesis to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Stream');
@@ -344,11 +349,16 @@ describe('Trace', () => {
     describe('beforeInvocation with FireHose event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockFirehoseEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockFirehoseEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for FireHose to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Stream');
