@@ -77,7 +77,10 @@ describe('Trace', () => {
 
     describe('setPluginContext', () => {
         const trace = Trace();
-        trace.setPluginContext(pluginContext);
+        beforeAll(() => {
+            trace.setPluginContext(pluginContext);
+        });
+
         it('Should set apiKey and pluginContext', () => {
             expect(trace.apiKey).toEqual(pluginContext.apiKey);
             expect(trace.pluginContext).toEqual(pluginContext);
@@ -89,14 +92,17 @@ describe('Trace', () => {
             disableRequest: true,
             disableResponse: true
         });
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {
             response: { key: 'data' }
         };
-        tracer.report = jest.fn();
-        tracer.beforeInvocation(beforeInvocationData);
-        tracer.afterInvocation(afterInvocationData);
+        
+        beforeAll(() => {
+            tracer.report = jest.fn();
+            tracer.setPluginContext(pluginContext);
+            tracer.beforeInvocation(beforeInvocationData);
+            tracer.afterInvocation(afterInvocationData);
+        });
         it('should not add request and response to traceData', () => {
             expect(tracer.rootSpan.tags['aws.lambda.invocation.request']).toBe(null);
             expect(tracer.rootSpan.tags['aws.lambda.invocation.response']).toBe(null);
@@ -107,7 +113,6 @@ describe('Trace', () => {
         const value = {
             'expected': null
         };
-
         const tracer = Trace({
             maskRequest: (request) => {
                 value.expected = request;
@@ -119,15 +124,19 @@ describe('Trace', () => {
                 return value;
             }
         });
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {
             response: { key: 'data' }
         };
-        tracer.report = jest.fn();
-        tracer.beforeInvocation(beforeInvocationData);
-        tracer.afterInvocation(afterInvocationData);
+
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            tracer.report = jest.fn();
+            tracer.beforeInvocation(beforeInvocationData);
+            tracer.afterInvocation(afterInvocationData);
+        });
+
+
         it('should not add request and response to traceData', () => {
             expect(tracer.rootSpan.tags['aws.lambda.invocation.request']).toEqual({ 'expected': { 'key': 'data' } });
             expect(tracer.rootSpan.tags['aws.lambda.invocation.response']).toEqual({ 'expected': { 'key': 'data' } });
@@ -136,11 +145,14 @@ describe('Trace', () => {
 
     describe('report', () => {
         const tracer = Trace();
-        tracer.setPluginContext({ ...pluginContext, requestCount: 5 });
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = { response: { key: 'data' } };
-        tracer.beforeInvocation(beforeInvocationData);
-        tracer.afterInvocation(afterInvocationData);
+        
+        beforeAll(() => {
+            tracer.setPluginContext({ ...pluginContext, requestCount: 5 });
+            tracer.beforeInvocation(beforeInvocationData);
+            tracer.afterInvocation(afterInvocationData);
+        });
 
         it('should call reporter.addReport', () => {
             expect(tracer.reporter.addReport).toBeCalledWith({
@@ -154,9 +166,12 @@ describe('Trace', () => {
 
     describe('beforeInvocation', () => {
         const tracer = Trace();
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set startTimestamp', () => {
             expect(tracer.startTimestamp).toBeTruthy();
@@ -198,11 +213,13 @@ describe('Trace', () => {
     describe('beforeInvocation with SQS event', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = createMockSQSEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+        
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = createMockSQSEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
@@ -214,11 +231,13 @@ describe('Trace', () => {
     describe('beforeInvocation with batch SQS event from multiple triggers', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = createBatchMockSQSEventDifferentIds();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = createBatchMockSQSEventDifferentIds();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
@@ -230,11 +249,13 @@ describe('Trace', () => {
     describe('beforeInvocation with batch SQS event from same trigger', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = createBatchMockSQSEventSameIds();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = createBatchMockSQSEventSameIds();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
@@ -246,11 +267,13 @@ describe('Trace', () => {
     describe('beforeInvocation with SNS event', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = createMockSNSEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = createMockSNSEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
@@ -263,11 +286,13 @@ describe('Trace', () => {
     describe('beforeInvocation with batch SNS event from multiple triggers', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = createBatchMockSNSEventWithDifferentIds();
-        tracer.beforeInvocation(beforeInvocationData);
+        
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = createBatchMockSNSEventWithDifferentIds();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
@@ -279,11 +304,13 @@ describe('Trace', () => {
     describe('beforeInvocation with batch SNS event from same trigger', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = createBatchMockSNSEventWithSameIds();
-        tracer.beforeInvocation(beforeInvocationData);
+        
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = createBatchMockSNSEventWithSameIds();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
@@ -295,11 +322,13 @@ describe('Trace', () => {
     describe('beforeInvocation with ApiGateway event', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = createMockApiGatewayProxy();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = createMockApiGatewayProxy();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
@@ -311,11 +340,13 @@ describe('Trace', () => {
     describe('beforeInvocation with Lambda trigger', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalContext.clientContext = createMockClientContext();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalContext.clientContext = createMockClientContext();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set propagated ids in plugin context', () => {
             expect(pluginContext.transactionId).toBe('awsRequestId');
