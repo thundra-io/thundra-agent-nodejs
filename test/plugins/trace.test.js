@@ -446,7 +446,7 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
 
-        it('should create incoming sns trace links', () => {
+        it('should create incoming sqs trace links', () => {
             const expTraceLinks = ['19dd0b57-b21e-4ac1-bd88-01bbb068cb78']
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
@@ -455,17 +455,28 @@ describe('Trace', () => {
     describe('beforeInvocation with S3 event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockS3Event();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockS3Event();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for S3 to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Storage');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-S3');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'example-bucket' ]);
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+            
+        });
+
+        it('should create incoming s3 trace links', () => {
+            const expTraceLinks = ['EXAMPLE123456789']
+            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
 
