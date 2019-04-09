@@ -416,7 +416,7 @@ describe('AWS Integration', () => {
         integration.wrappedFuncs.send = mockSend;
 
         const dataHash = md5('STRING_VALUE');
-        const traceLinks = [1, 2, 3].map((i) => `us-west-2:STRING_VALUE:${timestamp + i}:${dataHash}`);
+        const traceLinks = [0, 1, 2].map((i) => `us-west-2:STRING_VALUE:${timestamp + i}:${dataHash}`);
         const tracer = new ThundraTracer();
 
         return AWS.firehose(sdk).then(() => {
