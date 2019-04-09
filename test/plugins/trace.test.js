@@ -372,8 +372,13 @@ describe('Trace', () => {
         it('should set trigger tags for Kinesis to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Stream');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-Kinesis');
-            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'arn:aws:kinesis:EXAMPLE' ]);
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'example_stream' ]);
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+        
+        it('should create incoming sns trace links', () => {
+            const expTraceLinks = ['eu-west-2:example_stream:shardId-000000000000:49545115243490985018280067714973144582180062593244200961']
+            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
 

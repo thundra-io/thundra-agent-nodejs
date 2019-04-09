@@ -14,8 +14,8 @@ const createMockKinesisEvent = () => {
                 invokeIdentityArn: 'arn:aws:iam::EXAMPLE',
                 eventVersion: '1.0',
                 eventName: 'aws:kinesis:record',
-                eventSourceARN: 'arn:aws:kinesis:EXAMPLE',
-                awsRegion: 'us-west-2'
+                eventSourceARN: 'arn:aws:kinesis:eu-west-2:123456789012:stream/example_stream',
+                awsRegion: 'eu-west-2'
             }
         ]
     };
