@@ -428,17 +428,27 @@ describe('Trace', () => {
     describe('beforeInvocation with SQS event ', () => {
         const tracer = Trace();
         const pluginContext = createMockPluginContext();
-
-        tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
-        beforeInvocationData.originalEvent = mockAWSEvents.createMockSQSEvent();
-        tracer.beforeInvocation(beforeInvocationData);
+
+        beforeAll(() => {
+            InvocationSupport.removeTags();
+            InvocationTraceSupport.clear();
+
+            tracer.setPluginContext(pluginContext);
+            beforeInvocationData.originalEvent = mockAWSEvents.createMockSQSEvent();
+            tracer.beforeInvocation(beforeInvocationData);
+        });
 
         it('should set trigger tags for SNS to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('Messaging');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-SQS');
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ 'MyQueue' ]);
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
+        });
+
+        it('should create incoming sns trace links', () => {
+            const expTraceLinks = ['19dd0b57-b21e-4ac1-bd88-01bbb068cb78']
+            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
 
