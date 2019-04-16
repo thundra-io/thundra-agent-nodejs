@@ -253,7 +253,11 @@ class LambdaEventUtils {
         const domainName = 'API';
         const className = 'AWS-APIGateway';
         const operationName = originalEvent.headers.Host + '/' + originalEvent.requestContext.stage + originalEvent.path;
+        const incomingSpanId = _.get(originalEvent, 'headers.x-thundra-span-id', false);
 
+        if (incomingSpanId) {
+            InvocationTraceSupport.addIncomingTraceLinks([incomingSpanId]);
+        }
         this.injectTrigerTragsForInvocation(domainName, className, [operationName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [operationName]);
     }

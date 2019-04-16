@@ -621,6 +621,11 @@ describe('Trace', () => {
             expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ '1234567890.execute-api.us-west-2.amazonaws.com/prod/path/to/resource' ]);
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
+
+        it('should create incoming apigateway trace links', () => {
+            const expTraceLinks = ['spanId']
+            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
+        });
     });
 
     describe('beforeInvocation with APIGatewayPassThrough event ', () => {
