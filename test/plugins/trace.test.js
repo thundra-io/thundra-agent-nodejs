@@ -444,9 +444,9 @@ describe('Trace', () => {
             const expTraceLinks = _.flatten([0, 1, 2].map((i) => {
                 return [
                     `${region}:${tableName}:${timestamp+i}:DELETE:${keyHash}`,
-                    `${region}:${tableName}:${timestamp+i}:UPDATE:${keyHash}`,
-                    `${region}:${tableName}:${timestamp+i}:PUT:${newItemHash}`,
-                    `${region}:${tableName}:${timestamp+i}:PUT:${updatedItemHash}`,
+                    `${region}:${tableName}:${timestamp+i}:SAVE:${keyHash}`,
+                    `${region}:${tableName}:${timestamp+i}:SAVE:${newItemHash}`,
+                    `${region}:${tableName}:${timestamp+i}:SAVE:${updatedItemHash}`,
                 ]
             }));
             expect(InvocationTraceSupport.getIncomingTraceLinks().sort()).toEqual(expTraceLinks.sort());

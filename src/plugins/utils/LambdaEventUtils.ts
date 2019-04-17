@@ -130,16 +130,12 @@ class LambdaEventUtils {
                     const NewImage = _.get(record, 'dynamodb.NewImage', {});
                     const Keys = _.get(record, 'dynamodb.Keys', {});
                     const timestamp = creationTime - 1;
-                    if (record.eventName === 'INSERT') {
+                    if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
                         traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
-                            NewImage, 'PUT', tableName, region, timestamp,
-                        ));
-                    } else if (record.eventName === 'MODIFY') {
-                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
-                            NewImage, 'PUT', tableName, region, timestamp,
+                            NewImage, 'SAVE', tableName, region, timestamp,
                         ));
                         traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
-                            Keys, 'UPDATE', tableName, region, timestamp,
+                            Keys, 'SAVE', tableName, region, timestamp,
                         ));
                     } else if (record.eventName === 'REMOVE') {
                         traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
