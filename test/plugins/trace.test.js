@@ -10,7 +10,7 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../../dist/plugins/support/InvocationTraceSupport';
 
 const md5 = require('md5');
-const _ = require('lodash');
+const flatten = require('lodash.flatten');
 
 const pluginContext = createMockPluginContext();
 describe('Trace', () => {
@@ -441,7 +441,7 @@ describe('Trace', () => {
             const tableName = 'ExampleTableWithStream';
             const timestamp = 1480642019;
 
-            const expTraceLinks = _.flatten([0, 1, 2].map((i) => {
+            const expTraceLinks = flatten([0, 1, 2].map((i) => {
                 return [
                     `${region}:${tableName}:${timestamp+i}:DELETE:${keyHash}`,
                     `${region}:${tableName}:${timestamp+i}:SAVE:${keyHash}`,

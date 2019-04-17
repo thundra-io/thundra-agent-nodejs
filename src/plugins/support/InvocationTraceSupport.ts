@@ -3,7 +3,7 @@ import Resource from '../data/invocation/Resource';
 import ThundraTracer from '../../opentracing/Tracer';
 import ThundraSpan from '../../opentracing/Span';
 import { SpanTags } from '../../Constants';
-const _ = require('lodash');
+const flatten = require('lodash.flatten');
 
 class InvocationTraceSupport {
     static incomingTraceLinks: any[] = [];
@@ -60,7 +60,7 @@ class InvocationTraceSupport {
 
         try {
             const spans = ThundraTracer.getInstance().recorder.getSpanList();
-            const outgoingTraceLinks = _.flatten(
+            const outgoingTraceLinks = flatten(
                 spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
                     .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
             );

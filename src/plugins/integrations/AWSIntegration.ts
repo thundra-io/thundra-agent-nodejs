@@ -19,8 +19,10 @@ import InvocationSupport from '../support/InvocationSupport';
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
 const koalas = require('koalas');
-const _ = require('lodash');
 const md5 = require('md5');
+const has = require('lodash.has');
+const trim = require('lodash.trim');
+const get = require('lodash.get');
 
 class AWSIntegration implements Integration {
     version: string;
@@ -87,7 +89,7 @@ class AWSIntegration implements Integration {
 
     static injectDynamoDBTraceLinkOnUpdate(requestParams: any, span: ThundraSpan): void {
         const spanId = span.spanContext.spanId;
-        if (_.has(requestParams, 'AttributeUpdates')) {
+        if (has(requestParams, 'AttributeUpdates')) {
             const thundraAttr = {
                 Action: 'PUT',
                 Value: { S: spanId },
@@ -99,7 +101,7 @@ class AWSIntegration implements Integration {
             );
 
             span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
-        } else if (_.has(requestParams, 'UpdateExpression')) {
+        } else if (has(requestParams, 'UpdateExpression')) {
             const exp: string = requestParams.UpdateExpression;
             const thundraAttrName = { '#xThundraSpanId': 'x-thundra-span-id' };
             const thundraAttrVal = { ':xThundraSpanId': { S: spanId } };
@@ -120,7 +122,7 @@ class AWSIntegration implements Integration {
     static serializeAttributes(attributes: any): string {
         return Object.keys(attributes).sort().map((attrKey) => {
             const attrType = Object.keys(attributes[attrKey])[0];
-            const attrVal = _.trim(JSON.stringify(attributes[attrKey][attrType]), '"');
+            const attrVal = trim(JSON.stringify(attributes[attrKey][attrType]), '"');
             return `${attrKey}={${attrType}: ${attrVal}}`;
         }).join(', ');
     }
@@ -154,8 +156,8 @@ class AWSIntegration implements Integration {
         if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
             return;
         }
-        const region = _.get(req, 'service.config.region', '');
-        const serviceEndpoint = _.get(req, 'service.config.endpoint', '');
+        const region = get(req, 'service.config.region', '');
+        const serviceEndpoint = get(req, 'service.config.endpoint', '');
         const serviceName = Utils.getServiceName(serviceEndpoint as string);
         const operationName = req.operation;
         const response = req.response;
@@ -165,7 +167,7 @@ class AWSIntegration implements Integration {
         if (serviceName === 'dynamodb') {
             const tableName = Utils.getDynamoDBTableName(req);
             let timestamp: number;
-            if (_.has(response, 'httpResponse.headers.date')) {
+            if (has(response, 'httpResponse.headers.date')) {
                 timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
             } else {
                 timestamp = Math.floor(Date.now() / 1000) - 1;
@@ -176,7 +178,7 @@ class AWSIntegration implements Integration {
             } else if (operationName === 'updateItem') {
                 traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'SAVE', tableName, region, timestamp);
             } else if (operationName === 'deleteItem') {
-                if (config.dynamoDBTraceInjectionEnabled && _.has(response, 'data.Attributes.x-thundra-span-id.S')) {
+                if (config.dynamoDBTraceInjectionEnabled && has(response, 'data.Attributes.x-thundra-span-id.S')) {
                     const spanId = response.data.Attributes['x-thundra-span-id'].S;
                     traceLinks = [`DELETE:${spanId}`];
                 } else {
@@ -192,49 +194,49 @@ class AWSIntegration implements Integration {
                 entries.map((entry: any) => traceLinks.push(entry.MessageId));
             }
         } else if (serviceName === 'sns') {
-            const messageId = _.get(response, 'data.MessageId', false);
+            const messageId = get(response, 'data.MessageId', false);
             if (messageId) {
                 traceLinks = [messageId];
             }
         } else if (serviceName === 'kinesis') {
-            const records = _.get(response, 'data.Records', false);
+            const records = get(response, 'data.Records', false);
             const streamName = params.StreamName || '';
             if (records) {
                 for (const record of records) {
-                    const shardId = _.get(record, 'ShardId', false);
-                    const seqNumber = _.get(record, 'SequenceNumber', false);
+                    const shardId = get(record, 'ShardId', false);
+                    const seqNumber = get(record, 'SequenceNumber', false);
                     if (shardId && seqNumber) {
                         traceLinks.push(`${region}:${streamName}:${shardId}:${seqNumber}`);
                     }
                 }
             } else {
-                const shardId = _.get(response, 'data.ShardId', false);
-                const seqNumber = _.get(response, 'data.SequenceNumber', false);
+                const shardId = get(response, 'data.ShardId', false);
+                const seqNumber = get(response, 'data.SequenceNumber', false);
                 if (shardId && seqNumber) {
                     traceLinks = [`${region}:${streamName}:${shardId}:${seqNumber}`];
                 }
             }
         } else if (serviceName === 's3') {
-            const requestId = _.get(response, 'httpResponse.headers.x-amz-request-id', false);
+            const requestId = get(response, 'httpResponse.headers.x-amz-request-id', false);
             if (requestId) {
                 traceLinks = [requestId];
             }
         } else if (serviceName === 'lambda') {
-            const requestId = _.get(response, 'httpResponse.headers.x-amzn-requestid', false);
+            const requestId = get(response, 'httpResponse.headers.x-amzn-requestid', false);
             if (requestId) {
                 traceLinks = [requestId];
             }
         } else if (serviceName === 'firehose') {
             const deliveryStreamName = params.DeliveryStreamName || '';
             let timestamp: number;
-            if (_.has(response, 'httpResponse.headers.date')) {
+            if (has(response, 'httpResponse.headers.date')) {
                 timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
             } else {
                 timestamp = Math.floor(Date.now() / 1000) - 1;
             }
 
             if (operationName === 'putRecord') {
-                const data = _.get(params, 'Record.Data', false);
+                const data = get(params, 'Record.Data', false);
                 if (data) {
                     traceLinks = AWSIntegration.generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data);
                 }

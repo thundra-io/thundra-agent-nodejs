@@ -9,7 +9,7 @@ import InvocationSupport from '../support/InvocationSupport';
 import AWSIntegration from '../integrations/AWSIntegration';
 import InvocationTraceSupport from '../support/InvocationTraceSupport';
 
-const _ = require('lodash');
+const get = require('lodash.get');
 
 class LambdaEventUtils {
     static LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
@@ -111,13 +111,13 @@ class LambdaEventUtils {
             // Find trace links
             let traceLinkFound: boolean = false;
             if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
-                const spanId = _.get(record, 'dynamodb.NewImage.x-thundra-span-id', false);
+                const spanId = get(record, 'dynamodb.NewImage.x-thundra-span-id', false);
                 if (spanId) {
                     traceLinkFound = true;
                     traceLinks.push(`SAVE:${spanId}`);
                 }
             } else if (record.eventName === 'REMOVE') {
-                const spanId = _.get(record, 'dynamodb.OldImage.x-thundra-span-id', false);
+                const spanId = get(record, 'dynamodb.OldImage.x-thundra-span-id', false);
                 if (spanId) {
                     traceLinkFound = true;
                     traceLinks.push(`DELETE:${spanId}`);
@@ -125,10 +125,10 @@ class LambdaEventUtils {
             }
 
             if (!traceLinkFound) {
-                const creationTime = _.get(record, 'dynamodb.ApproximateCreationDateTime', false);
+                const creationTime = get(record, 'dynamodb.ApproximateCreationDateTime', false);
                 if (creationTime) {
-                    const NewImage = _.get(record, 'dynamodb.NewImage', {});
-                    const Keys = _.get(record, 'dynamodb.Keys', {});
+                    const NewImage = get(record, 'dynamodb.NewImage', {});
+                    const Keys = get(record, 'dynamodb.Keys', {});
                     const timestamp = creationTime - 1;
                     if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
                         traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
@@ -191,7 +191,7 @@ class LambdaEventUtils {
         const bucketNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const bucketName = record.s3.bucket.name;
-            const requestId = _.get(record, 'responseElements.x-amz-request-id', false);
+            const requestId = get(record, 'responseElements.x-amz-request-id', false);
             bucketNames.add(bucketName);
 
             if (requestId) {
@@ -249,7 +249,7 @@ class LambdaEventUtils {
         const domainName = 'API';
         const className = 'AWS-APIGateway';
         const operationName = originalEvent.headers.Host + '/' + originalEvent.requestContext.stage + originalEvent.path;
-        const incomingSpanId = _.get(originalEvent, 'headers.x-thundra-span-id', false);
+        const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
 
         if (incomingSpanId) {
             InvocationTraceSupport.addIncomingTraceLinks([incomingSpanId]);
