@@ -178,8 +178,8 @@ class AWSIntegration implements Integration {
             } else if (operationName === 'updateItem') {
                 traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'SAVE', tableName, region, timestamp);
             } else if (operationName === 'deleteItem') {
-                if (config.dynamoDBTraceInjectionEnabled && has(response, 'data.Attributes.x-thundra-span-id.S')) {
-                    const spanId = response.data.Attributes['x-thundra-span-id'].S;
+                if (config.dynamoDBTraceInjectionEnabled && has(response, 'data.Attributes.x-thundra-span-id')) {
+                    const spanId = response.data.Attributes['x-thundra-span-id'];
                     traceLinks = [`DELETE:${spanId}`];
                 } else {
                     traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'DELETE', tableName, region, timestamp);
