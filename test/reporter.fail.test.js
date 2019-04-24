@@ -1,5 +1,5 @@
 import Reporter from '../dist/Reporter.js';
-import {URL} from 'url';
+const URL = require('url').Url;
 
 let httpRequestCalled = false;
 let httpsRequestCalled = false;

@@ -60,6 +60,8 @@ export const envVariableKeys = {
     THUNDRA_MASK_RDB_STATEMENT: 'thundra_agent_lambda_trace_integrations_rdb_statement_mask',
     THUNDRA_MASK_DYNAMODB_STATEMENT: 'thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask',
     THUNDRA_MASK_ELASTIC_STATEMENT: 'thundra_agent_lambda_trace_integrations_elastic_statement_mask',
+
+    ENABLE_DYNAMODB_TRACE_INJECTION: 'thundra_agent_trace_integrations_dynamodb_trace_injection_enable',
 };
 
 export function getTimeoutMargin(region: string) {
@@ -267,6 +269,7 @@ export const SpanTags = {
     TRIGGER_CLASS_NAME: 'trigger.className',
     TRIGGER_OPERATION_NAMES: 'trigger.operationNames',
     TOPOLOGY_VERTEX: 'topology.vertex',
+    TRACE_LINKS: 'trace.links',
 };
 
 export const SpanTypes = {

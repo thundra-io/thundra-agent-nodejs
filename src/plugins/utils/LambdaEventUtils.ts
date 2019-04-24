@@ -6,6 +6,10 @@ import ThundraSpanContext from '../../opentracing/SpanContext';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../support/InvocationSupport';
+import AWSIntegration from '../integrations/AWSIntegration';
+import InvocationTraceSupport from '../support/InvocationTraceSupport';
+
+const get = require('lodash.get');
 
 class LambdaEventUtils {
     static LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
@@ -49,14 +53,20 @@ class LambdaEventUtils {
     static injectTriggerTagsForKinesis(span: ThundraSpan, originalEvent: any): void {
         const domainName = 'Stream';
         const className = 'AWS-Kinesis';
-
+        const traceLinks: any[] = [];
         const streamNames = new Set();
         for (const record of originalEvent.Records) {
+            const region = record.awsRegion || '';
+            const eventID = record.eventID || false;
             const evenSourceARN = record.eventSourceARN;
             const streamName = evenSourceARN.substring(evenSourceARN.indexOf('/') + 1);
             streamNames.add(streamName);
-        }
 
+            if (eventID) {
+                traceLinks.push(`${region}:${streamName}:${eventID}`);
+            }
+        }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(streamNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(streamNames));
     }
@@ -66,7 +76,21 @@ class LambdaEventUtils {
         const className = 'AWS-Firehose';
         const streamARN = originalEvent.deliveryStreamArn;
         const streamName = streamARN.substring(streamARN.indexOf('/') + 1);
+        const region = originalEvent.region || '';
+        const records  = originalEvent.records || [];
+        const traceLinks: any[] = [];
 
+        for (const record of records) {
+            const arriveTime = record.approximateArrivalTimestamp;
+            const data = record.data;
+            if (arriveTime && data) {
+                const timestamp = Math.floor(arriveTime / 1000) - 1;
+                traceLinks.push(...AWSIntegration
+                    .generateFirehoseTraceLinks(region, streamName,
+                        timestamp, Buffer.from(data, 'base64')));
+            }
+        }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, [streamName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [streamName]);
     }
@@ -74,16 +98,54 @@ class LambdaEventUtils {
     static injectTriggerTagsForDynamoDB(span: ThundraSpan, originalEvent: any): void {
         const domainName = 'DB';
         const className = 'AWS-DynamoDB';
-
+        const traceLinks: any[] = [];
         const tableNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const evenSourceARN = record.eventSourceARN;
             const idx1 = evenSourceARN.indexOf('/');
             const idx2 = evenSourceARN.indexOf('/', idx1 + 1);
             const tableName = evenSourceARN.substring(idx1 + 1, idx2);
+            const region = record.awsRegion || '';
             tableNames.add(tableName);
-        }
 
+            // Find trace links
+            let traceLinkFound: boolean = false;
+            if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
+                const spanId = get(record, 'dynamodb.NewImage.x-thundra-span-id', false);
+                if (spanId) {
+                    traceLinkFound = true;
+                    traceLinks.push(`SAVE:${spanId}`);
+                }
+            } else if (record.eventName === 'REMOVE') {
+                const spanId = get(record, 'dynamodb.OldImage.x-thundra-span-id', false);
+                if (spanId) {
+                    traceLinkFound = true;
+                    traceLinks.push(`DELETE:${spanId}`);
+                }
+            }
+
+            if (!traceLinkFound) {
+                const creationTime = get(record, 'dynamodb.ApproximateCreationDateTime', false);
+                if (creationTime) {
+                    const NewImage = get(record, 'dynamodb.NewImage', {});
+                    const Keys = get(record, 'dynamodb.Keys', {});
+                    const timestamp = creationTime - 1;
+                    if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
+                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                            NewImage, 'SAVE', tableName, region, timestamp,
+                        ));
+                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                            Keys, 'SAVE', tableName, region, timestamp,
+                        ));
+                    } else if (record.eventName === 'REMOVE') {
+                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                            Keys, 'DELETE', tableName, region, timestamp,
+                        ));
+                    }
+                }
+            }
+        }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(tableNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(tableNames));
     }
@@ -91,14 +153,16 @@ class LambdaEventUtils {
     static injectTriggerTagsForSNS(span: ThundraSpan, originalEvent: any): void {
         const domainName = 'Messaging';
         const className = 'AWS-SNS';
-
+        const traceLinks: any[] = [];
         const topicNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const topicARN = record.Sns.TopicArn;
             const topicName = topicARN.substring(topicARN.lastIndexOf(':') + 1);
+            const messageId = record.Sns.MessageId;
             topicNames.add(topicName);
+            traceLinks.push(messageId);
         }
-
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(topicNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(topicNames));
     }
@@ -106,13 +170,16 @@ class LambdaEventUtils {
     static injectTriggerTagsForSQS(span: ThundraSpan, originalEvent: any) {
         const domainName = 'Messaging';
         const className = 'AWS-SQS';
-
+        const traceLinks: any[] = [];
         const queueNames: Set<string> = new Set<string>();
         for (const message of originalEvent.Records) {
             const queueARN = message.eventSourceARN;
             const queueName = queueARN.substring(queueARN.lastIndexOf(':') + 1);
+            const messageId = message.messageId;
             queueNames.add(queueName);
+            traceLinks.push(messageId);
         }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(queueNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(queueNames));
     }
@@ -120,13 +187,18 @@ class LambdaEventUtils {
     static injectTriggerTagsForS3(span: ThundraSpan, originalEvent: any) {
         const domainName = 'Storage';
         const className = 'AWS-S3';
-
+        const traceLinks: any[] = [];
         const bucketNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
             const bucketName = record.s3.bucket.name;
+            const requestId = get(record, 'responseElements.x-amz-request-id', false);
             bucketNames.add(bucketName);
-        }
 
+            if (requestId) {
+                traceLinks.push(requestId);
+            }
+        }
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(bucketNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(bucketNames));
     }
@@ -177,7 +249,11 @@ class LambdaEventUtils {
         const domainName = 'API';
         const className = 'AWS-APIGateway';
         const operationName = originalEvent.headers.Host + '/' + originalEvent.requestContext.stage + originalEvent.path;
+        const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
 
+        if (incomingSpanId) {
+            InvocationTraceSupport.addIncomingTraceLinks([incomingSpanId]);
+        }
         this.injectTrigerTragsForInvocation(domainName, className, [operationName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [operationName]);
     }
@@ -198,7 +274,9 @@ class LambdaEventUtils {
             const domainName = 'API';
             const className = 'AWS-Lambda';
             const operationNames = [originalContext.clientContext.custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME]];
+            const requestId = originalContext.awsRequestId;
 
+            InvocationTraceSupport.addIncomingTraceLinks([requestId]);
             this.injectTrigerTragsForInvocation(domainName, className, operationNames);
             this.injectTrigerTragsForSpan(span, domainName, className, operationNames);
         }

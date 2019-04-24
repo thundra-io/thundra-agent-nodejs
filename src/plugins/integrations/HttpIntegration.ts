@@ -96,6 +96,7 @@ class HttpIntegration implements Integration {
             [HttpTags.HTTP_PATH]: path.split('?')[0],
             [HttpTags.HTTP_URL]: host + path,
             [HttpTags.QUERY_PARAMS]: queryParams,
+            [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
             [SpanTags.TOPOLOGY_VERTEX]: true,
             [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
             [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,

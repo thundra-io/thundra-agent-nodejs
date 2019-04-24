@@ -14,8 +14,8 @@ const createMockKinesisEvent = () => {
                 invokeIdentityArn: 'arn:aws:iam::EXAMPLE',
                 eventVersion: '1.0',
                 eventName: 'aws:kinesis:record',
-                eventSourceARN: 'arn:aws:kinesis:EXAMPLE',
-                awsRegion: 'us-west-2'
+                eventSourceARN: 'arn:aws:kinesis:eu-west-2:123456789012:stream/example_stream',
+                awsRegion: 'eu-west-2'
             }
         ]
     };
@@ -24,8 +24,8 @@ const createMockKinesisEvent = () => {
 const createMockFirehoseEvent = () => {
     return {
         invocationId: 'invocationIdExample',
-        deliveryStreamArn: 'arn:aws:kinesis:EXAMPLE',
-        region: 'us-west-2',
+        deliveryStreamArn: 'arn:aws:kinesis:EXAMPLE/exampleStream',
+        region: 'eu-west-2',
         records: [
             {
                 recordId: '49546986683135544286507457936321625675700192471156785154',
@@ -38,33 +38,97 @@ const createMockFirehoseEvent = () => {
 
 const createMockDynamoDBEvent = () => {
     return {
-        Records: [
+        "Records": [
             {
-                eventID: 'eccbc87e4b5ce2fe28308fd9f2a7baf3',
-                eventName: 'REMOVE',
-                eventVersion: '1.1',
-                eventSource: 'aws:dynamodb',
-                awsRegion: 'us-west-2',
-                dynamodb: {
-                    Keys: {
-                        Id: {
-                            N: '101'
+                "eventID": "1",
+                "eventVersion": "1.0",
+                "dynamodb": {
+                    "Keys": {
+                        "Id": {
+                            "N": "101"
                         }
                     },
-                    OldImage: {
-                        Message: {
-                            S: 'This item has changed'
+                    "NewImage": {
+                        "Message": {
+                            "S": "New item!"
                         },
-                        Id: {
-                            N: '101'
+                        "Id": {
+                            "N": "101"
                         }
                     },
-                    ApproximateCreationDateTime: 1428537600,
-                    SequenceNumber: '4421584500000000017450439093',
-                    SizeBytes: 38,
-                    StreamViewType: 'NEW_AND_OLD_IMAGES'
+                    "StreamViewType": "NEW_AND_OLD_IMAGES",
+                    "SequenceNumber": "111",
+                    "SizeBytes": 26,
+                    "ApproximateCreationDateTime": 1480642020,
                 },
-                eventSourceARN: 'arn:aws:dynamodb:us-west-2:123456789012:table/ExampleTableWithStream/stream/2015-06-27T00:48:05.899'
+                "awsRegion": "eu-west-2",
+                "eventName": "INSERT",
+                "eventSourceARN": "arn:aws:dynamodb:eu-west-2:account-id:table/ExampleTableWithStream/stream/2015-06-27T00:48:05.899",
+                "eventSource": "aws:dynamodb"
+            },
+            {
+                "eventID": "2",
+                "eventVersion": "1.0",
+                "dynamodb": {
+                    "OldImage": {
+                        "Message": {
+                            "S": "New item!"
+                        },
+                        "Id": {
+                            "N": "101"
+                        }
+                    },
+                    "SequenceNumber": "222",
+                    "Keys": {
+                        "Id": {
+                            "N": "101"
+                        }
+                    },
+                    "SizeBytes": 59,
+                    "NewImage": {
+                        "Message": {
+                            "S": "This item has changed"
+                        },
+                        "Id": {
+                            "N": "101"
+                        }
+                    },
+                    "StreamViewType": "NEW_AND_OLD_IMAGES",
+                    "ApproximateCreationDateTime": 1480642020,
+
+                },
+                "awsRegion": "eu-west-2",
+                "eventName": "MODIFY",
+                "eventSourceARN": "arn:aws:dynamodb:eu-west-2:account-id:table/ExampleTableWithStream/stream/2015-06-27T00:48:05.899",
+                "eventSource": "aws:dynamodb"
+            },
+            {
+                "eventID": "3",
+                "eventVersion": "1.0",
+                "dynamodb": {
+                    "Keys": {
+                        "Id": {
+                            "N": "101"
+                        }
+                    },
+                    "SizeBytes": 38,
+                    "SequenceNumber": "333",
+                    "OldImage": {
+                        "Message": {
+                            "S": "This item has changed"
+                        },
+                        "Id": {
+                            "N": "101"
+                        }
+                    },
+                    "StreamViewType": "NEW_AND_OLD_IMAGES",
+                    "ApproximateCreationDateTime": 1480642020,
+
+                },
+                "awsRegion": "eu-west-2",
+                "eventName": "REMOVE",
+                "eventSourceARN": "arn:aws:dynamodb:eu-west-2:account-id:table/ExampleTableWithStream/stream/2015-06-27T00:48:05.899",
+                "eventSource": "aws:dynamodb"
             }
         ]
     };
@@ -256,7 +320,8 @@ const createMockAPIGatewayProxyEvent = () => {
             'X-Amz-Cf-Id': 'cDehVQoZnx43VYQb9j2-nvCh-9z396Uhbp027Y2JvkCPNLmGJHqlaA==',
             'X-Forwarded-For': '127.0.0.1, 127.0.0.2',
             'X-Forwarded-Port': '443',
-            'X-Forwarded-Proto': 'https'
+            'X-Forwarded-Proto': 'https',
+            'x-thundra-span-id': 'spanId',
         },
         requestContext: {
             accountId: '123456789012',

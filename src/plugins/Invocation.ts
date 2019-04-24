@@ -106,6 +106,8 @@ class Invocation {
         this.invocationData.finishTimestamp = this.finishTimestamp;
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
         this.invocationData.resources = InvocationTraceSupport.getResources(this.pluginContext.spanId);
+        this.invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
+        this.invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);
 
@@ -114,6 +116,7 @@ class Invocation {
 
     destroy(): void {
         InvocationSupport.removeTags();
+        InvocationTraceSupport.clear();
     }
 }
 
