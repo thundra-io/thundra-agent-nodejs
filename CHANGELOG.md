@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.3.0 - April 25, 2019
+#### Added
+- Distributed tracing support
+
 ## 2.2.3 - March 19, 2019
 #### Added
 - Ability to apply custom span sampler to all spans
