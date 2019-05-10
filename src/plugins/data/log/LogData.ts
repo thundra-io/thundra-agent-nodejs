@@ -30,18 +30,6 @@ class LogData extends BaseMonitoringData {
         this.logContextName = logInfo.logContextName;
         this.tags = {};
     }
-
-    addErrorTags(data: LogData) {
-        this.tags['error.message'] = data.tags['error.message'];
-        this.tags['error.kind'] = data.tags['error.kind'];
-        this.tags['error.stack'] = data.tags['error.stack'];
-        if (data.tags['error.code']) {
-            this.tags['error.code'] = data.tags['error.code'];
-        }
-        if (data.tags['error.stack']) {
-            this.tags['error.stack'] = data.tags['error.stack'];
-        }
-    }
 }
 
 export default LogData;
