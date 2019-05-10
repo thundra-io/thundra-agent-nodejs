@@ -76,7 +76,8 @@ module.exports.lambdaGetAccountSettings = (AWS) => {
         lambda.getAccountSettings().promise().then((data) => {
             return resolve(data);
         }).catch((err) => {
-            return reject(err);
+            // Resolve even though there is an error.
+            return resolve(err);
         });
     });
 };
