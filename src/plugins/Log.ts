@@ -60,13 +60,6 @@ class Log {
         this.logData.traceId = this.pluginContext.traceId;
 
         this.logData.tags = {};
-        this.logData.tags['aws.region'] = this.pluginContext.applicationRegion;
-        this.logData.tags['aws.lambda.name'] = this.originalContext.functionName;
-        this.logData.tags['aws.lambda.arn'] = this.originalContext.invokedFunctionArn;
-        this.logData.tags['aws.lambda.memory_limit'] = parseInt(this.originalContext.memoryLimitInMB, 10);
-        this.logData.tags['aws.lambda.log_group_name'] = this.originalContext.logGroupName;
-        this.logData.tags['aws.lambda.log_stream_name'] = this.originalContext.logStreamName;
-        this.logData.tags['aws.lambda.invocation.request_id'] = this.originalContext.awsRequestId;
 
         if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
             this.shimConsole();
@@ -74,23 +67,7 @@ class Log {
     }
 
     afterInvocation = (data: any) => {
-        if (data.error) {
-            const error = Utils.parseError(data.error);
-            this.logData.tags['error.message'] = error.errorMessage;
-            this.logData.tags['error.kind'] = error.errorType;
-            this.logData.tags['error.stack'] = error.stack;
-            if (error.code) {
-                this.logData.tags['error.code'] = error.code;
-            }
-            if (error.stack) {
-                this.logData.tags['error.stack'] = error.stack;
-            }
-        }
-
         for (const log of this.logs) {
-            if (data.error) {
-                log.addErrorTags(this.logData);
-            }
             const logReportData = Utils.generateReport(log, this.apiKey);
             this.report(logReportData);
         }

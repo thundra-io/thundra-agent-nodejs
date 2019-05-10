@@ -81,11 +81,11 @@ export class Trace {
             this.extractSpanContext(originalEvent, originalContext) as ThundraSpanContext;
 
         if (propagatedSpanContext) {
-            this.pluginContext.transactionId = Utils.getConfiguration(
-                envVariableKeys.THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID) === 'true' ?
-                propagatedSpanContext.transactionId : originalContext.awsRequestId;
-
             this.pluginContext.traceId = propagatedSpanContext.traceId;
+            this.pluginContext.transactionId =
+                Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID) === 'true'
+                        ? propagatedSpanContext.transactionId
+                        : Utils.generateId();
             this.tracer.transactionId = this.pluginContext.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
@@ -95,11 +95,10 @@ export class Trace {
                 domainName: DomainNames.API,
                 className: ClassNames.LAMBDA,
             });
-
         } else {
-            this.tracer.transactionId = originalContext.awsRequestId;
             this.pluginContext.traceId = Utils.generateId();
-            this.pluginContext.transactionId = this.tracer.transactionId;
+            this.pluginContext.transactionId = Utils.generateId();
+            this.tracer.transactionId = this.pluginContext.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
                 rootTraceId: this.pluginContext.traceId,
