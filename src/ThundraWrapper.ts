@@ -149,10 +149,7 @@ class ThundraWrapper {
     async executeAfteInvocationAndReport(afterInvocationData: any) {
         await this.executeHook('after-invocation', afterInvocationData, true);
         this.resetTime();
-
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) !== 'true') {
-            await this.reporter.sendReports();
-        }
+        await this.reporter.sendReports();
     }
 
     resetTime() {

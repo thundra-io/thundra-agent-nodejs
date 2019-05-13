@@ -377,7 +377,7 @@ describe('Trace', () => {
         });
         
         it('should create incoming kinesis trace links', () => {
-            const expTraceLinks = ['eu-west-2:example_stream:shardId-000000000000:49545115243490985018280067714973144582180062593244200961']
+            const expTraceLinks = ['eu-west-2:example_stream:shardId-000000000000:49545115243490985018280067714973144582180062593244200961'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -405,10 +405,10 @@ describe('Trace', () => {
 
         it('should create incoming firehose trace links', () => {
             const expTraceLinks = [
-                "eu-west-2:exampleStream:1495072948:75c5afa1146857f64e92e6bb6e561ded",
-                "eu-west-2:exampleStream:1495072949:75c5afa1146857f64e92e6bb6e561ded",
-                "eu-west-2:exampleStream:1495072950:75c5afa1146857f64e92e6bb6e561ded",
-            ]
+                'eu-west-2:exampleStream:1495072948:75c5afa1146857f64e92e6bb6e561ded',
+                'eu-west-2:exampleStream:1495072949:75c5afa1146857f64e92e6bb6e561ded',
+                'eu-west-2:exampleStream:1495072950:75c5afa1146857f64e92e6bb6e561ded',
+            ];
             expect(InvocationTraceSupport.getIncomingTraceLinks().sort()).toEqual(expTraceLinks.sort());
         });
     });
@@ -447,7 +447,7 @@ describe('Trace', () => {
                     `${region}:${tableName}:${timestamp+i}:SAVE:${keyHash}`,
                     `${region}:${tableName}:${timestamp+i}:SAVE:${newItemHash}`,
                     `${region}:${tableName}:${timestamp+i}:SAVE:${updatedItemHash}`,
-                ]
+                ];
             }));
             expect(InvocationTraceSupport.getIncomingTraceLinks().sort()).toEqual(expTraceLinks.sort());
         });
@@ -475,7 +475,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming sns trace links', () => {
-            const expTraceLinks = ['95df01b4-ee98-5cb9-9903-4c221d41eb5e']
+            const expTraceLinks = ['95df01b4-ee98-5cb9-9903-4c221d41eb5e'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -502,7 +502,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming sqs trace links', () => {
-            const expTraceLinks = ['19dd0b57-b21e-4ac1-bd88-01bbb068cb78']
+            const expTraceLinks = ['19dd0b57-b21e-4ac1-bd88-01bbb068cb78'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -530,7 +530,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming s3 trace links', () => {
-            const expTraceLinks = ['EXAMPLE123456789']
+            const expTraceLinks = ['EXAMPLE123456789'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -623,7 +623,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming apigateway trace links', () => {
-            const expTraceLinks = ['spanId']
+            const expTraceLinks = ['spanId'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -673,7 +673,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming lambda trace links', () => {
-            const expTraceLinks = ['awsRequestId']
+            const expTraceLinks = ['awsRequestId'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });

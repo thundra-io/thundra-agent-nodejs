@@ -61,12 +61,7 @@ class Reporter {
     }
 
     addReport(report: any): void {
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) === 'true') {
-            const jsonStringReport = '\n' + JSON.stringify(report).replace(/\r?\n|\r/g, '') + '\n';
-            process.stdout.write(jsonStringReport);
-        } else {
-            this.reports = [...this.reports, report];
-        }
+        this.reports = [...this.reports, report];
     }
 
     getCompositeBatchedReports(): any[] {
@@ -127,12 +122,19 @@ class Reporter {
             ThundraLogger.getInstance().error(`Cannot create batch request will send no report. ${err}`);
         }
 
-        const requestPromises: any[] = [];
+        const isAsync = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) === 'true';
+
+        const reportPromises: any[] = [];
         batchedReports.forEach((batch: any) => {
-            requestPromises.push(this.request(batch));
+            if (isAsync) {
+                reportPromises.push(this.writeBatchToCW(batch));
+            } else {
+                reportPromises.push(this.request(batch));
+            }
         });
 
-        await Promise.all(requestPromises).catch((err) => {
+        await Promise.all(reportPromises).catch((err) => {
             ThundraLogger.getInstance().error(err);
         });
     }
@@ -170,6 +172,20 @@ class Reporter {
         });
     }
 
+    writeBatchToCW(batch: any[]): Promise<any> {
+        return new Promise((resolve, reject) => {
+            try {
+                for (const report of batch) {
+                    const jsonStringReport = '\n' + JSON.stringify(report).replace(/\r?\n|\r/g, '') + '\n';
+                    process.stdout.write(jsonStringReport);
+                }
+                return resolve();
+            } catch (error) {
+                ThundraLogger.getInstance().error('Cannot write report data to CW. ' + error);
+                return reject(error);
+            }
+        });
+    }
 }
 
 export default Reporter;
