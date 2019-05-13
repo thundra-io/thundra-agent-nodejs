@@ -18,7 +18,7 @@ describe('AWS Integration', () => {
         });
 
         const putParams = {
-            Item: {"id": {S: "1"}},
+            Item: {'id': {S: '1'}},
             TableName: 'test-table',
         };
 
@@ -43,7 +43,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
-            expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`])
+            expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`]);
         });
     });
 
@@ -58,7 +58,7 @@ describe('AWS Integration', () => {
         });
 
         const putParams = {
-            Item: {"id": {S: "1"}},
+            Item: {'id': {S: '1'}},
             TableName: 'test-table',
         };
 
@@ -84,7 +84,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
-            expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`])
+            expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`]);
         });
     });
 
@@ -101,7 +101,7 @@ describe('AWS Integration', () => {
                 httpResponse: {
                     headers: {'x-amz-request-id': 'EXAMPLE_REQUEST_ID_123'}
                 }
-            }
+            };
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
@@ -139,7 +139,7 @@ describe('AWS Integration', () => {
                 httpResponse: {
                     headers: {'x-amz-request-id': 'EXAMPLE_REQUEST_ID_123'}
                 }
-            }
+            };
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
@@ -180,7 +180,7 @@ describe('AWS Integration', () => {
                 httpResponse: {
                     headers: {'x-amzn-requestid': 'EXAMPLE_REQUEST_ID_123'}
                 }
-            }
+            };
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
@@ -235,7 +235,7 @@ describe('AWS Integration', () => {
                 data: {
                     MessageId: 'EXAMPLE_MESSAGE_ID_123',
                 }
-            }
+            };
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
@@ -302,7 +302,7 @@ describe('AWS Integration', () => {
                 data: {
                     MessageId: 'EXAMPLE_MESSAGE_ID_123',
                 }
-            }
+            };
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
@@ -368,7 +368,7 @@ describe('AWS Integration', () => {
                         {ShardId: 'SHARD_ID_2', SequenceNumber: 'SEQUENCE_NUMBER_2'},
                     ],
                 }
-            }
+            };
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
@@ -390,7 +390,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['us-west-2:STRING_VALUE:SHARD_ID_1:SEQUENCE_NUMBER_1',
-                                                        'us-west-2:STRING_VALUE:SHARD_ID_2:SEQUENCE_NUMBER_2']);
+                'us-west-2:STRING_VALUE:SHARD_ID_2:SEQUENCE_NUMBER_2']);
         });
     });
 
@@ -410,7 +410,7 @@ describe('AWS Integration', () => {
                 httpResponse: {
                     headers: {date: date},
                 },
-            }
+            };
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;

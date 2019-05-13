@@ -72,6 +72,10 @@ class Utils {
         };
     }
 
+    static isString(value: any): boolean {
+        return typeof value === 'string' || value instanceof String;
+    }
+
     static parseError(err: any) {
         const error: any = { errorMessage: '', errorType: 'Unknown Error', stack: null, code: 0 };
         if (err instanceof Error) {
@@ -89,6 +93,10 @@ class Utils {
                 error.errorMessage = '';
             }
         }
+        if (!Utils.isString(error.errorMessage)) {
+            error.errorMessage = JSON.stringify(error.errorMessage);
+        }
+
         return error;
     }
 
