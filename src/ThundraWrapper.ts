@@ -23,6 +23,7 @@ import Utils from './plugins/utils/Utils';
 import { envVariableKeys } from './Constants';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import PluginContext from './plugins/PluginContext';
+import ThundraLogger from './ThundraLogger';
 
 class ThundraWrapper {
 
@@ -127,6 +128,8 @@ class ThundraWrapper {
                     this.report(error, null, null);
                     return error;
                 }
+            }).catch((error) => {
+                ThundraLogger.getInstance().debug(error);
             });
     }
 
