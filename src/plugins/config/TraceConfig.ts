@@ -26,6 +26,9 @@ class TraceConfig extends BasePluginConfig {
     maskDynamoDBStatement: boolean;
     maskElasticSearchStatement: boolean;
     dynamoDBTraceInjectionEnabled: boolean;
+    enableCloudWatchRequest: boolean;
+    enableFirehoseRequest: boolean;
+    enableKinesisRequest: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -65,6 +68,18 @@ class TraceConfig extends BasePluginConfig {
         this.dynamoDBTraceInjectionEnabled = Utils.getConfiguration(
             envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) ? Utils.getConfiguration(
                 envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) === 'true' : options.dynamoDBTraceInjectionEnabled;
+
+        this.enableCloudWatchRequest = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE) === 'true' : options.enableCloudWatchRequest;
+
+        this.enableFirehoseRequest = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE) === 'true' : options.enableFirehoseRequest;
+
+        this.enableKinesisRequest = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE) === 'true' : options.enableKinesisRequest;
 
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {

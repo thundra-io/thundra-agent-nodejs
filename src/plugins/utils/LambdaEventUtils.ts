@@ -1,5 +1,5 @@
 import ThundraSpan from '../../opentracing/Span';
-import { SpanTags } from '../../Constants';
+import { SpanTags, DomainNames, ClassNames } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../../opentracing/SpanContext';
@@ -50,9 +50,9 @@ class LambdaEventUtils {
         }
     }
 
-    static injectTriggerTagsForKinesis(span: ThundraSpan, originalEvent: any): void {
-        const domainName = 'Stream';
-        const className = 'AWS-Kinesis';
+    static injectTriggerTagsForKinesis(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.STREAM;
+        const className = ClassNames.KINESIS;
         const traceLinks: any[] = [];
         const streamNames = new Set();
         for (const record of originalEvent.Records) {
@@ -69,11 +69,13 @@ class LambdaEventUtils {
         InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(streamNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(streamNames));
+
+        return className;
     }
 
-    static injectTriggerTagsForFirehose(span: ThundraSpan, originalEvent: any): void {
-        const domainName = 'Stream';
-        const className = 'AWS-Firehose';
+    static injectTriggerTagsForFirehose(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.STREAM;
+        const className = ClassNames.FIREHOSE;
         const streamARN = originalEvent.deliveryStreamArn;
         const streamName = streamARN.substring(streamARN.indexOf('/') + 1);
         const region = originalEvent.region || '';
@@ -93,11 +95,13 @@ class LambdaEventUtils {
         InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, [streamName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [streamName]);
+
+        return className;
     }
 
-    static injectTriggerTagsForDynamoDB(span: ThundraSpan, originalEvent: any): void {
-        const domainName = 'DB';
-        const className = 'AWS-DynamoDB';
+    static injectTriggerTagsForDynamoDB(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.DB;
+        const className = ClassNames.DYNAMODB;
         const traceLinks: any[] = [];
         const tableNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
@@ -148,11 +152,13 @@ class LambdaEventUtils {
         InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(tableNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(tableNames));
+
+        return className;
     }
 
-    static injectTriggerTagsForSNS(span: ThundraSpan, originalEvent: any): void {
-        const domainName = 'Messaging';
-        const className = 'AWS-SNS';
+    static injectTriggerTagsForSNS(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.MESSAGING;
+        const className = ClassNames.SNS;
         const traceLinks: any[] = [];
         const topicNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
@@ -165,11 +171,13 @@ class LambdaEventUtils {
         InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(topicNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(topicNames));
+
+        return className;
     }
 
-    static injectTriggerTagsForSQS(span: ThundraSpan, originalEvent: any) {
-        const domainName = 'Messaging';
-        const className = 'AWS-SQS';
+    static injectTriggerTagsForSQS(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.MESSAGING;
+        const className = ClassNames.SQS;
         const traceLinks: any[] = [];
         const queueNames: Set<string> = new Set<string>();
         for (const message of originalEvent.Records) {
@@ -182,11 +190,13 @@ class LambdaEventUtils {
         InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(queueNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(queueNames));
+
+        return className;
     }
 
-    static injectTriggerTagsForS3(span: ThundraSpan, originalEvent: any) {
-        const domainName = 'Storage';
-        const className = 'AWS-S3';
+    static injectTriggerTagsForS3(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.STORAGE;
+        const className = ClassNames.S3;
         const traceLinks: any[] = [];
         const bucketNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
@@ -201,11 +211,13 @@ class LambdaEventUtils {
         InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(bucketNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(bucketNames));
+
+        return className;
     }
 
-    static injectTriggerTagsForCloudWatchSchedule(span: ThundraSpan, originalEvent: any) {
-        const domainName = 'Schedule';
-        const className = 'AWS-CloudWatch-Schedule';
+    static injectTriggerTagsForCloudWatchSchedule(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.SCHEDULE;
+        const className = ClassNames.CLOUDWATCH;
 
         const scheduleNames: Set<string> = new Set<string>();
         for (const resource of originalEvent.resources) {
@@ -215,9 +227,11 @@ class LambdaEventUtils {
 
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(scheduleNames));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(scheduleNames));
+
+        return className;
     }
 
-    static injectTriggerTagsForCloudWatchLogs(span: ThundraSpan, originalEvent: any) {
+    static injectTriggerTagsForCloudWatchLogs(span: ThundraSpan, originalEvent: any): String {
         try {
             const buffer = Buffer.from(originalEvent.awslogs.data, 'base64');
             const logData = JSON.parse(zlib.gunzipSync(buffer).toString('utf-8'));
@@ -226,14 +240,16 @@ class LambdaEventUtils {
 
             this.injectTrigerTragsForInvocation(domainName, className, [logData.logGroup]);
             this.injectTrigerTragsForSpan(span, domainName, className, [logData.logGroup]);
+
+            return className;
         } catch (error) {
             ThundraLogger.getInstance().error('Cannot read CloudWatch log data. ' + error);
         }
     }
 
-    static injectTriggerTagsForCloudFront(span: ThundraSpan, originalEvent: any) {
-        const domainName = 'CDN';
-        const className = 'AWS-CloudFront';
+    static injectTriggerTagsForCloudFront(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.CDN;
+        const className = ClassNames.CLOUDFRONT;
 
         const uris: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
@@ -243,11 +259,13 @@ class LambdaEventUtils {
 
         this.injectTrigerTragsForInvocation(domainName, className, Array.from(uris));
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(uris));
+
+        return className;
     }
 
-    static injectTriggerTagsForAPIGatewayProxy(span: ThundraSpan, originalEvent: any) {
-        const domainName = 'API';
-        const className = 'AWS-APIGateway';
+    static injectTriggerTagsForAPIGatewayProxy(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.API;
+        const className = ClassNames.APIGATEWAY;
         const operationName = originalEvent.headers.Host + '/' + originalEvent.requestContext.stage + originalEvent.path;
         const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
 
@@ -256,29 +274,35 @@ class LambdaEventUtils {
         }
         this.injectTrigerTragsForInvocation(domainName, className, [operationName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [operationName]);
+
+        return className;
     }
 
-    static injectTriggerTagsForAPIGatewayPassThrough(span: ThundraSpan, originalEvent: any) {
-        const domainName = 'API';
-        const className = 'AWS-APIGateway';
+    static injectTriggerTagsForAPIGatewayPassThrough(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.API;
+        const className = ClassNames.APIGATEWAY;
         const operationName = originalEvent.params.header.Host + '/' + originalEvent.context.stage +
                              originalEvent.context['resource-path'];
 
         this.injectTrigerTragsForInvocation(domainName, className, [operationName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [operationName]);
+
+        return className;
     }
 
-    static injectTriggerTagsForLambda(span: ThundraSpan, originalContext: any) {
+    static injectTriggerTagsForLambda(span: ThundraSpan, originalContext: any): String {
         if (originalContext && originalContext.clientContext && originalContext.clientContext.custom &&
             originalContext.clientContext.custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME]) {
-            const domainName = 'API';
-            const className = 'AWS-Lambda';
+            const domainName = DomainNames.API;
+            const className = ClassNames.LAMBDA;
             const operationNames = [originalContext.clientContext.custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME]];
             const requestId = originalContext.awsRequestId;
 
             InvocationTraceSupport.addIncomingTraceLinks([requestId]);
             this.injectTrigerTragsForInvocation(domainName, className, operationNames);
             this.injectTrigerTragsForSpan(span, domainName, className, operationNames);
+
+            return className;
         }
     }
 

@@ -62,6 +62,10 @@ export const envVariableKeys = {
     THUNDRA_MASK_ELASTIC_STATEMENT: 'thundra_agent_lambda_trace_integrations_elastic_statement_mask',
 
     ENABLE_DYNAMODB_TRACE_INJECTION: 'thundra_agent_trace_integrations_dynamodb_trace_injection_enable',
+
+    THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE: 'thundra_agent_lambda_trace_kinesis_request_enable',
+    THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE: 'thundra_agent_lambda_trace_firehose_request_enable',
+    THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE: 'thundra_agent_lambda_trace_cloudwatchlog_request_enable',
 };
 
 export function getTimeoutMargin(region: string) {
@@ -162,6 +166,8 @@ export const DomainNames = {
     STORAGE: 'Storage',
     API: 'API',
     CACHE: 'Cache',
+    SCHEDULE: 'Schedule',
+    CDN: 'CDN',
 };
 
 export const ClassNames = {
@@ -176,6 +182,9 @@ export const ClassNames = {
     RDB: 'RDB',
     REDIS: 'Redis',
     HTTP: 'HTTP',
+    CLOUDWATCH: 'AWS-CloudWatch-Schedule',
+    CLOUDFRONT: 'AWS-CloudFront',
+    APIGATEWAY: 'AWS-APIGateway',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';

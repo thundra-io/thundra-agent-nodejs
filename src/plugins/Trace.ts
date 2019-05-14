@@ -40,6 +40,7 @@ export class Trace {
     tracer: ThundraTracer;
     rootSpan: ThundraSpan;
     pluginOrder: number = 1;
+    triggerClassName: String;
 
     constructor(config: TraceConfig) {
         this.hooks = {
@@ -141,7 +142,7 @@ export class Trace {
         this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.rootSpan.tags['aws.lambda.invocation.request'] = this.getRequest(originalEvent);
 
-        this.injectTriggerTags(this.rootSpan, originalEvent, originalContext);
+        this.triggerClassName = this.injectTriggerTags(this.rootSpan, originalEvent, originalContext);
     }
 
     afterInvocation = (data: any) => {
@@ -242,11 +243,13 @@ export class Trace {
                 this.config.unhookModuleCompile();
             }
         }
+        this.triggerClassName = undefined;
     }
 
     private getRequest(originalEvent: any): any {
         const conf = this.config;
 
+        // Masking and disableRequest should run first
         if (conf && conf.disableRequest) {
             return null;
         }
@@ -255,7 +258,24 @@ export class Trace {
             return conf.maskRequest.call(this, originalEvent);
         }
 
-        return originalEvent;
+        let enableRequestData = true;
+        if (this.triggerClassName === ClassNames.CLOUDWATCH && !conf.enableFirehoseRequest) {
+            enableRequestData = false;
+        }
+
+        if (this.triggerClassName === ClassNames.FIREHOSE && !conf.enableFirehoseRequest) {
+            enableRequestData = false;
+        }
+
+        if (this.triggerClassName === ClassNames.KINESIS && !conf.enableKinesisRequest) {
+            enableRequestData = false;
+        }
+
+        if (enableRequestData) {
+            return originalEvent;
+        } else {
+            return null;
+        }
     }
 
     private getResponse(response: any): any {
@@ -285,34 +305,34 @@ export class Trace {
         }
     }
 
-    private injectTriggerTags(span: ThundraSpan, originalEvent: any, originalContext: any) {
+    private injectTriggerTags(span: ThundraSpan, originalEvent: any, originalContext: any): String {
         try {
             const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
 
             if (lambdaEventType === LambdaEventType.Kinesis) {
-                LambdaEventUtils.injectTriggerTagsForKinesis(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForKinesis(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.FireHose) {
-                LambdaEventUtils.injectTriggerTagsForFirehose(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForFirehose(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.DynamoDB) {
-                LambdaEventUtils.injectTriggerTagsForDynamoDB(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForDynamoDB(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.SNS) {
-                LambdaEventUtils.injectTriggerTagsForSNS(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForSNS(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.SQS) {
-                LambdaEventUtils.injectTriggerTagsForSQS(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForSQS(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.S3) {
-                LambdaEventUtils.injectTriggerTagsForS3(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForS3(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.CloudWatchSchedule) {
-                LambdaEventUtils.injectTriggerTagsForCloudWatchSchedule(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForCloudWatchSchedule(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.CloudWatchLog) {
-                LambdaEventUtils.injectTriggerTagsForCloudWatchLogs(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForCloudWatchLogs(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.CloudFront) {
-                LambdaEventUtils.injectTriggerTagsForCloudFront(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForCloudFront(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.APIGatewayProxy) {
-                LambdaEventUtils.injectTriggerTagsForAPIGatewayProxy(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForAPIGatewayProxy(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.Lambda) {
-                LambdaEventUtils.injectTriggerTagsForLambda(span, originalContext);
+                return LambdaEventUtils.injectTriggerTagsForLambda(span, originalContext);
             } else if (lambdaEventType === LambdaEventType.APIGatewayPassThrough) {
-                LambdaEventUtils.injectTriggerTagsForAPIGatewayPassThrough(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForAPIGatewayPassThrough(span, originalEvent);
             }
         } catch (error) {
             ThundraLogger.getInstance().error('Cannot inject trigger tags. ' + error);
