@@ -98,15 +98,20 @@ class Log {
                 this.consoleReference[method] = (...args: any[]) => {
                     const logLevel = method.toUpperCase() === 'LOG' ? 'INFO' : method.toUpperCase();
 
-                    const logInfo = {
-                        logMessage: util.format.apply(util, args),
-                        logLevel,
-                        logLevelCode: method === 'log' ? 2 : logLevels[method],
-                        logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
-                        logTimestamp: Date.now(),
-                    };
+                    const levelConfig = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_LOGLEVEL);
+                    const logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
 
-                    this.reportLog(logInfo);
+                    if (logLevels[logLevel] >= logLevelFilter ) {
+                        const logInfo = {
+                            logMessage: util.format.apply(util, args),
+                            logLevel,
+                            logLevelCode: method === 'log' ? 2 : logLevels[method],
+                            logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
+                            logTimestamp: Date.now(),
+                        };
+                        this.reportLog(logInfo);
+                    }
+
                     originalConsoleMethod.apply(console, args);
                 };
             }
