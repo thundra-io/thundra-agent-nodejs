@@ -489,6 +489,14 @@ export const S3RequestTypes: any = {
     listBuckets: 'READ',
     putObject: 'WRITE',
     putObjectAcl: 'WRITE',
+    getBucketAcl: 'READ',
+    getObjectAcl: 'READ',
+    getSignedUrl: 'READ',
+    headBucket: 'READ',
+    headObject: 'READ',
+    listObjects: 'READ',
+    listObjectsV2: 'READ',
+    putBucketAcl: 'WRITE',
 };
 
 export const AwsXrayConstants: any = {
