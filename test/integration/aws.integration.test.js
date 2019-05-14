@@ -44,6 +44,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`]);
+            expect(span.finishTime).toBeTruthy();
         });
     });
 
@@ -85,6 +86,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`]);
+            expect(span.finishTime).toBeTruthy();
         });
     });
 
@@ -123,6 +125,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
+            expect(span.finishTime).toBeTruthy();
         });
     });
 
@@ -163,6 +166,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
+            expect(span.finishTime).toBeTruthy();
         });
     });
 
@@ -205,6 +209,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
+            expect(span.finishTime).toBeTruthy();
         });
     });
 
@@ -258,6 +263,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
+            expect(span.finishTime).toBeTruthy();
         });
     });
 
@@ -284,6 +290,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.domainName']).not.toBeTruthy();
             expect(span.tags['trigger.className']).not.toBeTruthy();
             expect(span.tags['trigger.operationNames']).not.toBeTruthy();
+            expect(span.finishTime).toBeTruthy();
         });
     });
   
@@ -325,6 +332,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
+            expect(span.finishTime).toBeTruthy();
         });
     }); 
 
@@ -348,6 +356,7 @@ describe('AWS Integration', () => {
             expect(span.tags['aws.request.name']).toBe('checkIfPhoneNumberIsOptedOut');
             expect(span.tags['aws.sns.topic.name']).toBe(undefined);
             expect(span.tags['operation.type']).toBe('');
+            expect(span.finishTime).toBeTruthy();
         });
     }); 
     
@@ -391,6 +400,7 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['us-west-2:STRING_VALUE:SHARD_ID_1:SEQUENCE_NUMBER_1',
                 'us-west-2:STRING_VALUE:SHARD_ID_2:SEQUENCE_NUMBER_2']);
+            expect(span.finishTime).toBeTruthy();
         });
     });
 
@@ -434,9 +444,10 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(traceLinks);
+            expect(span.finishTime).toBeTruthy();
         });
     });
-
+    
     test('should instrument AWS KMS calls ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
@@ -453,6 +464,7 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('AWS');
 
             expect(span.tags['aws.request.name']).toBe('createKey');
+            expect(span.finishTime).toBeTruthy();
         });
     });
 });

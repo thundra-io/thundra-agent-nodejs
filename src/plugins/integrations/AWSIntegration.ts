@@ -131,8 +131,8 @@ class AWSIntegration implements Integration {
         requestParams.ReturnValues = 'ALL_OLD';
     }
 
-    static generateDynamoTraceLinks(attributes: any, operationType: string, tableName: string,
-                                    region: string, timestamp: number): any[] {
+    static generateDynamoTraceLinks(attributes: any, operationType: string, tableName: string, region: string,
+                                    timestamp: number): any[] {
         if (attributes) {
             const attrHash = md5(AWSIntegration.serializeAttributes(attributes));
             return [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
@@ -153,7 +153,7 @@ class AWSIntegration implements Integration {
     }
 
     static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
-        if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
+        if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
             return;
         }
         const region = get(req, 'service.config.region', '');
@@ -227,7 +227,7 @@ class AWSIntegration implements Integration {
                 traceLinks = [requestId];
             }
         } else if (serviceName === 'firehose') {
-            const deliveryStreamName = params.DeliveryStreamName || '';
+            const deliveryStreamName = params.DeliveryStreamName || '';
             let timestamp: number;
             if (has(response, 'httpResponse.headers.date')) {
                 timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
@@ -377,7 +377,7 @@ class AWSIntegration implements Integration {
                                 [SpanTags.OPERATION_TYPE]: statementType ? statementType : '',
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_DYNAMO,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                                [DBTags.DB_STATEMENT]: config.maskDynamoDBStatement ? undefined : {...request.params},
+                                [DBTags.DB_STATEMENT]: config.maskDynamoDBStatement ? undefined : { ...request.params },
                             },
                         });
 
@@ -529,23 +529,39 @@ class AWSIntegration implements Integration {
                             },
                         });
                     }
-
-                    const me = this;
                     const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
-                    const wrappedCallback = (err: any, data: any) => {
-                        if (err && activeSpan) {
-                            activeSpan.setErrorTag(err);
-                        }
-                        if (data) {
-                            AWSIntegration.injectTraceLink(activeSpan, request, config);
-                        }
-                        if (activeSpan) {
-                            activeSpan.closeWithCallback(me, originalCallback, [err, data]);
-                        }
-                    };
 
-                    return originalFunction.apply(this, [wrappedCallback]);
+                    if (originalCallback) {
+                        const me = this;
+                        const wrappedCallback = (err: any, data: any) => {
+                            if (err && activeSpan) {
+                                activeSpan.setErrorTag(err);
+                            }
+                            if (data) {
+                                AWSIntegration.injectTraceLink(activeSpan, request, config);
+                            }
+                            if (activeSpan) {
+                                activeSpan.closeWithCallback(me, originalCallback, [err, data]);
+                            }
+                        };
 
+                        return originalFunction.apply(this, [wrappedCallback]);
+                    } else {
+                        request.on('error', (error: any) => {
+                            if (error && activeSpan) {
+                                activeSpan.setErrorTag(error);
+                            }
+                        }).on('complete', (response: any) => {
+                            if (response) {
+                                AWSIntegration.injectTraceLink(activeSpan, request, config);
+                            }
+                            if (activeSpan) {
+                                activeSpan.close();
+                            }
+                        });
+
+                        return originalFunction.apply(this, [originalCallback]);
+                    }
                 } catch (error) {
                     const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
                     if (activeSpan) {

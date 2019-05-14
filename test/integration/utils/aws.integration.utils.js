@@ -222,4 +222,23 @@ module.exports.kms = (AWS) => {
     });
 };
 
+module.exports.s3_with_promise = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const s3 = new AWS.S3();
+        var params = {
+            Bucket: 'bucket',
+            Key: 'example2.txt',
+            Body: 'Uploaded text using the promise-based method!'
+        };
+    
+        s3.putObject(params).promise().then((data) => {
+            return resolve(data);
+        }).catch((err) => {
+            // Resolve even though there is an error.
+            return resolve(err);
+        });
+    }); 
+};
+
 
