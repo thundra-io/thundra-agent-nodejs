@@ -15,7 +15,6 @@ import ThundraSpan from '../../opentracing/Span';
 import * as opentracing from 'opentracing';
 import LambdaEventUtils from '../utils/LambdaEventUtils';
 import InvocationSupport from '../support/InvocationSupport';
-import TraceConfig from '../config/TraceConfig';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -567,6 +566,7 @@ class AWSIntegration implements Integration {
                         request.on('error', (error: any) => {
                             if (error && activeSpan) {
                                 activeSpan.setErrorTag(error);
+                                activeSpan.close();
                             }
                         }).on('complete', (response: any) => {
                             if (response) {
