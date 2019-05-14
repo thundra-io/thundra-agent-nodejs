@@ -4,7 +4,7 @@ import Http from './utils/http.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('HTTP integration', () => {
-    test('should instrument HTTP calls ', () => {
+    test('should instrument HTTP GET calls ', () => {
         const integration = new HttpIntegration({});
         const sdk = require('http');
 
@@ -30,6 +30,50 @@ describe('HTTP integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['http.body']).not.toBeTruthy();
+        });
+    });
+
+    test('should instrument HTTPS POST calls', () => {
+        const integration = new HttpIntegration({});
+        const sdk = require('https');
+
+        integration.wrap(sdk, {});
+
+        const tracer = new ThundraTracer();
+        InvocationSupport.setFunctionName('functionName');
+
+        return Http.post(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.className).toBe('HTTP');
+            expect(span.domainName).toBe('API');
+
+            expect(span.tags['http.method']).toBe('POST');
+            expect(span.tags['http.body']).toBe('{"todo":"Buy the milk"}');
+
+        });
+    });
+
+    test('should mask body in post', () => {
+        const integration = new HttpIntegration({});
+        const sdk = require('https');
+
+        integration.wrap(sdk, {
+            maskHttpBody: true
+        });
+
+        const tracer = new ThundraTracer();
+        InvocationSupport.setFunctionName('functionName');
+
+        return Http.post(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.className).toBe('HTTP');
+            expect(span.domainName).toBe('API');
+
+            expect(span.tags['http.method']).toBe('POST');
+            expect(span.tags['http.body']).not.toBeTruthy();
         });
     });
 

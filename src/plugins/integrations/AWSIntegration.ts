@@ -15,6 +15,7 @@ import ThundraSpan from '../../opentracing/Span';
 import * as opentracing from 'opentracing';
 import LambdaEventUtils from '../utils/LambdaEventUtils';
 import InvocationSupport from '../support/InvocationSupport';
+import TraceConfig from '../config/TraceConfig';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -310,16 +311,29 @@ class AWSIntegration implements Integration {
                         }
 
                         const messageAttributes = AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan);
-                        if (messageAttributes) {
-                            if (operationName === 'sendMessage') {
+                        if (operationName === 'sendMessage') {
+                            if (messageAttributes) {
                                 const requestMessageAttributes = request.params.MessageAttributes || {};
                                 request.params.MessageAttributes = { ...requestMessageAttributes, ...messageAttributes };
-                            } else if (operationName === 'sendMessageBatch' &&
-                                request.params.Entries && Array.isArray(request.params.Entries)) {
-                                for (const entry of request.params.Entries) {
+                            }
+
+                            if (!config.maskSQSMessage) {
+                                activeSpan.setTag(AwsSQSTags.MESSAGE, request.params.MessageBody);
+                            }
+                        } else if (operationName === 'sendMessageBatch' &&
+                            request.params.Entries && Array.isArray(request.params.Entries)) {
+                            const messages: any = [];
+
+                            for (const entry of request.params.Entries) {
+                                if (messageAttributes) {
                                     const requestMessageAttributes = entry.MessageAttributes ? entry.MessageAttributes : {};
                                     entry.MessageAttributes = { ...requestMessageAttributes, ...messageAttributes };
                                 }
+                                messages.push(entry.MessageBody);
+                            }
+
+                            if (!config.maskSQSMessage) {
+                                activeSpan.setTag(AwsSQSTags.MESSAGES, messages);
                             }
                         }
                     } else if (serviceName === 'sns') {
@@ -349,6 +363,9 @@ class AWSIntegration implements Integration {
                             activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
 
                             activeSpan.setTag(AwsSNSTags.TOPIC_NAME, topicName);
+                            if (config && !config.maskSNSMessage) {
+                                activeSpan.setTag(AwsSNSTags.MESSAGE, request.params.message);
+                            }
                         }
 
                         if (operationName === 'publish') {
@@ -436,7 +453,7 @@ class AWSIntegration implements Integration {
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_LAMBDA,
                                 [SpanTags.OPERATION_TYPE]: operationType,
                                 [AwsLambdaTags.FUNCTION_QUALIFIER]: request.params.Qualifier,
-                                [AwsLambdaTags.INVOCATION_PAYLOAD]: request.params.Payload,
+                                [AwsLambdaTags.INVOCATION_PAYLOAD]: config.maskLambdaPayload ? undefined : request.params.Payload,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
                                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
                             },

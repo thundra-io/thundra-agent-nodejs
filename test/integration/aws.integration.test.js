@@ -213,6 +213,41 @@ describe('AWS Integration', () => {
         });
     });
 
+    test('should mask AWS Lambda Payload', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {
+            maskLambdaPayload: true
+        });
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                httpResponse: {
+                    headers: {'x-amzn-requestid': 'EXAMPLE_REQUEST_ID_123'}
+                }
+            };
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
+        
+        const tracer = new ThundraTracer();
+
+        return AWS.lambda(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('Test');
+
+            expect(span.className).toBe('AWS-Lambda');
+            expect(span.domainName).toBe('API');
+
+            expect(span.tags['aws.lambda.invocation.payload']).not.toBeTruthy();
+        });
+    });
+
     test('should instrument AWS Lambda calls ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
@@ -255,6 +290,7 @@ describe('AWS Integration', () => {
             expect(span.className).toBe('AWS-SQS');
             expect(span.domainName).toBe('Messaging');
 
+            expect(span.tags['aws.sqs.message']).toBe('Hello Thundra!');
             expect(span.tags['aws.request.name']).toBe('sendMessage');
             expect(span.tags['aws.sqs.queue.name']).toBe('testqueue');
             expect(span.tags['operation.type']).toBe('WRITE');
@@ -264,6 +300,41 @@ describe('AWS Integration', () => {
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
             expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+    test('should mask AWS SQS message ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {
+            maskSQSMessage: true
+        });
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                data: {
+                    MessageId: 'EXAMPLE_MESSAGE_ID_123',
+                }
+            };
+            cb(null, {result: 'success'});
+        });
+
+        integration.wrappedFuncs.send = mockSend;
+        const tracer = new ThundraTracer();
+
+        return AWS.sqs(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('testqueue');
+
+            expect(span.className).toBe('AWS-SQS');
+            expect(span.domainName).toBe('Messaging');
+
+            expect(span.tags['aws.sqs.message']).not.toBeTruthy();
         });
     });
 
@@ -337,7 +408,7 @@ describe('AWS Integration', () => {
     }); 
 
 
-    test('should instrument AWS SNS  call without publish', () => { 
+    test('should instrument AWS SNS call without publish', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
@@ -357,6 +428,28 @@ describe('AWS Integration', () => {
             expect(span.tags['aws.sns.topic.name']).toBe(undefined);
             expect(span.tags['operation.type']).toBe('');
             expect(span.finishTime).toBeTruthy();
+        });
+    });
+    
+    test('should mask SNS Message', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {
+            maskSNSMessage: true
+        });
+        
+        const tracer = new ThundraTracer();
+
+        return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('AWSServiceRequest');
+
+            expect(span.className).toBe('AWS-SNS');
+            expect(span.domainName).toBe('Messaging');
+
+            expect(span.tags['aws.sns.message']).not.toBeTruthy();
         });
     }); 
     

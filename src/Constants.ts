@@ -66,6 +66,11 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE: 'thundra_agent_lambda_trace_kinesis_request_enable',
     THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE: 'thundra_agent_lambda_trace_firehose_request_enable',
     THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE: 'thundra_agent_lambda_trace_cloudwatchlog_request_enable',
+
+    THUNDRA_MASK_SNS_MESSAGE: 'thundra_agent_lambda_trace_integrations_aws_sns_message_mask',
+    THUNDRA_MASK_SQS_MESSAGE: 'thundra_agent_lambda_trace_integrations_aws_sqs_message_mask',
+    THUNDRA_MASK_LAMBDA_PAYLOAD: 'thundra_agent_lambda_trace_integrations_aws_lambda_payload_mask',
+    THUNDRA_MASK_HTTP_BODY: 'thundra_agent_lambda_trace_integrations_aws_http_body_mask',
 };
 
 export function getTimeoutMargin(region: string) {
@@ -214,6 +219,7 @@ export const HttpTags = {
     HTTP_HOST: 'http.host',
     HTTP_STATUS: 'http.status_code',
     QUERY_PARAMS: 'http.query_params',
+    BODY: 'http.body',
 };
 
 export const RedisTags = {
@@ -265,10 +271,13 @@ export const AwsS3Tags = {
 
 export const AwsSNSTags = {
     TOPIC_NAME: 'aws.sns.topic.name',
+    MESSAGE: 'aws.sns.message',
 };
 
 export const AwsSQSTags = {
     QUEUE_NAME: 'aws.sqs.queue.name',
+    MESSAGE: 'aws.sqs.message',
+    MESSAGES: 'aws.sqs.messages',
 };
 
 export const SpanTags = {
