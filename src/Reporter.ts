@@ -175,10 +175,8 @@ class Reporter {
     writeBatchToCW(batch: any[]): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                for (const report of batch) {
-                    const jsonStringReport = '\n' + JSON.stringify(report).replace(/\r?\n|\r/g, '') + '\n';
-                    process.stdout.write(jsonStringReport);
-                }
+                const jsonStringReport = '\n' + JSON.stringify(batch).replace(/\r?\n|\r/g, '') + '\n';
+                process.stdout.write(jsonStringReport);
                 return resolve();
             } catch (error) {
                 ThundraLogger.getInstance().error('Cannot write report data to CW. ' + error);

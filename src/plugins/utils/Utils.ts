@@ -15,13 +15,13 @@ import BuildInfoLoader from '../../BuildInfoLoader';
 import MonitoringDataType from '../data/base/MonitoringDataType';
 import InvocationData from '../data/invocation/InvocationData';
 import MetricData from '../data/metric/MetricData';
-import TraceData from '../data/trace/TraceData';
 import SpanData from '../data/trace/SpanData';
 import LogData from '../data/log/LogData';
 import ThundraLogger from '../../ThundraLogger';
 import ApplicationSupport from '../support/ApplicationSupport';
 import ThundraTracer from '../../opentracing/Tracer';
 import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
+import InvocationSupport from '../support/InvocationSupport';
 
 class Utils {
     static generateId(): string {
@@ -205,7 +205,7 @@ class Utils {
         return endpoint.split('.')[0];
     }
 
-    static initMonitoringData(pluginContext: any, originalContext: any, type: MonitoringDataType): BaseMonitoringData {
+    static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
         const domainName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_DOMAIN_NAME);
@@ -222,7 +222,7 @@ class Utils {
         monitoringData.applicationDomainName = domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
         monitoringData.applicationClassName = className ? className : LAMBDA_APPLICATION_CLASS_NAME;
         monitoringData.applicationName = applicationName ? applicationName :
-            (originalContext ? originalContext.functionName : '');
+            (InvocationSupport.getFunctionName() ? InvocationSupport.getFunctionName() : '');
         monitoringData.applicationVersion = applicationVersion ? applicationVersion :
             (pluginContext ? pluginContext.applicationVersion : '');
         monitoringData.applicationStage = stage ? stage : '';
@@ -261,9 +261,6 @@ class Utils {
                 break;
             case MonitorDataType.METRIC:
                 monitoringData = new MetricData();
-                break;
-            case MonitorDataType.TRACE:
-                monitoringData = new TraceData();
                 break;
             case MonitorDataType.SPAN:
                 monitoringData = new SpanData();

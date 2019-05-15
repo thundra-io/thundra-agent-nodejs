@@ -24,6 +24,7 @@ import { envVariableKeys } from './Constants';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import PluginContext from './plugins/PluginContext';
 import ThundraLogger from './ThundraLogger';
+import InvocationSupport from './plugins/support/InvocationSupport';
 
 class ThundraWrapper {
 
@@ -83,6 +84,7 @@ class ThundraWrapper {
         }, this.wrappedContext);
 
         this.timeout = this.setupTimeoutHandler(this);
+        InvocationSupport.setFunctionName(this.originalContext.functionName);
     }
 
     wrappedCallback = (error: any, result: any) => {

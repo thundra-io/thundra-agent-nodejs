@@ -44,10 +44,10 @@ class Invocation {
         this.startTimestamp = this.pluginContext.invocationStartTimestamp;
 
         this.invocationData = Utils.initMonitoringData(this.pluginContext,
-            originalContext, MonitoringDataType.INVOCATION) as InvocationData;
+                             MonitoringDataType.INVOCATION) as InvocationData;
 
         this.invocationData.functionPlatform = LAMBDA_FUNCTION_PLATFORM;
-        this.invocationData.functionName = originalContext ? originalContext.functionName : '';
+        this.invocationData.functionName = InvocationSupport.getFunctionName() ? InvocationSupport.getFunctionName() : '';
         this.invocationData.functionRegion = this.pluginContext.applicationRegion;
         this.invocationData.tags = {};
         this.invocationData.startTimestamp = this.startTimestamp;

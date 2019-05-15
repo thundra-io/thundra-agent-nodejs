@@ -55,8 +55,7 @@ class Metric {
         this.initialProcIo = procIo;
         this.reporter = data.reporter;
 
-        this.metricData = Utils.initMonitoringData(this.pluginContext,
-            originalContext, MonitoringDataType.METRIC) as MetricData;
+        this.metricData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.METRIC) as MetricData;
         this.metricData.metricTimestamp = Date.now();
         this.metricData.tags['aws.region'] = this.pluginContext.applicationRegion;
 

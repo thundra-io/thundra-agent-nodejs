@@ -88,6 +88,7 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 | thundra_agent_lambda_trace_integrations_aws_sqs_message_mask             | bool   |    false      |
 | thundra_agent_lambda_trace_integrations_aws_lambda_payload_mask          | bool   |    false      |
 | thundra_agent_lambda_trace_integrations_aws_http_body_mask               | bool   |    false      |
+| thundra_agent_lambda_report_rest_composite_enabled                       | bool   |     false     |
 
 
 #### 2. Module initialization parameters

@@ -14,7 +14,6 @@ class Log {
     reporter: any;
     pluginContext: PluginContext;
     apiKey: any;
-    originalContext: any;
     logData: LogData;
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
     logs: LogData[];
@@ -51,12 +50,10 @@ class Log {
     beforeInvocation = (data: any) => {
         this.logs = [];
         this.reporter = data.reporter;
-        this.originalContext = data.originalContext;
-        this.logData = Utils.initMonitoringData(this.pluginContext,
-            this.originalContext, MonitoringDataType.LOG) as LogData;
+        this.logData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.LOG) as LogData;
 
         this.logData.transactionId = this.pluginContext.transactionId ?
-            this.pluginContext.transactionId : this.originalContext.awsRequestId;
+            this.pluginContext.transactionId : data.originalContext.awsRequestId;
         this.logData.traceId = this.pluginContext.traceId;
 
         this.logData.tags = {};
