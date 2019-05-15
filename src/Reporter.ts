@@ -114,10 +114,9 @@ class Reporter {
 
     async sendReports(): Promise<void> {
         let batchedReports = [];
-
+        const isComposite = this.config.enableCompositeData;
         try {
-            batchedReports = this.config.enableCompositeData ?
-                this.getCompositeBatchedReports() : this.getBatchedReports();
+            batchedReports = isComposite ? this.getCompositeBatchedReports() : this.getBatchedReports();
         } catch (err) {
             ThundraLogger.getInstance().error(`Cannot create batch request will send no report. ${err}`);
         }
@@ -128,7 +127,7 @@ class Reporter {
         const reportPromises: any[] = [];
         batchedReports.forEach((batch: any) => {
             if (isAsync) {
-                reportPromises.push(this.writeBatchToCW(batch));
+                reportPromises.push(this.writeBatchToCW(batch, isComposite));
             } else {
                 reportPromises.push(this.request(batch));
             }
@@ -172,11 +171,18 @@ class Reporter {
         });
     }
 
-    writeBatchToCW(batch: any[]): Promise<any> {
+    writeBatchToCW(batch: any[], isComposite: boolean): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                const jsonStringReport = '\n' + JSON.stringify(batch).replace(/\r?\n|\r/g, '') + '\n';
-                process.stdout.write(jsonStringReport);
+                if (isComposite) {
+                    const jsonStringReport = '\n' + JSON.stringify(batch).replace(/\r?\n|\r/g, '') + '\n';
+                    process.stdout.write(jsonStringReport);
+                } else {
+                    for (const report of batch) {
+                        const jsonStringReport = '\n' + JSON.stringify(report).replace(/\r?\n|\r/g, '') + '\n';
+                        process.stdout.write(jsonStringReport);
+                    }
+                }
                 return resolve();
             } catch (error) {
                 ThundraLogger.getInstance().error('Cannot write report data to CW. ' + error);
