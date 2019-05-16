@@ -3,8 +3,7 @@ import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
 import {DATA_MODEL_VERSION, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_FUNCTION_PLATFORM} from '../../dist/Constants';
 const buildInfo = require('../../dist/BuildInfo');
-var semver = require('semver');
-
+import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 const pluginContext = createMockPluginContext();
 
@@ -52,7 +51,11 @@ describe('Invocation', () => {
                 heapUsed: 39845888
             };
         });
+        
+
         it('Should set variables to their initial value', async () => {
+            InvocationSupport.setFunctionName(beforeInvocationData.originalContext.functionName);
+            
             await invocation.beforeInvocation(beforeInvocationData);
             expect(invocation.reporter).toBe(beforeInvocationData.reporter);
             expect(invocation.apiKey).toBe(pluginContext.apiKey);

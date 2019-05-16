@@ -11,7 +11,6 @@
 
 import ThundraTracer from '../opentracing/Tracer';
 import Utils from './utils/Utils';
-import TraceData from './data/trace/TraceData';
 import { initGlobalTracer } from 'opentracing';
 import * as opentracing from 'opentracing';
 import HttpError from './error/HttpError';
@@ -21,17 +20,14 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
-import TimeoutError from './error/TimeoutError';
 import { DomainNames, ClassNames, envVariableKeys } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import LambdaEventUtils, { LambdaEventType } from './utils/LambdaEventUtils';
 import ThundraLogger from '../ThundraLogger';
-import InvocationSupport from './support/InvocationSupport';
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
     config: TraceConfig;
-    traceData: TraceData;
     reporter: Reporter;
     pluginContext: PluginContext;
     apiKey: string;
@@ -40,6 +36,7 @@ export class Trace {
     tracer: ThundraTracer;
     rootSpan: ThundraSpan;
     pluginOrder: number = 1;
+    triggerClassName: String;
 
     constructor(config: TraceConfig) {
         this.hooks = {
@@ -47,7 +44,6 @@ export class Trace {
             'after-invocation': this.afterInvocation,
         };
 
-        this.traceData = new TraceData();
         const tracerConfig = config ? config.tracerConfig : {};
         this.config = config;
 
@@ -74,8 +70,6 @@ export class Trace {
         if (!originalContext.awsRequestId || originalContext.awsRequestId === 'id') {
             originalContext.awsRequestId = Utils.generateId();
         }
-
-        InvocationSupport.setFunctionName(originalContext.functionName);
 
         const propagatedSpanContext: ThundraSpanContext =
             this.extractSpanContext(originalEvent, originalContext) as ThundraSpanContext;
@@ -113,23 +107,6 @@ export class Trace {
         this.startTimestamp = this.pluginContext.invocationStartTimestamp;
         this.rootSpan.startTime = this.pluginContext.invocationStartTimestamp;
 
-        this.traceData = Utils.initMonitoringData(this.pluginContext,
-            originalContext, MonitoringDataType.TRACE) as TraceData;
-
-        this.traceData.id = this.pluginContext.traceId;
-        this.traceData.startTimestamp = this.pluginContext.invocationStartTimestamp;
-        this.traceData.rootSpanId = this.rootSpan ? this.rootSpan.spanContext.spanId : '';
-
-        this.traceData.tags = {};
-        this.traceData.tags['aws.region'] = this.pluginContext.applicationRegion;
-        this.traceData.tags['aws.lambda.name'] = originalContext.functionName;
-        this.traceData.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
-        this.traceData.tags['aws.lambda.log_group_name'] = originalContext.logGroupName;
-        this.traceData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
-        this.traceData.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
-        this.traceData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
-        this.traceData.tags['aws.lambda.invocation.timeout'] = false;
-
         this.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
         this.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
         this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
@@ -141,7 +118,7 @@ export class Trace {
         this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.rootSpan.tags['aws.lambda.invocation.request'] = this.getRequest(originalEvent);
 
-        this.injectTriggerTags(this.rootSpan, originalEvent, originalContext);
+        this.triggerClassName = this.injectTriggerTags(this.rootSpan, originalEvent, originalContext);
     }
 
     afterInvocation = (data: any) => {
@@ -152,24 +129,14 @@ export class Trace {
                 response = error;
             }
 
-            if (data.error instanceof TimeoutError) {
-                this.traceData.tags['aws.lambda.invocation.timeout'] = true;
-            }
-
-            this.traceData.tags.error = true;
-            this.traceData.tags['error.message'] = error.errorMessage;
-            this.traceData.tags['error.kind'] = error.errorType;
-
             this.rootSpan.tags.error = true;
             this.rootSpan.tags['error.message'] = error.errorMessage;
             this.rootSpan.tags['error.kind'] = error.errorType;
 
             if (error.code) {
-                this.traceData.tags['error.code'] = error.code;
                 this.rootSpan.tags['error.code'] = error.code;
             }
             if (error.stack) {
-                this.traceData.tags['error.stack'] = error.stack;
                 this.rootSpan.tags['error.stack'] = error.stack;
             }
         }
@@ -177,13 +144,8 @@ export class Trace {
         this.rootSpan.tags['aws.lambda.invocation.response'] = this.getResponse(response);
 
         this.finishTimestamp = this.pluginContext.invocationFinishTimestamp;
-        this.traceData.finishTimestamp = this.finishTimestamp;
-        this.traceData.duration = this.finishTimestamp - this.startTimestamp;
         this.rootSpan.finish();
         this.rootSpan.finishTime = this.pluginContext.invocationFinishTimestamp;
-
-        const reportData = Utils.generateReport(this.traceData, this.apiKey);
-        this.report(reportData);
 
         const spanList = this.tracer.getRecorder().getSpanList();
         const sampled = (this.config && this.config.samplerConfig) ? this.config.samplerConfig.isSampled(this.rootSpan) : true;
@@ -214,8 +176,7 @@ export class Trace {
     }
 
     buildSpanData(span: ThundraSpan, pluginContext: PluginContext): SpanData {
-        const spanData = Utils.createMonitoringData(MonitoringDataType.SPAN) as SpanData;
-        spanData.initWithBaseMonitoringDataValues(this.traceData);
+        const spanData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.SPAN) as SpanData;
 
         spanData.id = span.spanContext.spanId;
         spanData.traceId = pluginContext.traceId;
@@ -242,11 +203,13 @@ export class Trace {
                 this.config.unhookModuleCompile();
             }
         }
+        this.triggerClassName = undefined;
     }
 
     private getRequest(originalEvent: any): any {
         const conf = this.config;
 
+        // Masking and disableRequest should run first
         if (conf && conf.disableRequest) {
             return null;
         }
@@ -255,7 +218,24 @@ export class Trace {
             return conf.maskRequest.call(this, originalEvent);
         }
 
-        return originalEvent;
+        let enableRequestData = true;
+        if (this.triggerClassName === ClassNames.CLOUDWATCH && !conf.enableFirehoseRequest) {
+            enableRequestData = false;
+        }
+
+        if (this.triggerClassName === ClassNames.FIREHOSE && !conf.enableFirehoseRequest) {
+            enableRequestData = false;
+        }
+
+        if (this.triggerClassName === ClassNames.KINESIS && !conf.enableKinesisRequest) {
+            enableRequestData = false;
+        }
+
+        if (enableRequestData) {
+            return originalEvent;
+        } else {
+            return null;
+        }
     }
 
     private getResponse(response: any): any {
@@ -285,34 +265,34 @@ export class Trace {
         }
     }
 
-    private injectTriggerTags(span: ThundraSpan, originalEvent: any, originalContext: any) {
+    private injectTriggerTags(span: ThundraSpan, originalEvent: any, originalContext: any): String {
         try {
             const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
 
             if (lambdaEventType === LambdaEventType.Kinesis) {
-                LambdaEventUtils.injectTriggerTagsForKinesis(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForKinesis(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.FireHose) {
-                LambdaEventUtils.injectTriggerTagsForFirehose(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForFirehose(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.DynamoDB) {
-                LambdaEventUtils.injectTriggerTagsForDynamoDB(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForDynamoDB(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.SNS) {
-                LambdaEventUtils.injectTriggerTagsForSNS(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForSNS(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.SQS) {
-                LambdaEventUtils.injectTriggerTagsForSQS(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForSQS(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.S3) {
-                LambdaEventUtils.injectTriggerTagsForS3(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForS3(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.CloudWatchSchedule) {
-                LambdaEventUtils.injectTriggerTagsForCloudWatchSchedule(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForCloudWatchSchedule(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.CloudWatchLog) {
-                LambdaEventUtils.injectTriggerTagsForCloudWatchLogs(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForCloudWatchLogs(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.CloudFront) {
-                LambdaEventUtils.injectTriggerTagsForCloudFront(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForCloudFront(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.APIGatewayProxy) {
-                LambdaEventUtils.injectTriggerTagsForAPIGatewayProxy(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForAPIGatewayProxy(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.Lambda) {
-                LambdaEventUtils.injectTriggerTagsForLambda(span, originalContext);
+                return LambdaEventUtils.injectTriggerTagsForLambda(span, originalContext);
             } else if (lambdaEventType === LambdaEventType.APIGatewayPassThrough) {
-                LambdaEventUtils.injectTriggerTagsForAPIGatewayPassThrough(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForAPIGatewayPassThrough(span, originalEvent);
             }
         } catch (error) {
             ThundraLogger.getInstance().error('Cannot inject trigger tags. ' + error);

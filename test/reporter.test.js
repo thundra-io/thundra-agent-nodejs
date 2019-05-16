@@ -133,8 +133,9 @@ describe('Reporter', () => {
         const reporter = new Reporter({apiKey: 'apiKey'});
         const mockReport = {data: 'data'};
         reporter.addReport(mockReport);
-        it('should not add report to reports array', () => {
-            expect(reporter.reports).toEqual([]);
+        reporter.sendReports();
+        it('should add report to reports array', () => {
+            expect(reporter.reports.length).toBe(1);
         });
         it('should write report to process.stdout', () => {
             expect(stdout).toBeTruthy();

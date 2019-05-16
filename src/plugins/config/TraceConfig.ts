@@ -26,6 +26,13 @@ class TraceConfig extends BasePluginConfig {
     maskDynamoDBStatement: boolean;
     maskElasticSearchStatement: boolean;
     dynamoDBTraceInjectionEnabled: boolean;
+    enableCloudWatchRequest: boolean;
+    enableFirehoseRequest: boolean;
+    enableKinesisRequest: boolean;
+    maskSNSMessage: boolean;
+    maskSQSMessage: boolean;
+    maskLambdaPayload: boolean;
+    maskHttpBody: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -65,6 +72,34 @@ class TraceConfig extends BasePluginConfig {
         this.dynamoDBTraceInjectionEnabled = Utils.getConfiguration(
             envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) ? Utils.getConfiguration(
                 envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) === 'true' : options.dynamoDBTraceInjectionEnabled;
+
+        this.enableCloudWatchRequest = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE) === 'true' : options.enableCloudWatchRequest;
+
+        this.enableFirehoseRequest = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE) === 'true' : options.enableFirehoseRequest;
+
+        this.enableKinesisRequest = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE) === 'true' : options.enableKinesisRequest;
+
+        this.maskSNSMessage = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_SNS_MESSAGE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_SNS_MESSAGE) === 'true' : options.maskSNSMessage;
+
+        this.maskSQSMessage = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_SQS_MESSAGE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_SQS_MESSAGE) === 'true' : options.maskSQSMessage;
+
+        this.maskLambdaPayload = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_LAMBDA_PAYLOAD) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_LAMBDA_PAYLOAD) === 'true' : options.maskLambdaPayload;
+
+        this.maskHttpBody = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_HTTP_BODY) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_HTTP_BODY) === 'true' : options.maskHttpBody;
 
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {

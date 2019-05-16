@@ -81,6 +81,15 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 | thundra_agent_lambda_trace_integrations_rdb_statement_mask               | bool   |    false      |
 | thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask      | bool   |    false      |
 | thundra_agent_lambda_trace_integrations_elastic_statement_mask           | bool   |    false      |
+| thundra_agent_lambda_trace_kinesis_request_enable                        | bool   |    false      |
+| thundra_agent_lambda_trace_firehose_request_enable                       | bool   |    false      |
+| thundra_agent_lambda_trace_cloudwatchlog_request_enable                  | bool   |    false      |
+| thundra_agent_lambda_trace_integrations_aws_sns_message_mask             | bool   |    false      |
+| thundra_agent_lambda_trace_integrations_aws_sqs_message_mask             | bool   |    false      |
+| thundra_agent_lambda_trace_integrations_aws_lambda_payload_mask          | bool   |    false      |
+| thundra_agent_lambda_trace_integrations_aws_http_body_mask               | bool   |    false      |
+| thundra_agent_lambda_report_rest_composite_enabled                       | bool   |     false     |
+
 
 #### 2. Module initialization parameters
 

@@ -44,7 +44,6 @@ describe('LogPlugin', () => {
         logPlugin.beforeInvocation(beforeInvocationData);
         it('should set reporter, contextId and originalContext', () => {
             expect(logPlugin.reporter).toBe(beforeInvocationData.reporter);
-            expect(logPlugin.originalContext).toBe(beforeInvocationData.originalContext);
         });
     });
 

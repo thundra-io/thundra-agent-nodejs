@@ -120,4 +120,16 @@ describe('parseError', () => {
             expect(parsedError.errorType).toEqual('Unknown Error');
         });
     });
+
+    describe('object in message', () => {
+        const error = new Error();
+        error.message = {
+            'error': 'access_denied',
+            'error_description': 'Service not enabled within domain: https://login.thundra.io/api/v2/'
+        };
+
+        it('should set error.message as string', () => {
+            expect(Utils.parseError(error).errorMessage).toEqual(JSON.stringify(error.message));
+        });
+    });
 });

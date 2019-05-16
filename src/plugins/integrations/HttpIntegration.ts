@@ -115,15 +115,29 @@ class HttpIntegration implements Integration {
 
           const req = request.call(this, options, wrappedCallback);
 
-          req.on('socket', () => {
-            if (req.listenerCount('response') === 1) {
-              req.on('response', (res: any) => res.resume());
-            }
-          });
-
           req.on('response', (res: any) => {
             span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
           });
+
+          const emit = req.emit;
+          req.emit = function (eventName: any, arg: any) {
+            if (eventName === 'socket') {
+              if (req.listenerCount('response') === 1) {
+                req.on('response', (res: any) => res.resume());
+              }
+
+              if (!config.maskHttpBody && arg._httpMessage._hasBody) {
+                 try {
+                  const lines = arg._httpMessage.output[0].split('\n');
+                  span.setTag(HttpTags.BODY, lines[lines.length - 1]);
+                 } catch (error) {
+                  ThundraLogger.getInstance().debug(error);
+                 }
+              }
+            }
+
+            return emit.apply(this, arguments);
+          };
 
           return req;
 

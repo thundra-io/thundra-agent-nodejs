@@ -23,6 +23,8 @@ import Utils from './plugins/utils/Utils';
 import { envVariableKeys } from './Constants';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import PluginContext from './plugins/PluginContext';
+import ThundraLogger from './ThundraLogger';
+import InvocationSupport from './plugins/support/InvocationSupport';
 
 class ThundraWrapper {
 
@@ -82,6 +84,7 @@ class ThundraWrapper {
         }, this.wrappedContext);
 
         this.timeout = this.setupTimeoutHandler(this);
+        InvocationSupport.setFunctionName(this.originalContext.functionName);
     }
 
     wrappedCallback = (error: any, result: any) => {
@@ -127,6 +130,8 @@ class ThundraWrapper {
                     this.report(error, null, null);
                     return error;
                 }
+            }).catch((error) => {
+                ThundraLogger.getInstance().debug(error);
             });
     }
 
@@ -149,10 +154,7 @@ class ThundraWrapper {
     async executeAfteInvocationAndReport(afterInvocationData: any) {
         await this.executeHook('after-invocation', afterInvocationData, true);
         this.resetTime();
-
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) !== 'true') {
-            await this.reporter.sendReports();
-        }
+        await this.reporter.sendReports();
     }
 
     resetTime() {

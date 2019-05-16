@@ -4,7 +4,6 @@ import { createMockPluginContext, createMockBeforeInvocationData, createMockApiG
     createBatchMockSQSEventSameIds, createBatchMockSNSEventWithDifferentIds, createBatchMockSNSEventWithSameIds } from '../mocks/mocks';
 import * as mockAWSEvents from '../mocks/aws.events.mocks';    
 import { DATA_MODEL_VERSION } from '../../dist/Constants';
-import TimeoutError from '../../dist/plugins/error/TimeoutError';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../../dist/plugins/support/InvocationTraceSupport';
@@ -25,6 +24,7 @@ describe('Trace', () => {
         const tracerWithoutOptions = Trace();
         const tracer = Trace();
         tracer.setPluginContext(pluginContext);
+
         it('should create an instance with options', () => {
             expect(tracerWithOptions.config).toEqual(config);
         });
@@ -41,9 +41,7 @@ describe('Trace', () => {
                 'after-invocation': tracer.afterInvocation
             });
         });
-        it('Should set dataType correctly', () => {
-            expect(tracer.traceData.type).toEqual('Trace');
-        });
+     
         it('Should set tracer correctly', () => {
             expect(tracer.tracer instanceof ThundraTracer).toBeTruthy();
         });
@@ -143,27 +141,6 @@ describe('Trace', () => {
         });
     });
 
-    describe('report', () => {
-        const tracer = Trace();
-        const beforeInvocationData = createMockBeforeInvocationData();
-        const afterInvocationData = { response: { key: 'data' } };
-        
-        beforeAll(() => {
-            tracer.setPluginContext({ ...pluginContext, requestCount: 5 });
-            tracer.beforeInvocation(beforeInvocationData);
-            tracer.afterInvocation(afterInvocationData);
-        });
-
-        it('should call reporter.addReport', () => {
-            expect(tracer.reporter.addReport).toBeCalledWith({
-                data: tracer.traceData,
-                type: 'Trace',
-                apiKey: tracer.apiKey,
-                dataModelVersion: DATA_MODEL_VERSION
-            });
-        });
-    });
-
     describe('beforeInvocation', () => {
         const tracer = Trace();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -183,30 +160,6 @@ describe('Trace', () => {
 
         it('should set reporter', () => {
             expect(tracer.reporter).toBe(beforeInvocationData.reporter);
-        });
-
-        it('should initialize traceData', () => {
-            expect(tracer.traceData).toBeTruthy();
-            expect(tracer.traceData.id).toBeTruthy();
-            expect(tracer.traceData.applicationName).toEqual(beforeInvocationData.originalContext.functionName);
-            expect(tracer.traceData.applicationId).toBeTruthy();
-            expect(tracer.traceData.applicationVersion).toBeTruthy();
-            expect(tracer.traceData.applicationRuntime).toEqual('node');
-            expect(tracer.traceData.applicationRuntimeVersion).toEqual(process.version);
-            expect(tracer.traceData.startTimestamp).toBeTruthy();
-            expect(tracer.traceData.finishTimestamp).toBe(undefined);
-            expect(tracer.traceData.rootSpanId).toBeTruthy();
-            expect(tracer.traceData.duration).toBe(undefined);
-            expect(tracer.traceData.tags).toEqual({
-                'aws.lambda.invocation.timeout': false,
-                'aws.lambda.invocation.coldstart': pluginContext.requestCount > 0 ? false : true,
-                'aws.lambda.arn': beforeInvocationData.originalContext.invokedFunctionArn,
-                'aws.lambda.memory_limit': beforeInvocationData.originalContext.memoryLimitInMB,
-                'aws.region': pluginContext.applicationRegion,
-                'aws.lambda.name': beforeInvocationData.originalContext.functionName,
-                'aws.lambda.log_group_name': beforeInvocationData.originalContext.logGroupName,
-                'aws.lambda.log_stream_name': beforeInvocationData.originalContext.logStreamName,
-            });
         });
     });
 
@@ -377,7 +330,7 @@ describe('Trace', () => {
         });
         
         it('should create incoming kinesis trace links', () => {
-            const expTraceLinks = ['eu-west-2:example_stream:shardId-000000000000:49545115243490985018280067714973144582180062593244200961']
+            const expTraceLinks = ['eu-west-2:example_stream:shardId-000000000000:49545115243490985018280067714973144582180062593244200961'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -405,10 +358,10 @@ describe('Trace', () => {
 
         it('should create incoming firehose trace links', () => {
             const expTraceLinks = [
-                "eu-west-2:exampleStream:1495072948:75c5afa1146857f64e92e6bb6e561ded",
-                "eu-west-2:exampleStream:1495072949:75c5afa1146857f64e92e6bb6e561ded",
-                "eu-west-2:exampleStream:1495072950:75c5afa1146857f64e92e6bb6e561ded",
-            ]
+                'eu-west-2:exampleStream:1495072948:75c5afa1146857f64e92e6bb6e561ded',
+                'eu-west-2:exampleStream:1495072949:75c5afa1146857f64e92e6bb6e561ded',
+                'eu-west-2:exampleStream:1495072950:75c5afa1146857f64e92e6bb6e561ded',
+            ];
             expect(InvocationTraceSupport.getIncomingTraceLinks().sort()).toEqual(expTraceLinks.sort());
         });
     });
@@ -447,7 +400,7 @@ describe('Trace', () => {
                     `${region}:${tableName}:${timestamp+i}:SAVE:${keyHash}`,
                     `${region}:${tableName}:${timestamp+i}:SAVE:${newItemHash}`,
                     `${region}:${tableName}:${timestamp+i}:SAVE:${updatedItemHash}`,
-                ]
+                ];
             }));
             expect(InvocationTraceSupport.getIncomingTraceLinks().sort()).toEqual(expTraceLinks.sort());
         });
@@ -475,7 +428,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming sns trace links', () => {
-            const expTraceLinks = ['95df01b4-ee98-5cb9-9903-4c221d41eb5e']
+            const expTraceLinks = ['95df01b4-ee98-5cb9-9903-4c221d41eb5e'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -502,7 +455,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming sqs trace links', () => {
-            const expTraceLinks = ['19dd0b57-b21e-4ac1-bd88-01bbb068cb78']
+            const expTraceLinks = ['19dd0b57-b21e-4ac1-bd88-01bbb068cb78'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -530,7 +483,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming s3 trace links', () => {
-            const expTraceLinks = ['EXAMPLE123456789']
+            const expTraceLinks = ['EXAMPLE123456789'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -623,7 +576,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming apigateway trace links', () => {
-            const expTraceLinks = ['spanId']
+            const expTraceLinks = ['spanId'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -673,7 +626,7 @@ describe('Trace', () => {
         });
 
         it('should create incoming lambda trace links', () => {
-            const expTraceLinks = ['awsRequestId']
+            const expTraceLinks = ['awsRequestId'];
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
@@ -693,24 +646,13 @@ describe('Trace', () => {
         it('should set finishTimestamp', () => {
             expect(tracer.finishTimestamp).toBeTruthy();
         });
- 
-        it('should set traceData', () => {
-            expect(tracer.traceData).toBeTruthy();
-            expect(tracer.traceData.id).toBeTruthy();
-            expect(tracer.traceData.applicationName).toEqual(beforeInvocationData.originalContext.functionName);
-            expect(tracer.traceData.applicationId).toBeTruthy();
-            expect(tracer.traceData.applicationVersion).toBeTruthy();
-            expect(tracer.traceData.applicationRuntime).toEqual('node');
-            expect(tracer.traceData.applicationRuntimeVersion).toEqual(process.version);
-            expect(tracer.traceData.startTimestamp).toBeTruthy();
-            expect(tracer.traceData.finishTimestamp).toBeTruthy(undefined);
-            expect(tracer.traceData.rootSpanId).toBeTruthy();
-        });
- 
+
+        const rootSpanData = tracer.buildSpanData(tracer.rootSpan, tracer.pluginContext);
+
         it('should call report', () => {
             expect(tracer.report).toBeCalledWith({
-                data: tracer.traceData,
-                type: 'Trace',
+                data: rootSpanData,
+                type: 'Span',
                 apiKey: tracer.apiKey,
                 dataModelVersion: DATA_MODEL_VERSION
             });
@@ -735,46 +677,14 @@ describe('Trace', () => {
             expect(tracer.finishTimestamp).toBeTruthy();
         });
  
-        it('should set traceData', () => {
-            expect(tracer.traceData.tags.error).toEqual(true);
-            
-            expect(tracer.traceData.tags['error.kind']).toEqual('Error');
-            expect(tracer.traceData.tags['error.message']).toEqual('error message');
+        it('should set rootSpan', () => {
             expect(tracer.rootSpan.tags['aws.lambda.invocation.response']).toEqual({
                 errorMessage: 'error message',
                 errorType: 'Error',
                 code: 0,
                 stack: testError.stack
             });
-            expect(tracer.traceData.finishTimestamp).toBeTruthy();
-            expect(tracer.traceData.duration).toEqual(tracer.finishTimestamp - tracer.startTimestamp);
-        });
- 
-        it('should call report', () => {
-            expect(tracer.report).toBeCalledWith({
-                data: tracer.traceData,
-                type: 'Trace',
-                apiKey: tracer.apiKey,
-                dataModelVersion: DATA_MODEL_VERSION
-            });
-        });
- 
+        }); 
     });
 
-    describe('afterInvocation with TimeoutError', () => {
-        const tracer = Trace();
-        tracer.setPluginContext(pluginContext);
-        const beforeInvocationData = createMockBeforeInvocationData();
-        const afterInvocationData = {
-            error: new TimeoutError('error message'),
-            response: null
-        };
-        tracer.report = jest.fn();
-        tracer.beforeInvocation(beforeInvocationData);
-        tracer.afterInvocation(afterInvocationData);
-
-        it('should set Timeout true', () => {
-            expect(tracer.traceData.tags['aws.lambda.invocation.timeout']).toBeTruthy();
-        });
-    });
 });
