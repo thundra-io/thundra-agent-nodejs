@@ -97,6 +97,9 @@ class Utils {
             error.errorMessage = JSON.stringify(error.errorMessage);
         }
 
+        error.stack = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_ERROR_STACK_TRACE) ?  '' :  error.stack;
+
         return error;
     }
 

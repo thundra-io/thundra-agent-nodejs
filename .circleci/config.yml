@@ -25,7 +25,7 @@ jobs:
             - "ES_JAVA_OPTS=-Xms64m -Xmx64m"
           ports:
             - "127.0.0.1:9200:9200"
-
+      resource_class: xlarge
       steps:
         - checkout
         - run: npm install

@@ -20,7 +20,10 @@ jest.mock('os', () => ({
 
 jest.mock('../../dist/Constants', () => ({
     PROC_STAT_PATH: './test/mocks/mock-proc-stat',
-    PROC_IO_PATH: './test/mocks/mock-proc-io'
+    PROC_IO_PATH: './test/mocks/mock-proc-io',
+    envVariableKeys: {
+        THUNDRA_MASK_ERROR_STACK_TRACE: 'thundra_agent_lambda_error_stacktrace_mask',
+    }
 }));
 
 describe('getCpuUsage', () => {
@@ -130,6 +133,16 @@ describe('parseError', () => {
 
         it('should set error.message as string', () => {
             expect(Utils.parseError(error).errorMessage).toEqual(JSON.stringify(error.message));
+        });
+    });
+
+    describe('mask stack trace', () => {
+        const error = new Error('I am an error');
+   
+        process.env.thundra_agent_lambda_error_stacktrace_mask = 'true';
+        
+        it('should set error.message as string', () => {
+            expect(Utils.parseError(error).stack).toEqual('');
         });
     });
 });
