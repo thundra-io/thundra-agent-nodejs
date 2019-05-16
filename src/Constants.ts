@@ -71,6 +71,7 @@ export const envVariableKeys = {
     THUNDRA_MASK_SQS_MESSAGE: 'thundra_agent_lambda_trace_integrations_aws_sqs_message_mask',
     THUNDRA_MASK_LAMBDA_PAYLOAD: 'thundra_agent_lambda_trace_integrations_aws_lambda_payload_mask',
     THUNDRA_MASK_HTTP_BODY: 'thundra_agent_lambda_trace_integrations_aws_http_body_mask',
+    THUNDRA_MASK_ERROR_STACK_TRACE: 'thundra_agent_lambda_error_stacktrace_mask',
 };
 
 export function getTimeoutMargin(region: string) {
