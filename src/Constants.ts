@@ -4,6 +4,7 @@ import PostgreIntegration from './plugins/integrations/PostgreIntegration';
 import MySQL2Integration from './plugins/integrations/MySQL2Integration';
 import MySQLIntegration from './plugins/integrations/MySQLIntegration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
+import MongoDBIntegration from './plugins/integrations/MongoDBIntegration';
 import AWSIntegration from './plugins/integrations/AWSIntegration';
 import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
@@ -313,6 +314,7 @@ export const INTEGRATIONS: any = {
     redis: RedisIntegration,
     aws: AWSIntegration,
     es: ESIntegration,
+    mongodb: MongoDBIntegration,
 };
 
 export const LISTENERS: any = {
