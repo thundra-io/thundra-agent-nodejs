@@ -72,6 +72,10 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 | thundra_agent_lambda_trace_instrument_integrations_disable               | array  |    []         |
 | thundra_agent_lambda_metric_sample_sampler_timeAware_timeFreq            | number |    300000     |
 | thundra_agent_lambda_metric_sample_sampler_countAware_countFreq          | number |    10         |
+| thundra_agent_lambda_log_sample_sampler_timeAware_timeFreq               | number |    300000     |
+| thundra_agent_lambda_log_sample_sampler_countAware_countFreq             | number |    10         |
+| thundra_agent_lambda_trace_sample_sampler_timeAware_timeFreq             | number |    300000     |
+| thundra_agent_lambda_trace_sample_sampler_countAware_countFreq           | number |    10         |
 | thundra_agent_lambda_log_console_shim_disable                            | bool   |    false      |
 | thundra_agent_trace_instrument_integrations_spanContext_disable          | bool   |    false      |
 | thundra_agent_lambda_xray_disable                                        | bool   |    false      |
@@ -90,6 +94,16 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 | thundra_agent_lambda_trace_integrations_aws_http_body_mask               | bool   |    false      |
 | thundra_agent_lambda_report_rest_composite_enabled                       | bool   |    false      |
 | thundra_agent_lambda_error_stacktrace_mask                               | bool   |    false      |
+| thundra_agent_lambda_trace_sample_sampler_timeAware_enable               | bool   |    false      |
+| thundra_agent_lambda_trace_sample_sampler_countAware_enable              | bool   |    false      |
+| thundra_agent_lambda_trace_sample_sampler_errorAware_enable              | bool   |    false      |
+| thundra_agent_lambda_trace_sample_sampler_durationAware_enable           | bool   |    false      |
+| thundra_agent_lambda_log_sample_sampler_timeAware_enable                 | bool   |    false      |
+| thundra_agent_lambda_log_sample_sampler_countAware_enable                | bool   |    false      |
+| thundra_agent_lambda_log_sample_sampler_errorAware_enable                | bool   |    false      |
+| thundra_agent_lambda_metric_sample_sampler_timeAware_enable              | bool   |    false      |
+| thundra_agent_lambda_metric_sample_sampler_countAware_enable             | bool   |    false      |
+| thundra_agent_lambda_metric_sample_sampler_errorAware_enable             | bool   |    false      |
 
 
 #### 2. Module initialization parameters

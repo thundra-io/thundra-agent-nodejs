@@ -2,7 +2,7 @@ import DurationAwareSampler from '../../dist/opentracing/sampler/DurationAwareSa
 import ErrorAwareSampler from '../../dist/opentracing/sampler/ErrorAwareSampler';
 import TimeAwareSampler from '../../dist/opentracing/sampler/TimeAwareSampler';
 import CountAwareSampler from '../../dist/opentracing/sampler/CountAwareSampler';
-import ThundraSpan from '../../dist/opentracing/Span';
+import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 
 describe('DurationAwareSampler with duration 500ms and longerThan true', () => {
@@ -28,20 +28,21 @@ describe('ErrorAwareSampler', () => {
     const sampler = new ErrorAwareSampler();
 
     test('should sample root span with error', () => {
-        const span = new ThundraSpan();
-        span.setTag('error', true);
-        expect(sampler.isSampled(span)).toBe(true);
+        InvocationSupport.setErrorenous(true);
+        
+        expect(sampler.isSampled()).toBe(true);
     });
 
     test('should not sample root span without error', () => {
-        const span = new ThundraSpan();
-        expect(sampler.isSampled(span)).toBe(false);
+        InvocationSupport.setErrorenous(false);
+
+        expect(sampler.isSampled()).toBe(false);
     });
 });
 
 describe('TimeAwareSampler with time frequency 2 second', () => {
     const sampler = new TimeAwareSampler(2000);
-
+   
     test('should not sample after calling 1 second', (done) => {
         sampler.isSampled();
         setTimeout(() => {

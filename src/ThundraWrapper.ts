@@ -152,9 +152,13 @@ class ThundraWrapper {
     }
 
     async executeAfteInvocationAndReport(afterInvocationData: any) {
+        afterInvocationData.error ? InvocationSupport.setErrorenous(true) : InvocationSupport.setErrorenous(false);
+
         await this.executeHook('after-invocation', afterInvocationData, true);
         this.resetTime();
         await this.reporter.sendReports();
+
+        InvocationSupport.setErrorenous(false);
     }
 
     resetTime() {

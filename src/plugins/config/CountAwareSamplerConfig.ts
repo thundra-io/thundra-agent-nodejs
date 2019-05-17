@@ -8,10 +8,9 @@ class CountAwareSamplerConfig extends BasePluginConfig {
 
     constructor(options: any) {
         options = options ? options : {};
-        super(koalas(options.enabled, true));
+        super(koalas(options.enabled, false));
 
-        const freq = koalas(Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AGENT_METRIC_COUNT_AWARE_SAMPLER_COUNT_FREQ) , options.countFreq, 100);
+        const freq = koalas(options.countFreq, 100);
         this.countFreq = parseInt(freq, 10);
     }
 }

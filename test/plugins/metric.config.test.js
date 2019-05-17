@@ -21,7 +21,7 @@ describe('default Metric Config', () => {
 
     const config = new MetricConfig(); 
 
-    it('Should get default samling value from environment variables',() => {
+    it('Should get default sampling value from environment variables',() => {
         expect(config.enabled).toBe(true);
         
         expect(config.samplerConfig.countAwareSamplerConfig.enabled).toEqual(true);

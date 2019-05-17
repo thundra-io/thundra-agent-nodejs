@@ -6,6 +6,7 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraTracer from '../opentracing/Tracer';
 import { ConsoleShimmedMethods, logLevels, StdOutLogContext, envVariableKeys, StdErrorLogContext } from '../Constants';
 import * as util from 'util';
+import ThundraLogger from '../ThundraLogger';
 
 class Log {
     static instance: Log;
@@ -20,6 +21,7 @@ class Log {
     tracer: ThundraTracer;
     pluginOrder: number = 4;
     consoleReference: any = console;
+    config: LogConfig;
 
     constructor(options: LogConfig) {
         this.hooks = {
@@ -30,6 +32,7 @@ class Log {
         this.tracer = ThundraTracer.getInstance();
 
         Log.instance = this;
+        this.config = options;
     }
 
     static getInstance(): Log {
@@ -64,9 +67,16 @@ class Log {
     }
 
     afterInvocation = (data: any) => {
-        for (const log of this.logs) {
-            const logReportData = Utils.generateReport(log, this.apiKey);
-            this.report(logReportData);
+        const sampled = (this.config && this.config.samplerConfig) ?
+                    this.config.samplerConfig.isSampled() : true;
+
+        if (sampled) {
+            for (const log of this.logs) {
+                const logReportData = Utils.generateReport(log, this.apiKey);
+                this.report(logReportData);
+            }
+        } else {
+            ThundraLogger.getInstance().debug('Skipping reporting logs due to sampling.');
         }
 
         this.destroy();

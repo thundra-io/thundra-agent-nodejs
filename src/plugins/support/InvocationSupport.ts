@@ -2,7 +2,8 @@ import ThundraLogger from '../../ThundraLogger';
 
 class InvocationSupport {
     static tags: any = {};
-    static functionName = '';
+    static functionName: string = '';
+    static errorenous: boolean;
 
     static setTag(key: string, value: any): void {
         try {
@@ -36,6 +37,14 @@ class InvocationSupport {
 
     static getFunctionName(): string {
         return InvocationSupport.functionName;
+    }
+
+    static setErrorenous(errorenous: boolean): void {
+        InvocationSupport.errorenous = errorenous;
+    }
+
+    static isErrorenous(): boolean {
+        return InvocationSupport.errorenous;
     }
 }
 

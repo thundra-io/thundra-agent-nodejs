@@ -141,7 +141,7 @@ describe('parseError', () => {
    
         process.env.thundra_agent_lambda_error_stacktrace_mask = 'true';
         
-        it('should set error.message as string', () => {
+        it('should mask stack trace', () => {
             expect(Utils.parseError(error).stack).toEqual('');
         });
     });
