@@ -24,3 +24,11 @@ services:
       - "ES_JAVA_OPTS=-Xms64m -Xmx64m"
     ports:
       - "127.0.0.1:9200:9200"
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+    ports:
+      - "127.0.0.1:27017:27017"
