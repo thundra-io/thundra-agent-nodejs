@@ -40,7 +40,6 @@ class MongoDBIntegration implements Integration {
     }
 
     onStarted(event: any) {
-        console.log('on started event: ', event.command[event.commandName]);
         let span: ThundraSpan;
         try {
             const tracer = ThundraTracer.getInstance();
@@ -52,15 +51,16 @@ class MongoDBIntegration implements Integration {
             const parentSpan = tracer.getActiveSpan();
             const functionName = InvocationSupport.getFunctionName();
             const commandName: string = get(event, 'commandName', '');
+            const commandNameUpper: string = commandName.toUpperCase();
             const collectionName: string = get(event.command, commandName, '');
             const dbName: string = get(event, 'databaseName', '');
             const connectionId: string = get(event, 'connectionId', '');
             const hostPort: string[] = connectionId.split(':', 2);
             const host = hostPort[0];
             const port = hostPort.length === 2 ? hostPort[1] : '';
-            const operationType = get(MongoDBCommandTypes, commandName.toUpperCase(), '');
+            const operationType = get(MongoDBCommandTypes, commandNameUpper, '');
 
-            span = tracer._startSpan(commandName.toUpperCase(), {
+            span = tracer._startSpan(commandNameUpper, {
                 childOf: parentSpan,
                 domainName: DomainNames.DB,
                 className: ClassNames.MONGODB,
@@ -70,7 +70,7 @@ class MongoDBIntegration implements Integration {
                     [DBTags.DB_HOST]: host,
                     [DBTags.DB_PORT]: port,
                     [DBTags.DB_INSTANCE]: dbName,
-                    [MongoDBTags.MONGODB_COMMAND_NAME]: commandName.toUpperCase(),
+                    [MongoDBTags.MONGODB_COMMAND_NAME]: commandNameUpper,
                     [MongoDBTags.MONGODB_COLLECTION]: collectionName,
                     [SpanTags.OPERATION_TYPE]: operationType,
                     [SpanTags.TOPOLOGY_VERTEX]: true,
