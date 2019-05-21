@@ -39,3 +39,22 @@ module.exports.update = (doc, updateKey, mongodb) => {
         });
     });
 }
+
+module.exports.dropCollection = (mongodb) => {
+    return new Promise((resolve) => {
+        const MongoClient = mongodb.MongoClient;
+        const mongoURL = 'mongodb://localhost:27017';
+        const dbName = 'testDB';
+        const collectionName = 'testCollection'
+        MongoClient.connect(mongoURL, {useNewUrlParser: true }, (err, client) => {
+            const db = client.db(dbName);
+            db.dropCollection('non_exist')
+                .then((res) => client.close())
+                .then(() => resolve())
+                .catch((err) => {
+                    client.close()
+                    .then(resolve);
+                });
+        });
+    });
+}
