@@ -1,8 +1,8 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, MongoDBTags, MongoDBCommandTypes,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
 } from '../../Constants';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
@@ -11,6 +11,14 @@ import InvocationSupport from '../support/InvocationSupport';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
+const get = require('lodash.get');
+
+let mongodb: any = null;
+try {
+    mongodb = require('mongodb');
+} catch (e) {
+    // mongodb library not available
+}
 
 class MongoDBIntegration implements Integration {
     config: any;
@@ -18,42 +26,103 @@ class MongoDBIntegration implements Integration {
     version: string;
     hook: any;
     basedir: string;
+    listener: any;
+    spans: any;
 
     constructor(config: any) {
-        this.version = '>=2';
-        this.hook = Hook('mongodb-core', { internals: true }, (exp: any, name: string, basedir: string) => {
-            if (name === 'mongodb-core') {
-                const moduleValidator = new ModuleVersionValidator();
-                const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-                if (!isValidVersion) {
-                    ThundraLogger.getInstance().error('Invalid module version for mongodb integration. ' +
-                                                    `Supported version is ${this.version}`);
-                } else {
-                    this.lib = exp;
-                    this.config = config;
-                    this.basedir = basedir;
-
-                    this.wrap.call(this, exp, config);
-                }
-            }
-            return exp;
-        });
+        this.spans = {};
+        if (mongodb !== null) {
+            this.listener = mongodb.instrument();
+            this.listener.on('started', (this.onStarted.bind(this)));
+            this.listener.on('succeeded', this.onSucceeded.bind(this));
+            this.listener.on('failed', this.onFailed.bind(this));
+        }
     }
 
-    wrap(lib: any, config: any) {
-        function wrapper(originalInsertMethod: any) {
-            return function insertWrapper(ns: any, ops: any, options: any, callback: any) {
-                console.log('inside the insertWrapper');
-                return originalInsertMethod.call(this, ns, ops, options, callback);
-            };
+    onStarted(event: any) {
+        console.log('on started event: ', event.command[event.commandName]);
+        let span: ThundraSpan;
+        try {
+            const tracer = ThundraTracer.getInstance();
+
+            if (!tracer) {
+                return;
+            }
+
+            const parentSpan = tracer.getActiveSpan();
+            const functionName = InvocationSupport.getFunctionName();
+            const commandName: string = get(event, 'commandName', '');
+            const collectionName: string = get(event.command, commandName, '');
+            const dbName: string = get(event, 'databaseName', '');
+            const connectionId: string = get(event, 'connectionId', '');
+            const hostPort: string[] = connectionId.split(':', 2);
+            const host = hostPort[0];
+            const port = hostPort.length === 2 ? hostPort[1] : '';
+            const operationType = get(MongoDBCommandTypes, commandName.toUpperCase(), '');
+
+            span = tracer._startSpan(commandName.toUpperCase(), {
+                childOf: parentSpan,
+                domainName: DomainNames.DB,
+                className: ClassNames.MONGODB,
+                disableActiveStart: true,
+                tags: {
+                    [DBTags.DB_TYPE]: DBTypes.MONGODB,
+                    [DBTags.DB_HOST]: host,
+                    [DBTags.DB_PORT]: port,
+                    [DBTags.DB_INSTANCE]: dbName,
+                    [MongoDBTags.MONGODB_COMMAND_NAME]: commandName.toUpperCase(),
+                    [MongoDBTags.MONGODB_COLLECTION]: collectionName,
+                    [SpanTags.OPERATION_TYPE]: operationType,
+                    [SpanTags.TOPOLOGY_VERTEX]: true,
+                    [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
+                    [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
+                    [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
+                },
+            });
+
+            this.spans[event.requestId] = span;
+        } catch (error) {
+            if (span) {
+                span.close();
+            }
+
+            ThundraLogger.getInstance().error(error);
+        }
+    }
+
+    onSucceeded(event: any) {
+        const span: ThundraSpan = get(this.spans, event.requestId, null);
+        if (span === null) {
+            return;
         }
 
-        shimmer.wrap(lib.Server.prototype, 'insert', wrapper);
+        try {
+            span.close();
+        } catch (error) {
+            ThundraLogger.getInstance().error(error);
+        }
+    }
+
+    onFailed(event: any) {
+        const span: ThundraSpan = get(this.spans, event.requestId, null);
+        if (span === null) {
+            return;
+        }
+
+        try {
+            span.setErrorTag(event.failure);
+            span.close();
+        } catch (error) {
+            ThundraLogger.getInstance().error(error);
+        }
+    }
+
+    wrap() {
+        return;
     }
 
     unwrap() {
-        shimmer.unwrap(this.lib.Server.prototype, 'insert');
-        this.hook.unhook();
+        return;
     }
 }
 
