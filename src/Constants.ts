@@ -706,3 +706,5 @@ export const ConsoleShimmedMethods = ['log', 'debug', 'info', 'warn', 'error'];
 export const StdOutLogContext = 'STDOUT';
 
 export const StdErrorLogContext = 'STDERR';
+
+export const DefaultMongoCommandSizeLimit = 128 * 1024;
