@@ -9,8 +9,6 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 
-const shimmer = require('shimmer');
-const Hook = require('require-in-the-middle');
 const get = require('lodash.get');
 
 let mongodb: any = null;
