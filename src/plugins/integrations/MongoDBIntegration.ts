@@ -103,6 +103,7 @@ class MongoDBIntegration implements Integration {
         if (span === null) {
             return;
         }
+        delete this.spans[event.requestId];
 
         try {
             span.close();
@@ -116,6 +117,7 @@ class MongoDBIntegration implements Integration {
         if (span === null) {
             return;
         }
+        delete this.spans[event.requestId];
 
         try {
             span.setErrorTag(event.failure);
