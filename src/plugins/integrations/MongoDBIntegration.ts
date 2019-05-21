@@ -1,10 +1,10 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, MongoDBTags, MongoDBCommandTypes,
+    DBTags, SpanTags, DomainNames, DBTypes, MongoDBTags, MongoDBCommandTypes,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
+    DefaultMongoCommandSizeLimit,
 } from '../../Constants';
-import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
@@ -31,6 +31,7 @@ class MongoDBIntegration implements Integration {
 
     constructor(config: any) {
         this.spans = {};
+        this.config = config;
         if (mongodb !== null) {
             this.listener = mongodb.instrument();
             this.listener.on('started', (this.onStarted.bind(this)));
@@ -59,6 +60,11 @@ class MongoDBIntegration implements Integration {
             const host = hostPort[0];
             const port = hostPort.length === 2 ? hostPort[1] : '';
             const operationType = get(MongoDBCommandTypes, commandNameUpper, '');
+            let maskedCommand;
+
+            if (!this.config.maskMongoDBCommand) {
+                maskedCommand = JSON.stringify(event.command).substr(0, DefaultMongoCommandSizeLimit);
+            }
 
             span = tracer._startSpan(commandNameUpper, {
                 childOf: parentSpan,
@@ -70,8 +76,10 @@ class MongoDBIntegration implements Integration {
                     [DBTags.DB_HOST]: host,
                     [DBTags.DB_PORT]: port,
                     [DBTags.DB_INSTANCE]: dbName,
+                    [DBTags.DB_STATEMENT]: maskedCommand,
                     [MongoDBTags.MONGODB_COMMAND_NAME]: commandNameUpper,
                     [MongoDBTags.MONGODB_COLLECTION]: collectionName,
+                    [MongoDBTags.MONGODB_COMMAND]: maskedCommand,
                     [SpanTags.OPERATION_TYPE]: operationType,
                     [SpanTags.TOPOLOGY_VERTEX]: true,
                     [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
