@@ -19,8 +19,6 @@
 import Reporter from './Reporter';
 import TimeoutError from './plugins/error/TimeoutError';
 import HttpError from './plugins/error/HttpError';
-import Utils from './plugins/utils/Utils';
-import { envVariableKeys } from './Constants';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import PluginContext from './plugins/PluginContext';
 import ThundraLogger from './ThundraLogger';
@@ -109,6 +107,8 @@ class ThundraWrapper {
 
         this.resetTime();
 
+        InvocationSupport.setErrorenous(false);
+
         this.executeHook('before-invocation', beforeInvocationData, false)
             .then(() => {
                 this.pluginContext.requestCount += 1;
@@ -152,9 +152,13 @@ class ThundraWrapper {
     }
 
     async executeAfteInvocationAndReport(afterInvocationData: any) {
+        afterInvocationData.error ? InvocationSupport.setErrorenous(true) : InvocationSupport.setErrorenous(false);
+
         await this.executeHook('after-invocation', afterInvocationData, true);
         this.resetTime();
         await this.reporter.sendReports();
+
+        InvocationSupport.setErrorenous(false);
     }
 
     resetTime() {

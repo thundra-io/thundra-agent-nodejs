@@ -1,15 +1,15 @@
 import Sampler from './Sampler';
-import Utils from '../../plugins/utils/Utils';
 import { envVariableKeys } from '../../Constants';
+import Utils from '../../plugins/utils/Utils';
 const koalas = require('koalas');
 
 class TimeAwareSampler implements Sampler<null> {
     timeFreq: number;
     latestTime: number;
 
-    constructor(timeFreq: number) {
+    constructor(timeFreq?: number) {
         this.timeFreq = koalas(parseInt(Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AGENT_METRIC_TIME_AWARE_SAMPLER_TIME_FREQ), 10), timeFreq, 300000);
+            envVariableKeys.THUNDRA_AGENT_TIME_AWARE_SAMPLER_TIME_FREQ), 10), timeFreq, 300000);
         this.latestTime = 0;
     }
 

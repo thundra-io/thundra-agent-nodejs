@@ -9,10 +9,9 @@ class TimeAwareSamplerConfig extends BasePluginConfig {
 
     constructor(options: any) {
         options = options ? options : {};
-        super(koalas(options.enabled, true));
+        super(koalas(options.enabled, false));
 
-        const freq = koalas(Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AGENT_METRIC_TIME_AWARE_SAMPLER_TIME_FREQ) , options.timeFreq, 300000);
+        const freq = koalas(options.timeFreq, 300000);
 
         this.timeFreq = parseInt(freq, 10);
     }
