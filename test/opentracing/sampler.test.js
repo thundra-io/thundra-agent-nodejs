@@ -80,7 +80,6 @@ describe('CountAwareSampler with count frequency 5', () => {
 
 
 describe('CompositeSampler with Error and Count Aware Samplers with frequency 5 with OR operator', () => {
-    InvocationSupport.setErrorenous(true);
     const sampler1 = new CountAwareSampler(5);
     const sampler2 = new ErrorAwareSampler();
 
@@ -93,6 +92,7 @@ describe('CompositeSampler with Error and Count Aware Samplers with frequency 5 
 
     test('should sample 10 of 10 calls', () => {
         for (let sample = 0; sample < 10; sample++) {
+            InvocationSupport.setErrorenous(true);
             if (sampler.isSampled()) {
                 sampledCount++;
             }
