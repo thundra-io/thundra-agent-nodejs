@@ -25,6 +25,13 @@ jobs:
             - "ES_JAVA_OPTS=-Xms64m -Xmx64m"
           ports:
             - "127.0.0.1:9200:9200"
+  
+        - image: mongo
+          environment:
+            - MONGO_INITDB_ROOT_USERNAME=root
+            - MONGO_INITDB_ROOT_PASSWORD=example
+          ports:
+          - "127.0.0.1:27017:27017"
       resource_class: xlarge
       steps:
         - checkout
