@@ -1,5 +1,6 @@
 import ThundraSpanListener from './ThundraSpanListener';
 import ThundraSpan from '../../opentracing/Span';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const koalas = require('koalas');
 
@@ -63,7 +64,7 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
 
     private _injectErrorWithCallback(span: ThundraSpan,  me: any, callback: () => any): void {
         if (this.counter % this.injectCountFreq === 0) {
-            const error = new Error(this.errorMessage);
+            const error = new ThundraChaosError(this.errorMessage);
             error.name = this.errorType;
             span.setErrorTag(error);
             if (typeof(callback) === 'function') {
@@ -76,7 +77,7 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
 
     private _injectError(span: ThundraSpan,  me: any): void {
         if (this.counter % this.injectCountFreq === 0) {
-            const error = new Error(this.errorMessage);
+            const error = new ThundraChaosError(this.errorMessage);
             error.name = this.errorType;
             span.setErrorTag(error);
             this.counter++;
