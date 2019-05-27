@@ -15,6 +15,7 @@ import ThundraSpan from '../../opentracing/Span';
 import * as opentracing from 'opentracing';
 import LambdaEventUtils from '../utils/LambdaEventUtils';
 import InvocationSupport from '../support/InvocationSupport';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -566,25 +567,40 @@ class AWSIntegration implements Integration {
                         request.on('error', (error: any) => {
                             if (error && activeSpan) {
                                 activeSpan.setErrorTag(error);
-                                activeSpan.close();
+                                if (error.injectedByThundra) {
+                                    activeSpan.close();
+                                }
                             }
                         }).on('complete', (response: any) => {
                             if (response) {
                                 AWSIntegration.injectTraceLink(activeSpan, request, config);
                             }
                             if (activeSpan) {
-                                activeSpan.close();
+                                try {
+                                    activeSpan.close();
+                                } catch (error) {
+                                    if (error instanceof ThundraChaosError) {
+                                        request.emit('error', error);
+                                    } else {
+                                        ThundraLogger.getInstance().error(error);
+                                    }
+                                }
                             }
                         });
 
                         return originalFunction.apply(this, [originalCallback]);
                     }
                 } catch (error) {
+                    if (error instanceof ThundraChaosError) {
+                        this.response.error = error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                    }
+
                     const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
                     if (activeSpan) {
                         activeSpan.close();
                     }
-                    ThundraLogger.getInstance().error(error);
                     return originalFunction.apply(this, [callback]);
                 }
             };
