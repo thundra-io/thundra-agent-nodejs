@@ -64,7 +64,7 @@ class MongoDBIntegration implements Integration {
                 maskedCommand = JSON.stringify(event.command).substr(0, DefaultMongoCommandSizeLimit);
             }
 
-            span = tracer._startSpan(commandNameUpper, {
+            span = tracer._startSpan(dbName, {
                 childOf: parentSpan,
                 domainName: DomainNames.DB,
                 className: ClassNames.MONGODB,

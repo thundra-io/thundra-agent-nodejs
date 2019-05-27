@@ -26,7 +26,7 @@ jobs:
           ports:
             - "127.0.0.1:9200:9200"
   
-        - image: mongo
+        - image: bitnami/mongodb:3.6.11
           environment:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=example

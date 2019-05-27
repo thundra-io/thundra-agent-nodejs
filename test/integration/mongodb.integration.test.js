@@ -11,8 +11,8 @@ describe('MongoDB Integration', () => {
     test('should instrument MongoDB insert calls', () => {
         const tracer = new ThundraTracer();
         const doc = {
-            name: "foo",
-            colors: ["gray", "black", "white"],
+            name: 'foo',
+            colors: ['gray', 'black', 'white'],
         };
 
         return MongoDB.insert(doc, sdk).then(() => {
@@ -20,7 +20,7 @@ describe('MongoDB Integration', () => {
             
             expect(span.className).toBe('MONGODB');
             expect(span.domainName).toBe('DB');
-            expect(span.operationName).toBe('INSERT');
+            expect(span.operationName).toBe('testDB');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['db.host']).toBe('localhost');
             expect(span.tags['db.port']).toBe('27017');
@@ -35,7 +35,7 @@ describe('MongoDB Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
 
-            let command = JSON.parse(span.tags['mongodb.command'])
+            let command = JSON.parse(span.tags['mongodb.command']);
             expect(command.documents[0].name).toBe('foo');
         });
     });
@@ -51,7 +51,7 @@ describe('MongoDB Integration', () => {
             const span = tracer.getRecorder().spanList[1];
             expect(span.className).toBe('MONGODB');
             expect(span.domainName).toBe('DB');
-            expect(span.operationName).toBe('UPDATE');
+            expect(span.operationName).toBe('testDB');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['db.host']).toBe('localhost');
             expect(span.tags['db.port']).toBe('27017');
@@ -82,7 +82,7 @@ describe('MongoDB Integration', () => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.className).toBe('MONGODB');
             expect(span.domainName).toBe('DB');
-            expect(span.operationName).toBe('DROP');
+            expect(span.operationName).toBe('testDB');
             expect(span.tags['operation.type']).toBe('DELETE');
             expect(span.tags['db.host']).toBe('localhost');
             expect(span.tags['db.port']).toBe('27017');
@@ -97,7 +97,7 @@ describe('MongoDB Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
 
-            expect(span.tags['error']).toBe(true)
+            expect(span.tags['error']).toBe(true);
         });
     });
-})
+});
