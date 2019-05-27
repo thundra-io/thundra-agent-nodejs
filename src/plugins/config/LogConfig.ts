@@ -1,15 +1,14 @@
 import BasePluginConfig from './BasePluginConfig';
-import LogSamplerConfig from './LogSamplerConfig';
+import Sampler from '../../opentracing/sampler/Sampler';
 const koalas = require('koalas');
 
 class LogConfig extends BasePluginConfig {
-    samplerConfig: LogSamplerConfig;
+    sampler: Sampler<any>;
 
     constructor(options: any) {
         options = options ? options : {};
         super(koalas(options.enabled, true));
-
-        this.samplerConfig = new LogSamplerConfig(options.samplerConfig);
+        this.sampler = options.sampler;
     }
 }
 

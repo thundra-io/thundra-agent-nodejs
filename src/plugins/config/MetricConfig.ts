@@ -1,14 +1,15 @@
 import BasePluginConfig from './BasePluginConfig';
-import MetricSamplerConfig from './MetricSamplerConfig';
+import Sampler from '../../opentracing/sampler/Sampler';
 const koalas = require('koalas');
 
 class MetricConfig extends BasePluginConfig {
-    samplerConfig: MetricSamplerConfig;
+    sampler: Sampler<any>;
 
     constructor(options: any) {
         options = options ? options : {};
         super(koalas(options.enabled, true));
-        this.samplerConfig = new MetricSamplerConfig(options.samplerConfig);
+
+        this.sampler = options.sampler;
     }
 }
 

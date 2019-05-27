@@ -148,20 +148,16 @@ export class Trace {
         this.rootSpan.finishTime = this.pluginContext.invocationFinishTimestamp;
 
         const spanList = this.tracer.getRecorder().getSpanList();
-        const sampled = (this.config && this.config.samplerConfig) ? this.config.samplerConfig.isSampled(this.rootSpan) : true;
-        const isSamplerConfig = this.config && this.config.samplerConfig;
 
-        const customSampler = (isSamplerConfig && this.config.samplerConfig.customSampler) ?
-                            this.config.samplerConfig.customSampler : false;
-        const runCustomSamplerOnEachSpan =
-                            (isSamplerConfig) ? this.config.samplerConfig.runCustomSamplerOnEachSpan : false;
+        const isSamplerPresent = this.config && this.config.sampler && typeof(this.config.sampler) === 'function';
+        const sampled = isSamplerPresent ? this.config.sampler.isSampled() : true;
 
         if (sampled) {
             for (const span of spanList) {
                 if (span) {
-                    if (customSampler && runCustomSamplerOnEachSpan && !customSampler.isSampled(span)) {
+                    if (isSamplerPresent && this.config.runSamplerOnEachSpan && this.config.sampler.isSampled(span)) {
                         ThundraLogger.getInstance().debug(
-                            `Filtering span with name ${span.getOperationName()} due to custom sampling configration`);
+                            `Filtering span with name ${span.getOperationName()} due to custom sampling configuration`);
                         continue;
                     }
 

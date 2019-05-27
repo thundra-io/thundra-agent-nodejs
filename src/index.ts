@@ -14,11 +14,6 @@ import LogConfig from './plugins/config/LogConfig';
 import PluginContext from './plugins/PluginContext';
 import ThundraTracer from './opentracing/Tracer';
 import { envVariableKeys } from './Constants';
-import TraceSamplerConfig from './plugins/config/TraceSamplerConfig';
-import MetricSamplerConfig from './plugins/config/MetricSamplerConfig';
-import CountAwareSamplerConfig from './plugins/config/CountAwareSamplerConfig';
-import DurationAwareSamplerConfig from './plugins/config/DurationAwareSamplerConfig';
-import ErrorAwareSamplerConfig from './plugins/config/ErrorAwareSamplerConfig';
 import TimeAwareSamplerConfig from './plugins/config/TimeAwareSamplerConfig';
 import Logger from './plugins/Logger';
 import Log from './plugins/Log';
@@ -30,6 +25,11 @@ import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
 import SpanFilter from './plugins/listeners/SpanFilter';
 import StandardSpanFilterer from './plugins/listeners/StandardSpanFilterer';
+import CompositeSampler from './opentracing/sampler/CompositeSampler';
+import CountAwareSampler from './opentracing/sampler/CountAwareSampler';
+import DurationAwareSampler from './opentracing/sampler/DurationAwareSampler';
+import ErrorAwareSampler from './opentracing/sampler/ErrorAwareSampler';
+import TimeAwareSampler from './opentracing/sampler/TimeAwareSampler';
 
 const ThundraWarmup = require('@thundra/warmup');
 
@@ -145,13 +145,16 @@ module.exports.config = {
     LogConfig,
     TraceableConfig,
     IntegrationConfig,
-    TraceSamplerConfig,
-    MetricSamplerConfig,
-    CountAwareSamplerConfig,
-    DurationAwareSamplerConfig,
-    ErrorAwareSamplerConfig,
     TimeAwareSamplerConfig,
     AwsXRayConfig,
+};
+
+module.exports.samplers = {
+    CompositeSampler,
+    CountAwareSampler,
+    DurationAwareSampler,
+    ErrorAwareSampler,
+    TimeAwareSampler,
 };
 
 module.exports.InvocationSupport = InvocationSupport;

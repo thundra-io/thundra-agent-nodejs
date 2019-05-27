@@ -2,6 +2,8 @@ import DurationAwareSampler from '../../dist/opentracing/sampler/DurationAwareSa
 import ErrorAwareSampler from '../../dist/opentracing/sampler/ErrorAwareSampler';
 import TimeAwareSampler from '../../dist/opentracing/sampler/TimeAwareSampler';
 import CountAwareSampler from '../../dist/opentracing/sampler/CountAwareSampler';
+import CompositeSampler from '../../dist/opentracing/sampler/CompositeSampler';
+import { SamplerCompositionOperator } from '../../dist/opentracing/sampler/CompositeSampler';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 
@@ -73,5 +75,75 @@ describe('CountAwareSampler with count frequency 5', () => {
         }
 
         expect(sampledCount).toBe(2);
+    });
+});
+
+
+describe('CompositeSampler with Error and Count Aware Samplers with frequency 5 with OR operator', () => {
+    InvocationSupport.setErrorenous(true);
+    const sampler1 = new CountAwareSampler(5);
+    const sampler2 = new ErrorAwareSampler();
+
+    const samplers = [];
+    samplers.push(sampler1);
+    samplers.push(sampler2);
+
+    const sampler = new CompositeSampler(samplers);
+    let sampledCount = 0;
+
+    test('should sample 10 of 10 calls', () => {
+        for (let sample = 0; sample < 10; sample++) {
+            if (sampler.isSampled()) {
+                sampledCount++;
+            }
+        }
+        expect(sampledCount).toBe(10);
+    });
+});
+
+describe('CompositeSampler with Error and Count Aware Samplers with frequency 5 with AND operator.', () => {
+    const sampler1 = new CountAwareSampler(5);
+    const sampler2 = new ErrorAwareSampler();
+
+    const samplers = [];
+    samplers.push(sampler1);
+    samplers.push(sampler2);
+
+    const sampler = new CompositeSampler(samplers, SamplerCompositionOperator.AND);
+    let sampledCount = 0;
+
+    test('should sample 2 of 10 calls', () => {
+        for (let sample = 0; sample < 10; sample++) {
+            InvocationSupport.setErrorenous(true);
+            if (sampler.isSampled()) {
+                sampledCount++;
+            }
+        }
+        expect(sampledCount).toBe(2);
+    });
+});
+
+
+describe('CompositeSampler should pass data to underlying sampler', () => {
+    const sampler1 = new DurationAwareSampler(500, true);
+
+    const samplers = [];
+    samplers.push(sampler1);
+    
+    const sampler = new CompositeSampler(samplers, SamplerCompositionOperator.AND);
+
+    test('should sample root span with duration greater than 500 ms', () => {
+        const mockSpan = {
+            getDuration: () => 1000
+        };
+        expect(sampler.isSampled(mockSpan)).toBe(true);
+    });
+
+    test('should not sample root span with duration smaller than 500 ms', () => {
+        const mockSpan = {
+            getDuration: () => 200
+        };
+
+        expect(sampler.isSampled(mockSpan)).toBe(false);
     });
 });

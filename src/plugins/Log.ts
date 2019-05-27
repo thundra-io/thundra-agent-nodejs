@@ -67,8 +67,8 @@ class Log {
     }
 
     afterInvocation = (data: any) => {
-        const sampled = (this.config && this.config.samplerConfig) ?
-                    this.config.samplerConfig.isSampled() : true;
+        const isSamplerPresent = this.config && this.config.sampler && typeof(this.config.sampler) === 'function';
+        const sampled = isSamplerPresent ? this.config.sampler.isSampled() : true;
 
         if (sampled) {
             for (const log of this.logs) {

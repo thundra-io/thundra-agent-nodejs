@@ -19,8 +19,6 @@
 import Reporter from './Reporter';
 import TimeoutError from './plugins/error/TimeoutError';
 import HttpError from './plugins/error/HttpError';
-import Utils from './plugins/utils/Utils';
-import { envVariableKeys } from './Constants';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import PluginContext from './plugins/PluginContext';
 import ThundraLogger from './ThundraLogger';

@@ -4,9 +4,9 @@ import {envVariableKeys, INTEGRATIONS } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
 import Utils from '../utils/Utils';
 import ThundraLogger from '../../ThundraLogger';
-import TraceSamplerConfig from './TraceSamplerConfig';
 import Integration from '../integrations/Integration';
 import Instrumenter from '../../opentracing/instrument/Instrumenter';
+import Sampler from '../../opentracing/sampler/Sampler';
 const koalas = require('koalas');
 
 class TraceConfig extends BasePluginConfig {
@@ -18,7 +18,6 @@ class TraceConfig extends BasePluginConfig {
     maskResponse: (response: any) => any;
     disabledIntegrations: IntegrationConfig[];
     disableInstrumentation: boolean;
-    samplerConfig: TraceSamplerConfig;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
     maskRedisStatement: boolean;
@@ -33,6 +32,8 @@ class TraceConfig extends BasePluginConfig {
     maskSQSMessage: boolean;
     maskLambdaPayload: boolean;
     maskHttpBody: boolean;
+    sampler: Sampler<any>;
+    runSamplerOnEachSpan: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -51,7 +52,6 @@ class TraceConfig extends BasePluginConfig {
         this.disableInstrumentation = Utils.getConfiguration(
             envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) === 'true' : options.disableInstrumentation;
-        this.samplerConfig = new TraceSamplerConfig(options.samplerConfig);
 
         this.maskRedisStatement = Utils.getConfiguration(
             envVariableKeys.THUNDRA_MASK_REDIS_STATEMENT) ? Utils.getConfiguration(
@@ -100,6 +100,9 @@ class TraceConfig extends BasePluginConfig {
         this.maskHttpBody = Utils.getConfiguration(
             envVariableKeys.THUNDRA_MASK_HTTP_BODY) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_MASK_HTTP_BODY) === 'true' : options.maskHttpBody;
+
+        this.runSamplerOnEachSpan = koalas(options.runCustomSamplerOnEachSpan, false);
+        this.sampler = options.sampler;
 
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {

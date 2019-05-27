@@ -70,27 +70,8 @@ export const envVariableKeys = {
     THUNDRA_MASK_HTTP_BODY: 'thundra_agent_lambda_trace_integrations_aws_http_body_mask',
     THUNDRA_MASK_ERROR_STACK_TRACE: 'thundra_agent_lambda_error_stacktrace_mask',
 
-    THUNDRA_AGENT_TRACE_TIME_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_trace_sample_sampler_timeAware_enable',
-    THUNDRA_AGENT_TRACE_COUNT_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_trace_sample_sampler_countAware_enable',
-    THUNDRA_AGENT_TRACE_ERROR_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_trace_ample_sampler_errorAware_enable',
-    THUNDRA_AGENT_TRACE_DURATION_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_trace_sample_sampler_durationAware_enable',
-
-    THUNDRA_AGENT_LOG_TIME_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_log_sample_sampler_timeAware_enable',
-    THUNDRA_AGENT_LOG_COUNT_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_log_sample_sampler_countAware_enable',
-    THUNDRA_AGENT_LOG_ERROR_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_log_sample_sampler_errorAware_enable',
-
-    THUNDRA_AGENT_METRIC_TIME_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_metric_sample_sampler_timeAware_enable',
-    THUNDRA_AGENT_METRIC_COUNT_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_metric_sample_sampler_countAware_enable',
-    THUNDRA_AGENT_METRIC_ERROR_AWARE_SAMPLER_ENABLE: 'thundra_agent_lambda_metric_sample_sampler_errorAware_enable',
-
-    THUNDRA_AGENT_TRACE_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_trace_sample_sampler_timeAware_timeFreq',
-    THUNDRA_AGENT_TRACE_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_trace_sample_sampler_countAware_countFreq',
-
-    THUNDRA_AGENT_LOG_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_log_sample_sampler_timeAware_timeFreq',
-    THUNDRA_AGENT_LOG_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_log_sample_sampler_countAware_countFreq',
-
-    THUNDRA_AGENT_METRIC_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_metric_sample_sampler_timeAware_timeFreq',
-    THUNDRA_AGENT_METRIC_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_metric_sample_sampler_countAware_countFreq',
+    THUNDRA_AGENT_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_sample_sampler_timeAware_timeFreq',
+    THUNDRA_AGENT_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_sample_sampler_countAware_countFreq',
 };
 
 export function getTimeoutMargin(region: string) {

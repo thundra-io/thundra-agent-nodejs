@@ -70,7 +70,9 @@ class Metric {
     }
 
     afterInvocation = async () => {
-        const sampled = (this.config && this.config.samplerConfig) ? this.config.samplerConfig.isSampled() : true;
+        const isSamplerPresent = this.config && this.config.sampler && typeof(this.config.sampler) === 'function';
+        const sampled = isSamplerPresent ? this.config.sampler.isSampled() : true;
+
         if (sampled) {
             await Promise.all([
                 this.addThreadMetricReport(),
