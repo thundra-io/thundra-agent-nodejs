@@ -149,8 +149,8 @@ export class Trace {
 
         const spanList = this.tracer.getRecorder().getSpanList();
 
-        const isSamplerPresent = this.config && this.config.sampler && typeof(this.config.sampler) === 'function';
-        const sampled = isSamplerPresent ? this.config.sampler.isSampled() : true;
+        const isSamplerPresent = this.config && this.config.sampler && typeof(this.config.sampler.isSampled) === 'function';
+        const sampled = isSamplerPresent ? this.config.sampler.isSampled(this.rootSpan) : true;
 
         if (sampled) {
             for (const span of spanList) {

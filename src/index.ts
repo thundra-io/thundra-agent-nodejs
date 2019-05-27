@@ -30,6 +30,7 @@ import CountAwareSampler from './opentracing/sampler/CountAwareSampler';
 import DurationAwareSampler from './opentracing/sampler/DurationAwareSampler';
 import ErrorAwareSampler from './opentracing/sampler/ErrorAwareSampler';
 import TimeAwareSampler from './opentracing/sampler/TimeAwareSampler';
+import { SamplerCompositionOperator } from './opentracing/sampler/CompositeSampler';
 
 const ThundraWarmup = require('@thundra/warmup');
 
@@ -155,6 +156,7 @@ module.exports.samplers = {
     DurationAwareSampler,
     ErrorAwareSampler,
     TimeAwareSampler,
+    SamplerCompositionOperator,
 };
 
 module.exports.InvocationSupport = InvocationSupport;

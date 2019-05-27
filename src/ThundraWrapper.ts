@@ -107,6 +107,8 @@ class ThundraWrapper {
 
         this.resetTime();
 
+        InvocationSupport.setErrorenous(false);
+
         this.executeHook('before-invocation', beforeInvocationData, false)
             .then(() => {
                 this.pluginContext.requestCount += 1;

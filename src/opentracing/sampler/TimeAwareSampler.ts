@@ -7,7 +7,7 @@ class TimeAwareSampler implements Sampler<null> {
     timeFreq: number;
     latestTime: number;
 
-    constructor(timeFreq: number) {
+    constructor(timeFreq?: number) {
         this.timeFreq = koalas(parseInt(Utils.getConfiguration(
             envVariableKeys.THUNDRA_AGENT_TIME_AWARE_SAMPLER_TIME_FREQ), 10), timeFreq, 300000);
         this.latestTime = 0;

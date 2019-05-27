@@ -4,7 +4,7 @@ class CompositeSampler implements Sampler<any> {
     private samplers: Array<Sampler<any>>;
     private operator: SamplerCompositionOperator;
 
-    constructor(samplers: Array<Sampler<any>>, operator: SamplerCompositionOperator) {
+    constructor(samplers: Array<Sampler<any>>, operator?: SamplerCompositionOperator) {
         this.samplers =  samplers;
         this.operator = operator === undefined ? SamplerCompositionOperator.OR : operator;
     }
@@ -13,13 +13,13 @@ class CompositeSampler implements Sampler<any> {
         if (this.operator === SamplerCompositionOperator.AND) {
             let isSampled: boolean = true;
             for (const sampler of this.samplers) {
-                isSampled = isSampled && sampler.isSampled(arg);
+                isSampled = sampler.isSampled(arg) && isSampled;
             }
             return isSampled;
         } else {
-            let isSampled: boolean = true;
+            let isSampled: boolean = false;
             for (const sampler of this.samplers) {
-                isSampled = isSampled || sampler.isSampled(arg);
+                isSampled = sampler.isSampled(arg) || isSampled;
             }
             return isSampled;
         }

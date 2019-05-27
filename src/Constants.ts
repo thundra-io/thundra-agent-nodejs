@@ -70,8 +70,8 @@ export const envVariableKeys = {
     THUNDRA_MASK_HTTP_BODY: 'thundra_agent_lambda_trace_integrations_aws_http_body_mask',
     THUNDRA_MASK_ERROR_STACK_TRACE: 'thundra_agent_lambda_error_stacktrace_mask',
 
-    THUNDRA_AGENT_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_sample_sampler_timeAware_timeFreq',
-    THUNDRA_AGENT_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_sample_sampler_countAware_countFreq',
+    THUNDRA_AGENT_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_sampler_timeAware_timeFreq',
+    THUNDRA_AGENT_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_sampler_countAware_countFreq',
 };
 
 export function getTimeoutMargin(region: string) {
