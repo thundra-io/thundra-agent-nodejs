@@ -8,12 +8,13 @@ import {
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
+import Utils from '../utils/Utils';
 
 const get = require('lodash.get');
 
 let mongodb: any = null;
 try {
-    mongodb = require('mongodb');
+    mongodb = Utils.tryRequire('mongodb');
 } catch (e) {
     // mongodb library not available
 }
