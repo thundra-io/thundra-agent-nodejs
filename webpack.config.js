@@ -7,7 +7,8 @@ module.exports = {
     entry: './src/index.ts',
     target: 'node',
     externals: {
-        'aws-xray-sdk-core' : 'aws-xray-sdk-core'
+        'aws-xray-sdk-core' : 'aws-xray-sdk-core',
+        'mongodb' : 'mongodb'
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
