@@ -2,14 +2,14 @@ import ThundraSpanListener from './ThundraSpanListener';
 import ThundraSpan from '../../opentracing/Span';
 import ThundraLogger from '../../ThundraLogger';
 import {AwsXrayConstants } from '../../Constants';
+import Utils from '../utils/Utils';
 
 let AWSXRay: any;
 let Subsegment: any;
-try {
-    AWSXRay = require('aws-xray-sdk-core');
+AWSXRay = Utils.tryRequire('aws-xray-sdk-core');
+if (AWSXRay) {
     Subsegment = AWSXRay.Subsegment;
-// tslint:disable-next-line:no-empty
-} catch (err) {}
+}
 
 class AwsXRayThundraSpanListener  implements ThundraSpanListener {
     subsegmentMap: Map<string, any>;
