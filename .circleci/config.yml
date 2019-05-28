@@ -3,10 +3,8 @@ jobs:
     build:
       docker:
         - image: circleci/node:8.11
-
+        
         - image: postgres:9.5-alpine
-          ports:
-            - '127.0.0.1:5432:5432'
 
         - image: mysql:5.7
           environment:
@@ -14,8 +12,6 @@ jobs:
             - MYSQL_PASSWORD=userpass
             - MYSQL_USER=user
             - MYSQL_DATABASE=db
-          ports:
-            - "127.0.0.1:3306:3306"
 
         - image: redis:4.0-alpine
 
@@ -23,15 +19,11 @@ jobs:
           environment:
             - discovery.type=single-node
             - "ES_JAVA_OPTS=-Xms64m -Xmx64m"
-          ports:
-            - "127.0.0.1:9200:9200"
-  
+
         - image: bitnami/mongodb:3.6.11
           environment:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=example
-          ports:
-          - "127.0.0.1:27017:27017"
       resource_class: xlarge
       steps:
         - checkout
