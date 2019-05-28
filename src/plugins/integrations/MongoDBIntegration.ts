@@ -31,7 +31,7 @@ class MongoDBIntegration implements Integration {
     constructor(config: any) {
         this.spans = {};
         this.config = config;
-        if (mongodb !== null) {
+        if (mongodb) {
             this.listener = mongodb.instrument();
             this.listener.on('started', (this.onStarted.bind(this)));
             this.listener.on('succeeded', this.onSucceeded.bind(this));
