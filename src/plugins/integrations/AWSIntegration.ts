@@ -36,22 +36,18 @@ class AWSIntegration implements Integration {
     constructor(config: any) {
         this.version = '2.x';
 
-        this.hook = Hook('aws-sdk', { internals: true }, (exp: any, name: string, basedir: string) => {
-            if (name === 'aws-sdk') {
-                const moduleValidator = new ModuleVersionValidator();
-                const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-                if (!isValidVersion) {
-                    ThundraLogger.getInstance().error(`Invalid module version for aws-sdk integration.
-                                             Supported version is ${this.version}`);
-                } else {
-                    this.lib = exp;
-                    this.config = config;
-                    this.basedir = basedir;
-                    this.wrap.call(this, exp, config);
-                }
+        const AWS = Utils.tryRequire('aws-sdk');
+        if (AWS) {
+            const moduleValidator = new ModuleVersionValidator();
+            const basedir = Utils.tryResolve('aws-sdk');
+            const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+            if (!isValidVersion) {
+                ThundraLogger.getInstance().error(`Invalid module version for aws-sdk integration.
+                                         Supported version is ${this.version}`);
+            } else {
+                this.wrap.call(this, AWS, config);
             }
-            return exp;
-        });
+        }
 
         this.wrappedFuncs = {};
     }

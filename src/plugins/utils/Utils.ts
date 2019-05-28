@@ -208,6 +208,20 @@ class Utils {
         return endpoint.split('.')[0];
     }
 
+    static tryRequire(name: string): any {
+        try {
+            return require(name);
+        // tslint:disable-next-line:no-empty
+        } catch (err) {}
+    }
+
+    static tryResolve(name: string): any {
+        try {
+            require.resolve(`${name}/package.json`);
+        // tslint:disable-next-line:no-empty
+        } catch (err) {}
+    }
+
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
