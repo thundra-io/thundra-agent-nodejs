@@ -1,6 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.4.0 - May 28, 2019
+#### Added
+- MongoDB integration
+- New and improved sampling api
+- Mask error stack traces
+#### Fixed
+- Fixed https://github.com/thundra-io/thundra-lambda-agent-nodejs/issues/54
+- Fixed https://github.com/thundra-io/thundra-lambda-agent-nodejs/issues/52 
+- Fixed `Log Level filtering does not work with console.log integration`
+- Fixed `Send data of SNS, SQS, Lambda and HTTP operations with masking capability`
+- Fixed `Don't send Kinesis, Firehose and CloudWatch log event data`
+- Fixed  `Nodejs agent composite data model support over CW logs`
+- Fixed  `error.message tag must be string type`
+- Fixed  `Do not send trace data with trace plugin`
+- Fixed  `Use generated transaction id instead of request id`
+- Fixed  `Introduce `ThundraChaosError` propagate it correctly with AWS SDK`
+
 ## 2.3.0 - April 25, 2019
 #### Added
 - Distributed tracing support
