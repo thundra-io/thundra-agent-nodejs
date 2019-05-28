@@ -364,7 +364,7 @@ class AWSIntegration implements Integration {
 
                             activeSpan.setTag(AwsSNSTags.TOPIC_NAME, topicName);
                             if (config && !config.maskSNSMessage) {
-                                activeSpan.setTag(AwsSNSTags.MESSAGE, request.params.message);
+                                activeSpan.setTag(AwsSNSTags.MESSAGE, request.params.Message);
                             }
                         }
 
