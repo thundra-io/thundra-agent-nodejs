@@ -53,7 +53,7 @@ describe('LogPlugin', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
         const logData = {
             logMessage: 'logMessage',
-            logLevel: 'logLevel',
+            logLevel: 'TRACE',
             loggerName: 'loggerName',
             logTimestamp: Date.now(),
         };

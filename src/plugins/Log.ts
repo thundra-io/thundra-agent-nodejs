@@ -7,6 +7,7 @@ import ThundraTracer from '../opentracing/Tracer';
 import { ConsoleShimmedMethods, logLevels, StdOutLogContext, envVariableKeys, StdErrorLogContext } from '../Constants';
 import * as util from 'util';
 import ThundraLogger from '../ThundraLogger';
+import InvocationSupport from './support/InvocationSupport';
 
 class Log {
     static instance: Log;
@@ -67,13 +68,23 @@ class Log {
     }
 
     afterInvocation = (data: any) => {
-        const isSamplerPresent = this.config && this.config.sampler && typeof(this.config.sampler.isSampled) === 'function';
+        const isSamplerPresent = this.config && this.config.sampler && typeof (this.config.sampler.isSampled) === 'function';
         const sampled = isSamplerPresent ? this.config.sampler.isSampled() : true;
-
         if (sampled) {
             for (const log of this.logs) {
                 const logReportData = Utils.generateReport(log, this.apiKey);
-                this.report(logReportData);
+                // If lambda fails skip log filtering
+                if (InvocationSupport.isErrorenous()) {
+                    this.report(logReportData);
+                    continue;
+                }
+
+                const levelConfig = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_LOGLEVEL);
+                const logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
+
+                if (logLevels[log.logLevel] >= logLevelFilter) {
+                    this.report(logReportData);
+                }
             }
         } else {
             ThundraLogger.getInstance().debug('Skipping reporting logs due to sampling.');
@@ -87,7 +98,6 @@ class Log {
         const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
         const spanId = activeSpan ? activeSpan.spanContext.spanId : '';
         logData.initWithLogDataValues(this.logData, spanId, logInfo);
-
         this.logs.push(logData);
     }
 
@@ -105,19 +115,15 @@ class Log {
                 this.consoleReference[method] = (...args: any[]) => {
                     const logLevel = method.toUpperCase() === 'LOG' ? 'INFO' : method.toUpperCase();
 
-                    const levelConfig = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_LOGLEVEL);
-                    const logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
+                    const logInfo = {
+                        logMessage: util.format.apply(util, args),
+                        logLevel,
+                        logLevelCode: method === 'log' ? 2 : logLevels[method],
+                        logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
+                        logTimestamp: Date.now(),
+                    };
 
-                    if (logLevels[logLevel] >= logLevelFilter ) {
-                        const logInfo = {
-                            logMessage: util.format.apply(util, args),
-                            logLevel,
-                            logLevelCode: method === 'log' ? 2 : logLevels[method],
-                            logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
-                            logTimestamp: Date.now(),
-                        };
-                        this.reportLog(logInfo);
-                    }
+                    this.reportLog(logInfo);
 
                     originalConsoleMethod.apply(console, args);
                 };

@@ -1,6 +1,8 @@
 import Logger from '../../dist/plugins/Logger';
 import {logLevels} from '../../dist/Constants';
 import {createMockLogManager} from '../mocks/mocks';
+import LogManager from '../../dist/plugins/LogManager';
+import Log from '../../dist/plugins/Log';
 
 describe('Logger', () => {
     delete process.env.thundra_agent_lambda_log_loglevel;
@@ -117,7 +119,10 @@ describe('Logger', () => {
 describe('Logger with env level variable', () => {
     process.env.thundra_agent_lambda_log_loglevel = 'none';
     describe('should not report', () => {
-        const logManager = createMockLogManager();
+        const logManager = new LogManager();
+        const log = new Log({});
+        log.logs = [];        
+        logManager.addListener(log);
         const logger = new Logger({});
         Logger.logManagerInstance = logManager;
         logger.reportLog = jest.fn();
@@ -128,7 +133,7 @@ describe('Logger with env level variable', () => {
         logger.debug(1, 2, 3);
         logger.trace(1, 2, 3);
         it('should report log', () => {
-            expect(logger.reportLog).not.toBeCalled();
+            expect(log.logs.length).toBe(0);
         });
     });
 });
