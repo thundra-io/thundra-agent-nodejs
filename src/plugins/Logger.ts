@@ -32,10 +32,6 @@ class Logger {
         return Logger.logManagerInstance;
     }
 
-    shouldReport(level: any) {
-        return logLevels[level] >= this.logLevel;
-    }
-
     reportLog(level: any, args: any) {
         const logInfo = {
             logMessage: util.format.apply(util, args),
@@ -48,39 +44,27 @@ class Logger {
     }
 
     trace(...args: any[]) {
-        if (this.shouldReport('trace')) {
-            this.reportLog('TRACE', args);
-        }
+        this.reportLog('TRACE', args);
     }
 
     debug(...args: any[]) {
-        if (this.shouldReport('debug')) {
-            this.reportLog('DEBUG', args);
-        }
+        this.reportLog('DEBUG', args);
     }
 
     info(...args: any[]) {
-        if (this.shouldReport('info')) {
-            this.reportLog('INFO', args);
-        }
+        this.reportLog('INFO', args);
     }
 
     warn(...args: any[]) {
-        if (this.shouldReport('warn')) {
-            this.reportLog('WARN', args);
-        }
+        this.reportLog('WARN', args);
     }
 
     error(...args: any[]) {
-        if (this.shouldReport('error')) {
-            this.reportLog('ERROR', args);
-        }
+        this.reportLog('ERROR', args);
     }
 
     fatal(...args: any[]) {
-        if (this.shouldReport('fatal')) {
-            this.reportLog('FATAL', args);
-        }
+        this.reportLog('FATAL', args);
     }
 
     log(...args: any[]) {

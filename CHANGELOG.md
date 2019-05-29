@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## 2.4.0 - May 28, 2019
+## 2.4.1 - May 29, 2019
 #### Added
 - MongoDB integration
 - New and improved sampling api
