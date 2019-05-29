@@ -15,11 +15,6 @@ jobs:
 
         - image: redis:4.0-alpine
 
-        - image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.4
-          environment:
-            - discovery.type=single-node
-            - "ES_JAVA_OPTS=-Xms64m -Xmx64m"
-
         - image: bitnami/mongodb:3.6.11
           environment:
             - MONGO_INITDB_ROOT_USERNAME=root
