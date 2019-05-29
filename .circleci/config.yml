@@ -16,9 +16,13 @@ jobs:
         - image: redis:4.0-alpine
 
         - image: bitnami/mongodb:3.6.11
+          restart: always
           environment:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=example
+            - MONGODB_REPLICA_SET_MODE=primary
+            - MONGODB_ADVERTISED_HOSTNAME=localhost
+
       resource_class: xlarge
       steps:
         - checkout
