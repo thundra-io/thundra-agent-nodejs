@@ -7,6 +7,7 @@ import {
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,
 } from '../../Constants';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
+import ThundraLogger from '../../ThundraLogger';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -42,7 +43,7 @@ class IORedisIntegration implements Integration {
                 try {
                     const tracer = ThundraTracer.getInstance();
 
-                    if (!tracer || !command) {
+                    if (!tracer || !command || this.status !== 'ready') {
                         return original.call(this, command);
                     }
 
@@ -77,9 +78,23 @@ class IORedisIntegration implements Integration {
                         },
                     });
 
+                    if (typeof command.callback === 'function') {
+                        const originalCallback = command.callback;
+                        command.callback = (err: any, res: any) => {
+                            if (err) {
+                                span.setErrorTag(err);
+                            }
+                            span.closeWithCallback(me, originalCallback, [err, res]);
+                        };
+
                     return original.call(this, command);
                 } catch (error) {
-                    // pass
+                    if (span) {
+                        span.close();
+                    }
+
+                    ThundraLogger.getInstance().error(error);
+                    return original.call(this, command);
                 }
             };
         }
