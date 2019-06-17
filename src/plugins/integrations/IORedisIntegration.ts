@@ -86,6 +86,7 @@ class IORedisIntegration implements Integration {
                             }
                             span.closeWithCallback(me, originalCallback, [err, res]);
                         };
+                    }
 
                     return original.call(this, command);
                 } catch (error) {
