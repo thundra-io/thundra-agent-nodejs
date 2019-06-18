@@ -37,6 +37,7 @@ class IORedisIntegration implements Integration {
     }
 
     wrap(lib: any, config: any) {
+        const plugin = this;
         function wrapper(original: Function) {
             return function internalSendCommandWrapper(command: any) {
                 let span: ThundraSpan;
@@ -79,13 +80,15 @@ class IORedisIntegration implements Integration {
                     });
 
                     if (typeof command.callback === 'function') {
-                        const originalCallback = command.callback;
-                        command.callback = (err: any, res: any) => {
-                            if (err) {
-                                span.setErrorTag(err);
-                            }
-                            span.closeWithCallback(me, originalCallback, [err, res]);
-                        };
+                        command.callback = plugin.patchEnd(span, command.callback);
+                    }
+                    if (typeof command.promise === 'object') {
+                        if (typeof command.promise.finally === 'function') {
+                            command.promise.finally(plugin.patchEnd(span));
+                        } else if (typeof command.promise.then === 'function') {
+                            command.promise.then(plugin.patchEnd(span))
+                                .catch(plugin.patchEnd(span));
+                        }
                     }
 
                     return original.call(this, command);
@@ -105,6 +108,19 @@ class IORedisIntegration implements Integration {
 
     unwrap() {
         console.log('IOREDIS UNWRAP METHOD');
+    }
+
+    patchEnd(span: ThundraSpan, resultHandler?: Function): () => Promise<{}> {
+        return function (this: any, err?: Error) {
+            if (err instanceof Error) {
+                span.setErrorTag(err);
+            }
+            span.close();
+            console.log('inside patchEnd');
+            if (typeof resultHandler === 'function') {
+                return resultHandler.apply(this, arguments);
+            }
+        };
     }
 }
 
