@@ -18,12 +18,13 @@ import InvocationSupport from '../support/InvocationSupport';
 import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
-const Hook = require('require-in-the-middle');
 const koalas = require('koalas');
 const md5 = require('md5');
 const has = require('lodash.has');
 const trim = require('lodash.trim');
 const get = require('lodash.get');
+
+const moduleName = 'aws-sdk';
 
 class AWSIntegration implements Integration {
     version: string;
@@ -35,21 +36,27 @@ class AWSIntegration implements Integration {
 
     constructor(config: any) {
         this.version = '2.x';
+        this.lib = Utils.tryRequire(moduleName);
+        this.wrappedFuncs = {};
 
-        const AWS = Utils.tryRequire('aws-sdk');
-        if (AWS) {
+        if (this.lib) {
+            const { basedir } = Utils.getModuleInfo(moduleName);
+            if (!basedir) {
+                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
+                return;
+            }
             const moduleValidator = new ModuleVersionValidator();
-            const basedir = Utils.tryResolve('aws-sdk');
             const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
             if (!isValidVersion) {
                 ThundraLogger.getInstance().error(`Invalid module version for aws-sdk integration.
-                                         Supported version is ${this.version}`);
+                                            Supported version is ${this.version}`);
             } else {
-                this.wrap.call(this, AWS, config);
+                this.config = config;
+                this.basedir = basedir;
+                this.wrap.call(this, this.lib, config);
             }
         }
 
-        this.wrappedFuncs = {};
     }
 
     static injectSpanContextIntoMessageAttributes(tracer: ThundraTracer, span: ThundraSpan): any {
@@ -600,6 +607,15 @@ class AWSIntegration implements Integration {
                     return originalFunction.apply(this, [callback]);
                 }
             };
+        }
+
+        // Double wrapping a method causes infinite loops in unit tests
+        // To prevent this we first need to return to the original method
+        if ('send' in integration.wrappedFuncs) {
+            shimmer.unwrap(lib.Request.prototype, 'send');
+        }
+        if ('promise' in integration.wrappedFuncs) {
+            shimmer.unwrap(this.lib.Request.prototype, 'promise');
         }
 
         shimmer.wrap(lib.Request.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));

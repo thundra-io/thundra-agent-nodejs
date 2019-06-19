@@ -217,13 +217,6 @@ class Utils {
         } catch (err) {}
     }
 
-    static tryResolve(name: string): any {
-        try {
-            require.resolve(`${name}/package.json`);
-        // tslint:disable-next-line:no-empty
-        } catch (err) {}
-    }
-
     static getModuleInfo(name: string): any {
         try {
             return parse(require.resolve(name));
