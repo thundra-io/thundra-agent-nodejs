@@ -23,6 +23,8 @@ import ThundraTracer from '../../opentracing/Tracer';
 import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
 import InvocationSupport from '../support/InvocationSupport';
 
+const parse = require('module-details-from-path');
+
 class Utils {
     static generateId(): string {
         return uuidv4();
@@ -220,6 +222,14 @@ class Utils {
             require.resolve(`${name}/package.json`);
         // tslint:disable-next-line:no-empty
         } catch (err) {}
+    }
+
+    static getModuleInfo(name: string): any {
+        try {
+            return parse(require.resolve(name));
+        } catch (err) {
+            return {};
+        }
     }
 
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
