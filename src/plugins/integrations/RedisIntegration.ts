@@ -18,8 +18,10 @@ class RedisIntegration implements Integration {
   config: any;
   hook: any;
   basedir: string;
+  wrapped: boolean;
 
   constructor(config: any) {
+    this.wrapped = false;
     this.version = '^2.6';
     this.hook = Hook('redis', { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'redis') {

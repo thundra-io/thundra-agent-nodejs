@@ -19,10 +19,11 @@ class PostgreIntegration implements Integration {
   version: string;
   hook: any;
   basedir: string;
+  wrapped: boolean;
 
   constructor(config: any) {
     this.version = '6.x';
-
+    this.wrapped = false;
     this.hook = Hook('pg', { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'pg') {
         const moduleValidator = new ModuleVersionValidator();

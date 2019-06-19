@@ -30,11 +30,12 @@ class AWSIntegration implements Integration {
     version: string;
     lib: any;
     config: any;
-    hook: any;
     basedir: string;
     wrappedFuncs: any;
+    wrapped: boolean;
 
     constructor(config: any) {
+        this.wrapped = false;
         this.version = '2.x';
         this.lib = Utils.tryRequire(moduleName);
         this.wrappedFuncs = {};
@@ -611,21 +612,21 @@ class AWSIntegration implements Integration {
 
         // Double wrapping a method causes infinite loops in unit tests
         // To prevent this we first need to return to the original method
-        if ('send' in integration.wrappedFuncs) {
-            shimmer.unwrap(lib.Request.prototype, 'send');
-        }
-        if ('promise' in integration.wrappedFuncs) {
-            shimmer.unwrap(this.lib.Request.prototype, 'promise');
+        if (this.wrapped) {
+            this.unwrap();
         }
 
-        shimmer.wrap(lib.Request.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));
-        shimmer.wrap(lib.Request.prototype, 'promise', (wrapped: Function) => wrapper(wrapped, 'promise'));
+        if (has(lib.Request.prototype, 'send') && has(lib.Request.prototype, 'promise')) {
+            shimmer.wrap(lib.Request.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));
+            shimmer.wrap(lib.Request.prototype, 'promise', (wrapped: Function) => wrapper(wrapped, 'promise'));
+            this.wrapped = true;
+        }
     }
 
     unwrap() {
         shimmer.unwrap(this.lib.Request.prototype, 'send');
         shimmer.unwrap(this.lib.Request.prototype, 'promise');
-        this.hook.unhook();
+        this.wrapped = false;
     }
 }
 

@@ -21,8 +21,10 @@ class HttpIntegration implements Integration {
   basedir: string;
   instrumented: boolean = false;
   name: string;
+  wrapped: boolean;
 
   constructor(config: any) {
+    this.wrapped = false;
     this.hook = Hook(['http', 'https'], { internals: true }, (exp: any, name: string, basedir: string) => {
       this.name = name;
       if (!this.instrumented) {

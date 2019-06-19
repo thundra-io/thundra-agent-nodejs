@@ -18,9 +18,11 @@ class MySQL2Integration implements Integration {
   version: string;
   hook: any;
   basedir: string;
+  wrapped: false;
 
   constructor(config: any) {
     this.version = '^1.5';
+    this.wrapped = false;
     this.hook = Hook('mysql2', { internals: true }, (exp: any, name: string, basedir: string) => {
       if (name === 'mysql2/lib/connection.js') {
         const moduleValidator = new ModuleVersionValidator();
