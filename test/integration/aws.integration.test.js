@@ -372,6 +372,7 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('Messaging');
 
             expect(span.tags['aws.request.name']).toBe('publish');
+            expect(span.tags['aws.sns.message']).toBe('Hello Thundra!');
             expect(span.tags['aws.sns.topic.name']).toBe('TEST_TOPIC');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['topology.vertex']).toEqual(true);

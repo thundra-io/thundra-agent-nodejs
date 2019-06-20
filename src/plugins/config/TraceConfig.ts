@@ -24,6 +24,7 @@ class TraceConfig extends BasePluginConfig {
     maskRdbStatement: boolean;
     maskDynamoDBStatement: boolean;
     maskElasticSearchStatement: boolean;
+    maskMongoDBCommand: boolean;
     dynamoDBTraceInjectionEnabled: boolean;
     enableCloudWatchRequest: boolean;
     enableFirehoseRequest: boolean;
@@ -68,6 +69,10 @@ class TraceConfig extends BasePluginConfig {
         this.maskElasticSearchStatement = Utils.getConfiguration(
             envVariableKeys.THUNDRA_MASK_ELASTIC_STATEMENT) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_MASK_ELASTIC_STATEMENT) === 'true' : options.maskElasticSearchStatement;
+
+        this.maskMongoDBCommand = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_MONGODB_COMMAND) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_MONGODB_COMMAND) === 'true' : options.maskMongoDBCommand;
 
         this.dynamoDBTraceInjectionEnabled = Utils.getConfiguration(
             envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) ? Utils.getConfiguration(

@@ -5,9 +5,14 @@ describe('Console integration should filter logs with levels', () => {
     const logPlugin = new LogPlugin();
     const pluginContext = createMockPluginContext();
     const beforeInvocationData = createMockBeforeInvocationData();
+
+    const logs = [];
+    logPlugin.report = (logReport) => {
+        logs.push(logReport);
+    };
+
     logPlugin.setPluginContext(pluginContext);
     logPlugin.beforeInvocation(beforeInvocationData);
-    logPlugin.logs = [];
 
     process.env['thundra_agent_lambda_log_loglevel'] = 'WARN';
     
@@ -17,16 +22,18 @@ describe('Console integration should filter logs with levels', () => {
     console.info('info');
     console.error('error');
 
-    it('should capture console.log statements', () => {  
-        expect(logPlugin.logs.length).toBe(2);
-   
-        expect(logPlugin.logs[0].logLevel).toBe('WARN');
-        expect(logPlugin.logs[0].logMessage).toBe('warn');
-        expect(logPlugin.logs[0].logContextName).toBe('STDOUT');
+    logPlugin.afterInvocation();
 
-        expect(logPlugin.logs[1].logLevel).toBe('ERROR');
-        expect(logPlugin.logs[1].logMessage).toBe('error');
-        expect(logPlugin.logs[1].logContextName).toBe('STDERR');
+    it('should capture console.log statements', () => {  
+        expect(logs.length).toBe(2);
+   
+        expect(logs[0].data.logLevel).toBe('WARN');
+        expect(logs[0].data.logMessage).toBe('warn');
+        expect(logs[0].data.logContextName).toBe('STDOUT');
+
+        expect(logs[1].data.logLevel).toBe('ERROR');
+        expect(logs[1].data.logMessage).toBe('error');
+        expect(logs[1].data.logContextName).toBe('STDERR');
 
     });       
 });

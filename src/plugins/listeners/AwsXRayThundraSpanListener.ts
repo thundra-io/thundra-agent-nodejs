@@ -6,7 +6,6 @@ import Utils from '../utils/Utils';
 
 let AWSXRay: any;
 let Subsegment: any;
-
 AWSXRay = Utils.tryRequire('aws-xray-sdk-core');
 if (AWSXRay) {
     Subsegment = AWSXRay.Subsegment;

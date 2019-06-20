@@ -4,6 +4,7 @@ import PostgreIntegration from './plugins/integrations/PostgreIntegration';
 import MySQL2Integration from './plugins/integrations/MySQL2Integration';
 import MySQLIntegration from './plugins/integrations/MySQLIntegration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
+import MongoDBIntegration from './plugins/integrations/MongoDBIntegration';
 import AWSIntegration from './plugins/integrations/AWSIntegration';
 import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
@@ -57,6 +58,7 @@ export const envVariableKeys = {
     THUNDRA_MASK_RDB_STATEMENT: 'thundra_agent_lambda_trace_integrations_rdb_statement_mask',
     THUNDRA_MASK_DYNAMODB_STATEMENT: 'thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask',
     THUNDRA_MASK_ELASTIC_STATEMENT: 'thundra_agent_lambda_trace_integrations_elastic_statement_mask',
+    THUNDRA_MASK_MONGODB_COMMAND: 'thundra_agent_lambda_trace_integrations_mongodb_command_mask',
 
     ENABLE_DYNAMODB_TRACE_INJECTION: 'thundra_agent_trace_integrations_dynamodb_trace_injection_enable',
 
@@ -191,6 +193,7 @@ export const ClassNames = {
     CLOUDWATCH: 'AWS-CloudWatch-Schedule',
     CLOUDFRONT: 'AWS-CloudFront',
     APIGATEWAY: 'AWS-APIGateway',
+    MONGODB: 'MONGODB',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -205,12 +208,179 @@ export const DBTags = {
     DB_USER: 'db.user',
 };
 
+export const MongoDBTags = {
+    MONGODB_COMMAND: 'mongodb.command',
+    MONGODB_COMMAND_NAME: 'mongodb.command.name',
+    MONGODB_COLLECTION: 'mongodb.collection.name',
+};
+
+export const MongoDBCommandTypes = {
+    // Aggregate Commands
+    AGGREGATE: 'READ',
+    COUNT: 'READ',
+    DISTINCT: 'READ',
+    GROUP: 'READ',
+    MAPREDUCE: 'READ',
+
+    // Geospatial Commands
+    GEONEAR: 'READ',
+    GEOSEARCH: 'READ',
+
+    // Query and Write Operation Commands
+    DELETE: 'DELETE',
+    EVAL: 'EXECUTE',
+    FIND: 'READ',
+    FINDANDMODIFY: 'WRITE',
+    GETLASTERROR: 'READ',
+    GETMORE: 'READ',
+    GETPREVERROR: 'READ',
+    INSERT: 'WRITE',
+    PARALLELCOLLECTIONSCAN: 'READ',
+    RESETERROR: 'WRITE',
+    UPDATE: 'WRITE',
+
+    // Query Plan Cache Commands
+    PLANCACHECLEAR: 'DELETE',
+    PLANCACHECLEARFILTERS: 'DELETE',
+    PLANCACHELISTFILTERS: 'READ',
+    PLANCACHELISTPLANS: 'READ',
+    PLANCACHELISTQUERYSHAPES: 'READ',
+    PLANCACHESETFILTER: 'WRITE',
+
+    // Authentication Commands
+    AUTHENTICATE: 'EXECUTE',
+    LOGOUT: 'EXECUTE',
+
+    // User Management Commands
+    CREATEUSER: 'WRITE',
+    DROPALLUSERSFROMDATABASE: 'DELETE',
+    DROPUSER: 'DELETE',
+    GRANROLESTOUSER: 'WRITE',
+    REVOKEROLESFROMUSER: 'WRITE',
+    UPDATEUSER: 'WRITE',
+    USERSINFO: 'READ',
+
+    // Role Management Commands
+    CREATEROLE: 'WRITE',
+    DROPROLE: 'DELETE',
+    DROPALLROLESFROMDATABASE: 'DELETE',
+    GRANTPRIVILEGESTOROLE: 'WRITE',
+    GRANTROLESTOROLE: 'WRITE',
+    INVALIDATEUSERCACHE: 'DELETE',
+    REVOKEPRIVILEGESFROMROLE: 'WRITE',
+    REVOKEROLESFROMROLE: 'WRITE',
+    ROLESINFO: 'READ',
+    UPDATEROLE: 'WRITE',
+
+    // Replication Commands
+    ISMASTER: 'READ',
+    REPLSETABORTPRIMARYCATCHUP: 'EXECUTE',
+    REPLSETFREEZE: 'EXECUTE',
+    REPLSETGETCONFIG: 'READ',
+    REPLSETGETSTATUS: 'READ',
+    REPLSETINITIATE: 'EXECUTE',
+    REPLSETMAINTENANCE: 'EXECUTE',
+    REPLSETRECONFIG: 'EXECUTE',
+    REPLSETRESIZEOPLOG: 'EXECUTE',
+    REPLSETSTEPDOWN: 'EXECUTE',
+    REPLSETSYNCFROM: 'EXECUTE',
+
+    // Sharding Commands
+    ADDSHARD: 'EXECUTE',
+    ADDSHARDTOZONE: 'EXECUTE',
+    BALANCERSTART: 'EXECUTE',
+    BALANCERSTATUS: 'READ',
+    BALANCERSTOP: 'EXECUTE',
+    CLEANUPORPHANED: 'EXECUTE',
+    ENABLESHARDING: 'EXECUTE',
+    FLUSHROUTERCONFIG: 'EXECUTE',
+    ISDBGRID: 'READ',
+    LISTSHARDS: 'READ',
+    MOVEPRIMARY: 'EXECUTE',
+    MERGECHUNKS: 'EXECUTE',
+    REMOVESHARD: 'EXECUTE',
+    REMOVESHARDFROMZONE: 'EXECUTE',
+    SHARDCOLLECTION: 'EXECUTE',
+    SHARDINGSTATE: 'READ',
+    SPLIT: 'EXECUTE',
+    UPDATEZONEKEYRANGE: 'EXECUTE',
+
+    // Session Commands
+    ABORTTRANSACTION: 'EXECUTE',
+    COMMITTRANSACTION: 'EXECUTE',
+    ENDSESSIONS: 'EXECUTE',
+    KILLALLSESSIONS: 'EXECUTE',
+    KILLALLSESSIONSBYPATTERN: 'EXECUTE',
+    KILLSESSIONS: 'EXECUTE',
+    REFRESHSESSIONS: 'EXECUTE',
+    STARTSESSION: 'EXECUTE',
+
+    // Administration Commands
+    CLONE: 'EXECUTE',
+    CLONECOLLECTION: 'EXECUTE',
+    CLONECOLLECTIONASCAPPED: 'EXECUTE',
+    COLLMOD: 'WRITE',
+    COMPACT: 'EXECUTE',
+    CONVERTTOCAPPED: 'EXECUTE',
+    COPYDB: 'EXECUTE',
+    CREATE: 'WRITE',
+    CREATEINDEXES: 'WRITE',
+    CURRENTOP: 'READ',
+    DROP: 'DELETE',
+    DROPDATABASE: 'DELETE',
+    DROPINDEXES: 'DELETE',
+    FILEMD5: 'READ',
+    FSYNC: 'EXECUTE',
+    FSYNCUNLOCK: 'EXECUTE',
+    GETPARAMETER: 'READ',
+    KILLCURSORS: 'EXECUTE',
+    KILLOP: 'EXECUTE',
+    LISTCOLLECTIONS: 'READ',
+    LISTDATABASES: 'READ',
+    LISTINDEXES: 'READ',
+    LOGROTATE: 'EXECUTE',
+    REINDEX: 'WRITE',
+    RENAMECOLLECTION: 'WRITE',
+    REPAIRDATABASE: 'EXECUTE',
+    SETFEATURECOMPATIBILITYVERSION: 'WRITE',
+    SETPARAMETER: 'WRITE',
+    SHUTDOWN: 'EXECUTE',
+    TOUCH: 'EXECUTE',
+
+    // Diagnostic Commands
+    BUILDINFO: 'READ',
+    COLLSTATS: 'READ',
+    CONNPOOLSTATS: 'READ',
+    CONNECTIONSTATUS: 'READ',
+    CURSORINFO: 'READ',
+    DBHASH: 'READ',
+    DBSTATS: 'READ',
+    DIAGLOGGING: 'READ',
+    EXPLAIN: 'READ',
+    FEATURES: 'READ',
+    GETCMDLINEOPTS: 'READ',
+    GETLOG: 'READ',
+    HOSTINFO: 'READ',
+    LISTCOMMANDS: 'READ',
+    PROFILE: 'READ',
+    SERVERSTATUS: 'READ',
+    SHARDCONNPOOLSTATS: 'READ',
+    TOP: 'READ',
+
+    // Free Monitoring Commands
+    SETFREEMONITORING: 'EXECUTE',
+
+    // Auditing Commands
+    LOGAPPLICATIONMESSAGE: 'EXECUTE',
+};
+
 export const DBTypes = {
     DYNAMODB: 'aws-dynamodb',
     REDIS: 'redis',
     PG: 'postgresql',
     MYSQL: 'mysql',
     ELASTICSEARCH: 'elasticsearch',
+    MONGODB: 'mongodb',
 };
 
 export const HttpTags = {
@@ -313,6 +483,7 @@ export const INTEGRATIONS: any = {
     redis: RedisIntegration,
     aws: AWSIntegration,
     es: ESIntegration,
+    mongodb: MongoDBIntegration,
 };
 
 export const LISTENERS: any = {
@@ -535,3 +706,5 @@ export const ConsoleShimmedMethods = ['log', 'debug', 'info', 'warn', 'error'];
 export const StdOutLogContext = 'STDOUT';
 
 export const StdErrorLogContext = 'STDERR';
+
+export const DefaultMongoCommandSizeLimit = 128 * 1024;
