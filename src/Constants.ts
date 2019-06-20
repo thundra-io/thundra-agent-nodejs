@@ -442,6 +442,8 @@ export const AwsS3Tags = {
 
 export const AwsSNSTags = {
     TOPIC_NAME: 'aws.sns.topic.name',
+    TARGET_NAME: 'aws.sns.target.name',
+    SMS_PHONE_NUMBER: 'aws.sns.sms.phone_number',
     MESSAGE: 'aws.sns.message',
 };
 
