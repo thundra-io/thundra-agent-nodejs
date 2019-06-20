@@ -12,6 +12,7 @@ import InvocationSupport from '../support/InvocationSupport';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
+const semver = require('semver');
 
 class HttpIntegration implements Integration {
     version: string;
@@ -157,7 +158,9 @@ class HttpIntegration implements Integration {
 
             if (has(lib, 'request') && has(lib, 'get'))  {
                 shimmer.wrap(lib, 'request', wrapper);
-                shimmer.wrap(lib, 'get', wrapper);
+                if (semver.satisfies(process.version, '>=8')) {
+                    shimmer.wrap(lib, 'get', wrapper);
+                }
                 this.wrappedHTTP = true;
             }
         } else if (name === 'https') {
@@ -165,9 +168,13 @@ class HttpIntegration implements Integration {
                 this.unwrapHTTPS();
             }
 
-            if (has(lib, 'request')) {
-                shimmer.wrap(lib, 'request', wrapper);
-                this.wrappedHTTPS = true;
+            if (semver.satisfies(process.version, '>=9')) {
+                if (has(lib, 'request') && has(lib, 'get')) {
+
+                    shimmer.wrap(lib, 'request', wrapper);
+                    shimmer.wrap(lib, 'request', wrapper);
+                    this.wrappedHTTPS = true;
+                }
             }
         }
     }
@@ -180,7 +187,9 @@ class HttpIntegration implements Integration {
     unwrapHTTP(): void {
         if (this.libHTTP) {
             shimmer.unwrap(this.libHTTP, 'request');
-            shimmer.unwrap(this.libHTTP, 'get');
+            if (semver.satisfies(process.version, '>=8')) {
+                shimmer.unwrap(this.libHTTP, 'get');
+            }
         }
         this.wrappedHTTP = false;
     }
@@ -188,6 +197,7 @@ class HttpIntegration implements Integration {
     unwrapHTTPS(): void {
         if (this.libHTTPS) {
             shimmer.unwrap(this.libHTTPS, 'request');
+
         }
         this.wrappedHTTP = false;
     }
