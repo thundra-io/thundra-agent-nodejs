@@ -18,7 +18,6 @@ class MongoDBIntegration implements Integration {
     config: any;
     lib: any;
     version: string;
-    hook: any;
     basedir: string;
     listener: any;
     spans: any;
