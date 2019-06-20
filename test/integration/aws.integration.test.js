@@ -10,20 +10,16 @@ describe('AWS Integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should instrument AWS DynamoDB calls ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
-
-        const traceConfig = new TraceConfig({
+        const integration = new AWSIntegration({
             dynamoDBTraceInjectionEnabled: true,
         });
+        const sdk = require('aws-sdk');
 
         const putParams = {
             Item: {'id': {S: '1'}},
             TableName: 'test-table',
         };
 
-        integration.wrap(sdk, traceConfig);
-        
         const tracer = new ThundraTracer();
         
         return AWS.dynamo(sdk, putParams).then(() => {
@@ -49,21 +45,18 @@ describe('AWS Integration', () => {
     });
 
     test('should mask AWS DynamoDB statements ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
-
-        const traceConfig = new TraceConfig({
+        const integration = new AWSIntegration({
             disableInstrumentation: true,
             maskDynamoDBStatement: true,
             dynamoDBTraceInjectionEnabled: true,
         });
 
+        const sdk = require('aws-sdk');
+
         const putParams = {
             Item: {'id': {S: '1'}},
             TableName: 'test-table',
         };
-
-        integration.wrap(sdk, traceConfig);
         
         const tracer = new ThundraTracer();
     
@@ -93,8 +86,6 @@ describe('AWS Integration', () => {
     test('should instrument AWS S3 GetObject call ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
-        integration.wrap(sdk, {});
-        
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -132,7 +123,6 @@ describe('AWS Integration', () => {
     test('should instrument AWS S3 ListBucket call ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
-        integration.wrap(sdk, {});
 
         // Replace actual send function used by AWS SDK
         // with our mockSend function
@@ -174,8 +164,6 @@ describe('AWS Integration', () => {
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
-        integration.wrap(sdk, {});
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -214,12 +202,10 @@ describe('AWS Integration', () => {
     });
 
     test('should mask AWS Lambda Payload', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
-
-        integration.wrap(sdk, {
+        const integration = new AWSIntegration({
             maskLambdaPayload: true
         });
+        const sdk = require('aws-sdk');
 
         // Replace actual send function used by AWS SDK
         // with our mockSend function
@@ -252,8 +238,6 @@ describe('AWS Integration', () => {
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
-        integration.wrap(sdk, {});
-        
         const tracer = new ThundraTracer();
 
         return AWS.lambdaGetAccountSettings(sdk).then(() => {
@@ -264,8 +248,6 @@ describe('AWS Integration', () => {
     test('should instrument AWS SQS calls ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
-
-        integration.wrap(sdk, {});
 
         // Replace actual send function used by AWS SDK
         // with our mockSend function
@@ -304,12 +286,10 @@ describe('AWS Integration', () => {
     });
 
     test('should mask AWS SQS message ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
-
-        integration.wrap(sdk, {
+        const integration = new AWSIntegration({
             maskSQSMessage: true
         });
+        const sdk = require('aws-sdk');
 
         // Replace actual send function used by AWS SDK
         // with our mockSend function
@@ -342,8 +322,6 @@ describe('AWS Integration', () => {
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
-        integration.wrap(sdk, {});
-        
         const tracer = new ThundraTracer();
 
         return AWS.sqs_list_queue(sdk).then(() => {
@@ -369,8 +347,6 @@ describe('AWS Integration', () => {
     test('should instrument AWS SNS publish calls ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
-
-        integration.wrap(sdk, {});
 
         // Replace actual send function used by AWS SDK
         // with our mockSend function
@@ -412,8 +388,6 @@ describe('AWS Integration', () => {
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
-        integration.wrap(sdk, {});
-        
         const tracer = new ThundraTracer();
 
         return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
@@ -432,13 +406,11 @@ describe('AWS Integration', () => {
     });
     
     test('should mask SNS Message', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
-
-        integration.wrap(sdk, {
+        const integration = new AWSIntegration({
             maskSNSMessage: true
         });
-        
+        const sdk = require('aws-sdk');
+
         const tracer = new ThundraTracer();
 
         return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
@@ -456,8 +428,6 @@ describe('AWS Integration', () => {
     test('should instrument AWS Kinesis calls ', () => { 
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
-
-        integration.wrap(sdk, {});
 
         // Replace actual send function used by AWS SDK
         // with our mockSend function
@@ -501,8 +471,6 @@ describe('AWS Integration', () => {
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
-        integration.wrap(sdk, {});
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const date = 'Tue, 5 Apr 2019 22:12:31 GMT';
@@ -545,8 +513,6 @@ describe('AWS Integration', () => {
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
-        integration.wrap(sdk, {});
-        
         const tracer = new ThundraTracer();
 
         return AWS.kms(sdk).then(() => {

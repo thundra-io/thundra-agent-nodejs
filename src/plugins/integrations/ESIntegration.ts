@@ -157,14 +157,14 @@ class ESIntegration implements Integration {
             this.unwrap();
         }
 
-        if (has(lib.prototype, 'request')) {
-            shimmer.wrap(lib.prototype, 'request', wrapRequest);
+        if (has(lib, 'Transport.prototype.request')) {
+            shimmer.wrap(lib.Transport.prototype, 'request', wrapRequest);
             this.wrapped = true;
         }
     }
 
     unwrap() {
-        shimmer.unwrap(this.lib.prototype, 'request');
+        shimmer.unwrap(this.lib.Transport.prototype, 'request');
         this.wrapped = false;
     }
 }

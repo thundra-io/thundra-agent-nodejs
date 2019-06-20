@@ -127,7 +127,7 @@ class PostgreIntegration implements Integration {
             this.unwrap();
         }
 
-        if (has(lib.Client.prototype, 'query')) {
+        if (has(lib, 'Client.prototype.query')) {
             shimmer.wrap(lib.Client.prototype, 'query', wrapper);
             this.wrapped = true;
         }

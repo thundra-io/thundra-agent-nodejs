@@ -8,7 +8,6 @@ describe('Elastic Search Integration', () => {
     test('should instrument ES calls with single host', () => {
         const integration = new ESIntegrations({});
         const sdk = require('elasticsearch');
-        integration.wrap(sdk.Transport, {});
 
         const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
@@ -40,7 +39,6 @@ describe('Elastic Search Integration', () => {
     test('should instrument ES calls with single host', () => {
         const integration = new ESIntegrations({});
         const sdk = require('elasticsearch');
-        integration.wrap(sdk.Transport, {});
 
         const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
@@ -72,15 +70,11 @@ describe('Elastic Search Integration', () => {
     });
 
     test('should mask ES statments', () => {
-        const integration = new ESIntegrations({});
-        const sdk = require('elasticsearch');
-
-        const traceConfig = new TraceConfig({
+        const integration = new ESIntegrations({
             disableInstrumentation: true,
             maskElasticSearchStatement: true
         });
-
-        integration.wrap(sdk.Transport, traceConfig);
+        const sdk = require('elasticsearch');
 
         const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');

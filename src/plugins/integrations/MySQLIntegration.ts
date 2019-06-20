@@ -130,7 +130,7 @@ class MySQLIntegration implements Integration {
             this.unwrap();
         }
 
-        if (has(lib.prototype, 'query')) {
+        if (has(lib, 'prototype.query')) {
             shimmer.wrap(lib.prototype, 'query', wrapper);
             this.wrapped = true;
         }

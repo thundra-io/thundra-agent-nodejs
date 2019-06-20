@@ -14,25 +14,22 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const semver = require('semver');
 
+const moduleName = 'http';
+
 class HttpIntegration implements Integration {
     version: string;
     lib: any;
     config: any;
     basedir: string;
     wrapped: boolean;
-    wrappedHTTP: boolean;
-    wrappedHTTPS: boolean;
-    libHTTP: any;
-    libHTTPS: any;
 
     constructor(config: any) {
-        this.wrappedHTTP = false;
-        this.wrappedHTTPS = false;
-        this.libHTTP = Utils.tryRequire('http');
-        this.libHTTPS = Utils.tryRequire('https');
+        this.wrapped = false;
+        this.lib = Utils.tryRequire(moduleName);
         this.config = config;
-        this.wrap.call(this, this.libHTTP, config);
-        this.wrap.call(this, this.libHTTPS, config);
+        if (this.lib) {
+            this.wrap.call(this, this.lib, config);
+        }
     }
 
     static isValidUrl(host: string): boolean {
@@ -52,10 +49,6 @@ class HttpIntegration implements Integration {
     }
 
     wrap(lib: any, config: any): void {
-        if (!lib) {
-            return;
-        }
-        const name = has(lib, 'Client') ? 'http' : 'https';
         function wrapper(request: any) {
             return function requestWrapper(options: any, callback: any) {
                 try {
@@ -151,55 +144,26 @@ class HttpIntegration implements Integration {
             };
         }
 
-        if (name === 'http') {
-            if (this.wrappedHTTP) {
-                this.unwrapHTTP();
-            }
-
-            if (has(lib, 'request') && has(lib, 'get'))  {
-                shimmer.wrap(lib, 'request', wrapper);
-                if (semver.satisfies(process.version, '>=8')) {
-                    shimmer.wrap(lib, 'get', wrapper);
-                }
-                this.wrappedHTTP = true;
-            }
-        } else if (name === 'https') {
-            if (this.wrappedHTTPS) {
-                this.unwrapHTTPS();
-            }
-
-            if (semver.satisfies(process.version, '>=9')) {
-                if (has(lib, 'request') && has(lib, 'get')) {
-
-                    shimmer.wrap(lib, 'request', wrapper);
-                    shimmer.wrap(lib, 'request', wrapper);
-                    this.wrappedHTTPS = true;
-                }
-            }
+        if (this.wrapped) {
+            this.unwrap();
         }
+
+        if (has(lib, 'request')) {
+            shimmer.wrap(lib, 'request', wrapper);
+            if (semver.satisfies(process.version, '>=8')) {
+                shimmer.wrap(lib, 'get', wrapper);
+            }
+            this.wrapped = true;
+        }
+
     }
 
     unwrap(): void {
-        this.unwrapHTTP();
-        this.unwrapHTTPS();
-    }
-
-    unwrapHTTP(): void {
-        if (this.libHTTP) {
-            shimmer.unwrap(this.libHTTP, 'request');
-            if (semver.satisfies(process.version, '>=8')) {
-                shimmer.unwrap(this.libHTTP, 'get');
-            }
+        shimmer.unwrap(this.lib, 'request');
+        if (semver.satisfies(process.version, '>=8')) {
+            shimmer.unwrap(this.lib, 'get');
         }
-        this.wrappedHTTP = false;
-    }
-
-    unwrapHTTPS(): void {
-        if (this.libHTTPS) {
-            shimmer.unwrap(this.libHTTPS, 'request');
-
-        }
-        this.wrappedHTTP = false;
+        this.wrapped = false;
     }
 }
 

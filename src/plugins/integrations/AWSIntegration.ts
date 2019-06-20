@@ -617,7 +617,7 @@ class AWSIntegration implements Integration {
             this.unwrap();
         }
 
-        if (has(lib.Request.prototype, 'send') && has(lib.Request.prototype, 'promise')) {
+        if (has(lib, 'Request.prototype.send') && has(lib, 'Request.prototype.promise')) {
             shimmer.wrap(lib.Request.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));
             shimmer.wrap(lib.Request.prototype, 'promise', (wrapped: Function) => wrapper(wrapped, 'promise'));
             this.wrapped = true;

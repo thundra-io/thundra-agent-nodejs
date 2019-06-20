@@ -8,8 +8,6 @@ describe('HTTP integration', () => {
         const integration = new HttpIntegration({});
         const sdk = require('http');
 
-        integration.wrap(sdk, {});
-
         const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
@@ -38,8 +36,6 @@ describe('HTTP integration', () => {
         const integration = new HttpIntegration({});
         const sdk = require('https');
 
-        integration.wrap(sdk, {});
-
         const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
@@ -56,12 +52,10 @@ describe('HTTP integration', () => {
     });
 
     test('should mask body in post', () => {
-        const integration = new HttpIntegration({});
-        const sdk = require('https');
-
-        integration.wrap(sdk, {
+        const integration = new HttpIntegration({
             maskHttpBody: true
         });
+        const sdk = require('https');
 
         const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');

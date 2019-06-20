@@ -131,7 +131,7 @@ class RedisIntegration implements Integration {
             this.unwrap();
         }
 
-        if (has(lib.RedisClient.prototype, 'internal_send_command')) {
+        if (has(lib, 'RedisClient.prototype.internal_send_command')) {
             shimmer.wrap(lib.RedisClient.prototype, 'internal_send_command', wrapper);
             this.wrapped = true;
         }
