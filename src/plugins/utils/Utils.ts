@@ -303,20 +303,6 @@ class Utils {
         return 1 + Math.floor(Math.random() * bound);
     }
 
-    static tryRequire(name: string): any {
-        try {
-            return require(name);
-        // tslint:disable-next-line:no-empty
-        } catch (err) {}
-    }
-
-    static tryResolve(name: string): any {
-        try {
-            require.resolve(`${name}/package.json`);
-        // tslint:disable-next-line:no-empty
-        } catch (err) {}
-    }
-
     static registerSpanListenersFromConfigurations(tracer: ThundraTracer): any {
         const listeners: any[] = [];
         for (const key of Object.keys(process.env)) {
