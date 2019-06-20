@@ -18,7 +18,6 @@ class ESIntegration implements Integration {
     config: any;
     lib: any;
     version: string;
-    hook: any;
     basedir: string;
     wrapped: boolean;
 
@@ -38,6 +37,7 @@ class ESIntegration implements Integration {
             if (!isValidVersion) {
                 ThundraLogger.getInstance().error(`Invalid module version for ES integration.
                                             Supported version is ${this.version}`);
+                return;
             } else {
                 this.config = config;
                 this.basedir = basedir;

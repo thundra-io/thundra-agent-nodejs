@@ -51,6 +51,7 @@ class AWSIntegration implements Integration {
             if (!isValidVersion) {
                 ThundraLogger.getInstance().error(`Invalid module version for aws-sdk integration.
                                             Supported version is ${this.version}`);
+                return;
             } else {
                 this.config = config;
                 this.basedir = basedir;
