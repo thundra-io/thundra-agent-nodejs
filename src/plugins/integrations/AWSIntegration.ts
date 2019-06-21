@@ -339,10 +339,23 @@ class AWSIntegration implements Integration {
                     } else if (serviceName === 'sns') {
                         const operationType = SNSRequestTypes[operationName];
 
-                        let topicName = koalas(request.params.TopicArn, AWS_SERVICE_REQUEST);
-                        topicName = topicName.substring(topicName.lastIndexOf(':') + 1);
-
-                        const spanName = koalas(topicName, AWS_SERVICE_REQUEST);
+                        let spanName = null;
+                        let topicName = null;
+                        let targetName = null;
+                        let phoneNumber = null;
+                        if (request.params.TopicArn) {
+                            topicName = request.params.TopicArn.substring(request.params.TopicArn.lastIndexOf(':') + 1);
+                            spanName = topicName;
+                        }
+                        if (!spanName && request.params.TargetArn) {
+                            targetName = request.params.TargetArn.substring(request.params.TargetArn.lastIndexOf(':') + 1);
+                            spanName = targetName;
+                        }
+                        if (!spanName && request.params.PhoneNumber) {
+                            phoneNumber = request.params.PhoneNumber;
+                            spanName = phoneNumber;
+                        }
+                        spanName = koalas(spanName, AWS_SERVICE_REQUEST);
 
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
@@ -362,7 +375,15 @@ class AWSIntegration implements Integration {
                             activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
                             activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
 
-                            activeSpan.setTag(AwsSNSTags.TOPIC_NAME, topicName);
+                            if (topicName) {
+                                activeSpan.setTag(AwsSNSTags.TOPIC_NAME, topicName);
+                            }
+                            if (targetName) {
+                                activeSpan.setTag(AwsSNSTags.TARGET_NAME, targetName);
+                            }
+                            if (phoneNumber) {
+                                activeSpan.setTag(AwsSNSTags.SMS_PHONE_NUMBER, phoneNumber);
+                            }
                             if (config && !config.maskSNSMessage) {
                                 activeSpan.setTag(AwsSNSTags.MESSAGE, request.params.Message);
                             }

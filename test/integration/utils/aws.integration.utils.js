@@ -117,13 +117,51 @@ module.exports.sqs_list_queue = (AWS) => {
     });
 };
 
-module.exports.sns = (AWS) => {
+module.exports.sns_topic = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
         const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
         const params = {
             Message: 'Hello Thundra!',
             TopicArn: 'TEST_TOPIC'
+        };
+
+        sns.publish(params, function (err, data) {
+            if (err) {
+                // Resolve even though there is an error.
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    });
+};
+
+module.exports.sns_target = (AWS) => {
+    return new Promise((resolve) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
+        const params = {
+            Message: 'Hello Thundra!',
+            TargetArn: 'TEST_TARGET'
+        };
+
+        sns.publish(params, function (err, data) {
+            if (err) {
+                // Resolve even though there is an error.
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    });
+};
+
+module.exports.sns_sms = (AWS) => {
+    return new Promise((resolve) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
+        const params = {
+            Message: 'Hello Thundra!',
+            PhoneNumber: '+901234567890'
         };
 
         sns.publish(params, function (err, data) {
