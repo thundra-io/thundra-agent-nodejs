@@ -5,6 +5,7 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
 const md5 = require('md5');
+jest.setTimeout(30000);
 
 describe('AWS Integration', () => {
     InvocationSupport.setFunctionName('functionName');
