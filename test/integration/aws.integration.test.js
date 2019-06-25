@@ -5,6 +5,7 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
 const md5 = require('md5');
+jest.setTimeout(30000);
 
 describe('AWS Integration', () => {
     InvocationSupport.setFunctionName('functionName');
@@ -366,7 +367,7 @@ describe('AWS Integration', () => {
     });
   
     
-    test('should instrument AWS SNS publish calls ', () => { 
+    test('should instrument AWS SNS publish to topic calls ', () => {
         const integration = new AWSIntegration({});
         const sdk = require('aws-sdk');
 
@@ -387,7 +388,7 @@ describe('AWS Integration', () => {
         
         const tracer = new ThundraTracer();
 
-        return AWS.sns(sdk).then(() => {
+        return AWS.sns_topic(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
             expect(span.operationName).toBe('TEST_TOPIC');
@@ -406,8 +407,91 @@ describe('AWS Integration', () => {
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
             expect(span.finishTime).toBeTruthy();
         });
-    }); 
+    });
 
+    test('should instrument AWS SNS publish to target calls ', () => {
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {});
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                data: {
+                    MessageId: 'EXAMPLE_MESSAGE_ID_123',
+                }
+            };
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
+
+        const tracer = new ThundraTracer();
+
+        return AWS.sns_target(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('TEST_TARGET');
+
+            expect(span.className).toBe('AWS-SNS');
+            expect(span.domainName).toBe('Messaging');
+
+            expect(span.tags['aws.request.name']).toBe('publish');
+            expect(span.tags['aws.sns.message']).toBe('Hello Thundra!');
+            expect(span.tags['aws.sns.target.name']).toBe('TEST_TARGET');
+            expect(span.tags['operation.type']).toBe('WRITE');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+    test('should instrument AWS SNS publish to SMS calls ', () => {
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+
+        integration.wrap(sdk, {});
+
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                data: {
+                    MessageId: 'EXAMPLE_MESSAGE_ID_123',
+                }
+            };
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
+
+        const tracer = new ThundraTracer();
+
+        return AWS.sns_sms(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('+901234567890');
+
+            expect(span.className).toBe('AWS-SNS');
+            expect(span.domainName).toBe('Messaging');
+
+            expect(span.tags['aws.request.name']).toBe('publish');
+            expect(span.tags['aws.sns.message']).toBe('Hello Thundra!');
+            expect(span.tags['aws.sns.sms.phone_number']).toBe('+901234567890');
+            expect(span.tags['operation.type']).toBe('WRITE');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
 
     test('should instrument AWS SNS call without publish', () => { 
         const integration = new AWSIntegration({});

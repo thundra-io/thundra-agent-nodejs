@@ -40,10 +40,9 @@ class LambdaEventUtils {
         } else if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
             originalEvent.Records[0] && originalEvent.Records[0].cf) {
             return LambdaEventType.CloudFront;
-        } else if (originalEvent.requestContext && originalEvent.headers) {
+        } else if (originalEvent.requestContext && originalEvent.resource && originalEvent.path) {
             return LambdaEventType.APIGatewayProxy;
-        } else if (originalEvent.context && originalEvent['stage-variables'] &&
-            originalEvent.params && originalEvent['body-json']) {
+        } else if (originalEvent.context && originalEvent.context.stage && originalEvent.context['resource-path']) {
                 return LambdaEventType.APIGatewayPassThrough;
         } else if (originalContext.clientContext) {
             return LambdaEventType.Lambda;
@@ -266,7 +265,8 @@ class LambdaEventUtils {
     static injectTriggerTagsForAPIGatewayProxy(span: ThundraSpan, originalEvent: any): String {
         const domainName = DomainNames.API;
         const className = ClassNames.APIGATEWAY;
-        const operationName = originalEvent.headers.Host + '/' + originalEvent.requestContext.stage + originalEvent.path;
+        const host = get(originalEvent, 'headers.Host', '');
+        const operationName = host + originalEvent.requestContext.path;
         const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
 
         if (incomingSpanId) {
@@ -281,8 +281,8 @@ class LambdaEventUtils {
     static injectTriggerTagsForAPIGatewayPassThrough(span: ThundraSpan, originalEvent: any): String {
         const domainName = DomainNames.API;
         const className = ClassNames.APIGATEWAY;
-        const operationName = originalEvent.params.header.Host + '/' + originalEvent.context.stage +
-                             originalEvent.context['resource-path'];
+        const host = get(originalEvent, 'params.header.Host', '');
+        const operationName = host + '/' + originalEvent.context.stage + originalEvent.context['resource-path'];
 
         this.injectTrigerTragsForInvocation(domainName, className, [operationName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [operationName]);

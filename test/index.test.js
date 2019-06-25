@@ -149,8 +149,8 @@ describe('Thundra library', () => {
         });
     });
 
-    describe('when it is a warmup and thundra_lambda_warmup_warmupAware is true', () => {
-        process.env.thundra_lambda_warmup_warmupAware = 'true';
+    describe('when it is a warmup and thundra_agent_lambda_warmup_warmupAware is true', () => {
+        process.env.thundra_agent_lambda_warmup_warmupAware = 'true';
         const originalEvent = {};
         const originalContext = {};
         const originalCallback = jest.fn();
@@ -167,8 +167,8 @@ describe('Thundra library', () => {
 
     });
 
-    describe('when it is a warmup and thundra_lambda_warmup_warmupAware is not set', () => {
-        delete process.env.thundra_lambda_warmup_warmupAware;
+    describe('when it is a warmup and thundra_agent_lambda_warmup_warmupAware is not set', () => {
+        delete process.env.thundra_agent_lambda_warmup_warmupAware;
 
         const originalEvent = {};
         const originalContext = {};

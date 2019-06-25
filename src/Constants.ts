@@ -13,7 +13,7 @@ import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanList
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
 
 export const envVariableKeys = {
-    THUNDRA_LAMBDA_WARMUP_AWARE: 'thundra_lambda_warmup_warmupAware',
+    THUNDRA_LAMBDA_WARMUP_AWARE: 'thundra_agent_lambda_warmup_warmupAware',
     THUNDRA_APIKEY: 'thundra_apiKey',
     THUNDRA_DISABLE: 'thundra_agent_lambda_disable',
     THUNDRA_APPLICATION_STAGE: 'thundra_agent_lambda_application_stage',
@@ -443,6 +443,8 @@ export const AwsS3Tags = {
 
 export const AwsSNSTags = {
     TOPIC_NAME: 'aws.sns.topic.name',
+    TARGET_NAME: 'aws.sns.target.name',
+    SMS_PHONE_NUMBER: 'aws.sns.sms.phone_number',
     MESSAGE: 'aws.sns.message',
 };
 
