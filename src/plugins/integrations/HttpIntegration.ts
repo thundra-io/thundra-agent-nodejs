@@ -33,7 +33,6 @@ class HttpIntegration implements Integration {
     }
 
     static isValidUrl(host: string): boolean {
-
         if (host.indexOf('amazonaws.com') !== -1 &&
             host.indexOf('execute-api') !== -1) {
             return true;
@@ -112,6 +111,9 @@ class HttpIntegration implements Integration {
                     const req = request.call(this, options, wrappedCallback);
 
                     req.on('response', (res: any) => {
+                        if ('x-amzn-requestid' in res.headers) {
+                            span._setClassName(ClassNames.APIGATEWAY);
+                        }
                         span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
                     });
 

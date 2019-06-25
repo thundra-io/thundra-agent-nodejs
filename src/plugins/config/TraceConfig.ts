@@ -166,8 +166,10 @@ class TraceConfig extends BasePluginConfig {
     }
 
     parseTraceableConfigEnvVariable(value: string): TraceableConfig {
-        const args = value.substring(value.indexOf('[') + 1, value.indexOf(']')).split(',');
-        const pattern = value.substring(0, value.indexOf('['));
+        const idx1 = value.indexOf('[');
+        const idx2 = value.indexOf(']');
+        const args = value.substring(idx1 + 1, idx2).split(',');
+        const pattern = idx1 < 0 ? value : value.substring(0, idx1);
         const option: TraceableConfig = new TraceableConfig(pattern);
         for (const arg of args) {
             const tupple = arg.split('=');

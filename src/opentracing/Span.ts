@@ -98,6 +98,14 @@ class ThundraSpan extends Span {
     return this.parentTracer;
   }
 
+  _setDomainName(name: string) {
+    this.domainName = name;
+  }
+
+  _setClassName(name: string) {
+    this.className = name;
+  }
+
   _setOperationName(name: string) {
     this.operationName = name;
   }

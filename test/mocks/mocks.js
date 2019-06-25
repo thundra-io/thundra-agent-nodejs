@@ -467,6 +467,8 @@ const createMockApiGatewayProxy = () => {
             'x-thundra-transaction-id': 'transactionId',
             'x-thundra-span-id': 'spanId',
         },
+        resource: '/',
+        path: '/',
         requestContext: {
             path: '/prod/path/to/resource',
             resourcePath: '/{proxy+}',
