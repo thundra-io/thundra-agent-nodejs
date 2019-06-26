@@ -37,7 +37,7 @@ class RedisIntegration implements Integration {
             const moduleValidator = new ModuleVersionValidator();
             const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
             if (!isValidVersion) {
-                ThundraLogger.getInstance().error(`Invalid module version for redis integration.
+                ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
                                             Supported version is ${this.version}`);
                 return;
             } else {

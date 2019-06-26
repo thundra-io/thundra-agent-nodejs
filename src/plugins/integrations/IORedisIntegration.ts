@@ -2,38 +2,51 @@ import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
+import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
+import ThundraLogger from '../../ThundraLogger';
+import Utils from '../utils/Utils';
+import ModuleVersionValidator from './ModuleVersionValidator';
 import {
     DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,
 } from '../../Constants';
-import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
-import ThundraLogger from '../../ThundraLogger';
 
 const shimmer = require('shimmer');
-const Hook = require('require-in-the-middle');
+const has = require('lodash.has');
 const get = require('lodash.get');
+
+const moduleName = 'ioredis';
 
 class IORedisIntegration implements Integration {
     version: string;
     lib: any;
     config: any;
-    hook: any;
     basedir: string;
+    wrapped: boolean;
 
     constructor(config: any) {
-        this.hook = Hook('ioredis', { internals: true }, (exp: any, name: string, basedir: string) => {
-            if (name !== 'ioredis') {
-                return exp;
+        this.wrapped = false;
+        this.version = '>=2';
+        this.lib = Utils.tryRequire(moduleName);
+
+        if (this.lib) {
+            const { basedir } = Utils.getModuleInfo(moduleName);
+            if (!basedir) {
+                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
+                return;
             }
-
-            this.lib = exp;
-            this.config = config;
-            this.basedir = basedir;
-
-            this.wrap.call(this, exp, config);
-
-            return exp;
-        });
+            const moduleValidator = new ModuleVersionValidator();
+            const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+            if (!isValidVersion) {
+                ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
+                                            Supported version is ${this.version}`);
+                return;
+            } else {
+                this.config = config;
+                this.basedir = basedir;
+                this.wrap.call(this, this.lib, config);
+            }
+        }
     }
 
     wrap(lib: any, config: any) {
@@ -102,11 +115,19 @@ class IORedisIntegration implements Integration {
             };
         }
 
-        shimmer.wrap(lib.prototype, 'sendCommand', wrapper);
+        if (this.wrapped) {
+            this.unwrap();
+        }
+
+        if (has(lib, 'prototype.sendCommand')) {
+            shimmer.wrap(lib.prototype, 'sendCommand', wrapper);
+            this.wrapped = true;
+        }
     }
 
     unwrap() {
-        console.log('IOREDIS UNWRAP METHOD');
+        shimmer.unwrap(this.lib.prototype, 'sendCommand');
+        this.wrapped = false;
     }
 
     patchEnd(span: ThundraSpan, resultHandler?: Function): () => Promise<{}> {
