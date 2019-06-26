@@ -23,6 +23,8 @@ import ThundraTracer from '../../opentracing/Tracer';
 import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
 import InvocationSupport from '../support/InvocationSupport';
 
+const parse = require('module-details-from-path');
+
 class Utils {
     static generateId(): string {
         return uuidv4();
@@ -208,6 +210,21 @@ class Utils {
         return endpoint.split('.')[0];
     }
 
+    static tryRequire(name: string): any {
+        try {
+            return require(name);
+        // tslint:disable-next-line:no-empty
+        } catch (err) {}
+    }
+
+    static getModuleInfo(name: string): any {
+        try {
+            return parse(require.resolve(name));
+        } catch (err) {
+            return {};
+        }
+    }
+
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
@@ -284,20 +301,6 @@ class Utils {
 
     static getRandomInt(bound: number): number {
         return 1 + Math.floor(Math.random() * bound);
-    }
-
-    static tryRequire(name: string): any {
-        try {
-            return require(name);
-        // tslint:disable-next-line:no-empty
-        } catch (err) {}
-    }
-
-    static tryResolve(name: string): any {
-        try {
-            require.resolve(`${name}/package.json`);
-        // tslint:disable-next-line:no-empty
-        } catch (err) {}
     }
 
     static registerSpanListenersFromConfigurations(tracer: ThundraTracer): any {
