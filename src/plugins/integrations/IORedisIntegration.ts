@@ -48,7 +48,6 @@ class IORedisIntegration implements Integration {
                         return original.call(this, command);
                     }
 
-                    const me = this;
                     const functionName = InvocationSupport.getFunctionName();
                     const parentSpan = tracer.getActiveSpan();
                     const host: string = get(this.options, 'host', 'localhost');
@@ -116,7 +115,6 @@ class IORedisIntegration implements Integration {
                 span.setErrorTag(err);
             }
             span.close();
-            console.log('inside patchEnd');
             if (typeof resultHandler === 'function') {
                 return resultHandler.apply(this, arguments);
             }
