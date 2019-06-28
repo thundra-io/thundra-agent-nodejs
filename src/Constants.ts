@@ -10,7 +10,7 @@ import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
-import { version } from '../package.json';
+const { version } = require('../package.json');
 
 export const envVariableKeys = {
     THUNDRA_LAMBDA_WARMUP_AWARE: 'thundra_agent_lambda_warmup_warmupAware',

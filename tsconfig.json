@@ -12,7 +12,6 @@
             "es6"
         ],
         "removeComments": false,
-        "resolveJsonModule": true,
         "sourceMap": true,
         "strictNullChecks": false
     },
