@@ -3,14 +3,13 @@ import * as os from 'os';
 import {
     DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys,
-    LISTENERS,
+    LISTENERS, AGENT_VERSION,
 } from '../../Constants';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
 import MonitorDataType from '../data/base/MonitoringDataType';
 import BaseMonitoringData from '../data/base/BaseMonitoringData';
-import BuildInfoLoader from '../../BuildInfoLoader';
 import MonitoringDataType from '../data/base/MonitoringDataType';
 import InvocationData from '../data/invocation/InvocationData';
 import MetricData from '../data/metric/MetricData';
@@ -220,7 +219,7 @@ class Utils {
         const applicationVersion = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_VERSION);
 
         monitoringData.id = Utils.generateId();
-        monitoringData.agentVersion = BuildInfoLoader.getAgentVersion();
+        monitoringData.agentVersion = AGENT_VERSION;
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
         monitoringData.applicationId = applicationId ? applicationId : (pluginContext ? pluginContext.applicationId : '');
         monitoringData.applicationDomainName = domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
