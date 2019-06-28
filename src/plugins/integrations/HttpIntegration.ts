@@ -14,8 +14,6 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const semver = require('semver');
 
-const moduleName = 'http';
-
 class HttpIntegration implements Integration {
     version: string;
     lib: any;
@@ -25,11 +23,9 @@ class HttpIntegration implements Integration {
 
     constructor(config: any) {
         this.wrapped = false;
-        this.lib = Utils.tryRequire(moduleName);
+        this.lib = [Utils.tryRequire('http'), Utils.tryRequire('https')];
         this.config = config;
-        if (this.lib) {
-            this.wrap.call(this, this.lib, config);
-        }
+        this.wrap.call(this, this.lib, config);
     }
 
     static isValidUrl(host: string): boolean {
@@ -48,6 +44,10 @@ class HttpIntegration implements Integration {
     }
 
     wrap(lib: any, config: any): void {
+        const libHTTP = lib[0];
+        const libHTTPS = lib[1];
+        const nodeVersion = process.version;
+
         function wrapper(request: any) {
             return function requestWrapper(options: any, callback: any) {
                 try {
@@ -124,9 +124,16 @@ class HttpIntegration implements Integration {
                                 req.on('response', (res: any) => res.resume());
                             }
 
-                            if (!config.maskHttpBody && arg._httpMessage._hasBody) {
+                            const httpMessage = arg._httpMessage;
+
+                            if (!config.maskHttpBody && httpMessage._hasBody) {
                                 try {
-                                    const lines = arg._httpMessage.output[0].split('\n');
+                                    let lines: string[];
+                                    if (has(httpMessage, 'outputData')) {
+                                        lines = httpMessage.outputData[0].data.split('\n');
+                                    } else if (has(httpMessage, 'output')) {
+                                        lines = httpMessage.output[0].split('\n');
+                                    }
                                     span.setTag(HttpTags.BODY, lines[lines.length - 1]);
                                 } catch (error) {
                                     ThundraLogger.getInstance().debug(error);
@@ -150,21 +157,42 @@ class HttpIntegration implements Integration {
             this.unwrap();
         }
 
-        if (has(lib, 'request')) {
-            shimmer.wrap(lib, 'request', wrapper);
-            if (semver.satisfies(process.version, '>=8')) {
-                shimmer.wrap(lib, 'get', wrapper);
+        if (has(libHTTP, 'request')) {
+            shimmer.wrap(libHTTP, 'request', wrapper);
+            if (semver.satisfies(nodeVersion, '>=8') && has(libHTTP, 'get')) {
+                shimmer.wrap(libHTTP, 'get', wrapper);
             }
-            this.wrapped = true;
         }
 
+        if (semver.satisfies(nodeVersion, '>=9')) {
+            if (has(libHTTPS, 'request') && has(libHTTPS, 'get')) {
+                shimmer.wrap(libHTTPS, 'request', wrapper);
+                shimmer.wrap(libHTTPS, 'get', wrapper);
+            }
+        }
+
+        this.wrapped = true;
     }
 
     unwrap(): void {
-        shimmer.unwrap(this.lib, 'request');
-        if (semver.satisfies(process.version, '>=8')) {
-            shimmer.unwrap(this.lib, 'get');
+        const libHTTP = this.lib[0];
+        const libHTTPS = this.lib[1];
+        const nodeVersion = process.version;
+
+        if (has(libHTTP, 'request')) {
+            shimmer.unwrap(libHTTP, 'request');
+            if (semver.satisfies(nodeVersion, '>=8') && has(libHTTP, 'get')) {
+                shimmer.unwrap(libHTTP, 'get');
+            }
         }
+
+        if (semver.satisfies(nodeVersion, '>=9')) {
+            if (has(libHTTPS, 'request') && has(libHTTPS, 'get')) {
+                shimmer.unwrap(libHTTPS, 'request');
+                shimmer.unwrap(libHTTPS, 'get');
+            }
+        }
+
         this.wrapped = false;
     }
 }
