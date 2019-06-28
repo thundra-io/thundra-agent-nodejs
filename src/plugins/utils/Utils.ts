@@ -1,4 +1,3 @@
-import * as uuidv4 from 'uuid/v4';
 import { readFile } from 'fs';
 import * as os from 'os';
 import {
@@ -22,6 +21,8 @@ import ApplicationSupport from '../support/ApplicationSupport';
 import ThundraTracer from '../../opentracing/Tracer';
 import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
 import InvocationSupport from '../support/InvocationSupport';
+
+const uuidv4 = require('uuid/v4');
 
 class Utils {
     static generateId(): string {
