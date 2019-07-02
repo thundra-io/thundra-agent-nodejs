@@ -18,10 +18,10 @@ describe('Invocation Support', () => {
     
             InvocationSupport.setTag('object', object);
             
-            expect(InvocationSupport.tags['number']).toBe(5);
-            expect(InvocationSupport.tags['string']).toBe('value');
-            expect(InvocationSupport.tags['boolean']).toBe(true);
-            expect(InvocationSupport.tags['object']).toBe(object);
+            expect(InvocationSupport.userTags['number']).toBe(5);
+            expect(InvocationSupport.userTags['string']).toBe('value');
+            expect(InvocationSupport.userTags['boolean']).toBe(true);
+            expect(InvocationSupport.userTags ['object']).toBe(object);
         });
     });
 
@@ -50,7 +50,7 @@ describe('Invocation Support', () => {
             InvocationSupport.setTag('string', 'value');
 
             InvocationSupport.removeTags();
-            expect(InvocationSupport.tags).toEqual({});
+            expect(InvocationSupport.userTags).toEqual({});
         });
     });
 });
