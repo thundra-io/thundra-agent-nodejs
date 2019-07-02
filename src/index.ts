@@ -33,6 +33,7 @@ import TimeAwareSampler from './opentracing/sampler/TimeAwareSampler';
 import { SamplerCompositionOperator } from './opentracing/sampler/CompositeSampler';
 
 const ThundraWarmup = require('@thundra/warmup');
+const get = require('lodash.get');
 
 module.exports = (options: any) => {
     const config = new ThundraConfig(options);
@@ -97,8 +98,12 @@ module.exports = (options: any) => {
     const increaseRequestCount = () => pluginContext.requestCount += 1;
 
     return (originalFunc: any) => {
+        // Check if already wrapped
+        if (get(originalFunc, 'thundraWrapped', false)) {
+            return originalFunc;
+        }
 
-        const thundraWrappedHandler = (originalEvent: any, originalContext: any, originalCallback: any) => {
+        const thundraWrappedHandler: any = (originalEvent: any, originalContext: any, originalCallback: any) => {
             const originalThis = this;
             const thundraWrapper = new ThundraWrapper(
                 originalThis,
@@ -111,6 +116,8 @@ module.exports = (options: any) => {
             );
             return thundraWrapper.invoke();
         };
+        // Set thundraWrapped to true, to not double wrap the user handler
+        thundraWrappedHandler.thundraWrapped = true;
 
         if (config.warmupAware) {
             const warmupWrapper = ThundraWarmup(increaseRequestCount);
