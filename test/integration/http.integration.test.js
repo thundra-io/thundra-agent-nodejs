@@ -8,8 +8,6 @@ describe('HTTP integration', () => {
         const integration = new HttpIntegration({});
         const sdk = require('http');
 
-        integration.wrap(sdk, {});
-
         const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
@@ -38,8 +36,6 @@ describe('HTTP integration', () => {
         const integration = new HttpIntegration({});
         const sdk = require('https');
 
-        integration.wrap(sdk, {});
-
         const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
@@ -51,24 +47,21 @@ describe('HTTP integration', () => {
 
             expect(span.tags['http.method']).toBe('POST');
             expect(span.tags['http.body']).toBe('{"todo":"Buy the milk"}');
-
         });
     });
 
     test('should mask body in post', () => {
-        const integration = new HttpIntegration({});
-        const sdk = require('https');
-
-        integration.wrap(sdk, {
+        const integration = new HttpIntegration({
             maskHttpBody: true
         });
+        const sdk = require('https');
 
         const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
         return Http.post(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
-
+            
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
 

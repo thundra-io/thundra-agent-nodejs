@@ -12,27 +12,23 @@ import Utils from '../utils/Utils';
 
 const get = require('lodash.get');
 
-let mongodb: any = null;
-try {
-    mongodb = Utils.tryRequire('mongodb');
-} catch (e) {
-    // mongodb library not available
-}
+const moduleName = 'mongodb';
 
 class MongoDBIntegration implements Integration {
     config: any;
     lib: any;
     version: string;
-    hook: any;
     basedir: string;
     listener: any;
     spans: any;
+    wrapped: boolean;
 
     constructor(config: any) {
+        this.lib = Utils.tryRequire(moduleName);
         this.spans = {};
         this.config = config;
-        if (mongodb) {
-            this.listener = mongodb.instrument();
+        if (this.lib) {
+            this.listener = this.lib.instrument();
             this.listener.on('started', (this.onStarted.bind(this)));
             this.listener.on('succeeded', this.onSucceeded.bind(this));
             this.listener.on('failed', this.onFailed.bind(this));

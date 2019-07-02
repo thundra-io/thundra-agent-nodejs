@@ -5,7 +5,7 @@ interface Integration {
     config: any;
     version: string;
     basedir: string;
-    hook: any;
+    wrapped: boolean;
 
     wrap: (lib: any, tracer: ThundraTracer, config: any) => void;
     unwrap: () => void;
