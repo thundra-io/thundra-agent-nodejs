@@ -2,10 +2,11 @@ import ThundraLogger from '../../ThundraLogger';
 
 class InvocationSupport {
     static tags: any = {};
+    static userTags: any = {};
     static functionName: string = '';
     static errorenous: boolean;
 
-    static setTag(key: string, value: any): void {
+    static setAgentTag(key: string, value: any): void {
         try {
             InvocationSupport.tags[key] = value;
         } catch (e) {
@@ -13,11 +14,11 @@ class InvocationSupport {
         }
     }
 
-    static getTag(key: string): any {
+    static getAgentTag(key: string): any {
         return InvocationSupport.tags[key];
     }
 
-    static setTags(keyValuePairs: {[key: string]: any }): void {
+    static setAgentTags(keyValuePairs: {[key: string]: any }): void {
         try {
             Object.keys(keyValuePairs).forEach((key) => {
                 InvocationSupport.tags[key] = keyValuePairs[key];
@@ -27,8 +28,34 @@ class InvocationSupport {
         }
     }
 
-    static removeTags(): void {
+    static removeAgentTags(): void {
         InvocationSupport.tags = {};
+    }
+
+    static setTag(key: string, value: any): void {
+        try {
+            InvocationSupport.userTags[key] = value;
+        } catch (e) {
+            ThundraLogger.getInstance().error(e);
+        }
+    }
+
+    static getTag(key: string): any {
+        return InvocationSupport.userTags[key];
+    }
+
+    static setTags(keyValuePairs: {[key: string]: any }): void {
+        try {
+            Object.keys(keyValuePairs).forEach((key) => {
+                InvocationSupport.userTags[key] = keyValuePairs[key];
+            });
+        } catch (e) {
+            ThundraLogger.getInstance().error(e);
+        }
+    }
+
+    static removeTags(): void {
+        InvocationSupport.userTags = {};
     }
 
     static setFunctionName(functionName: string): void {

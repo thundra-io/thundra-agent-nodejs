@@ -102,6 +102,7 @@ class Invocation {
         }
 
         this.invocationData.setTags(InvocationSupport.tags);
+        this.invocationData.setUserTags(InvocationSupport.userTags);
         this.finishTimestamp = this.pluginContext.invocationFinishTimestamp;
         this.invocationData.finishTimestamp = this.finishTimestamp;
         this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
@@ -116,6 +117,7 @@ class Invocation {
 
     destroy(): void {
         InvocationSupport.removeTags();
+        InvocationSupport.removeAgentTags();
         InvocationTraceSupport.clear();
     }
 }

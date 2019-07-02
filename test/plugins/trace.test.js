@@ -314,7 +314,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -341,7 +341,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -372,7 +372,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -381,9 +381,9 @@ describe('Trace', () => {
         });
 
         it('should set trigger tags for DynamoDB to root span', () => {
-            expect(InvocationSupport.getTag('trigger.domainName')).toBe('DB');
-            expect(InvocationSupport.getTag('trigger.className')).toBe('AWS-DynamoDB');
-            expect(InvocationSupport.getTag('trigger.operationNames')).toEqual([ 'ExampleTableWithStream' ]);
+            expect(InvocationSupport.getAgentTag('trigger.domainName')).toBe('DB');
+            expect(InvocationSupport.getAgentTag('trigger.className')).toBe('AWS-DynamoDB');
+            expect(InvocationSupport.getAgentTag('trigger.operationNames')).toEqual([ 'ExampleTableWithStream' ]);
         });
         
         it('should create incoming dynamodb trace links', () => {
@@ -412,7 +412,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -439,7 +439,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -466,7 +466,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -494,7 +494,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -516,7 +516,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -538,7 +538,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -560,7 +560,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -587,7 +587,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
 
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);
@@ -610,7 +610,7 @@ describe('Trace', () => {
         const beforeInvocationData = createMockBeforeInvocationData();
         
         beforeAll(() => {
-            InvocationSupport.removeTags();
+            InvocationSupport.removeAgentTags();
             InvocationTraceSupport.clear();
 
             tracer.setPluginContext(pluginContext);

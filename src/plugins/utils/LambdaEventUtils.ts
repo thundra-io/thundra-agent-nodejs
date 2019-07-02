@@ -372,9 +372,9 @@ class LambdaEventUtils {
     }
 
     static injectTrigerTragsForInvocation(domainName: string, className: string, operationNames: any[]) {
-        InvocationSupport.setTag(SpanTags.TRIGGER_DOMAIN_NAME, domainName);
-        InvocationSupport.setTag(SpanTags.TRIGGER_CLASS_NAME, className);
-        InvocationSupport.setTag(SpanTags.TRIGGER_OPERATION_NAMES, operationNames);
+        InvocationSupport.setAgentTag(SpanTags.TRIGGER_DOMAIN_NAME, domainName);
+        InvocationSupport.setAgentTag(SpanTags.TRIGGER_CLASS_NAME, className);
+        InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, operationNames);
     }
 
     static injectTrigerTragsForSpan(span: ThundraSpan, domainName: string, className: string, operationNames: any[]) {
