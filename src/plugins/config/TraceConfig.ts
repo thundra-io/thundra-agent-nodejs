@@ -31,6 +31,7 @@ class TraceConfig extends BasePluginConfig {
     enableKinesisRequest: boolean;
     maskSNSMessage: boolean;
     maskSQSMessage: boolean;
+    maskAthenaStatement: boolean;
     maskLambdaPayload: boolean;
     maskHttpBody: boolean;
     sampler: Sampler<any>;
@@ -97,6 +98,10 @@ class TraceConfig extends BasePluginConfig {
         this.maskSQSMessage = Utils.getConfiguration(
             envVariableKeys.THUNDRA_MASK_SQS_MESSAGE) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_MASK_SQS_MESSAGE) === 'true' : options.maskSQSMessage;
+
+        this.maskAthenaStatement = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_MASK_ATHENA_STATEMENT) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_MASK_ATHENA_STATEMENT) === 'true' : options.maskAthenaStatement;
 
         this.maskLambdaPayload = Utils.getConfiguration(
             envVariableKeys.THUNDRA_MASK_LAMBDA_PAYLOAD) ? Utils.getConfiguration(

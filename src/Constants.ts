@@ -61,6 +61,7 @@ export const envVariableKeys = {
     THUNDRA_MASK_DYNAMODB_STATEMENT: 'thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask',
     THUNDRA_MASK_ELASTIC_STATEMENT: 'thundra_agent_lambda_trace_integrations_elastic_statement_mask',
     THUNDRA_MASK_MONGODB_COMMAND: 'thundra_agent_lambda_trace_integrations_mongodb_command_mask',
+    THUNDRA_MASK_ATHENA_STATEMENT: 'thundra_agent_lambda_trace_integrations_aws_athena_statement_mask',
 
     ENABLE_DYNAMODB_TRACE_INJECTION: 'thundra_agent_trace_integrations_dynamodb_trace_injection_enable',
 
@@ -196,6 +197,7 @@ export const ClassNames = {
     CLOUDWATCH: 'AWS-CloudWatch-Schedule',
     CLOUDFRONT: 'AWS-CloudFront',
     APIGATEWAY: 'AWS-APIGateway',
+    ATHENA: 'AWS-Athena',
     MONGODB: 'MONGODB',
 };
 
@@ -377,6 +379,28 @@ export const MongoDBCommandTypes = {
     LOGAPPLICATIONMESSAGE: 'EXECUTE',
 };
 
+export const AthenaOperationTypes = {
+    batchGetNamedQuery: 'READ',
+    batchGetQueryExecution: 'READ',
+    createNamedQuery: 'WRITE',
+    createWorkGroup: 'WRITE',
+    deleteNamedQuery: 'DELETE',
+    deleteWorkGroup: 'DELETE',
+    getNamedQuery: 'READ',
+    getQueryExecution: 'READ',
+    getQueryResults: 'READ',
+    getWorkGroup: 'READ',
+    listNamedQueries: 'READ',
+    listQueryExecutions: 'READ',
+    listTagsForResource: 'READ',
+    listWorkGroups: 'READ',
+    startQueryExecution: 'EXECUTE',
+    stopQueryExecution: 'EXECUTE',
+    tagResource: 'WRITE',
+    untagResource: 'DELETE',
+    updateWorkGroup: 'WRITE',
+};
+
 export const DBTypes = {
     DYNAMODB: 'aws-dynamodb',
     REDIS: 'redis',
@@ -431,6 +455,14 @@ export const AwsKinesisTags = {
     STREAM_NAME: 'aws.kinesis.stream.name',
 };
 
+export const AwsAthenaTags = {
+    S3_OUTPUT_LOCATION: 'aws.athena.s3.outputLocation',
+    REQUEST_QUERY_EXECUTION_IDS: 'aws.athena.request.query.executionIds',
+    RESPONSE_QUERY_EXECUTION_IDS: 'aws.athena.response.query.executionIds',
+    REQUEST_NAMED_QUERY_IDS: 'aws.athena.request.namedQuery.ids',
+    RESPONSE_NAMED_QUERY_IDS: 'aws.athena.response.namedQuery.ids',
+};
+
 export const AwsLambdaTags = {
     FUNCTION_NAME: 'aws.lambda.name',
     FUNCTION_QUALIFIER: 'aws.lambda.qualifier',
@@ -478,6 +510,7 @@ export const SpanTypes = {
     AWS_FIREHOSE: 'AWS-Firehose',
     AWS_S3: 'AWS-S3',
     AWS_LAMBDA: 'AWS-Lambda',
+    AWS_ATHENA: 'AWS-Athena',
 };
 
 export const INTEGRATIONS: any = {
