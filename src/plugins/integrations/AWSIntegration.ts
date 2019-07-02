@@ -257,6 +257,19 @@ class AWSIntegration implements Integration {
                     }
                 }
             }
+        } else if (serviceName === 'athena') {
+            if (has(response, 'data.QueryExecutionIds')) {
+                span.setTag(AwsAthenaTags.RESPONSE_QUERY_EXECUTION_IDS, response.data.QueryExecutionIds);
+            }
+            if (has(response, 'data.QueryExecutionId')) {
+                span.setTag(AwsAthenaTags.REQUEST_QUERY_EXECUTION_IDS, [response.data.QueryExecutionId]);
+            }
+            if (has(response, 'data.NamedQueryIds')) {
+                span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, response.data.NamedQueryIds);
+            }
+            if (has(response, 'data.NamedQueryId')) {
+                span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, [response.data.NamedQueryId]);
+            }
         }
 
         if (traceLinks.length > 0) {
