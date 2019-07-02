@@ -19,6 +19,7 @@ class InvocationData extends BaseMonitoringData {
     coldStart: boolean;
     timeout: boolean;
     tags: any;
+    userTags: any;
     resources: Resource[];
     incomingTraceLinks: any[];
     outgoingTraceLinks: any[];
@@ -31,6 +32,16 @@ class InvocationData extends BaseMonitoringData {
         try {
             Object.keys(keyValuePairs).forEach((key) => {
               this.tags[key] = keyValuePairs[key];
+            });
+        } catch (e) {
+            ThundraLogger.getInstance().error(e);
+        }
+    }
+
+    setUserTags(keyValuePairs: {[key: string]: any }): void {
+        try {
+            Object.keys(keyValuePairs).forEach((key) => {
+              this.userTags[key] = keyValuePairs[key];
             });
         } catch (e) {
             ThundraLogger.getInstance().error(e);

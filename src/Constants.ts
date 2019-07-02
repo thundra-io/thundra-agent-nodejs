@@ -11,6 +11,7 @@ import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
+const { version } = require('../package.json');
 
 export const envVariableKeys = {
     THUNDRA_LAMBDA_WARMUP_AWARE: 'thundra_agent_lambda_warmup_warmupAware',
@@ -100,6 +101,7 @@ export function getTimeoutMargin(region: string) {
     return 1000;
 }
 
+export const AGENT_VERSION: string = version;
 export const DATA_MODEL_VERSION: string = '2.0';
 export const TIMEOUT_MARGIN: number = getTimeoutMargin(process.env[envVariableKeys.AWS_REGION]);
 export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';

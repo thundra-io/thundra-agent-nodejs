@@ -47,7 +47,6 @@ describe('HTTP integration', () => {
 
             expect(span.tags['http.method']).toBe('POST');
             expect(span.tags['http.body']).toBe('{"todo":"Buy the milk"}');
-
         });
     });
 
@@ -62,7 +61,7 @@ describe('HTTP integration', () => {
 
         return Http.post(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
-
+            
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
 
