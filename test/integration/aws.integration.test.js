@@ -593,6 +593,181 @@ describe('AWS Integration', () => {
             expect(span.finishTime).toBeTruthy();
         });
     });
+
+    test('should instrument AWS Athena calls ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+        const tracer = new ThundraTracer();
+
+        return AWS.athenaStartQueryExec(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('sample-db');
+
+            expect(span.className).toBe('AWS-Athena');
+            expect(span.domainName).toBe('DB');
+
+            expect(span.tags['aws.request.name']).toBe('startQueryExecution');
+            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['db.instance']).toBe('sample-db');
+            expect(span.tags['db.statement']).toBe('sample-query');
+            expect(span.tags['aws.athena.s3.outputLocation']).toBe('sample-output-location');
+            expect(span.tags['aws.athena.request.query.executionIds']).toBeUndefined();
+            expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+    test('should instrument AWS Athena statement masked ', () => { 
+        const integration = new AWSIntegration({
+            maskAthenaStatement: true,
+        });
+        const sdk = require('aws-sdk');
+        const tracer = new ThundraTracer();
+
+        return AWS.athenaStartQueryExec(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('sample-db');
+
+            expect(span.className).toBe('AWS-Athena');
+            expect(span.domainName).toBe('DB');
+
+            expect(span.tags['aws.request.name']).toBe('startQueryExecution');
+            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['db.instance']).toBe('sample-db');
+            expect(span.tags['db.statement']).toBeUndefined();
+            expect(span.tags['aws.athena.s3.outputLocation']).toBe('sample-output-location');
+            expect(span.tags['aws.athena.request.query.executionIds']).toBeUndefined();
+            expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+    test('should instrument AWS Athena stop query execution ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+        const tracer = new ThundraTracer();
+
+        return AWS.athenaStopQueryExec(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('AWSServiceRequest');
+
+            expect(span.className).toBe('AWS-Athena');
+            expect(span.domainName).toBe('DB');
+
+            expect(span.tags['aws.request.name']).toBe('stopQueryExecution');
+            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['db.instance']).toBeUndefined();
+            expect(span.tags['db.statement']).toBeUndefined();
+            expect(span.tags['aws.athena.s3.outputLocation']).toBeUndefined();
+            expect(span.tags['aws.athena.request.query.executionIds']).toEqual(['sample-query-execution-id']);
+            expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+    test('should instrument AWS Athena batch get named query ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+        const tracer = new ThundraTracer();
+
+        return AWS.athenaBatchGetNamedQuery(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('AWSServiceRequest');
+
+            expect(span.className).toBe('AWS-Athena');
+            expect(span.domainName).toBe('DB');
+
+            expect(span.tags['aws.request.name']).toBe('batchGetNamedQuery');
+            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['db.instance']).toBeUndefined();
+            expect(span.tags['db.statement']).toBeUndefined();
+            expect(span.tags['aws.athena.s3.outputLocation']).toBeUndefined();
+            expect(span.tags['aws.athena.request.query.executionIds']).toBeUndefined();
+            expect(span.tags['aws.athena.request.namedQuery.ids']).toEqual(['sample-id-1', 'sample-id-2']);
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+    test('should instrument AWS Athena batch get query execution ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+        const tracer = new ThundraTracer();
+
+        return AWS.athenaBatchGetQueryExec(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('AWSServiceRequest');
+
+            expect(span.className).toBe('AWS-Athena');
+            expect(span.domainName).toBe('DB');
+
+            expect(span.tags['aws.request.name']).toBe('batchGetQueryExecution');
+            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['db.instance']).toBeUndefined();
+            expect(span.tags['db.statement']).toBeUndefined();
+            expect(span.tags['aws.athena.s3.outputLocation']).toBeUndefined();
+            expect(span.tags['aws.athena.request.query.executionIds']).toEqual(['sample-id-1', 'sample-id-2']);
+            expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+    test('should instrument AWS Athena create named query ', () => { 
+        const integration = new AWSIntegration({});
+        const sdk = require('aws-sdk');
+        const tracer = new ThundraTracer();
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                data: {
+                    NamedQueryId: 'sample-named-query-id',
+                },
+            };
+            cb(null, {result: 'success'});
+        });
+        integration.wrappedFuncs.send = mockSend;
+
+        return AWS.athenaCreateNamedQuery(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('sample-db');
+
+            expect(span.className).toBe('AWS-Athena');
+            expect(span.domainName).toBe('DB');
+
+            expect(span.tags['aws.request.name']).toBe('createNamedQuery');
+            expect(span.tags['operation.type']).toBe('WRITE');
+            expect(span.tags['db.instance']).toBe('sample-db');
+            expect(span.tags['db.statement']).toBe('sample-query');
+            expect(span.tags['aws.athena.s3.outputLocation']).toBeUndefined();
+            expect(span.tags['aws.athena.request.query.executionIds']).toBeUndefined();
+            expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
+            expect(span.tags['aws.athena.response.namedQuery.ids']).toEqual(['sample-named-query-id']);
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
     
     test('should instrument AWS KMS calls ', () => { 
         const integration = new AWSIntegration({});
