@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.0 - July 2, 2019
+#### Added
+- IORedis integration
+- Distinguish user tags
+- Replace webpack with rollup and remove `require-in-the-middle`
+
+#### Fixed
+- Fixed https://github.com/thundra-io/thundra-lambda-agent-nodejs/issues/51
+- Fixed `Handled target ARN and phone number based SNS publish requests`
+- Fixed `Handled non-existing host header in the API GW triggers`
+- Fixed `Added API GW detection support based on HTTP response header`
+
 ## 2.4.1 - May 29, 2019
 #### Added
 - MongoDB integration
