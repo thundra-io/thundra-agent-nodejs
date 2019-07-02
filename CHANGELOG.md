@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.1 - July 2, 2019
+#### Fixed
+- Fixed `Init `invocationData.userTags` with empty object`
+
 ## 2.5.0 - July 2, 2019
 #### Added
 - IORedis integration
