@@ -5,6 +5,7 @@ import MySQL2Integration from './plugins/integrations/MySQL2Integration';
 import MySQLIntegration from './plugins/integrations/MySQLIntegration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
 import MongoDBIntegration from './plugins/integrations/MongoDBIntegration';
+import IORedisIntegration from './plugins/integrations/IORedisIntegration';
 import AWSIntegration from './plugins/integrations/AWSIntegration';
 import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
@@ -485,6 +486,7 @@ export const INTEGRATIONS: any = {
     mysql2: MySQL2Integration,
     mysql: MySQLIntegration,
     redis: RedisIntegration,
+    ioredis: IORedisIntegration,
     aws: AWSIntegration,
     es: ESIntegration,
     mongodb: MongoDBIntegration,

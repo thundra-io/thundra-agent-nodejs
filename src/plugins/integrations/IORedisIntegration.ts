@@ -1,22 +1,23 @@
 import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
-import {
-    SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames,
-    ClassNames, DBTypes, DBTags, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-} from '../../Constants';
-import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
-import ModuleVersionValidator from './ModuleVersionValidator';
-import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
+import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
+import ThundraLogger from '../../ThundraLogger';
 import Utils from '../utils/Utils';
+import ModuleVersionValidator from './ModuleVersionValidator';
+import {
+    DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags,
+    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,
+} from '../../Constants';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
+const get = require('lodash.get');
 
-const moduleName = 'redis';
+const moduleName = 'ioredis';
 
-class RedisIntegration implements Integration {
+class IORedisIntegration implements Integration {
     version: string;
     lib: any;
     config: any;
@@ -25,7 +26,7 @@ class RedisIntegration implements Integration {
 
     constructor(config: any) {
         this.wrapped = false;
-        this.version = '^2.6';
+        this.version = '>=2';
         this.lib = Utils.tryRequire(moduleName);
 
         if (this.lib) {
@@ -49,36 +50,23 @@ class RedisIntegration implements Integration {
     }
 
     wrap(lib: any, config: any) {
-        function wrapper(internalSendCommand: any) {
-            return function internalSendCommandWrapper(options: any) {
+        const plugin = this;
+        function wrapper(original: Function) {
+            return function internalSendCommandWrapper(command: any) {
                 let span: ThundraSpan;
                 try {
                     const tracer = ThundraTracer.getInstance();
 
-                    if (!tracer) {
-                        return internalSendCommand.call(this, options);
+                    if (!tracer || !command || this.status !== 'ready') {
+                        return original.call(this, command);
                     }
-
-                    if (!options) {
-                        return internalSendCommand.call(this, options);
-                    }
-
-                    const me = this;
 
                     const functionName = InvocationSupport.getFunctionName();
-
                     const parentSpan = tracer.getActiveSpan();
-                    let host = 'localhost';
-                    let port = '6379';
-                    let command = '';
-
-                    if (this.connection_options) {
-                        host = String(this.connection_options.host);
-                        port = String(this.connection_options.port);
-                        command = options.command.toUpperCase();
-                    }
-
-                    const operationType = RedisCommandTypes[command] ? RedisCommandTypes[command] : '';
+                    const host: string = get(this.options, 'host', 'localhost');
+                    const port: string = get(this.options, 'port', '6379');
+                    const commandName: string = get(command, 'name', '').toUpperCase();
+                    const operationType = get(RedisCommandTypes, commandName, '');
 
                     span = tracer._startSpan(host, {
                         childOf: parentSpan,
@@ -92,8 +80,8 @@ class RedisIntegration implements Integration {
                             [DBTags.DB_STATEMENT_TYPE]: operationType,
                             [RedisTags.REDIS_HOST]: host,
                             [RedisTags.REDIS_PORT]: port,
-                            [RedisTags.REDIS_COMMAND]: config.maskRedisStatement ? undefined : command,
-                            [RedisTags.REDIS_COMMAND_ARGS]: config.maskRedisStatement ? undefined : options.args.join(','),
+                            [RedisTags.REDIS_COMMAND]: config.maskRedisStatement ? undefined : commandName,
+                            [RedisTags.REDIS_COMMAND_ARGS]: config.maskRedisStatement ? undefined : command.args.join(','),
                             [RedisTags.REDIS_COMMAND_TYPE]: operationType,
                             [SpanTags.OPERATION_TYPE]: operationType,
                             [SpanTags.TOPOLOGY_VERTEX]: true,
@@ -103,44 +91,56 @@ class RedisIntegration implements Integration {
                         },
                     });
 
-                    const originalCallback = options.callback;
-
-                    const wrappedCallback = (err: any, res: any) => {
-                        if (err) {
-                            span.setErrorTag(err);
+                    if (typeof command.callback === 'function') {
+                        command.callback = plugin.patchEnd(span, command.callback);
+                    }
+                    if (typeof command.promise === 'object') {
+                        if (typeof command.promise.finally === 'function') {
+                            command.promise.finally(plugin.patchEnd(span));
+                        } else if (typeof command.promise.then === 'function') {
+                            command.promise.then(plugin.patchEnd(span))
+                                .catch(plugin.patchEnd(span));
                         }
+                    }
 
-                        span.closeWithCallback(me, originalCallback, [err, res]);
-                    };
-
-                    options.callback = wrappedCallback;
-
-                    return internalSendCommand.call(this, options);
+                    return original.call(this, command);
                 } catch (error) {
-
                     if (span) {
                         span.close();
                     }
 
                     ThundraLogger.getInstance().error(error);
-                    internalSendCommand.call(this, options);
+                    return original.call(this, command);
                 }
             };
         }
+
         if (this.wrapped) {
             this.unwrap();
         }
 
-        if (has(lib, 'RedisClient.prototype.internal_send_command')) {
-            shimmer.wrap(lib.RedisClient.prototype, 'internal_send_command', wrapper);
+        if (has(lib, 'prototype.sendCommand')) {
+            shimmer.wrap(lib.prototype, 'sendCommand', wrapper);
             this.wrapped = true;
         }
     }
 
     unwrap() {
-        shimmer.unwrap(this.lib.RedisClient.prototype, 'internal_send_command');
+        shimmer.unwrap(this.lib.prototype, 'sendCommand');
         this.wrapped = false;
+    }
+
+    patchEnd(span: ThundraSpan, resultHandler?: Function): () => Promise<{}> {
+        return function (this: any, err?: Error) {
+            if (err instanceof Error) {
+                span.setErrorTag(err);
+            }
+            span.close();
+            if (typeof resultHandler === 'function') {
+                return resultHandler.apply(this, arguments);
+            }
+        };
     }
 }
 
-export default RedisIntegration;
+export default IORedisIntegration;
