@@ -125,7 +125,7 @@ export class Trace {
 
     afterInvocation = (data: any) => {
         let response = data.response;
-        let originalEvent = data.originalEvent;
+        const originalEvent = data.originalEvent;
 
         if (data.error) {
             const error = Utils.parseError(data.error);
@@ -180,9 +180,13 @@ export class Trace {
     }
 
     processAPIGWResponse(response: any, originalEvent: any): void {
-        const headers = get(response, 'headers', {});
-        headers[TriggerHeaderTags.RESOURCE_NAME] = originalEvent.resource;
-        response.headers = headers;
+        try {
+            const headers = get(response, 'headers', {});
+            headers[TriggerHeaderTags.RESOURCE_NAME] = originalEvent.resource;
+            response.headers = headers;
+        } catch (error) {
+            // Can not set headers property on response, probably it is not an object
+        }
     }
 
     buildSpanData(span: ThundraSpan, pluginContext: PluginContext): SpanData {

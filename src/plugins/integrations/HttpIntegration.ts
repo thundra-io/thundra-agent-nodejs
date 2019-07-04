@@ -3,7 +3,7 @@ import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import {
     HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, envVariableKeys,
-    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, TriggerHeaderTags
+    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, TriggerHeaderTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
 import * as url from 'url';
