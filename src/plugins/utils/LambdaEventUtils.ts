@@ -265,8 +265,7 @@ class LambdaEventUtils {
     static injectTriggerTagsForAPIGatewayProxy(span: ThundraSpan, originalEvent: any): String {
         const domainName = DomainNames.API;
         const className = ClassNames.APIGATEWAY;
-        const host = get(originalEvent, 'headers.Host', '');
-        const operationName = host + originalEvent.requestContext.path;
+        const operationName = originalEvent.resource;
         const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
 
         if (incomingSpanId) {
