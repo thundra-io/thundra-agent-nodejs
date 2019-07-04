@@ -6,7 +6,7 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 describe('HTTP integration', () => {
     test('should instrument HTTP GET calls ', () => {
         const integration = new HttpIntegration({
-            httpPathDepth: 1,
+            httpPathDepth: 2,
         });
         const sdk = require('http');
 
@@ -16,7 +16,7 @@ describe('HTTP integration', () => {
         return Http.get(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
-            expect(span.operationName).toBe('jsonplaceholder.typicode.com/users')
+            expect(span.operationName).toBe('jsonplaceholder.typicode.com/users/1?q=123')
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
 
