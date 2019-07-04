@@ -108,8 +108,8 @@ class TraceConfig extends BasePluginConfig {
                 envVariableKeys.THUNDRA_MASK_HTTP_BODY) === 'true' : options.maskHttpBody;
 
         this.httpPathDepth = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH,
-        ) ? parseInt(Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH), 10)
+            envVariableKeys.THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH,
+        ) ? parseInt(Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH), 10)
         : 1;
 
         this.runSamplerOnEachSpan = koalas(options.runCustomSamplerOnEachSpan, false);
