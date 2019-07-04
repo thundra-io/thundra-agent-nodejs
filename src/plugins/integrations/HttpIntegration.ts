@@ -43,11 +43,24 @@ class HttpIntegration implements Integration {
         return true;
     }
 
+    getNormalizedPath(path: string): string {
+        try {
+            const depth = this.config.httpPathDepth;
+            if (depth <= 0) {
+                return '';
+            }
+            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
+            return normalizedPath;
+        } catch (error) {
+            return path;
+        }
+    }
+
     wrap(lib: any, config: any): void {
         const libHTTP = lib[0];
         const libHTTPS = lib[1];
         const nodeVersion = process.version;
-
+        const plugin = this;
         function wrapper(request: any) {
             return function requestWrapper(options: any, callback: any) {
                 try {
@@ -70,7 +83,8 @@ class HttpIntegration implements Integration {
                     }
 
                     const parentSpan = tracer.getActiveSpan();
-                    const span = tracer._startSpan(host + path, {
+                    const operationName = host + plugin.getNormalizedPath(path);
+                    const span = tracer._startSpan(operationName, {
                         childOf: parentSpan,
                         domainName: DomainNames.API,
                         className: ClassNames.HTTP,

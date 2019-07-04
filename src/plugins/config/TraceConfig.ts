@@ -26,6 +26,7 @@ class TraceConfig extends BasePluginConfig {
     maskElasticSearchStatement: boolean;
     maskMongoDBCommand: boolean;
     dynamoDBTraceInjectionEnabled: boolean;
+    httpPathDepth: number;
     enableCloudWatchRequest: boolean;
     enableFirehoseRequest: boolean;
     enableKinesisRequest: boolean;
@@ -105,6 +106,11 @@ class TraceConfig extends BasePluginConfig {
         this.maskHttpBody = Utils.getConfiguration(
             envVariableKeys.THUNDRA_MASK_HTTP_BODY) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_MASK_HTTP_BODY) === 'true' : options.maskHttpBody;
+
+        this.httpPathDepth = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH,
+        ) ? parseInt(Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH), 10)
+        : 1;
 
         this.runSamplerOnEachSpan = koalas(options.runCustomSamplerOnEachSpan, false);
         this.sampler = options.sampler;

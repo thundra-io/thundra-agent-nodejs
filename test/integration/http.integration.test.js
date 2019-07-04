@@ -5,7 +5,9 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('HTTP integration', () => {
     test('should instrument HTTP GET calls ', () => {
-        const integration = new HttpIntegration({});
+        const integration = new HttpIntegration({
+            httpPathDepth: 1,
+        });
         const sdk = require('http');
 
         const tracer = new ThundraTracer();
@@ -14,6 +16,7 @@ describe('HTTP integration', () => {
         return Http.get(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
+            expect(span.operationName).toBe('jsonplaceholder.typicode.com/users')
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
 
@@ -33,7 +36,9 @@ describe('HTTP integration', () => {
     });
 
     test('should instrument HTTPS POST calls', () => {
-        const integration = new HttpIntegration({});
+        const integration = new HttpIntegration({
+            httpPathDepth: 0,
+        });
         const sdk = require('https');
 
         const tracer = new ThundraTracer();
@@ -42,6 +47,7 @@ describe('HTTP integration', () => {
         return Http.post(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
+            expect(span.operationName).toBe('flaviocopes.com');
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
 
@@ -62,6 +68,7 @@ describe('HTTP integration', () => {
         return Http.post(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             
+            expect(span.operationName).toBe('flaviocopes.com/todos');
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
 
