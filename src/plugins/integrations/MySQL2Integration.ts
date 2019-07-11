@@ -12,8 +12,10 @@ import Utils from '../utils/Utils';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
+const path = require('path');
 
 const moduleName = 'mysql2';
+const fileName = 'lib/connection';
 
 class MySQL2Integration implements Integration {
     config: any;
@@ -25,7 +27,7 @@ class MySQL2Integration implements Integration {
     constructor(config: any) {
         this.version = '^1.5';
         this.wrapped = false;
-        this.lib = Utils.tryRequire(moduleName);
+        this.lib = Utils.tryRequire(path.join(moduleName, fileName));
 
         if (this.lib) {
             const { basedir } = Utils.getModuleInfo(moduleName);

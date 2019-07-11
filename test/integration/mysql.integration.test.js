@@ -13,8 +13,6 @@ describe('MySQL2 Integration', () => {
     test('should instrument MySQL calls with mysql2 client', () => {
         const integration = new MySQL2Integration({});
         const sdk = require('mysql2');
-        const connection = require('mysql2/lib/connection.js');
-        integration.wrap(connection, {});
 
         const tracer = new ThundraTracer();
 
@@ -39,16 +37,11 @@ describe('MySQL2 Integration', () => {
     });
 
     test('should mask MySQL statements with mysql2 client', () => {
-        const integration = new MySQL2Integration({});
-        const sdk = require('mysql2');
-        const connection = require('mysql2/lib/connection.js');
-        
-        const traceConfig = new TraceConfig({
+        const integration = new MySQL2Integration({
             disableInstrumentation: true,
             maskRdbStatement: true
         });
-
-        integration.wrap(connection, traceConfig);
+        const sdk = require('mysql2');
 
         const tracer = new ThundraTracer();
 
@@ -78,8 +71,6 @@ describe('MySQL Integration', () => {
     test('should instrument MySQL calls with mysql client', () => {
         const integration = new MySQLIntegration({});
         const sdk = require('mysql');
-        const connection = require('mysql/lib/Connection.js');
-        integration.wrap(connection, {});
 
         const tracer = new ThundraTracer();
 
@@ -105,17 +96,11 @@ describe('MySQL Integration', () => {
     });
 
     test('should mask MySQL statements with mysql client', () => {
-        const integration = new MySQLIntegration({});
-        const sdk = require('mysql');
-        const connection = require('mysql/lib/Connection.js');
-
-        const traceConfig = new TraceConfig({
+        const integration = new MySQLIntegration({
             disableInstrumentation: true,
             maskRdbStatement: true
         });
-
-        integration.wrap(connection, traceConfig);
-
+        const sdk = require('mysql');
         const tracer = new ThundraTracer();
 
         return mysql.selectMySql(sdk).then((data) => {
