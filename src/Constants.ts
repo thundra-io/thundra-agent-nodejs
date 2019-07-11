@@ -467,6 +467,10 @@ export const SpanTags = {
     TRACE_LINKS: 'trace.links',
 };
 
+export const TriggerHeaderTags = {
+    RESOURCE_NAME: 'x-thundra-resource-name',
+};
+
 export const SpanTypes = {
     REDIS: 'Redis',
     ELASTIC: 'Elastic',

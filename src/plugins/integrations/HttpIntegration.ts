@@ -3,7 +3,7 @@ import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import {
     HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, envVariableKeys,
-    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME,
+    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, TriggerHeaderTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
 import * as url from 'url';
@@ -127,6 +127,10 @@ class HttpIntegration implements Integration {
                     req.on('response', (res: any) => {
                         if ('x-amzn-requestid' in res.headers) {
                             span._setClassName(ClassNames.APIGATEWAY);
+                        }
+                        if (TriggerHeaderTags.RESOURCE_NAME in res.headers) {
+                            const resourceName: string = res.headers[TriggerHeaderTags.RESOURCE_NAME];
+                            span._setOperationName(resourceName);
                         }
                         span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
                     });
