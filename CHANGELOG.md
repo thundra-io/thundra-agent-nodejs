@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.3 - July 12, 2019
+#### Fixed
+- Missing MySQL patching issue after `require-in-the-middle` removal
+
+#### Added
+- AWS Athena integration
+- HTTP path depth configuration
+
 ## 2.5.2 - July 4, 2019
 #### Fixed
 - Move rollup to dev dependencies
