@@ -159,107 +159,111 @@ class AWSIntegration implements Integration {
     }
 
     static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
-        if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
-            return;
-        }
-        const region = get(req, 'service.config.region', '');
-        const serviceEndpoint = get(req, 'service.config.endpoint', '');
-        const serviceName = Utils.getServiceName(serviceEndpoint as string);
-        const operationName = req.operation;
-        const response = req.response;
-        const params = Object.assign({}, req.params);
-        let traceLinks: any[] = [];
-
-        if (serviceName === 'dynamodb') {
-            const tableName = Utils.getDynamoDBTableName(req);
-            let timestamp: number;
-            if (has(response, 'httpResponse.headers.date')) {
-                timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
-            } else {
-                timestamp = Math.floor(Date.now() / 1000) - 1;
+        try {
+            if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
+                return;
             }
+            const region = get(req, 'service.config.region', '');
+            const serviceEndpoint = get(req, 'service.config.endpoint', '');
+            const serviceName = Utils.getServiceName(serviceEndpoint as string);
+            const operationName = req.operation;
+            const response = req.response;
+            const params = Object.assign({}, req.params);
+            let traceLinks: any[] = [];
 
-            if (operationName === 'putItem') {
-                traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Item, 'SAVE', tableName, region, timestamp);
-            } else if (operationName === 'updateItem') {
-                traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'SAVE', tableName, region, timestamp);
-            } else if (operationName === 'deleteItem') {
-                if (config.dynamoDBTraceInjectionEnabled && has(response, 'data.Attributes.x-thundra-span-id')) {
-                    const spanId = response.data.Attributes['x-thundra-span-id'];
-                    traceLinks = [`DELETE:${spanId}`];
+            if (serviceName === 'dynamodb') {
+                const tableName = Utils.getDynamoDBTableName(req);
+                let timestamp: number;
+                if (has(response, 'httpResponse.headers.date')) {
+                    timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
                 } else {
-                    traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'DELETE', tableName, region, timestamp);
+                    timestamp = Math.floor(Date.now() / 1000) - 1;
                 }
-            }
-        } else if (serviceName === 'sqs') {
-            if (operationName === 'sendMessage') {
-                const messageId = response.data.MessageId || '';
-                traceLinks = [messageId];
-            } else if (operationName === 'sendMessageBatch') {
-                const entries = response.data.Successful || [];
-                entries.map((entry: any) => traceLinks.push(entry.MessageId));
-            }
-        } else if (serviceName === 'sns') {
-            const messageId = get(response, 'data.MessageId', false);
-            if (messageId) {
-                traceLinks = [messageId];
-            }
-        } else if (serviceName === 'kinesis') {
-            const records = get(response, 'data.Records', false);
-            const streamName = params.StreamName || '';
-            if (records) {
-                for (const record of records) {
-                    const shardId = get(record, 'ShardId', false);
-                    const seqNumber = get(record, 'SequenceNumber', false);
+
+                if (operationName === 'putItem') {
+                    traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Item, 'SAVE', tableName, region, timestamp);
+                } else if (operationName === 'updateItem') {
+                    traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'SAVE', tableName, region, timestamp);
+                } else if (operationName === 'deleteItem') {
+                    if (config.dynamoDBTraceInjectionEnabled && has(response, 'data.Attributes.x-thundra-span-id')) {
+                        const spanId = response.data.Attributes['x-thundra-span-id'];
+                        traceLinks = [`DELETE:${spanId}`];
+                    } else {
+                        traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'DELETE', tableName, region, timestamp);
+                    }
+                }
+            } else if (serviceName === 'sqs') {
+                if (operationName === 'sendMessage') {
+                    const messageId = response.data.MessageId || '';
+                    traceLinks = [messageId];
+                } else if (operationName === 'sendMessageBatch') {
+                    const entries = response.data.Successful || [];
+                    entries.map((entry: any) => traceLinks.push(entry.MessageId));
+                }
+            } else if (serviceName === 'sns') {
+                const messageId = get(response, 'data.MessageId', false);
+                if (messageId) {
+                    traceLinks = [messageId];
+                }
+            } else if (serviceName === 'kinesis') {
+                const records = get(response, 'data.Records', false);
+                const streamName = params.StreamName || '';
+                if (records) {
+                    for (const record of records) {
+                        const shardId = get(record, 'ShardId', false);
+                        const seqNumber = get(record, 'SequenceNumber', false);
+                        if (shardId && seqNumber) {
+                            traceLinks.push(`${region}:${streamName}:${shardId}:${seqNumber}`);
+                        }
+                    }
+                } else {
+                    const shardId = get(response, 'data.ShardId', false);
+                    const seqNumber = get(response, 'data.SequenceNumber', false);
                     if (shardId && seqNumber) {
-                        traceLinks.push(`${region}:${streamName}:${shardId}:${seqNumber}`);
+                        traceLinks = [`${region}:${streamName}:${shardId}:${seqNumber}`];
                     }
                 }
-            } else {
-                const shardId = get(response, 'data.ShardId', false);
-                const seqNumber = get(response, 'data.SequenceNumber', false);
-                if (shardId && seqNumber) {
-                    traceLinks = [`${region}:${streamName}:${shardId}:${seqNumber}`];
+            } else if (serviceName === 's3') {
+                const requestId = get(response, 'httpResponse.headers.x-amz-request-id', false);
+                if (requestId) {
+                    traceLinks = [requestId];
                 }
-            }
-        } else if (serviceName === 's3') {
-            const requestId = get(response, 'httpResponse.headers.x-amz-request-id', false);
-            if (requestId) {
-                traceLinks = [requestId];
-            }
-        } else if (serviceName === 'lambda') {
-            const requestId = get(response, 'httpResponse.headers.x-amzn-requestid', false);
-            if (requestId) {
-                traceLinks = [requestId];
-            }
-        } else if (serviceName === 'firehose') {
-            const deliveryStreamName = params.DeliveryStreamName || '';
-            let timestamp: number;
-            if (has(response, 'httpResponse.headers.date')) {
-                timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
-            } else {
-                timestamp = Math.floor(Date.now() / 1000) - 1;
-            }
+            } else if (serviceName === 'lambda') {
+                const requestId = get(response, 'httpResponse.headers.x-amzn-requestid', false);
+                if (requestId) {
+                    traceLinks = [requestId];
+                }
+            } else if (serviceName === 'firehose') {
+                const deliveryStreamName = params.DeliveryStreamName || '';
+                let timestamp: number;
+                if (has(response, 'httpResponse.headers.date')) {
+                    timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
+                } else {
+                    timestamp = Math.floor(Date.now() / 1000) - 1;
+                }
 
-            if (operationName === 'putRecord') {
-                const data = get(params, 'Record.Data', false);
-                if (data) {
-                    traceLinks = AWSIntegration.generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data);
-                }
-            } else if (operationName === 'putRecordBatch') {
-                const records = params.Records || [];
-                for (const record of records) {
-                    const data = record.Data;
+                if (operationName === 'putRecord') {
+                    const data = get(params, 'Record.Data', false);
                     if (data) {
-                        traceLinks.push(...AWSIntegration.
-                            generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data));
+                        traceLinks = AWSIntegration.generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data);
+                    }
+                } else if (operationName === 'putRecordBatch') {
+                    const records = params.Records || [];
+                    for (const record of records) {
+                        const data = record.Data;
+                        if (data) {
+                            traceLinks.push(...AWSIntegration.
+                                generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data));
+                        }
                     }
                 }
             }
-        }
 
-        if (traceLinks.length > 0) {
-            span.setTag(SpanTags.TRACE_LINKS, traceLinks);
+            if (traceLinks.length > 0) {
+                span.setTag(SpanTags.TRACE_LINKS, traceLinks);
+            }
+        } catch (error) {
+            ThundraLogger.getInstance().debug(`Error while injecting trace links, ${error}`);
         }
     }
 
