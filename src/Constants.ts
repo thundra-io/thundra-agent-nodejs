@@ -77,6 +77,8 @@ export const envVariableKeys = {
 
     THUNDRA_AGENT_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_sampler_timeAware_timeFreq',
     THUNDRA_AGENT_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_sampler_countAware_countFreq',
+
+    THUNDRA_AWS_INSTRUMENT_ON_LOAD: 'thundra_agent_lambda_trace_integrations_aws_instrument_onLoad',
 };
 
 export function getTimeoutMargin(region: string) {

@@ -18,6 +18,7 @@ import InvocationSupport from '../support/InvocationSupport';
 import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
+const Hook = require('require-in-the-middle');
 const koalas = require('koalas');
 const md5 = require('md5');
 const has = require('lodash.has');
@@ -33,32 +34,52 @@ class AWSIntegration implements Integration {
     basedir: string;
     wrappedFuncs: any;
     wrapped: boolean;
+    hook: any;
+    instrumentOnLoad: boolean;
 
     constructor(config: any) {
         this.wrapped = false;
         this.version = '2.x';
-        this.lib = Utils.tryRequire(moduleName);
         this.wrappedFuncs = {};
-
-        if (this.lib) {
-            const { basedir } = Utils.getModuleInfo(moduleName);
-            if (!basedir) {
-                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
-                return;
-            }
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-            if (!isValidVersion) {
-                ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
-                                            Supported version is ${this.version}`);
-                return;
-            } else {
-                this.config = config;
-                this.basedir = basedir;
-                this.wrap.call(this, this.lib, config);
+        this.instrumentOnLoad = Utils.getConfiguration(envVariableKeys.THUNDRA_AWS_INSTRUMENT_ON_LOAD) === 'true';
+        if (this.instrumentOnLoad) {
+            this.hook = Hook('aws-sdk', { internals: true }, (exp: any, name: string, basedir: string) => {
+                if (name === 'aws-sdk') {
+                    const moduleValidator = new ModuleVersionValidator();
+                    const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+                    if (!isValidVersion) {
+                        ThundraLogger.getInstance().error(`Invalid module version for aws-sdk integration.
+                                                          Supported version is ${this.version}`);
+                    } else {
+                        this.lib = exp;
+                        this.config = config;
+                        this.basedir = basedir;
+                        this.wrap.call(this, exp, config);
+                    }
+                }
+                return exp;
+            });
+        } else {
+            this.lib = Utils.tryRequire(moduleName);
+            if (this.lib) {
+                const {basedir} = Utils.getModuleInfo(moduleName);
+                if (!basedir) {
+                    ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
+                    return;
+                }
+                const moduleValidator = new ModuleVersionValidator();
+                const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
+                if (!isValidVersion) {
+                    ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
+                                                      Supported version is ${this.version}`);
+                    return;
+                } else {
+                    this.config = config;
+                    this.basedir = basedir;
+                    this.wrap.call(this, this.lib, config);
+                }
             }
         }
-
     }
 
     static injectSpanContextIntoMessageAttributes(tracer: ThundraTracer, span: ThundraSpan): any {
@@ -642,16 +663,25 @@ class AWSIntegration implements Integration {
             this.unwrap();
         }
 
-        if (has(lib, 'Request.prototype.send') && has(lib, 'Request.prototype.promise')) {
+        if (this.instrumentOnLoad) {
             shimmer.wrap(lib.Request.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));
             shimmer.wrap(lib.Request.prototype, 'promise', (wrapped: Function) => wrapper(wrapped, 'promise'));
             this.wrapped = true;
+        } else {
+            if (has(lib, 'Request.prototype.send') && has(lib, 'Request.prototype.promise')) {
+                shimmer.wrap(lib.Request.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));
+                shimmer.wrap(lib.Request.prototype, 'promise', (wrapped: Function) => wrapper(wrapped, 'promise'));
+                this.wrapped = true;
+            }
         }
     }
 
     unwrap() {
         shimmer.unwrap(this.lib.Request.prototype, 'send');
         shimmer.unwrap(this.lib.Request.prototype, 'promise');
+        if (this.instrumentOnLoad) {
+            this.hook.unhook();
+        }
         this.wrapped = false;
     }
 }
