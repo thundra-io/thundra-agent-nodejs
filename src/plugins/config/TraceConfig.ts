@@ -36,6 +36,7 @@ class TraceConfig extends BasePluginConfig {
     maskHttpBody: boolean;
     sampler: Sampler<any>;
     runSamplerOnEachSpan: boolean;
+    instrumentAWSOnLoad: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -106,6 +107,10 @@ class TraceConfig extends BasePluginConfig {
         this.maskHttpBody = Utils.getConfiguration(
             envVariableKeys.THUNDRA_MASK_HTTP_BODY) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_MASK_HTTP_BODY) === 'true' : options.maskHttpBody;
+
+        this.instrumentAWSOnLoad = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_AWS_INSTRUMENT_ON_LOAD) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_AWS_INSTRUMENT_ON_LOAD) === 'true' : options.instrumentAWSOnLoad;
 
         this.httpPathDepth = Utils.getConfiguration(
             envVariableKeys.THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH,

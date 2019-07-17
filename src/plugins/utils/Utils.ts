@@ -209,16 +209,30 @@ class Utils {
         return endpoint.split('.')[0];
     }
 
-    static tryRequire(name: string): any {
+    static tryRequire(name: string, paths?: string[]): any {
         try {
-            return require(name);
+            let resolvedPath;
+            if (paths !== undefined) {
+                resolvedPath = require.resolve(name, { paths });
+            } else {
+                resolvedPath = require.resolve(name);
+            }
+
+            return require(resolvedPath);
         // tslint:disable-next-line:no-empty
         } catch (err) {}
     }
 
-    static getModuleInfo(name: string): any {
+    static getModuleInfo(name: string, paths?: string[]): any {
         try {
-            return parse(require.resolve(name));
+            let modulePath;
+            if (paths !== undefined) {
+                modulePath = require.resolve(name, { paths });
+            } else {
+                modulePath = require.resolve(name);
+            }
+
+            return parse(modulePath);
         } catch (err) {
             return {};
         }
