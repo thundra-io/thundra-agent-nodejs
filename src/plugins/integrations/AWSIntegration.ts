@@ -6,6 +6,7 @@ import {
     SpanTypes, DynamoDBRequestTypes, KinesisRequestTypes, ClassNames, DomainNames,
     DBTags, DBTypes, FirehoseRequestTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST, S3RequestTypes,
     LambdaRequestType, envVariableKeys, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    AthenaOperationTypes, AwsAthenaTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
@@ -277,8 +278,20 @@ class AWSIntegration implements Integration {
                         }
                     }
                 }
+            } else if (serviceName === 'athena') {
+                if (has(response, 'data.QueryExecutionIds')) {
+                    span.setTag(AwsAthenaTags.RESPONSE_QUERY_EXECUTION_IDS, response.data.QueryExecutionIds);
+                }
+                if (has(response, 'data.QueryExecutionId')) {
+                    span.setTag(AwsAthenaTags.REQUEST_QUERY_EXECUTION_IDS, [response.data.QueryExecutionId]);
+                }
+                if (has(response, 'data.NamedQueryIds')) {
+                    span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, response.data.NamedQueryIds);
+                }
+                if (has(response, 'data.NamedQueryId')) {
+                    span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, [response.data.NamedQueryId]);
+                }
             }
-
             if (traceLinks.length > 0) {
                 span.setTag(SpanTags.TRACE_LINKS, traceLinks);
             }
@@ -583,6 +596,66 @@ class AWSIntegration implements Integration {
                             activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
 
                             activeSpan.setTag(AwsFirehoseTags.STREAM_NAME, request.params.DeliveryStreamName);
+                        }
+                    } else if (serviceName === 'athena') {
+                        const dbName: string = get(request, 'params.Database',
+                            get(request, 'params.QueryExecutionContext.Database', ''));
+                        const outputLocation: string = get(request, 'params.ResultConfiguration.OutputLocation', '');
+                        const operationType: string = get(AthenaOperationTypes, operationName, '');
+
+                        let queryExecIds: string[] = [];
+                        let namedQueryIds: string[] = [];
+
+                        if (has(request, 'params.QueryExecutionIds')) {
+                            queryExecIds = request.params.QueryExecutionIds;
+                        } else if (has(request, 'params.QueryExecutionId')) {
+                            queryExecIds = [request.params.QueryExecutionId];
+                        }
+
+                        if (has(request, 'params.NamedQueryIds')) {
+                            namedQueryIds = request.params.NamedQueryIds;
+                        } else if (has(request, 'params.NamedQueryId')) {
+                            namedQueryIds = [request.params.NamedQueryId];
+                        }
+
+                        const spanName: string = dbName ? dbName : AWS_SERVICE_REQUEST;
+
+                        activeSpan = tracer._startSpan(spanName, {
+                            childOf: parentSpan,
+                            domainName: DomainNames.DB,
+                            className: ClassNames.ATHENA,
+                            disableActiveStart: true,
+                            tags: {
+                                [SpanTags.OPERATION_TYPE]: operationType,
+                                [SpanTags.SPAN_TYPE]: SpanTypes.AWS_ATHENA,
+                                [AwsSDKTags.REQUEST_NAME]: operationName,
+                            },
+                        });
+
+                        if (operationType) {
+                            activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
+                            activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+                            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+                            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+
+                            if (outputLocation !== '') {
+                                activeSpan.setTag(AwsAthenaTags.S3_OUTPUT_LOCATION, outputLocation);
+                            }
+                            if (dbName !== '') {
+                                activeSpan.setTag(DBTags.DB_INSTANCE, dbName);
+                            }
+                            if (!config.maskAthenaStatement) {
+                                const query: string = get(request, 'params.QueryString', '');
+                                if (query !== '') {
+                                    activeSpan.setTag(DBTags.DB_STATEMENT, request.params.QueryString);
+                                }
+                            }
+                            if (queryExecIds.length > 0) {
+                                activeSpan.setTag(AwsAthenaTags.REQUEST_QUERY_EXECUTION_IDS, queryExecIds);
+                            }
+                            if (namedQueryIds.length > 0) {
+                                activeSpan.setTag(AwsAthenaTags.REQUEST_NAMED_QUERY_IDS, namedQueryIds);
+                            }
                         }
                     } else {
                         activeSpan = tracer._startSpan(AWS_SERVICE_REQUEST, {

@@ -279,4 +279,97 @@ module.exports.s3_with_promise = (AWS) => {
     }); 
 };
 
+module.exports.athenaStartQueryExec = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const athena = new AWS.Athena();
+        var params = {
+            QueryString: 'sample-query',
+            QueryExecutionContext: {
+                Database: 'sample-db',
+            },
+            ResultConfiguration: {
+                OutputLocation: 'sample-output-location',
+            },
+        };
+    
+        athena.startQueryExecution(params, (err, data) => {
+            if (err) {
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    }); 
+};
+
+module.exports.athenaStopQueryExec = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const athena = new AWS.Athena();
+        var params = {
+            QueryExecutionId: 'sample-query-execution-id',
+        };
+    
+        athena.stopQueryExecution(params, (err, data) => {
+            if (err) {
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    }); 
+};
+
+module.exports.athenaBatchGetNamedQuery = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const athena = new AWS.Athena();
+        var params = {
+            NamedQueryIds: ['sample-id-1', 'sample-id-2'],
+        };
+    
+        athena.batchGetNamedQuery(params, (err, data) => {
+            if (err) {
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    }); 
+};
+
+module.exports.athenaBatchGetQueryExec = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const athena = new AWS.Athena();
+        var params = {
+            QueryExecutionIds: ['sample-id-1', 'sample-id-2'],
+        };
+    
+        athena.batchGetQueryExecution(params, (err, data) => {
+            if (err) {
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    }); 
+};
+
+module.exports.athenaCreateNamedQuery = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const athena = new AWS.Athena();
+        var params = {
+            QueryString: 'sample-query',
+            Database: 'sample-db',
+            Name: 'sample-name',
+        };
+    
+        athena.createNamedQuery(params, (err, data) => {
+            if (err) {
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    }); 
+};
+
 
