@@ -26,6 +26,7 @@ class Metric {
     startCpuUsage: { procCpuUsed: number; sysCpuUsed: number; sysCpuTotal: number; };
     tracer: ThundraTracer;
     pluginOrder: number = 2;
+    sampled: boolean = true;
 
     constructor(config: MetricConfig) {
         this.hooks = {
@@ -48,32 +49,35 @@ class Metric {
     }
 
     beforeInvocation = async (data: any) => {
-        const { originalContext } = data;
-
-        const [procMetric, procIo] = await Promise.all([Utils.readProcMetricPromise(), Utils.readProcIoPromise()]);
-        this.initialProcMetric = procMetric;
-        this.initialProcIo = procIo;
-        this.reporter = data.reporter;
-
-        this.metricData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.METRIC) as MetricData;
-        this.metricData.metricTimestamp = Date.now();
-        this.metricData.tags['aws.region'] = this.pluginContext.applicationRegion;
-
-        const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
-        this.metricData.transactionId = this.pluginContext.transactionId ?
-            this.pluginContext.transactionId : originalContext.awsRequestId;
-        this.metricData.spanId = activeSpan ? activeSpan.spanContext.spanId : '';
-        this.metricData.traceId = activeSpan ? activeSpan.spanContext.traceId : '';
-
-        this.startCpuUsage = Utils.getCpuUsage();
         this.reports = [];
+
+        const isSamplerPresent = this.config && this.config.sampler && typeof(this.config.sampler.isSampled) === 'function';
+        this.sampled = isSamplerPresent ? this.config.sampler.isSampled() : true;
+
+        if (this.sampled) {
+            const { originalContext } = data;
+
+            const [procMetric, procIo] = await Promise.all([Utils.readProcMetricPromise(), Utils.readProcIoPromise()]);
+            this.initialProcMetric = procMetric;
+            this.initialProcIo = procIo;
+            this.reporter = data.reporter;
+
+            this.metricData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.METRIC) as MetricData;
+            this.metricData.metricTimestamp = Date.now();
+            this.metricData.tags['aws.region'] = this.pluginContext.applicationRegion;
+
+            const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
+            this.metricData.transactionId = this.pluginContext.transactionId ?
+                this.pluginContext.transactionId : originalContext.awsRequestId;
+            this.metricData.spanId = activeSpan ? activeSpan.spanContext.spanId : '';
+            this.metricData.traceId = activeSpan ? activeSpan.spanContext.traceId : '';
+
+            this.startCpuUsage = Utils.getCpuUsage();
+        }
     }
 
     afterInvocation = async () => {
-        const isSamplerPresent = this.config && this.config.sampler && typeof(this.config.sampler.isSampled) === 'function';
-        const sampled = isSamplerPresent ? this.config.sampler.isSampled() : true;
-
-        if (sampled) {
+        if (this.sampled) {
             await Promise.all([
                 this.addThreadMetricReport(),
                 this.addMemoryMetricReport(),
@@ -82,11 +86,11 @@ class Metric {
             ]).catch((err: Error) => {
                 ThundraLogger.getInstance().error('Cannot obtain metric data :' + err);
             });
-        }
 
-        this.reports.forEach((report) => {
-            this.report(report);
-        });
+            this.reports.forEach((report) => {
+                this.report(report);
+            });
+        }
     }
 
     addThreadMetricReport = async () => {
