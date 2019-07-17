@@ -571,7 +571,7 @@ describe('Trace', () => {
         it('should set trigger tags for APIGatewayProxy to root span', () => {
             expect(tracer.rootSpan.tags['trigger.domainName']).toBe('API');
             expect(tracer.rootSpan.tags['trigger.className']).toBe('AWS-APIGateway');
-            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ '1234567890.execute-api.us-west-2.amazonaws.com/prod/path/to/resource' ]);
+            expect(tracer.rootSpan.tags['trigger.operationNames']).toEqual([ '/{proxy+}' ]);
             expect(tracer.rootSpan.tags['topology.vertex']).toBe(true);
         });
 

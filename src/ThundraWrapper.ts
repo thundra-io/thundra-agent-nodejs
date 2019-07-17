@@ -172,12 +172,14 @@ class ThundraWrapper {
 
             let afterInvocationData = {
                 error,
+                originalEvent: this.originalEvent,
                 response: result,
             };
 
             if (this.isErrorResponse(result)) {
                 afterInvocationData = {
                     error: new HttpError('Lambda returned with error response.'),
+                    originalEvent: this.originalEvent,
                     response: result,
                 };
             }

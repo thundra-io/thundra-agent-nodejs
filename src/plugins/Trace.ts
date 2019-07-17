@@ -20,10 +20,12 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
-import { DomainNames, ClassNames, envVariableKeys } from '../Constants';
+import { DomainNames, ClassNames, envVariableKeys, TriggerHeaderTags } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import LambdaEventUtils, { LambdaEventType } from './utils/LambdaEventUtils';
 import ThundraLogger from '../ThundraLogger';
+
+const get = require('lodash.get');
 
 export class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -123,6 +125,8 @@ export class Trace {
 
     afterInvocation = (data: any) => {
         let response = data.response;
+        const originalEvent = data.originalEvent;
+
         if (data.error) {
             const error = Utils.parseError(data.error);
             if (!(data.error instanceof HttpError)) {
@@ -139,6 +143,10 @@ export class Trace {
             if (error.stack) {
                 this.rootSpan.tags['error.stack'] = error.stack;
             }
+        }
+
+        if (this.triggerClassName === ClassNames.APIGATEWAY) {
+            this.processAPIGWResponse(response, originalEvent);
         }
 
         this.rootSpan.tags['aws.lambda.invocation.response'] = this.getResponse(response);
@@ -169,6 +177,16 @@ export class Trace {
         }
 
         this.destroy();
+    }
+
+    processAPIGWResponse(response: any, originalEvent: any): void {
+        try {
+            const headers = get(response, 'headers', {});
+            headers[TriggerHeaderTags.RESOURCE_NAME] = originalEvent.resource;
+            response.headers = headers;
+        } catch (error) {
+            // Can not set headers property on response, probably it is not an object
+        }
     }
 
     buildSpanData(span: ThundraSpan, pluginContext: PluginContext): SpanData {

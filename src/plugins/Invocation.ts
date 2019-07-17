@@ -50,6 +50,7 @@ class Invocation {
         this.invocationData.functionName = InvocationSupport.getFunctionName() ? InvocationSupport.getFunctionName() : '';
         this.invocationData.functionRegion = this.pluginContext.applicationRegion;
         this.invocationData.tags = {};
+        this.invocationData.userTags = {};
         this.invocationData.startTimestamp = this.startTimestamp;
         this.invocationData.finishTimestamp = 0;
         this.invocationData.duration = 0;

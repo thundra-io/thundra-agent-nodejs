@@ -3,7 +3,7 @@ import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import {
     HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, envVariableKeys,
-    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME,
+    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, TriggerHeaderTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
 import * as url from 'url';
@@ -43,11 +43,24 @@ class HttpIntegration implements Integration {
         return true;
     }
 
+    getNormalizedPath(path: string): string {
+        try {
+            const depth = this.config.httpPathDepth;
+            if (depth <= 0) {
+                return '';
+            }
+            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
+            return normalizedPath;
+        } catch (error) {
+            return path;
+        }
+    }
+
     wrap(lib: any, config: any): void {
         const libHTTP = lib[0];
         const libHTTPS = lib[1];
         const nodeVersion = process.version;
-
+        const plugin = this;
         function wrapper(request: any) {
             return function requestWrapper(options: any, callback: any) {
                 try {
@@ -70,7 +83,8 @@ class HttpIntegration implements Integration {
                     }
 
                     const parentSpan = tracer.getActiveSpan();
-                    const span = tracer._startSpan(host + path, {
+                    const operationName = host + plugin.getNormalizedPath(path);
+                    const span = tracer._startSpan(operationName, {
                         childOf: parentSpan,
                         domainName: DomainNames.API,
                         className: ClassNames.HTTP,
@@ -113,6 +127,10 @@ class HttpIntegration implements Integration {
                     req.on('response', (res: any) => {
                         if ('x-amzn-requestid' in res.headers) {
                             span._setClassName(ClassNames.APIGATEWAY);
+                        }
+                        if (TriggerHeaderTags.RESOURCE_NAME in res.headers) {
+                            const resourceName: string = res.headers[TriggerHeaderTags.RESOURCE_NAME];
+                            span._setOperationName(resourceName);
                         }
                         span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
                     });

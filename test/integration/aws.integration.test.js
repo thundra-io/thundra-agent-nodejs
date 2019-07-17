@@ -2,7 +2,6 @@ import AWS from './utils/aws.integration.utils';
 import AWSIntegration from '../../dist/plugins/integrations/AWSIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
-import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
 const md5 = require('md5');
 jest.setTimeout(30000);

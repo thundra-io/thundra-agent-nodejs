@@ -1,6 +1,38 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.4 - July 17, 2019
+#### Improved
+- Decided metric sampling before invocation to prevent unnecessary initial metric calculation
+
+## 2.5.3 - July 12, 2019
+#### Fixed
+- Missing MySQL patching issue after `require-in-the-middle` removal
+
+#### Added
+- AWS Athena integration
+- HTTP path depth configuration
+
+## 2.5.2 - July 4, 2019
+#### Fixed
+- Move rollup to dev dependencies
+
+## 2.5.1 - July 2, 2019
+#### Fixed
+- Fixed `Init `invocationData.userTags` with empty object`
+
+## 2.5.0 - July 2, 2019
+#### Added
+- IORedis integration
+- Distinguish user tags
+- Replace webpack with rollup and remove `require-in-the-middle`
+
+#### Fixed
+- Fixed https://github.com/thundra-io/thundra-lambda-agent-nodejs/issues/51
+- Fixed `Handled target ARN and phone number based SNS publish requests`
+- Fixed `Handled non-existing host header in the API GW triggers`
+- Fixed `Added API GW detection support based on HTTP response header`
+
 ## 2.4.1 - May 29, 2019
 #### Added
 - MongoDB integration

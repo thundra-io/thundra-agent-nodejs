@@ -12,8 +12,10 @@ import Utils from '../utils/Utils';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
+const path = require('path');
 
 const moduleName = 'mysql';
+const fileName = 'lib/Connection';
 
 class MySQLIntegration implements Integration {
     config: any;
@@ -25,7 +27,8 @@ class MySQLIntegration implements Integration {
     constructor(config: any) {
         this.version = '>=2';
         this.wrapped = false;
-        this.lib = Utils.tryRequire(moduleName);
+        this.lib = Utils.tryRequire(path.join(moduleName, fileName));
+
         if (this.lib) {
             const { basedir } = Utils.getModuleInfo(moduleName);
             if (!basedir) {

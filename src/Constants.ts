@@ -40,6 +40,7 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE: 'thundra_agent_lambda_log_console_disable',
     THUNDRA_LAMBDA_LOG_LOGLEVEL: 'thundra_agent_lambda_log_loglevel',
     THUNDRA_AGENT_LAMBDA_AGENT_DEBUG_ENABLE: 'thundra_agent_lambda_debug_enable',
+    THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH: 'thundra_agent_lambda_trace_integrations_http_url_depth',
 
     DISABLE_SPAN_CONTEXT_INJECTION: 'thundra_agent_trace_instrument_integrations_spanContext_disable',
     THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID: 'thundra_agent_lambda_trace_use_propagated_transaction_id',
@@ -496,6 +497,10 @@ export const SpanTags = {
     TRIGGER_OPERATION_NAMES: 'trigger.operationNames',
     TOPOLOGY_VERTEX: 'topology.vertex',
     TRACE_LINKS: 'trace.links',
+};
+
+export const TriggerHeaderTags = {
+    RESOURCE_NAME: 'x-thundra-resource-name',
 };
 
 export const SpanTypes = {

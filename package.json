@@ -1,6 +1,6 @@
 {
   "name": "@thundra/core",
-  "version": "2.5.0",
+  "version": "2.5.4",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
@@ -71,6 +71,7 @@
     "pg": "6.4.0",
     "redis": "^2.8.0",
     "release-it": "^7.5.0",
+    "rollup": "^1.16.4",
     "rollup-plugin-commonjs": "^10.0.1",
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^5.1.0",
@@ -92,7 +93,6 @@
     "md5": "^2.2.1",
     "minimatch": "^3.0.4",
     "module-details-from-path": "^1.0.3",
-    "rollup": "^1.16.2",
     "semver": "^5.5.0",
     "shimmer": "^1.2.0",
     "uuid": "^3.2.1"

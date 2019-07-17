@@ -142,7 +142,8 @@ describe('ThundraWrapper', () => {
             it('should extract error from response with valid error response', () => {
                 const expectedAfterInvocationData = {
                     error: new HttpError('Lambda returned with error response.'),
-                    response: response   
+                    originalEvent,
+                    response,
                 };
                 expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData, true);
             });
@@ -159,6 +160,7 @@ describe('ThundraWrapper', () => {
             it('should extract error from response with invalid body', () => {   
                 const expectedAfterInvocationData = {
                     error: new HttpError('Lambda returned with error response.'),
+                    originalEvent,
                     response: response   
                 };
                 expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData, true);
@@ -174,6 +176,7 @@ describe('ThundraWrapper', () => {
             it('should extract error from response with success status', () => {   
                 const expectedAfterInvocationData = {
                     error: null,
+                    originalEvent,
                     response: {statusCode: 200, body:'{\'message\':\'I have failed\'}'}  
                 };
                 expect(thundraWrapper.executeHook).toBeCalledWith('after-invocation', expectedAfterInvocationData, true);
@@ -282,6 +285,7 @@ describe('ThundraWrapper', () => {
         pc.timeoutMargin = null;
         let afterInvocationData = {
             error: new TimeoutError('Lambda is timed out.'),
+            originalEvent,
             response: null,
         };
 
