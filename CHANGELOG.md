@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.4 - July 17, 2019
+#### Improved
+- Decided metric sampling before invocation to prevent unnecessary initial metric calculation
+
 ## 2.5.3 - July 12, 2019
 #### Fixed
 - Missing MySQL patching issue after `require-in-the-middle` removal
