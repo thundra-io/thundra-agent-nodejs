@@ -81,7 +81,7 @@ class Reporter {
                     break;
                 }
 
-                batch.push(Utils.stripCommonFields(report.data  as BaseMonitoringData));
+                batch.push(Utils.stripCommonFields(report.data as BaseMonitoringData));
             }
 
             compositeData.allMonitoringData = batch;
@@ -133,7 +133,13 @@ class Reporter {
             }
         });
 
-        await Promise.all(reportPromises).catch((err) => {
+        await Promise.all(reportPromises).catch(async (err) => {
+            if (err.code === 'ECONNRESET') {
+                ThundraLogger.getInstance().debug(
+                    'Keep Alive connection reset by server. Will send monitoring data again.');
+                await this.sendReports();
+                return;
+            }
             ThundraLogger.getInstance().error(err);
         });
     }
