@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.6 - July 22, 2019
+#### Fixed
+- Add `require-in-the-middle` to dependencies
+
 ## 2.5.5 - July 22, 2019
 #### Fixed
 - Handle `ECONNRESET` error when keepAlive connection is terminated by the server
