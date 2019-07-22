@@ -23,12 +23,14 @@ class Reporter {
     private config: ThundraConfig;
     private useHttps: boolean;
     private requestOptions: http.RequestOptions;
+    private connectionRetryCount: number;
 
     constructor(config: ThundraConfig, u?: url.URL) {
         this.reports = [];
         this.config = config ? config : new ThundraConfig({});
         this.useHttps = (u ? u.protocol : URL.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
+        this.connectionRetryCount = 0;
     }
 
     createRequestOptions(u?: url.URL): http.RequestOptions {
@@ -81,7 +83,7 @@ class Reporter {
                     break;
                 }
 
-                batch.push(Utils.stripCommonFields(report.data  as BaseMonitoringData));
+                batch.push(Utils.stripCommonFields(report.data as BaseMonitoringData));
             }
 
             compositeData.allMonitoringData = batch;
@@ -133,9 +135,22 @@ class Reporter {
             }
         });
 
-        await Promise.all(reportPromises).catch((err) => {
+        await Promise.all(reportPromises).catch(async (err) => {
+            if (this.connectionRetryCount === 0 && err.code === 'ECONNRESET') {
+                ThundraLogger.getInstance().debug(
+                    'Keep Alive connection reset by server. Will send monitoring data again.');
+
+                this.connectionRetryCount++;
+
+                await this.sendReports();
+                this.connectionRetryCount = 0;
+                return;
+            }
+
             ThundraLogger.getInstance().error(err);
         });
+
+        this.connectionRetryCount = 0;
     }
 
     request(batch: any[]): Promise<any> {
