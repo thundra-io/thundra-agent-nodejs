@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.5 - July 22, 2019
+#### Fixed
+- Handle `ECONNRESET` error when keepAlive connection is terminated by the server
+
 ## 2.5.4 - July 17, 2019
 #### Improved
 - Decided metric sampling before invocation to prevent unnecessary initial metric calculation
