@@ -75,8 +75,11 @@ class HttpIntegration implements Integration {
                     const method = (options.method || 'GET').toUpperCase();
                     options = typeof options === 'string' ? url.parse(options) : options;
                     const host = options.hostname || options.host || 'localhost';
-                    const path = options.path || options.pathname || '/';
-                    const queryParams = path.split('?').length > 1 ? path.split('?')[1] : '';
+                    let path = options.path || options.pathname || '/';
+                    const splittedPath = path.split('?');
+                    const queryParams = splittedPath.length > 1 ? splittedPath[1] : '';
+
+                    path = splittedPath[0];
 
                     if (!HttpIntegration.isValidUrl(host)) {
                         return request.apply(this, [options, callback]);
@@ -102,8 +105,8 @@ class HttpIntegration implements Integration {
                         [SpanTags.SPAN_TYPE]: SpanTypes.HTTP,
                         [HttpTags.HTTP_METHOD]: method,
                         [HttpTags.HTTP_HOST]: host,
-                        [HttpTags.HTTP_PATH]: path.split('?')[0],
-                        [HttpTags.HTTP_URL]: host + path,
+                        [HttpTags.HTTP_PATH]: path,
+                        [HttpTags.HTTP_URL]: `${host}${path}?${queryParams}`,
                         [HttpTags.QUERY_PARAMS]: queryParams,
                         [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
                         [SpanTags.TOPOLOGY_VERTEX]: true,
