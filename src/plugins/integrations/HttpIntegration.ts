@@ -76,6 +76,7 @@ class HttpIntegration implements Integration {
                     options = typeof options === 'string' ? url.parse(options) : options;
                     const host = options.hostname || options.host || 'localhost';
                     let path = options.path || options.pathname || '/';
+                    const fullURL = host + path;
                     const splittedPath = path.split('?');
                     const queryParams = splittedPath.length > 1 ? splittedPath[1] : '';
 
@@ -106,7 +107,7 @@ class HttpIntegration implements Integration {
                         [HttpTags.HTTP_METHOD]: method,
                         [HttpTags.HTTP_HOST]: host,
                         [HttpTags.HTTP_PATH]: path,
-                        [HttpTags.HTTP_URL]: `${host}${path}?${queryParams}`,
+                        [HttpTags.HTTP_URL]: fullURL,
                         [HttpTags.QUERY_PARAMS]: queryParams,
                         [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
                         [SpanTags.TOPOLOGY_VERTEX]: true,
