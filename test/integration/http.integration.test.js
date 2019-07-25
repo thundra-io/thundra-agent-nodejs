@@ -16,7 +16,7 @@ describe('HTTP integration', () => {
         return Http.get(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
-            expect(span.operationName).toBe('jsonplaceholder.typicode.com/users/1?q=123')
+            expect(span.operationName).toBe('jsonplaceholder.typicode.com/users/1')
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
 
