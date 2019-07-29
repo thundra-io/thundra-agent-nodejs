@@ -7,8 +7,7 @@ class InvocationData extends BaseMonitoringData {
     traceId: string;
     transactionId: string;
     spanId: string;
-    functionPlatform: string;
-    functionName: string;
+    applicationPlatform: string;
     functionRegion: string;
     startTimestamp: number;
     finishTimestamp: number ;
