@@ -46,8 +46,7 @@ class Invocation {
         this.invocationData = Utils.initMonitoringData(this.pluginContext,
                              MonitoringDataType.INVOCATION) as InvocationData;
 
-        this.invocationData.functionPlatform = LAMBDA_FUNCTION_PLATFORM;
-        this.invocationData.functionName = InvocationSupport.getFunctionName() ? InvocationSupport.getFunctionName() : '';
+        this.invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM;
         this.invocationData.functionRegion = this.pluginContext.applicationRegion;
         this.invocationData.tags = {};
         this.invocationData.userTags = {};
@@ -68,6 +67,7 @@ class Invocation {
 
         this.invocationData.tags['aws.lambda.memory_limit'] = this.pluginContext.maxMemory;
         this.invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
+        this.invocationData.tags['aws.account_no'] = Utils.getAWSAccountNo(originalContext.invokedFunctionArn);
         this.invocationData.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.invocationData.tags['aws.region'] = this.pluginContext.applicationRegion;
         this.invocationData.tags['aws.lambda.log_group_name'] = originalContext ? originalContext.logGroupName : '';

@@ -388,6 +388,14 @@ class Utils {
 
         return monitoringData;
     }
+
+    static getAWSAccountNo(arn: string) {
+        try {
+            return arn.split(':')[4];
+        } catch (error) {
+            return '';
+        }
+    }
 }
 
 export default Utils;
