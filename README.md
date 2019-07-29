@@ -1,5 +1,6 @@
 # Thundra Lambda Node.js Agent
 
+[![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
 [![Coverage Status](https://coveralls.io/repos/github/thundra-io/thundra-lambda-agent-nodejs/badge.svg?branch=master)](https://coveralls.io/github/thundra-io/thundra-lambda-agent-nodejs?branch=master)
 [![CircleCI](https://circleci.com/gh/thundra-io/thundra-lambda-agent-nodejs.svg?style=svg)](https://circleci.com/gh/thundra-io/thundra-lambda-agent-nodejs)
 
