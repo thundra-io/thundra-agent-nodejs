@@ -24,6 +24,7 @@ class Reporter {
     private useHttps: boolean;
     private requestOptions: http.RequestOptions;
     private connectionRetryCount: number;
+    private latestReportingLimitedMinute: number;
 
     constructor(config: ThundraConfig, u?: url.URL) {
         this.reports = [];
@@ -31,6 +32,7 @@ class Reporter {
         this.useHttps = (u ? u.protocol : URL.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
         this.connectionRetryCount = 0;
+        this.latestReportingLimitedMinute = -1;
     }
 
     createRequestOptions(u?: url.URL): http.RequestOptions {
@@ -127,11 +129,16 @@ class Reporter {
             envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) === 'true';
 
         const reportPromises: any[] = [];
+        const currentMinute = Date.now() / 1000;
         batchedReports.forEach((batch: any) => {
             if (isAsync) {
                 reportPromises.push(this.writeBatchToCW(batch, isComposite));
             } else {
-                reportPromises.push(this.request(batch));
+                if (currentMinute > this.latestReportingLimitedMinute) {
+                    reportPromises.push(this.request(batch));
+                } else {
+                    ThundraLogger.getInstance().error(`Skipped sending monitoring data temporarily as it hits the limit`);
+                }
             }
         });
 
@@ -162,6 +169,9 @@ class Reporter {
                     responseData += chunk;
                 });
                 response.on('end', () => {
+                    if (response.statusCode === 429) {
+                        this.latestReportingLimitedMinute = Date.now() / 1000;
+                    }
                     if (response.statusCode !== 200) {
                         ThundraLogger.getInstance().debug(JSON.stringify(this.reports));
                         return reject({ status: response.statusCode, data: responseData });
