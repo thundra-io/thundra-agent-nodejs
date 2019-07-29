@@ -129,7 +129,7 @@ class Reporter {
             envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) === 'true';
 
         const reportPromises: any[] = [];
-        const currentMinute = Date.now() / 1000;
+        const currentMinute = Math.floor(Date.now() / 1000);
         batchedReports.forEach((batch: any) => {
             if (isAsync) {
                 reportPromises.push(this.writeBatchToCW(batch, isComposite));
@@ -170,7 +170,7 @@ class Reporter {
                 });
                 response.on('end', () => {
                     if (response.statusCode === 429) {
-                        this.latestReportingLimitedMinute = Date.now() / 1000;
+                        this.latestReportingLimitedMinute = Math.floor(Date.now() / 1000);
                     }
                     if (response.statusCode !== 200) {
                         ThundraLogger.getInstance().debug(JSON.stringify(this.reports));
