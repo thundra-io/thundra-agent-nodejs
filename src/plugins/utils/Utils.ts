@@ -24,6 +24,11 @@ import InvocationSupport from '../support/InvocationSupport';
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
 
+declare var __non_webpack_require__: any;
+const customReq = typeof __non_webpack_require__ !== 'undefined'
+                        ?  __non_webpack_require__
+                        : require;
+
 class Utils {
     static generateId(): string {
         return uuidv4();
@@ -213,12 +218,11 @@ class Utils {
         try {
             let resolvedPath;
             if (paths !== undefined) {
-                resolvedPath = require.resolve(name, { paths });
+                resolvedPath = customReq.resolve(name, { paths });
             } else {
-                resolvedPath = require.resolve(name);
+                resolvedPath = customReq.resolve(name);
             }
-
-            return require(resolvedPath);
+            return customReq(resolvedPath);
         // tslint:disable-next-line:no-empty
         } catch (err) {}
     }
@@ -227,9 +231,9 @@ class Utils {
         try {
             let modulePath;
             if (paths !== undefined) {
-                modulePath = require.resolve(name, { paths });
+                modulePath = customReq.resolve(name, { paths });
             } else {
-                modulePath = require.resolve(name);
+                modulePath = customReq.resolve(name);
             }
 
             return parse(modulePath);
