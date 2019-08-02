@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.7 - August 2, 2019
+#### Improved
+- Decide collector API endpoint based on current region adaptively
+- Hide Thundra internal requires from Webpack for integrations 
+
 ## 2.5.6 - July 22, 2019
 #### Fixed
 - Add `require-in-the-middle` to dependencies
