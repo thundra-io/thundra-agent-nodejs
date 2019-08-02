@@ -122,8 +122,25 @@ export const URL: url.UrlWithStringQuery = url.parse(
     // istanbul ignore next
     process.env[envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL]
         ? process.env[envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL]
-        : 'https://api.thundra.io/v1',
+        : 'https://' + getAPIEndpoint(process.env[envVariableKeys.AWS_REGION]) + '/v1',
 );
+
+export function getAPIEndpoint(region: string) {
+    if (region) {
+        if (region.startsWith('us-west-')) {
+            return 'api.thundra.io';
+        } else if (region.startsWith('us-east-')
+            || region.startsWith('sa-')
+            || region.startsWith('ca-')) {
+            return 'api-us-east-1.thundra.io';
+        } else if (region.startsWith('eu-')) {
+            return 'api-eu-west-2.thundra.io';
+        } else if (region.startsWith("ap-")) {
+            return 'api-ap-northeast-1.thundra.io';
+        }
+    }
+    return 'api.thundra.io';
+}
 
 export const MONITORING_DATA_PATH = '/monitoring-data';
 export const COMPOSITE_MONITORING_DATA_PATH = '/composite-monitoring-data';
