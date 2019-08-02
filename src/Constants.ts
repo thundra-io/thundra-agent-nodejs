@@ -135,7 +135,7 @@ export function getAPIEndpoint(region: string) {
             return 'api-us-east-1.thundra.io';
         } else if (region.startsWith('eu-')) {
             return 'api-eu-west-2.thundra.io';
-        } else if (region.startsWith("ap-")) {
+        } else if (region.startsWith('ap-')) {
             return 'api-ap-northeast-1.thundra.io';
         }
     }
