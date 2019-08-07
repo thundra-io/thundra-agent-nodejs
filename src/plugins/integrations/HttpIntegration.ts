@@ -9,6 +9,7 @@ import Utils from '../utils/Utils';
 import * as url from 'url';
 import ThundraLogger from '../../ThundraLogger';
 import InvocationSupport from '../support/InvocationSupport';
+import HttpError from '../error/HttpError';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -135,6 +136,10 @@ class HttpIntegration implements Integration {
                         if (TriggerHeaderTags.RESOURCE_NAME in res.headers) {
                             const resourceName: string = res.headers[TriggerHeaderTags.RESOURCE_NAME];
                             span._setOperationName(resourceName);
+                        }
+                        const statusCode = res.statusCode.toString();
+                        if (statusCode.startsWith('4') || statusCode.startsWith('5')) {
+                            span.setErrorTag(new HttpError(res.statusMessage));
                         }
                         span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
                     });
