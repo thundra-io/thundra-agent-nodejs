@@ -46,7 +46,7 @@ describe('HTTP integration', () => {
 
         return Http.getError(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
-
+            console.log(span);
             expect(span.operationName).toBe('httpstat.us/404');
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
@@ -60,6 +60,41 @@ describe('HTTP integration', () => {
             expect(span.tags['error']).toBe(true);
             expect(span.tags['error.kind']).toBe('HttpError');
             expect(span.tags['error.message']).toBe('Not Found');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['http.body']).not.toBeTruthy();
+        });
+    });
+
+    test('should disable 4XX 5XX errors on HTTP calls', () => {
+        const integration = new HttpIntegration({
+            httpPathDepth: 2,
+            disableHttp4xxError:true
+
+        });
+        const sdk = require('http');
+
+        const tracer = new ThundraTracer();
+        InvocationSupport.setFunctionName('functionName');
+
+        return Http.getError(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            console.log(span);
+            expect(span.operationName).toBe('httpstat.us/404');
+            expect(span.className).toBe('HTTP');
+            expect(span.domainName).toBe('API');
+
+            expect(span.tags['operation.type']).toBe('GET');
+            expect(span.tags['http.method']).toBe('GET');
+            expect(span.tags['http.host']).toBe('httpstat.us');
+            expect(span.tags['http.path']).toBe('/404');
+            expect(span.tags['http.url']).toBe('httpstat.us/404');
+            expect(span.tags['http.status_code']).toBe(404);
+            expect(span.tags['error']).toBe(undefined);
+            expect(span.tags['error.kind']).toBe(undefined);
+            expect(span.tags['error.message']).toBe(undefined);
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');

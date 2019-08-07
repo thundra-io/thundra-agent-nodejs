@@ -62,6 +62,7 @@ class HttpIntegration implements Integration {
         const libHTTPS = lib[1];
         const nodeVersion = process.version;
         const plugin = this;
+
         function wrapper(request: any) {
             return function requestWrapper(options: any, callback: any) {
                 try {
@@ -138,7 +139,10 @@ class HttpIntegration implements Integration {
                             span._setOperationName(resourceName);
                         }
                         const statusCode = res.statusCode.toString();
-                        if (statusCode.startsWith('4') || statusCode.startsWith('5')) {
+                        if (!config.disableHttp5xxError && statusCode.startsWith('5')) {
+                            span.setErrorTag(new HttpError(res.statusMessage));
+                        }
+                        if (!config.disableHttp4xxError && statusCode.startsWith('4')) {
                             span.setErrorTag(new HttpError(res.statusMessage));
                         }
                         span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
