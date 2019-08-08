@@ -19,6 +19,7 @@ import Logger from './plugins/Logger';
 import Log from './plugins/Log';
 import AwsXRayConfig from './plugins/config/AwsXRayConfig';
 import InvocationSupport from './plugins/support/InvocationSupport';
+import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
 import ApplicationSupport from './plugins/support/ApplicationSupport';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
@@ -167,6 +168,7 @@ module.exports.samplers = {
 };
 
 module.exports.InvocationSupport = InvocationSupport;
+module.exports.InvocationTraceSupport = InvocationTraceSupport;
 
 module.exports.listeners = {
     ErrorInjectorSpanListener,
