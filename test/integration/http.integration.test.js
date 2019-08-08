@@ -46,7 +46,6 @@ describe('HTTP integration', () => {
 
         return Http.getError(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
-            console.log(span);
             expect(span.operationName).toBe('httpstat.us/404');
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
@@ -81,7 +80,6 @@ describe('HTTP integration', () => {
 
         return Http.getError(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
-            console.log(span);
             expect(span.operationName).toBe('httpstat.us/404');
             expect(span.className).toBe('HTTP');
             expect(span.domainName).toBe('API');
