@@ -80,6 +80,11 @@ export const envVariableKeys = {
     THUNDRA_AGENT_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_sampler_countAware_countFreq',
 
     THUNDRA_AWS_INSTRUMENT_ON_LOAD: 'thundra_agent_lambda_trace_integrations_aws_instrument_onLoad',
+
+    THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_4XX:
+        'thundra_agent_trace_integrations_http_set_error_on_4xx_response_code_disable',
+    THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_5XX:
+        'thundra_agent_trace_integrations_http_set_error_on_5xx_response_code_disable',
 };
 
 export function getTimeoutMargin(region: string) {

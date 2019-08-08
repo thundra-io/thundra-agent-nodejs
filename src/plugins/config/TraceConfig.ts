@@ -18,6 +18,8 @@ class TraceConfig extends BasePluginConfig {
     maskResponse: (response: any) => any;
     disabledIntegrations: IntegrationConfig[];
     disableInstrumentation: boolean;
+    disableHttp4xxError: boolean;
+    disableHttp5xxError: boolean;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
     maskRedisStatement: boolean;
@@ -56,6 +58,14 @@ class TraceConfig extends BasePluginConfig {
         this.disableInstrumentation = Utils.getConfiguration(
             envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) === 'true' : options.disableInstrumentation;
+
+        this.disableHttp4xxError = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_4XX) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_4XX) === 'true' : options.disableHttp4xxError;
+
+        this.disableHttp5xxError = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_5XX) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_5XX) === 'true' : options.disableHttp5xxError;
 
         this.maskRedisStatement = Utils.getConfiguration(
             envVariableKeys.THUNDRA_MASK_REDIS_STATEMENT) ? Utils.getConfiguration(
