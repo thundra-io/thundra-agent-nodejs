@@ -6,7 +6,10 @@ import { SpanTags } from '../../Constants';
 const flatten = require('lodash.flatten');
 
 class InvocationTraceSupport {
+
     static incomingTraceLinks: any[] = [];
+    static outgoingTraceLinks: any[] = [];
+
     static getResources(rootSpanId: string = ''): Resource[] {
         try {
             if (!ThundraTracer.getInstance()) {
@@ -45,12 +48,24 @@ class InvocationTraceSupport {
         }
     }
 
+    static addIncomingTraceLink(traceLink: string): void {
+        InvocationTraceSupport.incomingTraceLinks.push(traceLink);
+    }
+
     static addIncomingTraceLinks(traceLinks: any[]): void {
         InvocationTraceSupport.incomingTraceLinks.push(...traceLinks);
     }
 
     static getIncomingTraceLinks(): any[] {
         return [...new Set(InvocationTraceSupport.incomingTraceLinks)].filter((e) => e);
+    }
+
+    static addOutgoingTraceLink(traceLink: string): void {
+        InvocationTraceSupport.outgoingTraceLinks.push(traceLink);
+    }
+
+    static addOutgoingTraceLinks(traceLinks: any[]): void {
+        InvocationTraceSupport.outgoingTraceLinks.push(...traceLinks);
     }
 
     static getOutgoingTraceLinks(): any[] {
@@ -64,7 +79,7 @@ class InvocationTraceSupport {
                 spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
                     .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
             );
-
+            outgoingTraceLinks.push(...InvocationTraceSupport.outgoingTraceLinks);
             return [...new Set(outgoingTraceLinks)];
         } catch (e) {
             ThundraLogger.getInstance().error(
@@ -74,7 +89,9 @@ class InvocationTraceSupport {
 
     static clear(): void {
         InvocationTraceSupport.incomingTraceLinks = [];
+        InvocationTraceSupport.outgoingTraceLinks = [];
     }
+
 }
 
 export default InvocationTraceSupport;
