@@ -80,6 +80,21 @@ class Invocation {
     }
 
     afterInvocation = (data: any) => {
+        if (InvocationSupport.hasError()) {
+            this.invocationData.erroneous = true;
+            this.invocationData.tags.error = true;
+            this.invocationData.errorType = InvocationSupport.error.errorType;
+            this.invocationData.errorMessage = InvocationSupport.error.errorMessage;
+            this.invocationData.tags['error.message'] = InvocationSupport.error.errorMessage;
+            this.invocationData.tags['error.kind'] = InvocationSupport.error.errorType;
+            if (InvocationSupport.error.code) {
+                this.invocationData.tags['error.code'] = InvocationSupport.error.code;
+            }
+            if (InvocationSupport.error.stack) {
+                this.invocationData.tags['error.stack'] = InvocationSupport.error.stack;
+            }
+        }
+
         if (data.error) {
             const error = Utils.parseError(data.error);
             this.invocationData.erroneous = true;

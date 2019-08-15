@@ -24,6 +24,7 @@ import { DomainNames, ClassNames, envVariableKeys, TriggerHeaderTags } from '../
 import ThundraSpanContext from '../opentracing/SpanContext';
 import LambdaEventUtils, { LambdaEventType } from './utils/LambdaEventUtils';
 import ThundraLogger from '../ThundraLogger';
+import InvocationSupport from './support/InvocationSupport';
 
 const get = require('lodash.get');
 
@@ -126,6 +127,19 @@ export class Trace {
     afterInvocation = (data: any) => {
         let response = data.response;
         const originalEvent = data.originalEvent;
+
+        if (InvocationSupport.hasError()) {
+            this.rootSpan.tags.error = true;
+            this.rootSpan.tags['error.message'] = InvocationSupport.error.errorMessage;
+            this.rootSpan.tags['error.kind'] = InvocationSupport.error.errorType;
+            if (InvocationSupport.error.code) {
+                this.rootSpan.tags['error.code'] = InvocationSupport.error.code;
+            }
+            if (InvocationSupport.error.stack) {
+                this.rootSpan.tags['error.stack'] = InvocationSupport.error.stack;
+            }
+            InvocationSupport.clearError();
+        }
 
         if (data.error) {
             const error = Utils.parseError(data.error);

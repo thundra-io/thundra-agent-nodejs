@@ -75,4 +75,31 @@ describe('Invocation Support', () => {
             expect(InvocationSupport.userTags).toEqual({});
         });
     });
+
+    describe('should set exception', () => {
+        test('error', () => {
+            InvocationSupport.setError(Error('custom error'));
+            expect(InvocationSupport.error.errorType).toBe('Error');
+            expect(InvocationSupport.error.errorMessage).toBe('custom error');
+            expect(InvocationSupport.error.code).toBe(0);
+            expect(InvocationSupport.error.stack).not.toBe(undefined);
+        });
+    });
+
+    describe('should clear exception', () => {
+        test('error', () => {
+            InvocationSupport.setError(Error('custom error'));
+            InvocationSupport.clearError();
+            expect(InvocationSupport.error).toBe(undefined);
+        });
+    });
+
+    describe('should has exception', () => {
+        test('error', () => {
+            InvocationSupport.setError(Error('custom error'));
+            expect(InvocationSupport.hasError()).toBe(true);
+            InvocationSupport.clearError();
+            expect(InvocationSupport.hasError()).toBe(false);
+        });
+    });
 });

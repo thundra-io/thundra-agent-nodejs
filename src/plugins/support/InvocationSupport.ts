@@ -1,10 +1,12 @@
 import ThundraLogger from '../../ThundraLogger';
+import Utils from '../utils/Utils';
 
 class InvocationSupport {
     static tags: any = {};
     static userTags: any = {};
     static functionName: string = '';
     static errorenous: boolean;
+    static error: any;
 
     static setAgentTag(key: string, value: any): void {
         try {
@@ -44,6 +46,16 @@ class InvocationSupport {
         return InvocationSupport.userTags[key];
     }
 
+    static removeTag(key: string): void {
+        try {
+            if (InvocationSupport.userTags[key]) {
+                delete InvocationSupport.userTags[key];
+            }
+        } catch (e) {
+            ThundraLogger.getInstance().error(e);
+        }
+    }
+
     static setTags(keyValuePairs: {[key: string]: any }): void {
         try {
             Object.keys(keyValuePairs).forEach((key) => {
@@ -73,6 +85,23 @@ class InvocationSupport {
     static isErrorenous(): boolean {
         return InvocationSupport.errorenous;
     }
+
+    static setError(exception: any): void {
+        if (exception instanceof Error) {
+            InvocationSupport.error = Utils.parseError(exception);
+        }
+    }
+
+    static hasError(): boolean {
+        return InvocationSupport.error !== undefined;
+    }
+
+    static clearError(): void {
+        if (InvocationSupport.error) {
+            delete InvocationSupport.error;
+        }
+    }
+
 }
 
 export default InvocationSupport;
