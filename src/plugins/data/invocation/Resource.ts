@@ -53,8 +53,8 @@ class Resource {
                 });
             }
             this.resourceDuration += resource.resourceDuration;
-            if (resource.resourceDuration > this.resourceMaxDuration) {
-                this.resourceMaxDuration = resource.resourceDuration;
+            if (resource.resourceMaxDuration > this.resourceMaxDuration) {
+                this.resourceMaxDuration = resource.resourceMaxDuration;
             }
         }
     }
