@@ -9,6 +9,7 @@ class Resource {
     resourceErrorCount: number;
     resourceErrors: string[];
     resourceDuration: number;
+    resourceMaxDuration: number;
 
     constructor(opt: any = {}) {
         this.resourceType = opt.resourceType;
@@ -18,6 +19,7 @@ class Resource {
         this.resourceErrorCount = opt.resourceErrorCount;
         this.resourceErrors = opt.resourceErrors ? opt.resourceErrors : [];
         this.resourceDuration = opt.resourceDuration;
+        this.resourceMaxDuration = opt.resourceMaxDuration;
     }
 
     public init(span: ThundraSpan) {
@@ -32,6 +34,7 @@ class Resource {
             this.resourceErrors.push(span.getTag('error.kind'));
         }
         this.resourceDuration = span.getDuration();
+        this.resourceMaxDuration = span.getDuration();
     }
 
     public merge(resource: Resource): void {
@@ -50,6 +53,9 @@ class Resource {
                 });
             }
             this.resourceDuration += resource.resourceDuration;
+            if (resource.resourceMaxDuration > this.resourceMaxDuration) {
+                this.resourceMaxDuration = resource.resourceMaxDuration;
+            }
         }
     }
 

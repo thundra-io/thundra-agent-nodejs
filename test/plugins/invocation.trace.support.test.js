@@ -63,6 +63,7 @@ describe('Invocation Trace Support', () => {
         expect(resource.resourceDuration).toBe(60);
         expect(resource.resourceCount).toBe(3);
         expect(resource.resourceErrorCount).toBe(0);
+        expect(resource.resourceMaxDuration).toBe(30);
     });
 
     test('Should merge resources errors if same resource id resource is created', () => {
@@ -101,5 +102,38 @@ describe('Invocation Trace Support', () => {
         expect(resource.resourceErrorCount).toBe(3);
         
         expect(resource.resourceErrors).toEqual(['Database Error1', 'Database Error2']);
+    });
+
+    test('Should set resourceMaxDuration while merging resources', () => {
+        const tracer = new ThundraTracer();
+        tracer.recorder.destroy();
+
+        const spanOptions = {
+            operationName: 'resource',
+            className: 'className',
+            operationType: 'operationType',
+            duration: 35,
+            vertex: true,
+            error: false,
+        };
+        const span1 = Utils.createMockSpan(tracer, spanOptions);
+
+        spanOptions.duration = 10;
+        Utils.createMockSpan(tracer, spanOptions);
+
+        spanOptions.duration = 30;
+        Utils.createMockSpan(tracer ,spanOptions);
+
+        const resources = InvocationTraceSupport.getResources();
+        const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span1);
+        const resource = resources.filter((resource) => resource.generateId() === resourceId)[0];
+
+        expect(resources.length).toBe(1);
+        expect(resource.resourceName).toBe('resource');
+        expect(resource.resourceType).toBe('className');
+        expect(resource.resourceDuration).toBe(75);
+        expect(resource.resourceCount).toBe(3);
+        expect(resource.resourceErrorCount).toBe(0);
+        expect(resource.resourceMaxDuration).toBe(35);
     });
 });
