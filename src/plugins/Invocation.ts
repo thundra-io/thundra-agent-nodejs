@@ -43,6 +43,8 @@ class Invocation {
         this.finishTimestamp = null;
         this.startTimestamp = this.pluginContext.invocationStartTimestamp;
 
+        InvocationSupport.clearError();
+
         this.invocationData = Utils.initMonitoringData(this.pluginContext,
                              MonitoringDataType.INVOCATION) as InvocationData;
 
@@ -80,16 +82,18 @@ class Invocation {
     }
 
     afterInvocation = (data: any) => {
+        if (InvocationSupport.hasError()) {
+            this.invocationData.setError(InvocationSupport.error);
+        }
+
         if (data.error) {
             const error = Utils.parseError(data.error);
-            this.invocationData.erroneous = true;
+            this.invocationData.setError(error);
             if (data.error instanceof TimeoutError) {
                 this.invocationData.timeout = true;
                 this.invocationData.tags['aws.lambda.invocation.timeout'] = true;
             }
 
-            this.invocationData.errorType = error.errorType;
-            this.invocationData.errorMessage = error.errorMessage;
             this.invocationData.tags.error = true;
             this.invocationData.tags['error.message'] = error.errorMessage;
             this.invocationData.tags['error.kind'] = error.errorType;

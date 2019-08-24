@@ -30,7 +30,7 @@ class InvocationData extends BaseMonitoringData {
     setTags(keyValuePairs: {[key: string]: any }): void {
         try {
             Object.keys(keyValuePairs).forEach((key) => {
-              this.tags[key] = keyValuePairs[key];
+                this.tags[key] = keyValuePairs[key];
             });
         } catch (e) {
             ThundraLogger.getInstance().error(e);
@@ -40,11 +40,17 @@ class InvocationData extends BaseMonitoringData {
     setUserTags(keyValuePairs: {[key: string]: any }): void {
         try {
             Object.keys(keyValuePairs).forEach((key) => {
-              this.userTags[key] = keyValuePairs[key];
+                this.userTags[key] = keyValuePairs[key];
             });
         } catch (e) {
             ThundraLogger.getInstance().error(e);
         }
+    }
+
+    setError(error: any): void {
+        this.erroneous = true;
+        this.errorType = error.errorType;
+        this.errorMessage = error.errorMessage;
     }
 }
 
