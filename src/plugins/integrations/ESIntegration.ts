@@ -65,8 +65,22 @@ class ESIntegration implements Integration {
         });
     }
 
+    getNormalizedPath(path: string): string {
+        try {
+            const depth = this.config.esPathDepth;
+            if (depth <= 0) {
+                return '';
+            }
+            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
+            return normalizedPath;
+        } catch (error) {
+            return path;
+        }
+    }
+
     wrap(lib: any, config: any) {
         const integration = this;
+
         function wrapRequest(request: any) {
             let span: ThundraSpan;
 
@@ -82,8 +96,8 @@ class ESIntegration implements Integration {
                     const functionName = InvocationSupport.getFunctionName();
                     const parentSpan = tracer.getActiveSpan();
                     const host = await ESIntegration.hostSelect(me);
-
-                    span = tracer._startSpan(params.path, {
+                    const normalizedPath = plugin.getNormalizedPath(params.path);
+                    span = tracer._startSpan(normalizedPath, {
                         childOf: parentSpan,
                         domainName: DomainNames.DB,
                         className: DBTypes.ELASTICSEARCH.toUpperCase(),
