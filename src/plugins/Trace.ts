@@ -20,11 +20,16 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
-import { DomainNames, ClassNames, envVariableKeys, TriggerHeaderTags } from '../Constants';
+import {
+    DomainNames, ClassNames, envVariableKeys,
+    TriggerHeaderTags, INTEGRATIONS,
+} from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import LambdaEventUtils, { LambdaEventType } from './utils/LambdaEventUtils';
 import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';
+import Integration from './integrations/Integration';
+import Instrumenter from '../opentracing/instrument/Instrumenter';
 
 const get = require('lodash.get');
 
@@ -40,6 +45,8 @@ export class Trace {
     rootSpan: ThundraSpan;
     pluginOrder: number = 1;
     triggerClassName: String;
+    integrationsMap: Map<string, Integration>;
+    instrumenter: Instrumenter;
 
     constructor(config: TraceConfig) {
         this.hooks = {
@@ -51,8 +58,34 @@ export class Trace {
         this.config = config;
 
         this.tracer = new ThundraTracer(tracerConfig);
+
+        this.config.tracer = this.tracer;
+        this.initIntegrations();
+
         initGlobalTracer(this.tracer);
         Utils.registerSpanListenersFromConfigurations(this.tracer);
+    }
+
+    initIntegrations(): void {
+        if (!(this.config.disableInstrumentation) ||
+            !(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true')) {
+            this.integrationsMap = new Map<string, Integration>();
+
+            for (const key of Object.keys(INTEGRATIONS)) {
+                const clazz = INTEGRATIONS[key];
+                if (clazz) {
+                    if (!this.integrationsMap.get(key)) {
+                        if (!this.config.isConfigDisabled(key)) {
+                            const instance = new clazz(this.config);
+                            this.integrationsMap.set(key, instance);
+                        }
+                    }
+                }
+            }
+
+            this.instrumenter = new Instrumenter(this.config);
+            this.instrumenter.hookModuleCompile();
+        }
     }
 
     report(data: any): void {
@@ -81,8 +114,8 @@ export class Trace {
             this.pluginContext.traceId = propagatedSpanContext.traceId;
             this.pluginContext.transactionId =
                 Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID) === 'true'
-                        ? propagatedSpanContext.transactionId
-                        : Utils.generateId();
+                    ? propagatedSpanContext.transactionId
+                    : Utils.generateId();
             this.tracer.transactionId = this.pluginContext.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
@@ -159,7 +192,7 @@ export class Trace {
             }
         }
 
-        if (this.triggerClassName === ClassNames.APIGATEWAY) {
+        if (this.triggerClassName === ClassNames.APIGATEWAY) {
             this.processAPIGWResponse(response, originalEvent);
         }
 
@@ -171,7 +204,7 @@ export class Trace {
 
         const spanList = this.tracer.getRecorder().getSpanList();
 
-        const isSamplerPresent = this.config && this.config.sampler && typeof(this.config.sampler.isSampled) === 'function';
+        const isSamplerPresent = this.config && this.config.sampler && typeof (this.config.sampler.isSampled) === 'function';
         const sampled = isSamplerPresent ? this.config.sampler.isSampled(this.rootSpan) : true;
 
         if (sampled) {
@@ -227,8 +260,8 @@ export class Trace {
     destroy(): void {
         if (this.config && !(this.config.disableInstrumentation)) {
             this.tracer.destroy();
-            if (typeof this.config.unhookModuleCompile === 'function') {
-                this.config.unhookModuleCompile();
+            if (typeof this.instrumenter.unhookModuleCompile === 'function') {
+                this.instrumenter.unhookModuleCompile();
             }
         }
         this.triggerClassName = undefined;

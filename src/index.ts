@@ -35,6 +35,7 @@ import { SamplerCompositionOperator } from './opentracing/sampler/CompositeSampl
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
+let tracer: ThundraTracer;
 
 module.exports = (options: any) => {
     const config = new ThundraConfig(options);
@@ -46,6 +47,12 @@ module.exports = (options: any) => {
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
         const tracePlugin = TracePlugin(config.traceConfig);
         config.plugins.push(tracePlugin);
+
+        tracer = tracePlugin.tracer;
+        config.metricConfig.tracer = tracer;
+        config.logConfig.tracer = tracer;
+        config.xrayConfig.tracer = tracer;
+        InvocationTraceSupport.tracer = tracer;
     }
 
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC) === 'true') && config.metricConfig.enabled) {
@@ -130,7 +137,7 @@ module.exports = (options: any) => {
 };
 
 module.exports.tracer = () => {
-    return ThundraTracer.getInstance();
+    return tracer;
 };
 
 module.exports.createLogger = (options: any) => {

@@ -6,10 +6,12 @@ import ThundraTracer from '../../dist/opentracing/Tracer';
 describe('MongoDB Integration', () => {
     InvocationSupport.setFunctionName('functionName');
     const sdk = require('mongodb');
-    const integration = new MongoDBIntegration({});
-
+    
     test('should instrument MongoDB insert calls', () => {
         const tracer = new ThundraTracer();
+        const integration = new MongoDBIntegration({
+            tracer,
+        });
         const doc = {
             name: 'foo',
             colors: ['gray', 'black', 'white'],
@@ -42,6 +44,9 @@ describe('MongoDB Integration', () => {
     
     test('should instrument MongoDB update calls', () => {
         const tracer = new ThundraTracer();
+        const integration = new MongoDBIntegration({
+            tracer,
+        });
         const doc = {
             name: 'foo',
             colors: ['gray', 'black', 'white'],
@@ -73,6 +78,9 @@ describe('MongoDB Integration', () => {
     
     test('should instrument a failing MongoDB call', () => {
         const tracer = new ThundraTracer();
+        const integration = new MongoDBIntegration({
+            tracer,
+        });
         const doc = {
             name: 'foo',
             colors: ['gray', 'black', 'white'],

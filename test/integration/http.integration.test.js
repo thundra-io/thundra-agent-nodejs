@@ -5,12 +5,13 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('HTTP integration', () => {
     test('should instrument HTTP GET calls ', () => {
+        const tracer = new ThundraTracer();
         const integration = new HttpIntegration({
             httpPathDepth: 2,
+            tracer,
         });
         const sdk = require('http');
 
-        const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
         return Http.get(sdk).then(() => {
@@ -36,12 +37,13 @@ describe('HTTP integration', () => {
     });
 
     test('should set 4XX 5XX errors on HTTP calls', () => {
+        const tracer = new ThundraTracer();
         const integration = new HttpIntegration({
             httpPathDepth: 2,
+            tracer,
         });
         const sdk = require('http');
 
-        const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
         return Http.getError(sdk).then(() => {
@@ -68,14 +70,14 @@ describe('HTTP integration', () => {
     });
 
     test('should disable 4XX 5XX errors on HTTP calls', () => {
+        const tracer = new ThundraTracer();
         const integration = new HttpIntegration({
             httpPathDepth: 2,
-            disableHttp4xxError:true
-
+            disableHttp4xxError:true,
+            tracer,
         });
         const sdk = require('http');
 
-        const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
         return Http.getError(sdk).then(() => {
@@ -102,12 +104,13 @@ describe('HTTP integration', () => {
     });
 
     test('should instrument HTTPS POST calls', () => {
+        const tracer = new ThundraTracer();
         const integration = new HttpIntegration({
             httpPathDepth: 0,
+            tracer,
         });
         const sdk = require('https');
 
-        const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
         return Http.post(sdk).then(() => {
@@ -123,12 +126,13 @@ describe('HTTP integration', () => {
     });
 
     test('should mask body in post', () => {
+        const tracer = new ThundraTracer();
         const integration = new HttpIntegration({
-            maskHttpBody: true
+            maskHttpBody: true,
+            tracer,
         });
         const sdk = require('https');
 
-        const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
         return Http.post(sdk).then(() => {

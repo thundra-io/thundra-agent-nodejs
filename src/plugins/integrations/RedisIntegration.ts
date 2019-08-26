@@ -1,5 +1,4 @@
 import Integration from './Integration';
-import ThundraTracer from '../../opentracing/Tracer';
 import {
     SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames,
     ClassNames, DBTypes, DBTags, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
@@ -49,11 +48,12 @@ class RedisIntegration implements Integration {
     }
 
     wrap(lib: any, config: any) {
+        const integration = this;
         function wrapper(internalSendCommand: any) {
             return function internalSendCommandWrapper(options: any) {
                 let span: ThundraSpan;
                 try {
-                    const tracer = ThundraTracer.getInstance();
+                    const tracer = integration.config.tracer;
 
                     if (!tracer) {
                         return internalSendCommand.call(this, options);

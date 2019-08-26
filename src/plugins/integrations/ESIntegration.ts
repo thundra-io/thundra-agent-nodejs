@@ -1,5 +1,4 @@
 import Integration from './Integration';
-import ThundraTracer from '../../opentracing/Tracer';
 import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
@@ -67,12 +66,13 @@ class ESIntegration implements Integration {
     }
 
     wrap(lib: any, config: any) {
+        const integration = this;
         function wrapRequest(request: any) {
             let span: ThundraSpan;
 
             return async function requestWithTrace(params: any, cb: any) {
                 try {
-                    const tracer = ThundraTracer.getInstance();
+                    const tracer = integration.config.tracer;
 
                     if (!tracer) {
                         return request.call(this, params, cb);

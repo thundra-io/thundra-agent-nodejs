@@ -8,11 +8,12 @@ const pluginContext = createMockPluginContext();
 describe('AwsXRay', () => {
 
     describe('constructor', () => {
-        const options = {opt1: 'opt1', opt2: 'opt2'};
         const tracer = new ThundraTracer();
         tracer.addSpanListener = jest.fn();
 
-        const xray = AwsXRay(options);
+        const xray = AwsXRay({
+            tracer,
+        });
         xray.setPluginContext(pluginContext);
         ThundraTracer.getInstance = jest.fn(() => tracer);
         

@@ -6,18 +6,19 @@ import { SpanTags } from '../../Constants';
 const flatten = require('lodash.flatten');
 
 class InvocationTraceSupport {
-
+    static tracer: ThundraTracer;
     static incomingTraceLinks: any[] = [];
     static outgoingTraceLinks: any[] = [];
 
     static getResources(rootSpanId: string = ''): Resource[] {
         try {
-            if (!ThundraTracer.getInstance()) {
+            const tracer = InvocationTraceSupport.tracer;
+            if (!tracer) {
                 return undefined;
             }
 
             const resourcesMap: Map<string, Resource> = new Map<string, Resource>();
-            const spans = ThundraTracer.getInstance().recorder.getSpanList().
+            const spans = tracer.recorder.getSpanList().
                             filter((span: ThundraSpan) => span.getTag(SpanTags.TOPOLOGY_VERTEX)).
                             filter((span: ThundraSpan) => span.spanContext.spanId !== rootSpanId);
 
@@ -69,12 +70,14 @@ class InvocationTraceSupport {
     }
 
     static getOutgoingTraceLinks(): any[] {
-        if (!ThundraTracer.getInstance()) {
+        const tracer = InvocationTraceSupport.tracer;
+
+        if (!tracer) {
             return undefined;
         }
 
         try {
-            const spans = ThundraTracer.getInstance().recorder.getSpanList();
+            const spans = tracer.recorder.getSpanList();
             const outgoingTraceLinks = flatten(
                 spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
                     .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
@@ -91,7 +94,6 @@ class InvocationTraceSupport {
         InvocationTraceSupport.incomingTraceLinks = [];
         InvocationTraceSupport.outgoingTraceLinks = [];
     }
-
 }
 
 export default InvocationTraceSupport;

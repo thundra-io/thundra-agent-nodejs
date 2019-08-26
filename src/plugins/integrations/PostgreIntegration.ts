@@ -1,5 +1,4 @@
 import Integration from './Integration';
-import ThundraTracer from '../../opentracing/Tracer';
 import {
     DBTags, SpanTags, SpanTypes, DomainNames, ClassNames, DBTypes,
     SQLQueryOperationTypes, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
@@ -48,11 +47,12 @@ class PostgreIntegration implements Integration {
     }
 
     wrap(lib: any, config: any) {
+        const integration = this;
         function wrapper(query: any, args: any) {
             return function queryWrapper() {
                 let span: ThundraSpan;
                 try {
-                    const tracer = ThundraTracer.getInstance();
+                    const tracer = integration.config.tracer;
 
                     if (!tracer) {
                         return query.apply(this, arguments);

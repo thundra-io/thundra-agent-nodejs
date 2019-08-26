@@ -1,9 +1,8 @@
 import Integration from './Integration';
-import ThundraTracer from '../../opentracing/Tracer';
 import {
     DBTags, SpanTags, DomainNames, DBTypes, MongoDBTags, MongoDBCommandTypes,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
-    DefaultMongoCommandSizeLimit,
+        LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
+        DefaultMongoCommandSizeLimit,
 } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
@@ -35,10 +34,10 @@ class MongoDBIntegration implements Integration {
         }
     }
 
-    onStarted(event: any) {
+    onStarted(event: any) {
         let span: ThundraSpan;
         try {
-            const tracer = ThundraTracer.getInstance();
+            const tracer = this.config.tracer;
 
             if (!tracer) {
                 return;
@@ -122,7 +121,7 @@ class MongoDBIntegration implements Integration {
         }
     }
 
-    wrap() {
+    wrap() {
         return;
     }
 

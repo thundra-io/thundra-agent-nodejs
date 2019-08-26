@@ -18,7 +18,11 @@ class AwsXRay {
 
         this.config = config;
 
-        const tracer = ThundraTracer.getInstance();
+        let tracer;
+        if (config) {
+            tracer = config.tracer;
+        }
+
         if (tracer) {
             tracer.addSpanListener(new AwsXRayThundraSpanListener(this));
         } else {

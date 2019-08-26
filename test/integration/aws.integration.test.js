@@ -9,9 +9,11 @@ jest.setTimeout(30000);
 describe('AWS Integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
-    test('should instrument AWS DynamoDB calls ', () => { 
+    test('should instrument AWS DynamoDB calls ', () => {
+        const tracer = new ThundraTracer();
         const integration = new AWSIntegration({
             dynamoDBTraceInjectionEnabled: true,
+            tracer
         });
         const sdk = require('aws-sdk');
 
@@ -19,8 +21,6 @@ describe('AWS Integration', () => {
             Item: {'id': {S: '1'}},
             TableName: 'test-table',
         };
-
-        const tracer = new ThundraTracer();
         
         return AWS.dynamo(sdk, putParams).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -45,10 +45,12 @@ describe('AWS Integration', () => {
     });
 
     test('should mask AWS DynamoDB statements ', () => { 
+        const tracer = new ThundraTracer();
         const integration = new AWSIntegration({
             disableInstrumentation: true,
             maskDynamoDBStatement: true,
             dynamoDBTraceInjectionEnabled: true,
+            tracer,
         });
 
         const sdk = require('aws-sdk');
@@ -58,8 +60,6 @@ describe('AWS Integration', () => {
             TableName: 'test-table',
         };
         
-        const tracer = new ThundraTracer();
-    
         return AWS.dynamo(sdk, putParams).then(() => {
             const span = tracer.getRecorder().spanList[0];
             
@@ -84,7 +84,10 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS S3 GetObject call ', () => { 
-        const integration = new AWSIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
         const sdk = require('aws-sdk');
         // Replace actual send function used by AWS SDK
         // with our mockSend function
@@ -99,7 +102,6 @@ describe('AWS Integration', () => {
         });
         integration.wrappedFuncs.send = mockSend;
 
-        const tracer = new ThundraTracer();
 
         return AWS.s3GetObject(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -121,7 +123,10 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS S3 ListBucket call ', () => { 
-        const integration = new AWSIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
         const sdk = require('aws-sdk');
 
         // Replace actual send function used by AWS SDK
@@ -137,8 +142,6 @@ describe('AWS Integration', () => {
         });
         integration.wrappedFuncs.send = mockSend;
         
-        const tracer = new ThundraTracer();
-
         return AWS.s3ListBuckets(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
@@ -161,7 +164,10 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Lambda invoke call ', () => { 
-        const integration = new AWSIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer
+        });
         const sdk = require('aws-sdk');
 
         // Replace actual send function used by AWS SDK
@@ -177,8 +183,6 @@ describe('AWS Integration', () => {
         });
         integration.wrappedFuncs.send = mockSend;
         
-        const tracer = new ThundraTracer();
-
         return AWS.lambda(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
@@ -202,8 +206,10 @@ describe('AWS Integration', () => {
     });
 
     test('should mask AWS Lambda Payload', () => { 
+        const tracer = new ThundraTracer();
         const integration = new AWSIntegration({
-            maskLambdaPayload: true
+            maskLambdaPayload: true,
+            tracer,
         });
         const sdk = require('aws-sdk');
 
@@ -219,8 +225,6 @@ describe('AWS Integration', () => {
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
-        
-        const tracer = new ThundraTracer();
 
         return AWS.lambda(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -235,10 +239,11 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Lambda calls ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
-
         const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
+        const sdk = require('aws-sdk');
 
         return AWS.lambdaGetAccountSettings(sdk).then(() => {
             expect(tracer.getRecorder().spanList[0]).toBeTruthy();
@@ -246,7 +251,10 @@ describe('AWS Integration', () => {
     });
     
     test('should instrument AWS SQS calls ', () => { 
-        const integration = new AWSIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
         const sdk = require('aws-sdk');
 
         // Replace actual send function used by AWS SDK
@@ -262,8 +270,6 @@ describe('AWS Integration', () => {
         });
         integration.wrappedFuncs.send = mockSend;
         
-        const tracer = new ThundraTracer();
-
         return AWS.sqs(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
@@ -286,8 +292,10 @@ describe('AWS Integration', () => {
     });
 
     test('should mask AWS SQS message ', () => { 
+        const tracer = new ThundraTracer();
         const integration = new AWSIntegration({
-            maskSQSMessage: true
+            maskSQSMessage: true,
+            tracer,
         });
         const sdk = require('aws-sdk');
 
@@ -304,7 +312,6 @@ describe('AWS Integration', () => {
         });
 
         integration.wrappedFuncs.send = mockSend;
-        const tracer = new ThundraTracer();
 
         return AWS.sqs(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -319,10 +326,11 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS sqs_list_queue calls', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
-
         const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
+        const sdk = require('aws-sdk');
 
         return AWS.sqs_list_queue(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -345,7 +353,10 @@ describe('AWS Integration', () => {
   
     
     test('should instrument AWS SNS publish to topic calls ', () => {
-        const integration = new AWSIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
         const sdk = require('aws-sdk');
 
         // Replace actual send function used by AWS SDK
@@ -361,8 +372,6 @@ describe('AWS Integration', () => {
         });
         integration.wrappedFuncs.send = mockSend;
         
-        const tracer = new ThundraTracer();
-
         return AWS.sns_topic(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
@@ -385,7 +394,10 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS SNS publish to target calls ', () => {
-        const integration = new AWSIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
         const sdk = require('aws-sdk');
 
         integration.wrap(sdk, {});
@@ -402,8 +414,6 @@ describe('AWS Integration', () => {
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
-
-        const tracer = new ThundraTracer();
 
         return AWS.sns_target(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -427,7 +437,10 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS SNS publish to SMS calls ', () => {
-        const integration = new AWSIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
         const sdk = require('aws-sdk');
 
         integration.wrap(sdk, {});
@@ -444,8 +457,6 @@ describe('AWS Integration', () => {
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
-
-        const tracer = new ThundraTracer();
 
         return AWS.sns_sms(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -469,10 +480,11 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS SNS call without publish', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
-
         const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
+        const sdk = require('aws-sdk');
 
         return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -490,12 +502,12 @@ describe('AWS Integration', () => {
     });
     
     test('should mask SNS Message', () => { 
+        const tracer = new ThundraTracer();
         const integration = new AWSIntegration({
-            maskSNSMessage: true
+            maskSNSMessage: true,
+            tracer,
         });
         const sdk = require('aws-sdk');
-
-        const tracer = new ThundraTracer();
 
         return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -510,7 +522,10 @@ describe('AWS Integration', () => {
     }); 
     
     test('should instrument AWS Kinesis calls ', () => { 
-        const integration = new AWSIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
         const sdk = require('aws-sdk');
 
         // Replace actual send function used by AWS SDK
@@ -529,8 +544,6 @@ describe('AWS Integration', () => {
         });
         integration.wrappedFuncs.send = mockSend;
         
-        const tracer = new ThundraTracer();
-
         return AWS.kinesis(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.operationName).toBe('STRING_VALUE');
@@ -552,7 +565,10 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Firehose calls ', () => { 
-        const integration = new AWSIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
         const sdk = require('aws-sdk');
 
         // Replace actual send function used by AWS SDK
@@ -572,7 +588,6 @@ describe('AWS Integration', () => {
 
         const dataHash = md5('STRING_VALUE');
         const traceLinks = [0, 1, 2].map((i) => `us-west-2:STRING_VALUE:${timestamp + i}:${dataHash}`);
-        const tracer = new ThundraTracer();
 
         return AWS.firehose(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -594,9 +609,11 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena calls ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
         const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
+        const sdk = require('aws-sdk');
 
         return AWS.athenaStartQueryExec(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -621,11 +638,12 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena statement masked ', () => { 
+        const tracer = new ThundraTracer();
         const integration = new AWSIntegration({
             maskAthenaStatement: true,
+            tracer,
         });
         const sdk = require('aws-sdk');
-        const tracer = new ThundraTracer();
 
         return AWS.athenaStartQueryExec(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -650,9 +668,11 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena stop query execution ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
         const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
+        const sdk = require('aws-sdk');
 
         return AWS.athenaStopQueryExec(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -677,9 +697,11 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena batch get named query ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
         const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
+        const sdk = require('aws-sdk');
 
         return AWS.athenaBatchGetNamedQuery(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -704,9 +726,11 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena batch get query execution ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
         const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
+        const sdk = require('aws-sdk');
 
         return AWS.athenaBatchGetQueryExec(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -731,9 +755,11 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena create named query ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
         const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
+        const sdk = require('aws-sdk');
         const mockSend = jest.fn((cb) => {
             let req = mockSend.mock.instances[0];
             req.response = {
@@ -769,10 +795,11 @@ describe('AWS Integration', () => {
     });
     
     test('should instrument AWS KMS calls ', () => { 
-        const integration = new AWSIntegration({});
-        const sdk = require('aws-sdk');
-
         const tracer = new ThundraTracer();
+        const integration = new AWSIntegration({
+            tracer,
+        });
+        const sdk = require('aws-sdk');
 
         return AWS.kms(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];

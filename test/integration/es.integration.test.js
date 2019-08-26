@@ -6,10 +6,12 @@ import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
 describe('Elastic Search Integration', () => {
     test('should instrument ES calls with single host', () => {
-        const integration = new ESIntegrations({});
+        const tracer = new ThundraTracer();
+        const integration = new ESIntegrations({
+            tracer,
+        });
         const sdk = require('elasticsearch');
 
-        const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
         return ES.query(sdk).then((data) => {
@@ -37,10 +39,12 @@ describe('Elastic Search Integration', () => {
     });
 
     test('should instrument ES calls with single host', () => {
-        const integration = new ESIntegrations({});
+        const tracer = new ThundraTracer();
+        const integration = new ESIntegrations({
+            tracer,
+        });
         const sdk = require('elasticsearch');
 
-        const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
         const hostList = ['localhost', 'test.elastic.io'];
         const portList = [9200, 9201];
@@ -70,13 +74,14 @@ describe('Elastic Search Integration', () => {
     });
 
     test('should mask ES statments', () => {
+        const tracer = new ThundraTracer();
         const integration = new ESIntegrations({
             disableInstrumentation: true,
-            maskElasticSearchStatement: true
+            maskElasticSearchStatement: true,
+            tracer,
         });
         const sdk = require('elasticsearch');
 
-        const tracer = new ThundraTracer();
         InvocationSupport.setFunctionName('functionName');
 
         return ES.query(sdk).then((data) => {
