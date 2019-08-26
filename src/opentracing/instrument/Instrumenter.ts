@@ -29,8 +29,10 @@ class Instrumenter {
 
     constructor(traceConfig: TraceConfig) {
         this.traceConfig = traceConfig;
-        this.tracer = traceConfig.tracer;
         this.stack = new Stack<NodeWrapper>();
+        if (traceConfig) {
+            this.tracer = traceConfig.tracer;
+        }
     }
 
     shouldTraceFile(relPath: string): boolean {
