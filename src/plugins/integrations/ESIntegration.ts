@@ -96,7 +96,7 @@ class ESIntegration implements Integration {
                     const functionName = InvocationSupport.getFunctionName();
                     const parentSpan = tracer.getActiveSpan();
                     const host = await ESIntegration.hostSelect(me);
-                    const normalizedPath = plugin.getNormalizedPath(params.path);
+                    const normalizedPath = integration.getNormalizedPath(params.path);
                     span = tracer._startSpan(normalizedPath, {
                         childOf: parentSpan,
                         domainName: DomainNames.DB,
