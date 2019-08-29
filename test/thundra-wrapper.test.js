@@ -52,7 +52,10 @@ describe('ThundraWrapper', () => {
         });
         const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, apiKey);
         thundraWrapper.report = jest.fn();
-        thundraWrapper.invoke();
+        try {
+            thundraWrapper.invoke();
+        } catch (e) {
+        }
         it('should call original function and report', () => {
             expect(originalFunction.mock.calls.length).toBe(1);
             expect(thundraWrapper.report).toBeCalledWith(thrownError, null, null);
