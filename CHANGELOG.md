@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.8 - August 30, 2019
+#### Added
+- Introduced "Trace Link" API
+- Added ability to specify custom exception through `InvocationSupport`
+
+#### Fixed
+- Removed Promise chaining for calling original function after `beforeExecution` hook which might cause exception swallowing
+
 ## 2.5.7 - August 2, 2019
 #### Improved
 - Decide collector API endpoint based on current region adaptively
