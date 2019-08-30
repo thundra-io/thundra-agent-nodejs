@@ -56,17 +56,11 @@ class Resource {
                 });
             }
             this.resourceDuration += resource.resourceDuration;
-            this.updateResourceAvgDuration(resource.resourceDuration);
+            this.resourceAvgDuration = Math.round(this.resourceDuration / this.resourceCount * 100) / 100;
             if (resource.resourceMaxDuration > this.resourceMaxDuration) {
                 this.resourceMaxDuration = resource.resourceMaxDuration;
             }
         }
-    }
-
-    public updateResourceAvgDuration(newDuration: number ): void {
-        const differential = (newDuration - this.resourceAvgDuration) / this.resourceCount;
-        this.resourceAvgDuration +=  differential;
-        this.resourceAvgDuration = Math.round(this.resourceAvgDuration * 100) / 100;
     }
 
     public generateId(): string {
