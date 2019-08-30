@@ -10,6 +10,7 @@ class Resource {
     resourceErrors: string[];
     resourceDuration: number;
     resourceMaxDuration: number;
+    resourceAvgDuration: number;
 
     constructor(opt: any = {}) {
         this.resourceType = opt.resourceType;
@@ -20,6 +21,7 @@ class Resource {
         this.resourceErrors = opt.resourceErrors ? opt.resourceErrors : [];
         this.resourceDuration = opt.resourceDuration;
         this.resourceMaxDuration = opt.resourceMaxDuration;
+        this.resourceAvgDuration = opt.resourceAvgDuration;
     }
 
     public init(span: ThundraSpan) {
@@ -35,6 +37,7 @@ class Resource {
         }
         this.resourceDuration = span.getDuration();
         this.resourceMaxDuration = span.getDuration();
+        this.resourceAvgDuration = span.getDuration();
     }
 
     public merge(resource: Resource): void {
@@ -53,6 +56,7 @@ class Resource {
                 });
             }
             this.resourceDuration += resource.resourceDuration;
+            this.resourceAvgDuration = Math.round(this.resourceDuration / this.resourceCount * 100) / 100;
             if (resource.resourceMaxDuration > this.resourceMaxDuration) {
                 this.resourceMaxDuration = resource.resourceMaxDuration;
             }
