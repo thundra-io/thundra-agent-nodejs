@@ -109,30 +109,27 @@ class ThundraWrapper {
 
         InvocationSupport.setErrorenous(false);
 
-        this.executeHook('before-invocation', beforeInvocationData, false)
-            .then(() => {
-                this.pluginContext.requestCount += 1;
+        this.executeHook('before-invocation', beforeInvocationData, false);
 
-                try {
-                    const result = this.originalFunction.call(
-                        this.originalThis,
-                        this.originalEvent,
-                        this.wrappedContext,
-                        this.wrappedCallback,
-                    );
+        this.pluginContext.requestCount += 1;
 
-                    if (result && result.then !== undefined && typeof result.then === 'function') {
-                        result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
-                    }
+        try {
+             const result = this.originalFunction.call(
+                 this.originalThis,
+                 this.originalEvent,
+                 this.wrappedContext,
+                 this.wrappedCallback,
+             );
 
-                    return result;
-                } catch (error) {
-                    this.report(error, null, null);
-                    return error;
-                }
-            }).catch((error) => {
-                ThundraLogger.getInstance().debug(error);
-            });
+             if (result && result.then !== undefined && typeof result.then === 'function') {
+                 result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
+             }
+
+             return result;
+        } catch (error) {
+             this.report(error, null, null);
+             throw error;
+        }
     }
 
     async executeHook(hook: any, data: any, reverse: boolean) {
