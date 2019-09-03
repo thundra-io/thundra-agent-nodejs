@@ -98,7 +98,7 @@ class ThundraWrapper {
         }
     }
 
-    invoke(): void {
+    async invoke() {
         const beforeInvocationData = {
             originalContext: this.originalContext,
             originalEvent: this.originalEvent,
@@ -109,7 +109,7 @@ class ThundraWrapper {
 
         InvocationSupport.setErrorenous(false);
 
-        this.executeHook('before-invocation', beforeInvocationData, false);
+        await this.executeHook('before-invocation', beforeInvocationData, false);
 
         this.pluginContext.requestCount += 1;
 
@@ -127,7 +127,7 @@ class ThundraWrapper {
 
              return result;
         } catch (error) {
-             this.report(error, null, null);
+             await this.report(error, null, null);
              throw error;
         }
     }
