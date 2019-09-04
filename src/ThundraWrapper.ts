@@ -38,6 +38,8 @@ class ThundraWrapper {
     private reporter: Reporter;
     private wrappedContext: any;
     private timeout: NodeJS.Timer;
+    private resolve: any;
+    private reject: any;
 
     constructor(self: any, event: any, context: any, callback: any,
                 originalFunction: any, plugins: any, pluginContext: PluginContext) {
@@ -88,8 +90,7 @@ class ThundraWrapper {
     wrappedCallback = (error: any, result: any) => {
         this.report(error, result, () => {
             this.invokeCallback(error, result);
-        },
-        );
+        });
     }
 
     invokeCallback(error: any, result: any): void {
@@ -98,7 +99,15 @@ class ThundraWrapper {
         }
     }
 
-    async invoke() {
+    onFinish(error: any, result: any): void {
+        if (error && this.reject) {
+            this.reject(error);
+        } else if (this.resolve) {
+            this.resolve(result);
+        }
+    }
+
+    invoke() {
         const beforeInvocationData = {
             originalContext: this.originalContext,
             originalEvent: this.originalEvent,
@@ -109,27 +118,42 @@ class ThundraWrapper {
 
         InvocationSupport.setErrorenous(false);
 
-        await this.executeHook('before-invocation', beforeInvocationData, false);
+        this.resolve = undefined;
+        this.reject = undefined;
 
-        this.pluginContext.requestCount += 1;
-
-        try {
-             const result = this.originalFunction.call(
-                 this.originalThis,
-                 this.originalEvent,
-                 this.wrappedContext,
-                 this.wrappedCallback,
-             );
-
-             if (result && result.then !== undefined && typeof result.then === 'function') {
-                 result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
-             }
-
-             return result;
-        } catch (error) {
-             await this.report(error, null, null);
-             throw error;
-        }
+        return new Promise((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+            this.executeHook('before-invocation', beforeInvocationData, false)
+                .then(() => {
+                    this.pluginContext.requestCount += 1;
+                    try {
+                        const result = this.originalFunction.call(
+                            this.originalThis,
+                            this.originalEvent,
+                            this.wrappedContext,
+                            this.wrappedCallback,
+                        );
+                        if (result && result.then !== undefined && typeof result.then === 'function') {
+                            result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
+                        }
+                    } catch (error) {
+                        this.report(error, null, null);
+                    }
+                })
+                .catch((error) => {
+                    ThundraLogger.getInstance().debug(error);
+                    // There is an error on "before-invocation" phase
+                    // So skip Thundra wrapping and call original function directly
+                    const result = this.originalFunction.call(
+                        this.originalThis,
+                        this.originalEvent,
+                        this.originalContext,
+                        this.originalCallback,
+                    );
+                    resolve(result);
+                });
+        });
     }
 
     async executeHook(hook: any, data: any, reverse: boolean) {
@@ -165,42 +189,46 @@ class ThundraWrapper {
 
     async report(error: any, result: any, callback: any) {
         if (!this.reported) {
-            this.reported = true;
+            try {
+                this.reported = true;
 
-            let afterInvocationData = {
-                error,
-                originalEvent: this.originalEvent,
-                response: result,
-            };
-
-            if (this.isErrorResponse(result)) {
-                afterInvocationData = {
-                    error: new HttpError('Lambda returned with error response.'),
+                let afterInvocationData = {
+                    error,
                     originalEvent: this.originalEvent,
                     response: result,
                 };
-            }
 
-            if (this.config.sampleTimedOutInvocations) {
-                if (error instanceof TimeoutError) {
-                    await this.executeAfteInvocationAndReport(afterInvocationData);
-                } else {
-                    this.plugins.map((plugin: any) => {
-                        if (plugin.destroy && typeof (plugin.destroy) === 'function') {
-                            plugin.destroy();
-                        }
-                    });
+                if (this.isErrorResponse(result)) {
+                    afterInvocationData = {
+                        error: new HttpError('Lambda returned with error response.'),
+                        originalEvent: this.originalEvent,
+                        response: result,
+                    };
                 }
-            } else {
-                await this.executeAfteInvocationAndReport(afterInvocationData);
-            }
 
-            if (this.timeout) {
-                clearTimeout(this.timeout);
-            }
+                if (this.config.sampleTimedOutInvocations) {
+                    if (error instanceof TimeoutError) {
+                        await this.executeAfteInvocationAndReport(afterInvocationData);
+                    } else {
+                        this.plugins.map((plugin: any) => {
+                            if (plugin.destroy && typeof (plugin.destroy) === 'function') {
+                                plugin.destroy();
+                            }
+                        });
+                    }
+                } else {
+                    await this.executeAfteInvocationAndReport(afterInvocationData);
+                }
 
-            if (typeof callback === 'function') {
-                callback();
+                if (this.timeout) {
+                    clearTimeout(this.timeout);
+                }
+
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            } finally {
+                this.onFinish(error, result);
             }
         }
     }
