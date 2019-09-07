@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.5.10 - September 4, 2019
+#### Fixed
+- Chained execution hooks and reporting through Promises
+
+## 2.5.9 - September 3, 2019
+#### Fixed
+- Awaited completion of execution hooks before invocation
+
 ## 2.5.8 - August 30, 2019
 #### Added
 - Introduced "Trace Link" API
