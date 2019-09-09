@@ -5,16 +5,18 @@ const assert = require('assert');
 
 const automatic_instrumentation_test = function () {
     const tracer = new ThundraTracer();
-    const traceConfigOptions = {
+    const config = new TraceConfig({
         traceableConfigs: [{
             pattern: 'test.instrumentation.utils.automated.instrumentation.util.*',
             traceReturnValue: true,
             traceArgs : true,
         }],
         tracer,
-    };
+    });
+
     
-    new TraceConfig(traceConfigOptions);
+    const instrumenter = new Instrumenter(config);
+    instrumenter.hookModuleCompile();
     
     const Automated = require('./utils/automated.instrumentation.util');
 
