@@ -15,7 +15,6 @@ describe('AwsXRay', () => {
             tracer,
         });
         xray.setPluginContext(pluginContext);
-        ThundraTracer.getInstance = jest.fn(() => tracer);
         
         it('should add listeners in plugin initialization', () => {
             expect(tracer.addSpanListener).toBeCalled();
