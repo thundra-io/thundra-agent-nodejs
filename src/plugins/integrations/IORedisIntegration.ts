@@ -1,5 +1,4 @@
 import Integration from './Integration';
-import ThundraTracer from '../../opentracing/Tracer';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
@@ -55,7 +54,7 @@ class IORedisIntegration implements Integration {
             return function internalSendCommandWrapper(command: any) {
                 let span: ThundraSpan;
                 try {
-                    const tracer = ThundraTracer.getInstance();
+                    const tracer = plugin.config.tracer;
 
                     if (!tracer || !command || this.status !== 'ready') {
                         return original.call(this, command);

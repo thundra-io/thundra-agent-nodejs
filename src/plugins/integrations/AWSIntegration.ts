@@ -308,7 +308,7 @@ class AWSIntegration implements Integration {
 
                 let activeSpan: ThundraSpan;
                 try {
-                    const tracer = ThundraTracer.getInstance();
+                    const tracer = integration.config.tracer;
 
                     if (!tracer) {
                         return wrappedFunction.apply(this, [callback]);

@@ -7,6 +7,7 @@ describe('Invocation Trace Support', () => {
 
     test('Should only add topology vertex spans as resources', () => {
         const tracer = new ThundraTracer();
+        InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
 
         const span1 = tracer.startSpan('resource1');
@@ -35,6 +36,7 @@ describe('Invocation Trace Support', () => {
 
     test('Should merge resources if same resource id resource is created', () => {
         const tracer = new ThundraTracer();
+        InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
            
         const spanOptions = {
@@ -70,6 +72,7 @@ describe('Invocation Trace Support', () => {
 
     test('Should merge resources errors if same resource id resource is created', () => {
         const tracer = new ThundraTracer();
+        InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
 
         const spanOptions = {
@@ -108,6 +111,7 @@ describe('Invocation Trace Support', () => {
 
     test('Should set resourceMaxDuration while merging resources', () => {
         const tracer = new ThundraTracer();
+        InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
 
         const spanOptions = {

@@ -27,17 +27,12 @@ class ThundraTracer extends Tracer {
     this.tags = config.tags;
     this.recorder = config.recorder ? config.recorder : new ThundraRecorder();
     this.activeSpans = new Map<string, ThundraSpan>();
-    ThundraTracer.instance = this;
 
     this.propagators = {
       [opentracing.FORMAT_TEXT_MAP]: new TextMapPropagator(),
       [opentracing.FORMAT_HTTP_HEADERS]: new HttpPropagator(),
       [opentracing.FORMAT_BINARY]: new BinaryPropagator(),
     };
-  }
-
-  static getInstance(): ThundraTracer {
-    return ThundraTracer.instance;
   }
 
   getActiveSpan(): ThundraSpan {

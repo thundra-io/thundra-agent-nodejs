@@ -7,12 +7,14 @@ describe('IORedis Integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should instrument IORedis calls', () => {
-        const integration = new IORedisIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new IORedisIntegration({
+            tracer,
+        });
         const sdk = require('ioredis');
 
         integration.wrap(sdk, {});
 
-        const tracer = new ThundraTracer();
         tracer.getRecorder().spanList = [];
 
         return Redis.set(sdk).then((data) => {

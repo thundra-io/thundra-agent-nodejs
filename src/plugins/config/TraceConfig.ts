@@ -7,6 +7,7 @@ import ThundraLogger from '../../ThundraLogger';
 import Integration from '../integrations/Integration';
 import Instrumenter from '../../opentracing/instrument/Instrumenter';
 import Sampler from '../../opentracing/sampler/Sampler';
+import ThundraTracer from '../../opentracing/Tracer';
 const koalas = require('koalas');
 
 class TraceConfig extends BasePluginConfig {
@@ -41,6 +42,7 @@ class TraceConfig extends BasePluginConfig {
     sampler: Sampler<any>;
     runSamplerOnEachSpan: boolean;
     instrumentAWSOnLoad: boolean;
+    tracer: ThundraTracer;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -176,24 +178,8 @@ class TraceConfig extends BasePluginConfig {
             }
         }
 
-        if (!(this.disableInstrumentation) ||
-                !(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true')) {
-            this.integrationsMap = new Map<string, Integration>();
-
-            for (const key of Object.keys(INTEGRATIONS)) {
-                const clazz = INTEGRATIONS[key];
-                if (clazz) {
-                    if (!this.integrationsMap.get(key)) {
-                        if (!this.isConfigDisabled(key)) {
-                            const instance = new clazz(this);
-                            this.integrationsMap.set(key, instance);
-                        }
-                    }
-                }
-            }
-
-            this.instrumenter = new Instrumenter(this);
-            this.instrumenter.hookModuleCompile();
+        if (options.tracer) {
+            this.tracer = options.tracer;
         }
     }
 
@@ -227,10 +213,6 @@ class TraceConfig extends BasePluginConfig {
             }
         }
         return disabled;
-    }
-
-    unhookModuleCompile() {
-        this.instrumenter.unhookModuleCompile();
     }
 }
 

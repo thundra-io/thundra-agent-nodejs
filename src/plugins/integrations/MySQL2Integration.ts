@@ -1,5 +1,4 @@
 import Integration from './Integration';
-import ThundraTracer from '../../opentracing/Tracer';
 import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
@@ -50,12 +49,13 @@ class MySQL2Integration implements Integration {
     }
 
     wrap(lib: any, config: any) {
+        const integration = this;
         function wrapper(query: any) {
             let span: ThundraSpan;
 
             return function queryWrapper(sql: any, values: any, cb: any) {
                 try {
-                    const tracer = ThundraTracer.getInstance();
+                    const tracer = integration.config.tracer;
 
                     if (!tracer) {
                         return query.call(this, sql, values, cb);

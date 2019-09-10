@@ -8,7 +8,10 @@ describe('Redis Integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should mask Redis statments ', () => {
-        const integration = new RedisIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new RedisIntegration({
+            tracer,
+        });
         const sdk = require('redis');
 
         const traceConfig = new TraceConfig({
@@ -18,7 +21,6 @@ describe('Redis Integration', () => {
 
         integration.wrap(sdk, traceConfig);
 
-        const tracer = new ThundraTracer();
         tracer.getRecorder().spanList = [];
 
         return Redis.set(sdk).then((data) => {

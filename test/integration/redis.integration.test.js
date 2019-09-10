@@ -7,12 +7,14 @@ describe('Redis Integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should instrument Redis calls ', () => {
-        const integration = new RedisIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new RedisIntegration({
+            tracer,
+        });
         const sdk = require('redis');
 
         integration.wrap(sdk, {});
 
-        const tracer = new ThundraTracer();
         tracer.getRecorder().spanList = [];
 
         return Redis.set(sdk).then((data) => {

@@ -30,7 +30,9 @@ class Log {
             'after-invocation': this.afterInvocation,
         };
         this.options = options;
-        this.tracer = ThundraTracer.getInstance();
+        if (options) {
+            this.tracer = options.tracer;
+        }
 
         Log.instance = this;
         this.config = options;

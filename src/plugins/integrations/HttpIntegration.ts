@@ -1,5 +1,4 @@
 import Integration from './Integration';
-import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import {
     HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, envVariableKeys,
@@ -66,7 +65,7 @@ class HttpIntegration implements Integration {
         function wrapper(request: any) {
             return function requestWrapper(options: any, callback: any) {
                 try {
-                    const tracer = ThundraTracer.getInstance();
+                    const tracer = plugin.config.tracer;
 
                     if (!tracer) {
                         return request.apply(this, [options, callback]);

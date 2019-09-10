@@ -11,10 +11,12 @@ describe('MySQL2 Integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should instrument MySQL calls with mysql2 client', () => {
-        const integration = new MySQL2Integration({});
+        const tracer = new ThundraTracer();
+        const integration = new MySQL2Integration({
+            tracer,
+        });
         const sdk = require('mysql2');
 
-        const tracer = new ThundraTracer();
 
         return mysql.selectMySql2(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
@@ -37,13 +39,13 @@ describe('MySQL2 Integration', () => {
     });
 
     test('should mask MySQL statements with mysql2 client', () => {
+        const tracer = new ThundraTracer();
         const integration = new MySQL2Integration({
             disableInstrumentation: true,
-            maskRdbStatement: true
+            maskRdbStatement: true,
+            tracer,
         });
         const sdk = require('mysql2');
-
-        const tracer = new ThundraTracer();
 
         return mysql.selectMySql2(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
@@ -69,10 +71,11 @@ describe('MySQL2 Integration', () => {
 
 describe('MySQL Integration', () => {
     test('should instrument MySQL calls with mysql client', () => {
-        const integration = new MySQLIntegration({});
-        const sdk = require('mysql');
-
         const tracer = new ThundraTracer();
+        const integration = new MySQLIntegration({
+            tracer,
+        });
+        const sdk = require('mysql');
 
         return mysql.selectMySql(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
@@ -96,12 +99,13 @@ describe('MySQL Integration', () => {
     });
 
     test('should mask MySQL statements with mysql client', () => {
+        const tracer = new ThundraTracer();
         const integration = new MySQLIntegration({
             disableInstrumentation: true,
-            maskRdbStatement: true
+            maskRdbStatement: true,
+            tracer,
         });
         const sdk = require('mysql');
-        const tracer = new ThundraTracer();
 
         return mysql.selectMySql(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];

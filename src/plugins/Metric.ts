@@ -36,7 +36,9 @@ class Metric {
         this.config = config;
         this.reports = [];
         this.clockTick = parseInt(execSync('getconf CLK_TCK').toString(), 0);
-        this.tracer = ThundraTracer.getInstance();
+        if (config) {
+            this.tracer = config.tracer;
+        }
     }
 
     report(data: any): void {

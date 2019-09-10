@@ -25,10 +25,14 @@ class Instrumenter {
     traceConfig: TraceConfig;
     origCompile: any;
     stack: Stack<NodeWrapper>;
+    tracer: ThundraTracer;
 
     constructor(traceConfig: TraceConfig) {
         this.traceConfig = traceConfig;
         this.stack = new Stack<NodeWrapper>();
+        if (traceConfig) {
+            this.tracer = traceConfig.tracer;
+        }
     }
 
     shouldTraceFile(relPath: string): boolean {
@@ -220,9 +224,10 @@ class Instrumenter {
     }
 
     setGlobalFunction() {
+        const tracer = this.tracer;
         global.__thundraTraceEntry__ = function (args: any) {
             try {
-                const span = ThundraTracer.getInstance().startSpan(args.path + '.' + args.name) as ThundraSpan;
+                const span = tracer.startSpan(args.path + '.' + args.name) as ThundraSpan;
                 span.className = 'Method';
 
                 const spanArguments: Argument[] = [];
@@ -241,14 +246,14 @@ class Instrumenter {
                     span,
                 };
             } catch (ex) {
-                ThundraTracer.getInstance().finishSpan();
+                tracer.finishSpan();
             }
         };
 
         global.__thundraTraceExit__ = function (args: any) {
             try {
                 const entryData = args.entryData;
-                const span = (entryData && entryData.span) ? entryData.span : ThundraTracer.getInstance().getActiveSpan();
+                const span = (entryData && entryData.span) ? entryData.span : tracer.getActiveSpan();
                 if (!args.exception) {
                     if (args.returnValue) {
                         span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, args.returnValue));
@@ -267,7 +272,7 @@ class Instrumenter {
                 }
                 span.finish();
             } catch (ex) {
-                ThundraTracer.getInstance().finishSpan();
+                tracer.finishSpan();
             }
         };
     }

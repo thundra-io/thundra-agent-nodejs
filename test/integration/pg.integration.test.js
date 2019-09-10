@@ -10,11 +10,12 @@ describe('PostgreSQL Integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should instrument PostgreSQL calls ', () => {
-        const integration = new PostgreIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new PostgreIntegration({
+            tracer,
+        });
         const sdk = require('pg');
         integration.wrap(sdk, {});
-
-        const tracer = new ThundraTracer();
 
         return PG.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
@@ -37,7 +38,10 @@ describe('PostgreSQL Integration', () => {
     });
 
     test('should mask PostgreSQL statements', () => {
-        const integration = new PostgreIntegration({});
+        const tracer = new ThundraTracer();
+        const integration = new PostgreIntegration({
+            tracer,
+        });
         const sdk = require('pg');
 
         const traceConfig = new TraceConfig({
@@ -46,8 +50,6 @@ describe('PostgreSQL Integration', () => {
         });
 
         integration.wrap(sdk, traceConfig);
-
-        const tracer = new ThundraTracer();
     
         return PG.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
