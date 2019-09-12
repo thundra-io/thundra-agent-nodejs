@@ -400,6 +400,32 @@ class Utils {
             return '';
         }
     }
+
+    static getXRayTraceInfo() {
+        let traceID: string = '';
+        let segmentID: string = '';
+        const xrayTraceHeader: string = Utils.getConfiguration(envVariableKeys._X_AMZN_TRACE_ID);
+        if (xrayTraceHeader) {
+            for (const traceHeaderPart of xrayTraceHeader.split(';')) {
+                const traceInfo = traceHeaderPart.split('=');
+                if (traceInfo.length !== 2) {
+                    continue;
+                }
+                const [traceInfoKey, traceInfoVal] = traceInfo;
+
+                if (traceInfoKey === 'Root') {
+                    traceID = traceInfoVal;
+                } else if (traceInfoKey === 'Parent') {
+                    segmentID = traceInfoVal;
+                }
+            }
+        }
+
+        return {
+            traceID,
+            segmentID,
+        };
+    }
 }
 
 export default Utils;

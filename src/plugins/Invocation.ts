@@ -67,6 +67,15 @@ class Invocation {
         this.invocationData.spanId = this.pluginContext.spanId;
         this.invocationData.traceId = this.pluginContext.traceId;
 
+        const xrayTraceInfo = Utils.getXRayTraceInfo();
+
+        if (xrayTraceInfo.traceID) {
+            this.invocationData.tags['aws.xray.trace.id'] = xrayTraceInfo.traceID;
+        }
+        if (xrayTraceInfo.segmentID) {
+            this.invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
+        }
+
         this.invocationData.tags['aws.lambda.memory_limit'] = this.pluginContext.maxMemory;
         this.invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
         this.invocationData.tags['aws.account_no'] = Utils.getAWSAccountNo(originalContext.invokedFunctionArn);

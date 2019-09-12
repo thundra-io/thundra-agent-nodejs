@@ -30,6 +30,7 @@ export const envVariableKeys = {
     THUNDRA_DISABLE_METRIC: 'thundra_agent_lambda_metric_disable',
     THUNDRA_DISABLE_LOG: 'thundra_agent_lambda_log_disable',
     THUNDRA_DISABLE_XRAY: 'thundra_agent_lambda_xray_disable',
+    _X_AMZN_TRACE_ID: '_X_AMZN_TRACE_ID',
 
     THUNDRA_LAMBDA_TRACE_REQUEST_SKIP: 'thundra_agent_lambda_trace_request_skip',
     THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP: 'thundra_agent_lambda_trace_response_skip',
