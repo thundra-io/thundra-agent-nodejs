@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.6.0 - September 12, 2019
+#### Added
+- Added AWS X-Ray trace id and segment id into invocation tags
+
 ## 2.5.10 - September 4, 2019
 #### Fixed
 - Chained execution hooks and reporting through Promises
