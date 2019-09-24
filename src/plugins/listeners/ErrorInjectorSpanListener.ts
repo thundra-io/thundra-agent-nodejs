@@ -29,11 +29,10 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
     onSpanStarted(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callback && !this.injectOnFinish) {
             if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
-                this._injectErrorWithCallback(span, me, callback);
-                return true;
+                return this._injectErrorWithCallback(span, me, callback);
             }
 
-            return false;
+            return true;
         }
 
         if (!callback && !this.injectOnFinish && this.failOnError()) {
@@ -45,11 +44,10 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
     onSpanFinished(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callback && this.injectOnFinish) {
             if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
-                this._injectErrorWithCallback(span, me, callback);
-                return true;
+                return this._injectErrorWithCallback(span, me, callback);
             }
 
-            return false;
+            return true;
         }
 
         if (!callback && this.injectOnFinish && this.failOnError()) {
@@ -62,17 +60,19 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
         return true;
     }
 
-    private _injectErrorWithCallback(span: ThundraSpan,  me: any, callback: () => any): void {
+    private _injectErrorWithCallback(span: ThundraSpan,  me: any, callback: () => any): boolean {
+        let callbackCalled = false;
         if (this.counter % this.injectCountFreq === 0) {
             const error = new ThundraChaosError(this.errorMessage);
             error.name = this.errorType;
             span.setErrorTag(error);
             if (typeof(callback) === 'function') {
                 callback.apply(me, [error]);
+                callbackCalled = true;
             }
         }
-
         this.counter++;
+        return callbackCalled;
     }
 
     private _injectError(span: ThundraSpan,  me: any): void {

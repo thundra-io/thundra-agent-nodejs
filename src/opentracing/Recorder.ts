@@ -34,15 +34,13 @@ class ThundraRecorder {
             for (const listener of this.listeners) {
                 const isCallbackCalled = listener.onSpanStarted(span, options.me,
                     options.callback, options.args, !shouldInvokeCallback);
-                if (shouldInvokeCallback) {
-                    shouldInvokeCallback = !isCallbackCalled;
+                if (!isCallbackCalled) {
+                    if (typeof(options.callback) === 'function') {
+                        options.callback.apply(options.me, options.args);
+                    }
                 }
             }
-            if (shouldInvokeCallback) {
-                if (typeof(options.callback) === 'function') {
-                    options.callback.apply(options.me, options.args);
-                }
-            }
+
         } else if (spanEvent === SpanEvent.SPAN_FINISH) {
             ThundraLogger.getInstance().debug(`Span with name ${span.operationName} finished.`);
             if (!(options && options.disableActiveSpanHandling === true)) {
