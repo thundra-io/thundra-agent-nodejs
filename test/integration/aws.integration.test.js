@@ -1,5 +1,5 @@
 import AWS from './utils/aws.integration.utils';
-import AWSIntegration from '../../dist/plugins/integrations/AWSIntegration';
+import {AWSIntegration} from '../../dist/plugins/integrations/AWSIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
