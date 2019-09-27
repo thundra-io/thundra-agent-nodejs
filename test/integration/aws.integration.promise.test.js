@@ -6,7 +6,7 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 describe('AWS Integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
-    test('should close span when worked with promise', () => { 
+    test('should close span when worked with promise', () => {
         const tracer = new ThundraTracer();
         const integration = new AWSIntegration({
             tracer,
@@ -26,7 +26,7 @@ describe('AWS Integration', () => {
             cb(null, {result: 'success'});
         });
         integration.wrappedFuncs.send = mockSend;
-        
+
 
         return AWS.s3_with_promise(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
