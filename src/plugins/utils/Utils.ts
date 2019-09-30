@@ -43,8 +43,8 @@ class Utils {
         };
     }
 
-    static getConfiguration(key: string): string {
-        return process.env[key];
+    static getConfiguration(key: string, defaultValue?: any): any {
+        return process.env[key] ? process.env[key] : defaultValue;
     }
 
     static getCpuUsage() {
