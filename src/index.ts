@@ -55,12 +55,12 @@ module.exports = (options: any) => {
         InvocationTraceSupport.tracer = tracer;
     }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC) === 'true') && config.metricConfig.enabled) {
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC, 'true') === 'true') && config.metricConfig.enabled) {
         const metricPlugin = MetricPlugin(config.metricConfig);
         config.plugins.push(metricPlugin);
     }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG) === 'true') && config.logConfig.enabled) {
+    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG, 'true') === 'true') && config.logConfig.enabled) {
         if (!Log.getInstance()) {
             const logPlugin = new Log(config.logConfig);
             Logger.getLogManager().addListener(logPlugin);
