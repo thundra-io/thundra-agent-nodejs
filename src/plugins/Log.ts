@@ -14,6 +14,7 @@ class Log {
 
     options: LogConfig;
     reporter: any;
+    enabled: boolean;
     pluginContext: PluginContext;
     apiKey: any;
     logData: LogData;
@@ -33,7 +34,7 @@ class Log {
         if (options) {
             this.tracer = options.tracer;
         }
-
+        this.enabled = false;
         Log.instance = this;
         this.config = options;
     }
@@ -96,6 +97,9 @@ class Log {
     }
 
     reportLog(logInfo: any): void {
+        if (!this.enabled) {
+            return;
+        }
         const logData = new LogData();
         const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
         const spanId = activeSpan ? activeSpan.spanContext.spanId : '';
@@ -141,6 +145,14 @@ class Log {
                 Object.defineProperty(console, method, descriptor);
             }
         });
+    }
+
+    enable(): void {
+        this.enabled = true;
+    }
+
+    disable(): void {
+        this.enabled = false;
     }
 
     destroy(): void {

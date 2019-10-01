@@ -65,8 +65,9 @@ module.exports = (options: any) => {
             const logPlugin = new Log(config.logConfig);
             Logger.getLogManager().addListener(logPlugin);
         }
-
-        config.plugins.push(Log.getInstance());
+        const logInstance = Log.getInstance();
+        logInstance.enable();
+        config.plugins.push(logInstance);
     }
 
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_XRAY) === 'true') && config.xrayConfig.enabled) {
