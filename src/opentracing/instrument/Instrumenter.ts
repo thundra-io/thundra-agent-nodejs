@@ -15,21 +15,53 @@ const falafel = require('falafel');
 const util = require('util');
 const path = require('path');
 
-const TRACE_ENTRY = 'var __thundraEntryData__ = __thundraTraceEntry__({name: %s, path: %s, args: %s, argNames:%s});';
-const TRACE_EXIT = '__thundraTraceExit__({entryData: __thundraEntryData__, exception: %s,returnValue: %s, exceptionValue:%s});';
+const TRACE_ENTRY = 'var __thundraEntryData__ = __thundraTraceEntry__({name: %s, path: %s, args: %s, argNames: %s});';
+const TRACE_LINE = 'if (typeof __thundraEntryData__ !== \'undefined\') \
+                        __thundraTraceLine__({entryData: __thundraEntryData__, \
+                        line: %d, source: %s, localVarNames: %s, localVarValues: %s});';
+const TRACE_EXIT = '__thundraTraceExit__({entryData: __thundraEntryData__, exception: %s, returnValue: %s, exceptionValue: %s});';
+
+const NODE_TYPES_FOR_LINE_TRACING = [
+    'ExpressionStatement',
+    'BreakStatement',
+    'ContinueStatement',
+    'VariableDeclaration',
+    'ReturnStatement',
+    'ThrowStatement',
+    'TryStatement',
+    'FunctionDeclaration',
+    'IfStatement',
+    'WhileStatement',
+    'DoWhileStatement',
+    'ForStatement',
+    'ForInStatement',
+    'SwitchStatement',
+    'WithStatement',
+];
+
+// To keep line numbers sync between the original and instrumented code,
+// it is better to keep injected code at the same line with the original code
+const TRACE_INJECTION_SEPARATOR = ' ';
+const DEBUG_INSTRUMENTATION = false;
 
 /*
     Most of the code is derived from njsTrace : https://github.com/ValYouW/njsTrace
 */
 class Instrumenter {
+
     traceConfig: TraceConfig;
     origCompile: any;
-    stack: Stack<NodeWrapper>;
+    /*
+    nodeStack: Stack<NodeWrapper>;
+     */
+    updates: Map<string, string> = new Map();
     tracer: ThundraTracer;
 
     constructor(traceConfig: TraceConfig) {
         this.traceConfig = traceConfig;
-        this.stack = new Stack<NodeWrapper>();
+        /*
+        this.nodeStack = new Stack<NodeWrapper>();
+         */
         if (traceConfig) {
             this.tracer = traceConfig.tracer;
         }
@@ -61,7 +93,6 @@ class Instrumenter {
                 } else {
                     wrapped = false;
                 }
-
                 try {
                     content = self.addTraceHooks(content, true, relPathWithDots, wrapped);
                     if (Module.wrapper.length === 2) {
@@ -76,76 +107,299 @@ class Instrumenter {
     }
 
     addTraceHooks(code: any, wrapFunctions: any, relPath: string, wrappedFile: any) {
-        const self = this;
+        try {
+            const codeLines = code.split('\n');
+            const self = this;
+            const tracedLines = new Set();
+            const localVars = new Map();
+            const output = falafel(code, {
+                ranges: true,
+                locations: true,
+                ecmaVersion: 8,
+            }, function processASTNode(node: any) {
+                const startLine = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
+                const name = self.getFunctionName(node);
 
-        const output = falafel(code, { ranges: true, locations: true, ecmaVersion: 8 }, function processASTNode(node: any) {
-            const startLine = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
-            const name = self.getFunctionName(node);
-
-            if (name && node.body.type === Syntax.BlockStatement) {
                 const instrumentOption = self.getThundraTraceableConfig(relPath + '.' + name, TracableConfigCheckLevel.FUNCTION);
-                if (instrumentOption === null) {
-                    self.stack.store = [];
-                    return;
-                }
 
-                while (self.stack.store.length !== 0) {
-                    const wrapper: NodeWrapper = self.stack.pop();
-                    wrapper.instrumentFunction.call(self, instrumentOption, wrapper.node);
-                }
+                if (name && node.body.type === Syntax.BlockStatement) {
+                    if (instrumentOption === null) {
+                        /*
+                        self.nodeStack.store = [];
+                         */
+                        self.updates.clear();
+                        return;
+                    }
 
-                const funcDec = node.source().slice(0, node.body.range[0] - node.range[0]);
-                let origFuncBody = node.body.source();
-                origFuncBody = origFuncBody.slice(1, origFuncBody.length - 1);
+                    /*
+                    while (self.nodeStack.store.length !== 0) {
+                        const wrapper: NodeWrapper = self.nodeStack.pop();
+                        wrapper.instrumentFunction.call(self, instrumentOption, wrapper.node);
+                    }
+                    */
 
-                if (wrappedFile && node.loc.start.line === 1) { return; }
+                    const funcDec = node.source().slice(0, node.body.range[0] - node.range[0]);
+                    let origFuncBody = node.body.source();
+                    origFuncBody = origFuncBody.slice(1, origFuncBody.length - 1);
 
-                let args = 'null';
-                let argNames = 'null';
-                if (instrumentOption.traceArgs) {
-                    args = '[' + node.params.map((p: any) => p.name).join(',') + ']';
-                    argNames = '[' + node.params.map((p: any) => '\'' + p.name + '\'').join(',') + ']';
-                }
+                    if (wrappedFile && node.loc.start.line === 1) {
+                        return;
+                    }
 
-                const traceEntry = util.format(TRACE_ENTRY, JSON.stringify(name), JSON.stringify(relPath), args, argNames);
-                const traceExit = util.format(TRACE_EXIT, 'false', 'null', 'null');
+                    let args = 'null';
+                    let argNames = 'null';
+                    if (instrumentOption.traceArgs) {
+                        args = '[' + node.params.map((p: any) => p.name).join(',') + ']';
+                        argNames = '[' + node.params.map((p: any) => '\'' + p.name + '\'').join(',') + ']';
+                    }
 
-                const newFuncBody = '\n' + traceEntry + '\n' + origFuncBody + '\n' + traceExit + '\n';
+                    const traceEntry = util.format(TRACE_ENTRY, JSON.stringify(name), JSON.stringify(relPath), args, argNames);
+                    const traceExit = util.format(TRACE_EXIT, 'false', 'null', 'null');
 
-                if (wrapFunctions) {
-                    const traceEX = util.format(TRACE_EXIT, 'true', 'null',
-                        instrumentOption.traceError ? '__thundraEX__' : 'null');
+                    const newFuncBody =
+                        TRACE_INJECTION_SEPARATOR + traceEntry +
+                        TRACE_INJECTION_SEPARATOR + origFuncBody +
+                        TRACE_INJECTION_SEPARATOR + traceExit +
+                        TRACE_INJECTION_SEPARATOR;
 
-                    node.update(funcDec + '{\ntry {' + newFuncBody + '} catch(__thundraEX__) {\n' +
-                        traceEX + '\nthrow __thundraEX__;\n}\n}');
+                    if (wrapFunctions) {
+                        const traceEX = util.format(TRACE_EXIT, 'true', 'null',
+                            instrumentOption.traceError ? '__thundraEX__' : 'null');
+                        let funcCode =
+                            funcDec +
+                            '{' +
+                                TRACE_INJECTION_SEPARATOR +
+                                'try {' +
+                                    newFuncBody +
+                                '} catch(__thundraEX__) {' + TRACE_INJECTION_SEPARATOR +
+                                    traceEX + TRACE_INJECTION_SEPARATOR +
+                                    'throw __thundraEX__;' + TRACE_INJECTION_SEPARATOR +
+                                '}' +
+                                TRACE_INJECTION_SEPARATOR +
+                            '}';
 
-                } else {
-                    node.update(funcDec + '{' + newFuncBody + '}');
-                }
+                        for (const e of self.updates.entries()) {
+                            const pointer = e[0];
+                            const update = e[1];
+                            if (funcCode.includes(pointer)) {
+                                funcCode = funcCode.replace(pointer, update);
+                                self.updates.delete(pointer);
+                            }
+                        }
 
-            } else if (node.type === Syntax.ReturnStatement) {
-
-                const wrapper: NodeWrapper = new NodeWrapper(node, (traceableConfig: TraceableConfig, sourceNode: any) => {
-                    if (sourceNode.argument) {
+                        node.update(funcCode);
+                    } else {
+                        const funcCode =
+                            funcDec +
+                            '{' +
+                            newFuncBody +
+                            '}';
+                        node.update(funcCode);
+                    }
+                } else if (node.type === Syntax.ReturnStatement) {
+                    const traceLine =
+                        self.checkTraceLine(node, instrumentOption, tracedLines, localVars, wrappedFile, codeLines);
+                    /*
+                    if (node.argument) {
                         const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
-
                         const traceExit = util.format(TRACE_EXIT, 'false',
-                        traceableConfig.traceReturnValue ? tmpVar : 'null', 'null');
-
-                        sourceNode.update('{\nvar ' + tmpVar + ' = ' + sourceNode.argument.source() + ';\n' +
-                            traceExit + '\nreturn ' + tmpVar + ';\n}');
+                            instrumentOption.traceReturnValue ? tmpVar : 'null', 'null');
+                        node.update(
+                            (traceLine ? traceLine : '') +
+                            '{' +
+                                TRACE_INJECTION_SEPARATOR + 'var ' + tmpVar + ' = ' + node.argument.source() + ';' +
+                                TRACE_INJECTION_SEPARATOR + traceExit +
+                                TRACE_INJECTION_SEPARATOR + 'return ' + tmpVar + ';' + TRACE_INJECTION_SEPARATOR +
+                            '}');
                     } else {
                         const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
-                        sourceNode.update('{' + traceExit + sourceNode.source() + '}');
+                        node.update(
+                            (traceLine ? traceLine : '') +
+                            '{' +
+                                traceExit + node.source() +
+                            '}');
                     }
-                });
+                    */
+                    /*
+                    const wrapper: NodeWrapper = new NodeWrapper(node, (traceableConfig: TraceableConfig, sourceNode: any) => {
+                        if (sourceNode.argument) {
+                            const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
+                            const traceExit = util.format(TRACE_EXIT, 'false',
+                                instrumentOption.traceReturnValue ? tmpVar : 'null', 'null');
+                            node.update(
+                                //(traceLine ? traceLine : '') +
+                                '{' +
+                                TRACE_INJECTION_SEPARATOR + 'var ' + tmpVar + ' = ' + node.argument.source() + ';' +
+                                TRACE_INJECTION_SEPARATOR + traceExit +
+                                TRACE_INJECTION_SEPARATOR + 'return ' + tmpVar + ';' + TRACE_INJECTION_SEPARATOR +
+                                '}');
+                        } else {
+                            const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
+                            node.update(
+                                //(traceLine ? traceLine : '') +
+                                '{' +
+                                traceExit + node.source() +
+                                '}');
+                        }
+                    });
+                    self.nodeStack.push(wrapper);
+                    */
 
-                self.stack.push(wrapper);
-
+                    const id = Math.floor(Math.random() * 10000);
+                    const returnPointer = '/* __%thundraReturn@' + id + '%__ */';
+                    if (node.argument) {
+                        const tmpVar = '__thundraTmp' + id + '__';
+                        const traceExit = util.format(TRACE_EXIT, 'false',
+                            instrumentOption.traceReturnValue ? tmpVar : 'null', 'null');
+                        const traceReturn =
+                            (traceLine ? traceLine : '') +
+                            '{' +
+                                TRACE_INJECTION_SEPARATOR + 'var ' + tmpVar + ' = ' + node.argument.source() + ';' +
+                                TRACE_INJECTION_SEPARATOR + traceExit +
+                                TRACE_INJECTION_SEPARATOR + 'return ' + tmpVar + ';' +
+                                TRACE_INJECTION_SEPARATOR +
+                            '}';
+                        node.update(returnPointer);
+                        self.updates.set(returnPointer, traceReturn);
+                    } else {
+                        const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
+                        const traceReturn =
+                            (traceLine ? traceLine : '') +
+                            '{' +
+                                traceExit + ' ' + node.source() +
+                            '}';
+                        node.update(returnPointer);
+                        self.updates.set(returnPointer, traceReturn);
+                    }
+                } else {
+                    const traceLine =
+                        self.checkTraceLine(node, instrumentOption, tracedLines, localVars, wrappedFile, codeLines);
+                    if (traceLine) {
+                        const line = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
+                        const linePointer = '/* ___%thundraLine@' + line + '%___ */';
+                        node.update(linePointer + ' ' + node.source());
+                        self.updates.set(linePointer, traceLine);
+                    }
+                }
+            });
+            const instrumentedCode = output.toString();
+            if (DEBUG_INSTRUMENTATION) {
+                console.log('==================================================');
+                console.log('File: ' + relPath);
+                console.log('Original code: ' + code);
+                console.log('Instrumented code: ' + instrumentedCode);
+                console.log('==================================================');
             }
-        });
+            return instrumentedCode;
+        } catch (e) {
+            console.log(e);
+        }
+    }
 
-        return output.toString();
+    checkTraceLine(node: any, instrumentOption: any,
+                   tracedLines: Set<number>,
+                   localVars: Map<string, number>,
+                   wrappedFile: boolean,
+                   codeLines: string[]) {
+        if (node.type === Syntax.BlockStatement) {
+            if (instrumentOption && instrumentOption.traceLocalVariables) {
+                // Remove local variables which are out of scope anymore
+                for (const e of localVars.entries()) {
+                    const localVarName = e[0];
+                    const localVarDefPos = e[1];
+                    if (localVarDefPos >= node.start && localVarDefPos <= node.end) {
+                        localVars.delete(localVarName);
+                    }
+                }
+            }
+            return null;
+        } else {
+            let traceLine = null;
+            if (instrumentOption && instrumentOption.traceLineByLine && node.loc && node.loc.start) {
+                const line = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
+                if (NODE_TYPES_FOR_LINE_TRACING.indexOf(node.type) > -1 && node.parent.type === Syntax.BlockStatement) {
+                    if (!tracedLines.has(line)) {
+                        let lineSource = 'null';
+                        if (instrumentOption.traceLinesWithSource) {
+                            lineSource = codeLines[line].trim();
+
+                        }
+                        let localVarValues = 'null';
+                        let localVarNames = 'null';
+                        if (instrumentOption.traceLocalVariables) {
+                            localVarValues = '[';
+                            localVarNames = '[';
+                            let added = false;
+                            for (const e of localVars.entries()) {
+                                const localVarName = e[0];
+                                const localVarPos = e[1];
+                                if (!this.shouldTraceLocalVariable(localVarPos, node, wrappedFile)) {
+                                    continue;
+                                }
+                                if (added) {
+                                    localVarValues += ', ';
+                                    localVarNames += ', ';
+                                }
+                                // If somehow, variable is out of scope (maybe because of a bug in our parser)
+                                // add check to understand whether or not it is undefined in current scope
+                                localVarValues += 'typeof ' + localVarName + ' !== \'undefined\' ? '
+                                    + localVarName + ' : undefined';
+                                localVarNames += '\'' + localVarName + '\'';
+                                added = true;
+                            }
+                            localVarValues += ']';
+                            localVarNames += ']';
+                        }
+                        traceLine = util.format(TRACE_LINE, line, JSON.stringify(lineSource), localVarNames, localVarValues);
+                        tracedLines.add(line);
+                    }
+                }
+                if (instrumentOption.traceLocalVariables
+                    && node.type === Syntax.VariableDeclaration
+                    && node.declarations) {
+                    for (const d of node.declarations) {
+                        if (d.init &&
+                            (d.init.type === Syntax.FunctionExpression
+                                || d.init.type === Syntax.ArrowFunctionExpression)) {
+                            continue;
+                        }
+                        if (d.id && d.id.name) {
+                            localVars.set(d.id.name, node.start);
+                        }
+                    }
+                }
+            }
+            return traceLine;
+        }
+    }
+
+    shouldTraceLocalVariable(localVarPos: number, node: any, wrappedFile: boolean) {
+        if (localVarPos < node.start) {
+            let n = this.getParentBlock(node);
+            let n2 = this.getParentBlock(n);
+            while (n) {
+                if (wrappedFile && !n2) {
+                    break;
+                }
+                if (localVarPos >= n.start && localVarPos <= n.end) {
+                    return true;
+                }
+                n = this.getParentBlock(n);
+                n2 = this.getParentBlock(n);
+            }
+        }
+        return false;
+    }
+
+    getParentBlock(node: any) {
+        let n = node.parent;
+        while (n) {
+            if (n && n.type === Syntax.BlockStatement) {
+                return n;
+            }
+            n = n.parent;
+        }
+        return null;
     }
 
     isFunctionNode(node: any) {
@@ -250,9 +504,64 @@ class Instrumenter {
             }
         };
 
+        global.__thundraTraceLine__ = function (args: any) {
+            const entryData = args.entryData;
+            if (entryData.latestLineSpan) {
+                entryData.latestLineSpan.close();
+            }
+
+            const line = args.line;
+            const source = args.source;
+            const localVars = new Array();
+            const localVarNames = args.localVarNames;
+            const localVarValues = args.localVarValues;
+
+            if (localVarNames && localVarValues && localVarNames.length === localVarValues.length) {
+                for (let i = 0; i < localVarNames.length; i++) {
+                    const localVarName = localVarNames[i];
+                    const localVarValue = localVarValues[i];
+                    let processedLocalVarValue = localVarValue ? localVarValue.toString() : null;
+                    try {
+                        processedLocalVarValue = JSON.stringify(localVarValue);
+                        try {
+                            processedLocalVarValue = JSON.parse(processedLocalVarValue);
+                        } catch (e) {
+                            // Ignore
+                        }
+                    } catch (e) {
+                        // Ignore
+                    }
+                    const localVar: any = {
+                        name: localVarName,
+                        value: processedLocalVarValue,
+                        type: typeof localVarValue,
+                    };
+                    localVars.push(localVar);
+                }
+            }
+            const methodLineTag = {
+                line,
+                source,
+                localVars,
+            };
+
+            const span = tracer.startSpan('@' + args.line) as ThundraSpan;
+            span.className = 'Line';
+            span.setTag('method.lines', [methodLineTag]);
+
+            entryData.latestLineSpan = span;
+        };
+
         global.__thundraTraceExit__ = function (args: any) {
             try {
                 const entryData = args.entryData;
+                if (entryData.latestLineSpan) {
+                    entryData.latestLineSpan.close();
+                    const methodLineTag = entryData.latestLineSpan.getTag('method.lines');
+                    if (methodLineTag) {
+                        methodLineTag.duration = entryData.latestLineSpan.getDuration();
+                    }
+                }
                 const span = (entryData && entryData.span) ? entryData.span : tracer.getActiveSpan();
                 if (!args.exception) {
                     if (args.returnValue) {
