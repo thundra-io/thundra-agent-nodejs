@@ -17,9 +17,22 @@ const path = require('path');
 
 const TRACE_ENTRY = 'var __thundraEntryData__ = __thundraTraceEntry__({name: %s, path: %s, args: %s, argNames: %s});';
 const TRACE_LINE = 'if (typeof __thundraEntryData__ !== \'undefined\') \
-                        __thundraTraceLine__({entryData: __thundraEntryData__, \
-                        line: %d, source: %s, localVarNames: %s, localVarValues: %s});';
+                        __thundraTraceLine__({ \
+                            entryData: __thundraEntryData__, \
+                            line: %d, \
+                            source: %s, \
+                            localVarNames: %s, \
+                            localVarValues: %s, \
+                            argNames: %s, \
+                            argValues: %s \
+                        });';
 const TRACE_EXIT = '__thundraTraceExit__({entryData: __thundraEntryData__, exception: %s, returnValue: %s, exceptionValue: %s});';
+
+const ARG_NAMES_POINTER = '/* ___%thundraArgNames%___ */';
+const ARG_VALUES_POINTER = '/* ___%thundraArgValues%___ */';
+
+const ARG_NAMES_PATTERN = new RegExp(ARG_NAMES_POINTER.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
+const ARG_VALUES_PATTERN = new RegExp(ARG_VALUES_POINTER.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
 
 const NODE_TYPES_FOR_LINE_TRACING = [
     'ExpressionStatement',
@@ -146,11 +159,14 @@ class Instrumenter {
                         return;
                     }
 
+                    const aNames = node.params.map((p: any) => '\'' + p.name + '\'').join(',');
+                    const aValues = node.params.map((p: any) => p.name).join(',');
+
                     let args = 'null';
                     let argNames = 'null';
                     if (instrumentOption.traceArgs) {
-                        args = '[' + node.params.map((p: any) => p.name).join(',') + ']';
-                        argNames = '[' + node.params.map((p: any) => '\'' + p.name + '\'').join(',') + ']';
+                        args = '[' + aValues + ']';
+                        argNames = '[' + aNames + ']';
                     }
 
                     const traceEntry = util.format(TRACE_ENTRY, JSON.stringify(name), JSON.stringify(relPath), args, argNames);
@@ -187,12 +203,15 @@ class Instrumenter {
                             }
                         }
 
+                        funcCode = funcCode.replace(ARG_NAMES_PATTERN, aNames);
+                        funcCode = funcCode.replace(ARG_VALUES_PATTERN, aValues);
+
                         node.update(funcCode);
                     } else {
                         const funcCode =
                             funcDec +
                             '{' +
-                            newFuncBody +
+                                newFuncBody +
                             '}';
                         node.update(funcCode);
                     }
@@ -322,7 +341,6 @@ class Instrumenter {
                         let lineSource = 'null';
                         if (instrumentOption.traceLinesWithSource) {
                             lineSource = codeLines[line].trim();
-
                         }
                         let localVarValues = 'null';
                         let localVarNames = 'null';
@@ -342,15 +360,26 @@ class Instrumenter {
                                 }
                                 // If somehow, variable is out of scope (maybe because of a bug in our parser)
                                 // add check to understand whether or not it is undefined in current scope
-                                localVarValues += 'typeof ' + localVarName + ' !== \'undefined\' ? '
-                                    + localVarName + ' : undefined';
+                                localVarValues +=
+                                    'typeof ' + localVarName + ' !== \'undefined\'' +
+                                        ' ? ' + localVarName +
+                                        ' : undefined';
                                 localVarNames += '\'' + localVarName + '\'';
                                 added = true;
                             }
                             localVarValues += ']';
                             localVarNames += ']';
                         }
-                        traceLine = util.format(TRACE_LINE, line, JSON.stringify(lineSource), localVarNames, localVarValues);
+                        traceLine =
+                            util.format(
+                                TRACE_LINE,
+                                line,
+                                JSON.stringify(lineSource),
+                                localVarNames,
+                                localVarValues,
+                                '[' + ARG_NAMES_POINTER + ']',
+                                '[' + ARG_VALUES_POINTER + ']',
+                            );
                         tracedLines.add(line);
                     }
                 }
@@ -513,18 +542,35 @@ class Instrumenter {
             const line = args.line;
             const source = args.source;
             const localVars = new Array();
+            const varNames = new Array();
+            const varValues = new Array();
             const localVarNames = args.localVarNames;
             const localVarValues = args.localVarValues;
+            const argNames = args.argNames;
+            const argValues = args.argValues;
 
-            if (localVarNames && localVarValues && localVarNames.length === localVarValues.length) {
-                for (let i = 0; i < localVarNames.length; i++) {
-                    const localVarName = localVarNames[i];
-                    const localVarValue = localVarValues[i];
-                    let processedLocalVarValue = localVarValue ? localVarValue.toString() : null;
+            if (argNames) {
+                varNames.push(...argNames);
+            }
+            if (argValues) {
+                varValues.push(...argValues);
+            }
+            if (localVarNames) {
+                varNames.push(...localVarNames);
+            }
+            if (localVarValues) {
+                varValues.push(...localVarValues);
+            }
+
+            if (varNames.length === varValues.length) {
+                for (let i = 0; i < varNames.length; i++) {
+                    const varName = varNames[i];
+                    const varValue = varValues[i];
+                    let processedVarValue = varValue ? varValue.toString() : null;
                     try {
-                        processedLocalVarValue = JSON.stringify(localVarValue);
+                        processedVarValue = JSON.stringify(varValue);
                         try {
-                            processedLocalVarValue = JSON.parse(processedLocalVarValue);
+                            processedVarValue = JSON.parse(processedVarValue);
                         } catch (e) {
                             // Ignore
                         }
@@ -532,9 +578,9 @@ class Instrumenter {
                         // Ignore
                     }
                     const localVar: any = {
-                        name: localVarName,
-                        value: processedLocalVarValue,
-                        type: typeof localVarValue,
+                        name: varName,
+                        value: processedVarValue,
+                        type: typeof varValue,
                     };
                     localVars.push(localVar);
                 }
