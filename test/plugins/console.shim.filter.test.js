@@ -3,6 +3,8 @@ import { createMockPluginContext, createMockBeforeInvocationData } from '../mock
 
 describe('Console integration should filter logs with levels', () => {
     const logPlugin = new LogPlugin();
+    logPlugin.enable();
+    
     const pluginContext = createMockPluginContext();
     const beforeInvocationData = createMockBeforeInvocationData();
 

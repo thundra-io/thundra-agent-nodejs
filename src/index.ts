@@ -85,12 +85,12 @@ module.exports = (options: any) => {
     ApplicationSupport.parseApplicationTags();
 
     const logStreamName = Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
-    const region =  Utils.getConfiguration(envVariableKeys.AWS_REGION);
+    const region = Utils.getConfiguration(envVariableKeys.AWS_REGION);
     const functionVersion = Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
-    const applicationId = logStreamName ? logStreamName.split(']').pop() : Utils.generateId();
+    const applicationInstanceId = logStreamName ? logStreamName.split(']').pop() : Utils.generateId();
 
     const pluginContext: PluginContext = new PluginContext({
-        applicationId,
+        applicationInstanceId,
         applicationRegion: region ? region : '',
         applicationVersion: functionVersion ? functionVersion : '',
         requestCount: 0,
@@ -98,10 +98,6 @@ module.exports = (options: any) => {
         timeoutMargin: config.timeoutMargin,
         transactionId: null,
         config,
-    });
-
-    config.plugins.forEach((plugin: any) => {
-        plugin.setPluginContext(pluginContext);
     });
 
     const increaseRequestCount = () => pluginContext.requestCount += 1;
@@ -113,6 +109,14 @@ module.exports = (options: any) => {
         }
 
         const thundraWrappedHandler: any = (originalEvent: any, originalContext: any, originalCallback: any) => {
+            // Creating applicationId here, since we need the information in context
+            const applicationId = Utils.getApplicationId(originalContext);
+            pluginContext.applicationId = applicationId;
+
+            config.plugins.forEach((plugin: any) => {
+                plugin.setPluginContext(pluginContext);
+            });
+
             const originalThis = this;
             const thundraWrapper = new ThundraWrapper(
                 originalThis,

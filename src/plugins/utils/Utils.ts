@@ -394,8 +394,28 @@ class Utils {
     }
 
     static getAWSAccountNo(arn: string) {
+        return Utils.getARNPart(arn, 4);
+    }
+
+    static getAWSRegion(arn: string) {
+        return Utils.getARNPart(arn, 3);
+    }
+
+    static getAWSFunctionName(arn: string) {
+        return Utils.getARNPart(arn, 6);
+    }
+
+    static getApplicationId(arn: string) {
+        const region = Utils.getAWSRegion(arn);
+        const accountNo = Utils.getAWSAccountNo(arn);
+        const functionName = Utils.getAWSFunctionName(arn);
+
+        return `aws:lambda:${region}:${accountNo}:${functionName}`;
+    }
+
+    static getARNPart(arn: string, index: number) {
         try {
-            return arn.split(':')[4];
+            return arn.split(':')[index];
         } catch (error) {
             return '';
         }
