@@ -2,6 +2,7 @@ import ThundraConfig from './config/ThundraConfig';
 
 class PluginContext {
     applicationId: string;
+    applicationInstanceId: string;
     applicationRegion: string;
     applicationVersion: string;
     requestCount: number;
@@ -20,6 +21,7 @@ class PluginContext {
     constructor(opt: any) {
         opt = opt ? opt : {};
         this.applicationId = opt.applicationId;
+        this.applicationInstanceId = opt.applicationInstanceId;
         this.applicationRegion = opt.applicationRegion;
         this.applicationVersion = opt.applicationVersion;
         this.requestCount = opt.requestCount;
