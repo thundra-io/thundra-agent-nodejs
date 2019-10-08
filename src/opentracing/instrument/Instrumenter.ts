@@ -534,79 +534,79 @@ class Instrumenter {
         };
 
         global.__thundraTraceLine__ = function (args: any) {
-            const entryData = args.entryData;
-            if (entryData.latestLineSpan) {
-                entryData.latestLineSpan.close();
-            }
+            try {
+                const entryData = args.entryData;
+                if (entryData.latestLineSpan) {
+                    entryData.latestLineSpan.finish();
+                }
 
-            const line = args.line;
-            const source = args.source;
-            const localVars = new Array();
-            const varNames = new Array();
-            const varValues = new Array();
-            const localVarNames = args.localVarNames;
-            const localVarValues = args.localVarValues;
-            const argNames = args.argNames;
-            const argValues = args.argValues;
+                const line = args.line;
+                const source = args.source;
+                const localVars = new Array();
+                const varNames = new Array();
+                const varValues = new Array();
+                const localVarNames = args.localVarNames;
+                const localVarValues = args.localVarValues;
+                const argNames = args.argNames;
+                const argValues = args.argValues;
 
-            if (argNames) {
-                varNames.push(...argNames);
-            }
-            if (argValues) {
-                varValues.push(...argValues);
-            }
-            if (localVarNames) {
-                varNames.push(...localVarNames);
-            }
-            if (localVarValues) {
-                varValues.push(...localVarValues);
-            }
+                if (argNames) {
+                    varNames.push(...argNames);
+                }
+                if (argValues) {
+                    varValues.push(...argValues);
+                }
+                if (localVarNames) {
+                    varNames.push(...localVarNames);
+                }
+                if (localVarValues) {
+                    varValues.push(...localVarValues);
+                }
 
-            if (varNames.length === varValues.length) {
-                for (let i = 0; i < varNames.length; i++) {
-                    const varName = varNames[i];
-                    const varValue = varValues[i];
-                    let processedVarValue = varValue ? varValue.toString() : null;
-                    try {
-                        processedVarValue = JSON.stringify(varValue);
+                if (varNames.length === varValues.length) {
+                    for (let i = 0; i < varNames.length; i++) {
+                        const varName = varNames[i];
+                        const varValue = varValues[i];
+                        let processedVarValue = varValue ? varValue.toString() : null;
                         try {
-                            processedVarValue = JSON.parse(processedVarValue);
+                            processedVarValue = JSON.stringify(varValue);
+                            try {
+                                processedVarValue = JSON.parse(processedVarValue);
+                            } catch (e) {
+                                // Ignore
+                            }
                         } catch (e) {
                             // Ignore
                         }
-                    } catch (e) {
-                        // Ignore
+                        const localVar: any = {
+                            name: varName,
+                            value: processedVarValue,
+                            type: typeof varValue,
+                        };
+                        localVars.push(localVar);
                     }
-                    const localVar: any = {
-                        name: varName,
-                        value: processedVarValue,
-                        type: typeof varValue,
-                    };
-                    localVars.push(localVar);
                 }
+                const methodLineTag = {
+                    line,
+                    source,
+                    localVars,
+                };
+
+                const span = tracer.startSpan('@' + args.line) as ThundraSpan;
+                span.className = 'Line';
+                span.setTag('method.lines', [methodLineTag]);
+
+                entryData.latestLineSpan = span;
+            } catch (ex) {
+                tracer.finishSpan();
             }
-            const methodLineTag = {
-                line,
-                source,
-                localVars,
-            };
-
-            const span = tracer.startSpan('@' + args.line) as ThundraSpan;
-            span.className = 'Line';
-            span.setTag('method.lines', [methodLineTag]);
-
-            entryData.latestLineSpan = span;
         };
 
         global.__thundraTraceExit__ = function (args: any) {
             try {
                 const entryData = args.entryData;
                 if (entryData.latestLineSpan) {
-                    entryData.latestLineSpan.close();
-                    const methodLineTag = entryData.latestLineSpan.getTag('method.lines');
-                    if (methodLineTag) {
-                        methodLineTag.duration = entryData.latestLineSpan.getDuration();
-                    }
+                    entryData.latestLineSpan.finish();
                 }
                 const span = (entryData && entryData.span) ? entryData.span : tracer.getActiveSpan();
                 if (!args.exception) {
