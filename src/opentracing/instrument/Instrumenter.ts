@@ -606,6 +606,9 @@ class Instrumenter {
             try {
                 const entryData = args.entryData;
                 if (entryData.latestLineSpan) {
+                    if (args.exception) {
+                        entryData.latestLineSpan.setErrorTag(args.exceptionValue);
+                    }
                     entryData.latestLineSpan.finish();
                 }
                 const span = (entryData && entryData.span) ? entryData.span : tracer.getActiveSpan();
@@ -614,16 +617,7 @@ class Instrumenter {
                         span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, args.returnValue));
                     }
                 } else {
-                    const err = Utils.parseError(args.exceptionValue);
-                    span.setTag('error', true);
-                    span.setTag('error.kind', err.errorType);
-                    span.setTag('error.message', err.errorMessage);
-                    if (err.code) {
-                        span.setTag('error.code', err.code);
-                    }
-                    if (err.stack) {
-                        span.setTag('error.stack', err.stack);
-                    }
+                    span.setErrorTag(args.exceptionValue);
                 }
                 span.finish();
             } catch (ex) {
