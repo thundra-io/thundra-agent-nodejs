@@ -3,6 +3,8 @@ import { createMockPluginContext, createMockBeforeInvocationData } from '../mock
 
 describe('Log plugin shim console', () => {
     const logPlugin = new LogPlugin();
+    logPlugin.enable();
+    
     const pluginContext = createMockPluginContext();
     const beforeInvocationData = createMockBeforeInvocationData();
     logPlugin.setPluginContext(pluginContext);

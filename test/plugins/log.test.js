@@ -5,6 +5,8 @@ describe('LogPlugin', () => {
     describe('constructor', () => {
         const options = { op2: 1, opt2: 2 };
         const logPlugin = new LogPlugin(options);
+        logPlugin.enable();
+
         it('should set variables', () => {
             expect(logPlugin.hooks).toEqual({ 'before-invocation': logPlugin.beforeInvocation, 'after-invocation': logPlugin.afterInvocation });
             expect(logPlugin.options).toEqual(options);
@@ -14,6 +16,7 @@ describe('LogPlugin', () => {
     describe('report', () => {
         describe('when reporter instance is set', () => {
             const logPlugin = new LogPlugin();
+            logPlugin.enable();
             logPlugin.reporter = createMockReporter();
             logPlugin.report('logReport');
             it('should report', () => {
@@ -28,6 +31,7 @@ describe('LogPlugin', () => {
 
     describe('setPluginContext', () => {
         const logPlugin = new LogPlugin();
+        logPlugin.enable();
         const pluginContext = createMockPluginContext();
         logPlugin.setPluginContext(pluginContext);
         it('should set pluginContext and apiKey', () => {
@@ -38,6 +42,7 @@ describe('LogPlugin', () => {
 
     describe('beforeInvocation', () => {
         const logPlugin = new LogPlugin();
+        logPlugin.enable();
         const beforeInvocationData = createMockBeforeInvocationData();
         const pluginContext = createMockPluginContext();
         logPlugin.setPluginContext(pluginContext);
@@ -49,6 +54,7 @@ describe('LogPlugin', () => {
 
     describe('reportLog', () => {
         const logPlugin = new LogPlugin();
+        logPlugin.enable();
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
         const logData = {

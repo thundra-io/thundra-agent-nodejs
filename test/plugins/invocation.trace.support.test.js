@@ -147,6 +147,7 @@ describe('Invocation Trace Support', () => {
 
     test('Should set resourceAvgDuration while merging resources', () => {
         const tracer = new ThundraTracer();
+        InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
 
         const spanOptions = {
