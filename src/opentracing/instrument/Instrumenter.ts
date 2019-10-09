@@ -4,8 +4,6 @@ import { envVariableKeys, TRACE_DEF_SEPERATOR, Syntax, ARGS_TAG_NAME, RETURN_VAL
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/utils/Utils';
-import Stack from './Stack';
-import NodeWrapper from './NodeWrapper';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraTracer from '../Tracer';
 import ThundraSpan from '../Span';
@@ -64,17 +62,11 @@ class Instrumenter {
 
     traceConfig: TraceConfig;
     origCompile: any;
-    /*
-    nodeStack: Stack<NodeWrapper>;
-     */
     updates: Map<string, string> = new Map();
     tracer: ThundraTracer;
 
     constructor(traceConfig: TraceConfig) {
         this.traceConfig = traceConfig;
-        /*
-        this.nodeStack = new Stack<NodeWrapper>();
-         */
         if (traceConfig) {
             this.tracer = traceConfig.tracer;
         }
@@ -137,19 +129,9 @@ class Instrumenter {
 
                 if (name && node.body.type === Syntax.BlockStatement) {
                     if (instrumentOption === null) {
-                        /*
-                        self.nodeStack.store = [];
-                         */
                         self.updates.clear();
                         return;
                     }
-
-                    /*
-                    while (self.nodeStack.store.length !== 0) {
-                        const wrapper: NodeWrapper = self.nodeStack.pop();
-                        wrapper.instrumentFunction.call(self, instrumentOption, wrapper.node);
-                    }
-                    */
 
                     const funcDec = node.source().slice(0, node.body.range[0] - node.range[0]);
                     let origFuncBody = node.body.source();
@@ -218,52 +200,6 @@ class Instrumenter {
                 } else if (node.type === Syntax.ReturnStatement) {
                     const traceLine =
                         self.checkTraceLine(node, instrumentOption, tracedLines, localVars, wrappedFile, codeLines);
-                    /*
-                    if (node.argument) {
-                        const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
-                        const traceExit = util.format(TRACE_EXIT, 'false',
-                            instrumentOption.traceReturnValue ? tmpVar : 'null', 'null');
-                        node.update(
-                            (traceLine ? traceLine : '') +
-                            '{' +
-                                TRACE_INJECTION_SEPARATOR + 'var ' + tmpVar + ' = ' + node.argument.source() + ';' +
-                                TRACE_INJECTION_SEPARATOR + traceExit +
-                                TRACE_INJECTION_SEPARATOR + 'return ' + tmpVar + ';' + TRACE_INJECTION_SEPARATOR +
-                            '}');
-                    } else {
-                        const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
-                        node.update(
-                            (traceLine ? traceLine : '') +
-                            '{' +
-                                traceExit + node.source() +
-                            '}');
-                    }
-                    */
-                    /*
-                    const wrapper: NodeWrapper = new NodeWrapper(node, (traceableConfig: TraceableConfig, sourceNode: any) => {
-                        if (sourceNode.argument) {
-                            const tmpVar = '__thundraTmp' + Math.floor(Math.random() * 10000) + '__';
-                            const traceExit = util.format(TRACE_EXIT, 'false',
-                                instrumentOption.traceReturnValue ? tmpVar : 'null', 'null');
-                            node.update(
-                                //(traceLine ? traceLine : '') +
-                                '{' +
-                                TRACE_INJECTION_SEPARATOR + 'var ' + tmpVar + ' = ' + node.argument.source() + ';' +
-                                TRACE_INJECTION_SEPARATOR + traceExit +
-                                TRACE_INJECTION_SEPARATOR + 'return ' + tmpVar + ';' + TRACE_INJECTION_SEPARATOR +
-                                '}');
-                        } else {
-                            const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
-                            node.update(
-                                //(traceLine ? traceLine : '') +
-                                '{' +
-                                traceExit + node.source() +
-                                '}');
-                        }
-                    });
-                    self.nodeStack.push(wrapper);
-                    */
-
                     const id = Math.floor(Math.random() * 10000);
                     const returnPointer = '/* __%thundraReturn@' + id + '%__ */';
                     if (node.argument) {
