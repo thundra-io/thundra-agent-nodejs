@@ -274,7 +274,7 @@ class Instrumenter {
                 const line = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
                 if (NODE_TYPES_FOR_LINE_TRACING.indexOf(node.type) > -1 && node.parent.type === Syntax.BlockStatement) {
                     if (!tracedLines.has(line)) {
-                        let lineSource = 'null';
+                        let lineSource = '';
                         if (instrumentOption.traceLinesWithSource) {
                             lineSource = codeLines[line].trim();
                         }
