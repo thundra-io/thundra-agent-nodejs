@@ -407,7 +407,7 @@ class Utils {
 
     static getApplicationId(arn: string) {
         const region = Utils.getAWSRegion(arn);
-        const accountNo = Utils.getAWSAccountNo(arn);
+        const accountNo = Utils.getIfSAMLocalDebugging() ? 'sam_local' : Utils.getAWSAccountNo(arn);
         const functionName = Utils.getAWSFunctionName(arn);
 
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
@@ -419,6 +419,10 @@ class Utils {
         } catch (error) {
             return '';
         }
+    }
+
+    static getIfSAMLocalDebugging() {
+        return Utils.getConfiguration(envVariableKeys.AWS_SAM_LOCAL) === 'true';
     }
 
     static getXRayTraceInfo() {
