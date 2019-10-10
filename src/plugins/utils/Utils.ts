@@ -255,6 +255,7 @@ class Utils {
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = AGENT_VERSION;
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
+        monitoringData.applicationInstanceId = pluginContext ? pluginContext.applicationInstanceId : '';
         monitoringData.applicationId = applicationId ? applicationId : (pluginContext ? pluginContext.applicationId : '');
         monitoringData.applicationDomainName = domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
         monitoringData.applicationClassName = className ? className : LAMBDA_APPLICATION_CLASS_NAME;
