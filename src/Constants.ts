@@ -171,6 +171,7 @@ export const Syntax = {
     CatchClause: 'CatchClause',
     ReturnStatement: 'ReturnStatement',
     BlockStatement: 'BlockStatement',
+    VariableDeclaration: 'VariableDeclaration',
 };
 
 export const logLevels: any = {
