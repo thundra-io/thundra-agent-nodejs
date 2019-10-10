@@ -110,7 +110,7 @@ module.exports = (options: any) => {
 
         const thundraWrappedHandler: any = (originalEvent: any, originalContext: any, originalCallback: any) => {
             // Creating applicationId here, since we need the information in context
-            const applicationId = Utils.getApplicationId(originalContext);
+            const applicationId = Utils.getApplicationId(originalContext.invokedFunctionArn);
             pluginContext.applicationId = applicationId;
 
             config.plugins.forEach((plugin: any) => {

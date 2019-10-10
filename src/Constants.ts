@@ -48,6 +48,7 @@ export const envVariableKeys = {
     DISABLE_SPAN_CONTEXT_INJECTION: 'thundra_agent_trace_instrument_integrations_spanContext_disable',
     THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID: 'thundra_agent_lambda_trace_use_propagated_transaction_id',
 
+    AWS_SAM_LOCAL: 'AWS_SAM_LOCAL',
     AWS_LAMBDA_APPLICATION_ID: 'AWS_LAMBDA_APPLICATION_ID',
     AWS_LAMBDA_LOG_STREAM_NAME: 'AWS_LAMBDA_LOG_STREAM_NAME',
     AWS_LAMBDA_FUNCTION_VERSION: 'AWS_LAMBDA_FUNCTION_VERSION',

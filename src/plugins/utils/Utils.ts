@@ -255,6 +255,7 @@ class Utils {
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = AGENT_VERSION;
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
+        monitoringData.applicationInstanceId = pluginContext ? pluginContext.applicationInstanceId : '';
         monitoringData.applicationId = applicationId ? applicationId : (pluginContext ? pluginContext.applicationId : '');
         monitoringData.applicationDomainName = domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
         monitoringData.applicationClassName = className ? className : LAMBDA_APPLICATION_CLASS_NAME;
@@ -407,7 +408,7 @@ class Utils {
 
     static getApplicationId(arn: string) {
         const region = Utils.getAWSRegion(arn);
-        const accountNo = Utils.getAWSAccountNo(arn);
+        const accountNo = Utils.getIfSAMLocalDebugging() ? 'sam_local' : Utils.getAWSAccountNo(arn);
         const functionName = Utils.getAWSFunctionName(arn);
 
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
@@ -419,6 +420,10 @@ class Utils {
         } catch (error) {
             return '';
         }
+    }
+
+    static getIfSAMLocalDebugging() {
+        return Utils.getConfiguration(envVariableKeys.AWS_SAM_LOCAL) === 'true';
     }
 
     static getXRayTraceInfo() {

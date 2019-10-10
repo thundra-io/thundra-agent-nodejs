@@ -6,6 +6,7 @@ class BaseMonitoringData {
     agentVersion: string;
     dataModelVersion: string;
     applicationId: string;
+    applicationInstanceId: string;
     applicationDomainName: string;
     applicationClassName: string;
     applicationName: string;
@@ -24,6 +25,7 @@ class BaseMonitoringData {
         this.agentVersion = data.agentVersion;
         this.dataModelVersion = data.dataModelVersion;
         this.applicationId = data.applicationId;
+        this.applicationInstanceId = data.applicationInstanceId;
         this.applicationDomainName = data.applicationDomainName;
         this.applicationClassName = data.applicationClassName;
         this.applicationName = data.applicationName;
