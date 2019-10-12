@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.6.2 - October 12, 2019
+#### Added
+- Added line by line tracing support
+
 ## 2.6.1 - September 30, 2019
 #### Added
 - Disabled metric and log plugins by default
