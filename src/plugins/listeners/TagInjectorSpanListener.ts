@@ -24,11 +24,11 @@ class TagInjectorSpanListener implements ThundraSpanListener {
 
         span.tags = newTags;
 
-        return false;
+        return !callbackAlreadyCalled;
     }
 
     onSpanFinished(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
-        return false;
+        return !callbackAlreadyCalled;
     }
 
     failOnError() {
