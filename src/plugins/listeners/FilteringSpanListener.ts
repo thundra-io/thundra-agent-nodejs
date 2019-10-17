@@ -1,10 +1,12 @@
 import ThundraSpanListener from './ThundraSpanListener';
-import SpanFilterer from './SpanFilterer';
 import ThundraSpan from '../../opentracing/Span';
 import { LISTENERS } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
-import StandardSpanFilterer from './StandardSpanFilterer';
 import SpanFilter from './SpanFilter';
+import SpanFilterer from './SpanFilterer';
+import StandardSpanFilter from './StandardSpanFilter';
+import CompositeSpanFilter from './CompositeSpanFilter';
+import StandardSpanFilterer from './StandardSpanFilterer';
 
 const get = require('lodash.get');
 
@@ -63,7 +65,17 @@ class FilteringSpanListener implements ThundraSpanListener {
     private _getSpanFiltererFromConfig(opt: any): SpanFilter[] {
         const spanFilters: SpanFilter[] = [];
         for (const filterConfig of opt.filters) {
-            spanFilters.push(new SpanFilter(filterConfig));
+            const composite = get(filterConfig, 'composite', false);
+
+            if (composite) {
+                const compositeFilter = new CompositeSpanFilter(filterConfig);
+                const filters = this._getSpanFiltererFromConfig(filterConfig);
+
+                compositeFilter.setFilters(filters);
+                spanFilters.push(compositeFilter);
+            } else {
+                spanFilters.push(new StandardSpanFilter(filterConfig));
+            }
         }
 
         return spanFilters;
