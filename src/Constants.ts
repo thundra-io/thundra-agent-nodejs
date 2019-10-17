@@ -58,7 +58,7 @@ export const envVariableKeys = {
     THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX: 'thundra_agent_lambda_application_tag_',
     THUNDRA_APPLICATION_ID: 'thundra_agent_lambda_application_id',
     THUNDRA_APPLICATION_NAME: 'thundra_agent_lambda_application_name',
-    THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF : 'thundra_agent_lambda_trace_span_listener',
+    THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF : 'thundra_agent_lambda_trace_span_listenerConfig',
 
     THUNDRA_AGENT_LAMBDA_SAMPLE_TIMED_OUT_INVOCATIONS: 'thundra_agent_lambda_sample_timed_out_invocations',
     THUNDRA_MASK_REDIS_STATEMENT: 'thundra_agent_lambda_trace_integrations_redis_command_mask',
