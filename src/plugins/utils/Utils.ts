@@ -23,6 +23,7 @@ import InvocationSupport from '../support/InvocationSupport';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
+const zlib = require('zlib');
 
 declare var __non_webpack_require__: any;
 const customReq = typeof __non_webpack_require__ !== 'undefined'
@@ -326,21 +327,21 @@ class Utils {
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF)) {
                 try {
-                    const value = process.env[key];
-                    const configStartIndex = value.indexOf('[');
-                    const configEndIndex = value.lastIndexOf(']');
+                    let value = process.env[key];
 
-                    if (value.startsWith('{')) {
-                        // Span listener config is given in JSON format
-                        const listenerDef = JSON.parse(value);
-                        const listenerClass = LISTENERS[listenerDef.type];
-                        const listenerConfig = listenerDef.config;
-
-                        const listenerInstance = new listenerClass(listenerConfig);
-
-                        tracer.addSpanListener(listenerInstance);
-                        listeners.push(listenerInstance);
+                    if (!value.startsWith('{')) {
+                        // Span listener config is given encoded
+                        value = this.decodeSpanListenerConfig(value);
                     }
+
+                    const listenerDef = JSON.parse(value);
+                    const listenerClass = LISTENERS[listenerDef.type];
+                    const listenerConfig = listenerDef.config;
+
+                    const listenerInstance = new listenerClass(listenerConfig);
+
+                    tracer.addSpanListener(listenerInstance);
+                    listeners.push(listenerInstance);
                 } catch (ex) {
                     ThundraLogger.getInstance().error(
                         `Cannot parse span listener def ${key} with reason: ${ex.message}`);
@@ -349,6 +350,13 @@ class Utils {
                 return listeners;
             }
         }
+    }
+
+    static decodeSpanListenerConfig(encoded: string) {
+        const buffer = Buffer.from(encoded, 'base64');
+        const spanListenerConfig = zlib.unzipSync(buffer).toString();
+
+        return spanListenerConfig;
     }
 
     static stripCommonFields(monitoringData: BaseMonitoringData) {
