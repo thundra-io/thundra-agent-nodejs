@@ -330,43 +330,16 @@ class Utils {
                     const configStartIndex = value.indexOf('[');
                     const configEndIndex = value.lastIndexOf(']');
 
-                    if (configStartIndex > 0 && configEndIndex > 0) {
-                        const listenerClassName = value.substring(0, configStartIndex);
-                        const configDefs = value.substring(configStartIndex + 1, configEndIndex).split(',');
-                        const configs: any = {};
-                        for (let configDef of configDefs) {
-                            if (!configDef || configDef === '') {
-                                continue;
-                            }
+                    if (value.startsWith('{')) {
+                        // Span listener config is given in JSON format
+                        const listenerDef = JSON.parse(value);
+                        const listenerClass = LISTENERS[listenerDef.type];
+                        const listenerConfig = listenerDef.config;
 
-                            configDef = configDef.trim();
-                            const separatorIndex = configDef.indexOf('=');
-                            if (separatorIndex < 1) {
-                                throw new Error(
-                                    'Span listener config definitions must ' +
-                                    'be in \'key=value\' format where \'value\' can be empty');
-                            }
-                            const paramName = configDef.substring(0, separatorIndex);
-                            const paramValue = configDef.substring(separatorIndex + 1);
-                            configs[paramName.trim()] = paramValue.trim();
-                        }
+                        const listenerInstance = new listenerClass(listenerConfig);
 
-                        const listenerClass = LISTENERS[listenerClassName];
-                        if (!listenerClass) {
-                            throw new Error('No listener found with name: ' + listenerClassName);
-                        }
-
-                        const listener = new listenerClass(configs);
-                        tracer.addSpanListener(listener);
-                        listeners.push(listener);
-                    } else {
-                        const listenerClass = LISTENERS[value];
-                        if (!listenerClass) {
-                            throw new Error('No listener found with name: ' + value);
-                        }
-                        const listener = new listenerClass({});
-                        tracer.addSpanListener(listener);
-                        listeners.push(listener);
+                        tracer.addSpanListener(listenerInstance);
+                        listeners.push(listenerInstance);
                     }
                 } catch (ex) {
                     ThundraLogger.getInstance().error(

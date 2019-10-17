@@ -2,7 +2,7 @@ import ThundraSpanListener from './ThundraSpanListener';
 import ThundraSpan from '../../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
 
-const koalas = require('koalas');
+const get = require('lodash.get');
 
 class ErrorInjectorSpanListener implements ThundraSpanListener {
     private readonly DEFAULT_ERROR_MESSAGE: string = 'Error injected by Thundra!';
@@ -17,12 +17,10 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
     private errorMessage: string;
 
     constructor(opt: any = {}) {
-        this.injectCountFreq = JSON.parse(koalas(opt.injectCountFreq, this.DEFAULT_INJECT_COUNT_FREQ));
-        this.injectOnFinish = JSON.parse(koalas(opt.injectOnFinish, this.DEFAULT_INJECT_ON_FINISH));
-        this.errorType = koalas(opt.errorType, this.DEFAULT_ERROR_TYPE);
-        this.errorMessage = koalas(opt.errorMessage, this.DEFAULT_ERROR_MESSAGE);
-        this.errorMessage = this.errorMessage.replace(new RegExp('\"', 'g'), '');
-        this.errorType = this.errorType.replace(new RegExp('\"', 'g'), '');
+        this.injectCountFreq = get(opt, 'injectCountFreq', this.DEFAULT_INJECT_COUNT_FREQ);
+        this.injectOnFinish = get(opt, 'injectOnFinish', this.DEFAULT_INJECT_ON_FINISH);
+        this.errorType = get(opt, 'errorType', this.DEFAULT_ERROR_TYPE);
+        this.errorMessage = get(opt, 'errorMessage', this.DEFAULT_ERROR_MESSAGE);
         this.counter = 0;
     }
 

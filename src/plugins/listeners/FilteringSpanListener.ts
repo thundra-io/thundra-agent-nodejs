@@ -6,9 +6,12 @@ import ThundraLogger from '../../ThundraLogger';
 import StandardSpanFilterer from './StandardSpanFilterer';
 import SpanFilter from './SpanFilter';
 
+const get = require('lodash.get');
+
 class FilteringSpanListener implements ThundraSpanListener {
     private listener: ThundraSpanListener;
     private spanFilterer: SpanFilterer;
+    private all: boolean;
 
     constructor(opt: any = {}) {
         if (!opt.listener) {
@@ -16,8 +19,9 @@ class FilteringSpanListener implements ThundraSpanListener {
         }
 
         try {
+            this.all = get(opt, 'all', false);
             this.listener = this._getListenerFromConfig(opt);
-            this.spanFilterer = new StandardSpanFilterer(this._getSpanFiltererFromConfig(opt));
+            this.spanFilterer = new StandardSpanFilterer(this._getSpanFiltererFromConfig(opt), this.all);
         } catch (err) {
             ThundraLogger.getInstance().error(
                 `Cannot parse span listener config with reason: ${err.message}`);
@@ -46,77 +50,23 @@ class FilteringSpanListener implements ThundraSpanListener {
     }
 
     private _getListenerFromConfig(opt: any): ThundraSpanListener {
-        const listenerClass = LISTENERS[opt.listener];
+        const listenerType = get(opt, 'listener.type', '');
+        const listenerClass = LISTENERS[listenerType];
         if (!listenerClass) {
-            throw new Error('No listener found with name: ' + opt.listener);
+            throw new Error('No listener found with name: ' + listenerType);
         }
 
-        const listenerConfigs: any = {};
-        for (const key of Object.keys(opt)) {
-            if (key.startsWith('config.')) {
-                const value = opt[key];
-                const configName = key.substring('config.'.length, key.length);
-                listenerConfigs[configName] = value;
-            }
-        }
-
-        return new listenerClass(listenerConfigs);
+        const listenerConfig: any = get(opt, 'listener.config', {});
+        return new listenerClass(listenerConfig);
     }
 
     private _getSpanFiltererFromConfig(opt: any): SpanFilter[] {
         const spanFilters: SpanFilter[] = [];
-        const filterConfigs = this._getFiltererConfigs(opt);
-        for (const key of Object.keys(filterConfigs)) {
-            const filterConfig = filterConfigs[key];
-            const domainName = filterConfig.domainName;
-            const className = filterConfig.className;
-            const operationName = filterConfig.operationName;
-            const tags: any = {};
-
-            for (const configKey of Object.keys(filterConfig)) {
-                if (configKey.startsWith('tag.')) {
-                    const value = filterConfig[configKey];
-                    const configName = configKey.substring('tag.'.length, configKey.length);
-                    if (isNaN(parseFloat(value))) {
-                        if (value === 'true' || value === 'false') {
-                            tags[configName] = value === 'true' ? true : false;
-                        } else {
-                            tags[configName] = value;
-                        }
-                    } else {
-                        tags[configName] = parseFloat(value);
-                    }
-                }
-            }
-
-            spanFilters.push(new SpanFilter(domainName, className, operationName, tags));
+        for (const filterConfig of opt.filters) {
+            spanFilters.push(new SpanFilter(filterConfig));
         }
 
         return spanFilters;
-    }
-
-    private _getFiltererConfigs(opt: any): any {
-        const filterConfigs: any = {};
-
-        for (const key of Object.keys(opt)) {
-            if (key.startsWith('filter')) {
-                const value = opt[key];
-                const separator = key.indexOf('.');
-                if (separator > 0) {
-                    const filterId = key.substring(0, separator + 1);
-                    let filterConfig = filterConfigs[filterId];
-                    if (!filterConfig) {
-                        filterConfig = {};
-                        filterConfigs[filterId] = filterConfig;
-                    }
-                    // Cannot add more than 10 filters but it is ok for now.
-                    const filterPropName = key.substring(separator + 1, key.length);
-                    filterConfig[filterPropName] = value;
-                }
-            }
-        }
-
-        return filterConfigs;
     }
 }
 

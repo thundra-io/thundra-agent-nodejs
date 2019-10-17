@@ -4,13 +4,15 @@ class SpanFilter {
     private $domainName: string;
     private $className: string;
     private $operationName: string;
+    private $reverse: boolean;
     private $tags: any;
 
-    constructor(domainName: string, className: string, operationName: string, tags: any) {
-        this.$domainName = domainName;
-        this.$className = className;
-        this.$operationName = operationName;
-        this.$tags = tags ? tags : {};
+    constructor(config: any = {}) {
+        this.$domainName = config.domainName;
+        this.$className = config.className;
+        this.$operationName = config.operationName;
+        this.$reverse = config.reverse;
+        this.$tags = config.tags ? config.tags : {};
     }
 
     get domainName(): string {
@@ -35,6 +37,14 @@ class SpanFilter {
 
     set operationName(operationName: string) {
          this.$operationName = operationName;
+    }
+
+    get reverse(): boolean {
+        return this.$reverse;
+    }
+
+    set reverse(reverse: boolean) {
+         this.$reverse = reverse;
     }
 
     get tags(): string {
@@ -79,7 +89,12 @@ class SpanFilter {
                 }
             }
         }
-        return accepted;
+
+        if (this.reverse) {
+            return !accepted;
+        } else {
+            return accepted;
+        }
     }
 
 }
