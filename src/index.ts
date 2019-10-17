@@ -24,6 +24,7 @@ import ApplicationSupport from './plugins/support/ApplicationSupport';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
+import TagInjectorSpanListener from './plugins/listeners/TagInjectorSpanListener';
 import StandardSpanFilter from './plugins/listeners/StandardSpanFilter';
 import CompositeSpanFilter from './plugins/listeners/CompositeSpanFilter';
 import StandardSpanFilterer from './plugins/listeners/StandardSpanFilterer';
@@ -187,6 +188,7 @@ module.exports.listeners = {
     ErrorInjectorSpanListener,
     FilteringSpanListener,
     LatencyInjectorSpanListener,
+    TagInjectorSpanListener,
     StandardSpanFilter,
     CompositeSpanFilter,
     StandardSpanFilterer,

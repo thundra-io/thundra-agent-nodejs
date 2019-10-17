@@ -11,6 +11,7 @@ import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
+import TagInjectorSpanListener from './plugins/listeners/TagInjectorSpanListener';
 const { version } = require('../package.json');
 
 export const envVariableKeys = {
@@ -563,6 +564,7 @@ export const LISTENERS: any = {
     FilteringSpanListener,
     ErrorInjectorSpanListener,
     LatencyInjectorSpanListener,
+    TagInjectorSpanListener,
 };
 
 export const SQSRequestTypes: any = {
