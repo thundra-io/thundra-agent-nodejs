@@ -32,7 +32,7 @@ class TagInjectorSpanListener implements ThundraSpanListener {
     }
 
     failOnError() {
-        return true;
+        return false;
     }
 }
 

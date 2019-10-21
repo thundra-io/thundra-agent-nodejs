@@ -346,10 +346,10 @@ class Utils {
                     ThundraLogger.getInstance().error(
                         `Cannot parse span listener def ${key} with reason: ${ex.message}`);
                 }
-
-                return listeners;
             }
         }
+
+        return listeners;
     }
 
     static decodeSpanListenerConfig(encoded: string) {
