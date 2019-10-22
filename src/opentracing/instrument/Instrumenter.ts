@@ -3,6 +3,7 @@ import TraceableConfig, { TracableConfigCheckLevel } from '../../plugins/config/
 import { envVariableKeys, TRACE_DEF_SEPERATOR, Syntax, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
+import NodePointer, { LINE_POINTER_TYPE, RETURN_POINTER_TYPE } from './NodePointer';
 import Utils from '../../plugins/utils/Utils';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraTracer from '../Tracer';
@@ -62,7 +63,7 @@ class Instrumenter {
 
     traceConfig: TraceConfig;
     origCompile: any;
-    updates: Map<string, string> = new Map();
+    updates: Map<NodePointer, string> = new Map();
     tracer: ThundraTracer;
 
     constructor(traceConfig: TraceConfig) {
@@ -123,9 +124,14 @@ class Instrumenter {
                 ecmaVersion: 8,
             }, function processASTNode(node: any) {
                 const startLine = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
-                const name = self.getFunctionName(node);
-
-                const instrumentOption = self.getThundraTraceableConfig(relPath + '.' + name, TracableConfigCheckLevel.FUNCTION);
+                let name = self.getFunctionName(node);
+                if (name && name.startsWith('module.exports.')) {
+                    name = name.substring('module.exports.'.length);
+                }
+                const instrumentOption =
+                    name
+                        ? self.getThundraTraceableConfig(relPath + '.' + name, TracableConfigCheckLevel.FUNCTION)
+                        : null;
 
                 if (name && node.body.type === Syntax.BlockStatement) {
                     if (instrumentOption === null) {
@@ -177,11 +183,21 @@ class Instrumenter {
                             '}';
 
                         for (const e of self.updates.entries()) {
-                            const pointer = e[0];
-                            const update = e[1];
-                            if (funcCode.includes(pointer)) {
-                                funcCode = funcCode.replace(pointer, update);
-                                self.updates.delete(pointer);
+                            const nodePointer: NodePointer = e[0];
+                            const type: number = nodePointer.type;
+                            const pointer: string = nodePointer.pointer;
+                            const update: string = e[1];
+                            if (type === LINE_POINTER_TYPE && instrumentOption.traceLineByLine) {
+                                if (funcCode.includes(pointer)) {
+                                    funcCode = funcCode.replace(pointer, update);
+                                    self.updates.delete(nodePointer);
+                                }
+                            }
+                            if (type === RETURN_POINTER_TYPE && instrumentOption.traceReturnValue) {
+                                if (funcCode.includes(pointer)) {
+                                    funcCode = funcCode.replace(pointer, update);
+                                    self.updates.delete(nodePointer);
+                                }
                             }
                         }
 
@@ -199,41 +215,52 @@ class Instrumenter {
                     }
                 } else if (node.type === Syntax.ReturnStatement) {
                     const traceLine =
-                        self.checkTraceLine(node, instrumentOption, tracedLines, localVars, wrappedFile, codeLines);
+                        self.checkTraceLine(node, tracedLines, localVars, wrappedFile, codeLines);
                     const id = Math.floor(Math.random() * 10000);
+                    const line = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
+                    const linePointer = '/* ___%thundraLine@' + line + '%___ */';
                     const returnPointer = '/* __%thundraReturn@' + id + '%__ */';
                     if (node.argument) {
                         const tmpVar = '__thundraTmp' + id + '__';
-                        const traceExit = util.format(TRACE_EXIT, 'false',
-                            instrumentOption.traceReturnValue ? tmpVar : 'null', 'null');
+                        const traceExit = util.format(TRACE_EXIT, 'false', tmpVar, 'null');
                         const traceReturn =
-                            (traceLine ? traceLine : '') +
                             '{' +
                                 TRACE_INJECTION_SEPARATOR + 'var ' + tmpVar + ' = ' + node.argument.source() + ';' +
-                                TRACE_INJECTION_SEPARATOR + traceExit +
+                                TRACE_INJECTION_SEPARATOR + returnPointer +
                                 TRACE_INJECTION_SEPARATOR + 'return ' + tmpVar + ';' +
                                 TRACE_INJECTION_SEPARATOR +
                             '}';
-                        node.update(returnPointer);
-                        self.updates.set(returnPointer, traceReturn);
+                        if (traceLine) {
+                            node.update(linePointer + ' ' + traceReturn);
+                            self.updates.set(new NodePointer(LINE_POINTER_TYPE, linePointer), traceLine);
+                            self.updates.set(new NodePointer(RETURN_POINTER_TYPE, returnPointer), traceExit);
+                        } else {
+                            node.update(traceReturn);
+                            self.updates.set(new NodePointer(RETURN_POINTER_TYPE, returnPointer), traceReturn);
+                        }
                     } else {
                         const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
                         const traceReturn =
-                            (traceLine ? traceLine : '') +
                             '{' +
                                 traceExit + ' ' + node.source() +
                             '}';
-                        node.update(returnPointer);
-                        self.updates.set(returnPointer, traceReturn);
+                        if (traceLine) {
+                            node.update(linePointer + ' ' + returnPointer);
+                            self.updates.set(new NodePointer(LINE_POINTER_TYPE, linePointer), traceLine);
+                            self.updates.set(new NodePointer(RETURN_POINTER_TYPE, returnPointer), traceReturn);
+                        } else {
+                            node.update(returnPointer);
+                            self.updates.set(new NodePointer(RETURN_POINTER_TYPE, returnPointer), traceReturn);
+                        }
                     }
                 } else {
                     const traceLine =
-                        self.checkTraceLine(node, instrumentOption, tracedLines, localVars, wrappedFile, codeLines);
+                        self.checkTraceLine(node, tracedLines, localVars, wrappedFile, codeLines);
                     if (traceLine) {
                         const line = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
                         const linePointer = '/* ___%thundraLine@' + line + '%___ */';
                         node.update(linePointer + ' ' + node.source());
-                        self.updates.set(linePointer, traceLine);
+                        self.updates.set(new NodePointer(LINE_POINTER_TYPE, linePointer), traceLine);
                     }
                 }
             });
@@ -251,61 +278,52 @@ class Instrumenter {
         }
     }
 
-    checkTraceLine(node: any, instrumentOption: any,
+    checkTraceLine(node: any,
                    tracedLines: Set<number>,
                    localVars: Map<string, number>,
                    wrappedFile: boolean,
                    codeLines: string[]) {
         if (node.type === Syntax.BlockStatement) {
-            if (instrumentOption && instrumentOption.traceLocalVariables) {
-                // Remove local variables which are out of scope anymore
-                for (const e of localVars.entries()) {
-                    const localVarName = e[0];
-                    const localVarDefPos = e[1];
-                    if (localVarDefPos >= node.start && localVarDefPos <= node.end) {
-                        localVars.delete(localVarName);
-                    }
+            // Remove local variables which are out of scope anymore
+            for (const e of localVars.entries()) {
+                const localVarName = e[0];
+                const localVarDefPos = e[1];
+                if (localVarDefPos >= node.start && localVarDefPos <= node.end) {
+                    localVars.delete(localVarName);
                 }
             }
             return null;
         } else {
             let traceLine = null;
-            if (instrumentOption && instrumentOption.traceLineByLine && node.loc && node.loc.start) {
+            if (node.loc && node.loc.start) {
                 const line = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
                 if (NODE_TYPES_FOR_LINE_TRACING.indexOf(node.type) > -1 && node.parent.type === Syntax.BlockStatement) {
                     if (!tracedLines.has(line)) {
-                        let lineSource = '';
-                        if (instrumentOption.traceLinesWithSource) {
-                            lineSource = codeLines[line].trim();
-                        }
-                        let localVarValues = 'null';
-                        let localVarNames = 'null';
-                        if (instrumentOption.traceLocalVariables) {
-                            localVarValues = '[';
-                            localVarNames = '[';
-                            let added = false;
-                            for (const e of localVars.entries()) {
-                                const localVarName = e[0];
-                                const localVarPos = e[1];
-                                if (!this.shouldTraceLocalVariable(localVarPos, node, wrappedFile)) {
-                                    continue;
-                                }
-                                if (added) {
-                                    localVarValues += ', ';
-                                    localVarNames += ', ';
-                                }
-                                // If somehow, variable is out of scope (maybe because of a bug in our parser)
-                                // add check to understand whether or not it is undefined in current scope
-                                localVarValues +=
-                                    'typeof ' + localVarName + ' !== \'undefined\'' +
-                                        ' ? ' + localVarName +
-                                        ' : undefined';
-                                localVarNames += '\'' + localVarName + '\'';
-                                added = true;
+                        const lineSource = codeLines[line].trim();
+                        let localVarValues = '[';
+                        let localVarNames = '[';
+                        let added = false;
+                        for (const e of localVars.entries()) {
+                            const localVarName = e[0];
+                            const localVarPos = e[1];
+                            if (!this.shouldTraceLocalVariable(localVarPos, node, wrappedFile)) {
+                                continue;
                             }
-                            localVarValues += ']';
-                            localVarNames += ']';
+                            if (added) {
+                                localVarValues += ', ';
+                                localVarNames += ', ';
+                            }
+                            // If somehow, variable is out of scope (maybe because of a bug in our parser)
+                            // add check to understand whether or not it is undefined in current scope
+                            localVarValues +=
+                                'typeof ' + localVarName + ' !== \'undefined\'' +
+                                ' ? ' + localVarName +
+                                ' : undefined';
+                            localVarNames += '\'' + localVarName + '\'';
+                            added = true;
                         }
+                        localVarValues += ']';
+                        localVarNames += ']';
                         traceLine =
                             util.format(
                                 TRACE_LINE,
@@ -319,8 +337,7 @@ class Instrumenter {
                         tracedLines.add(line);
                     }
                 }
-                if (instrumentOption.traceLocalVariables
-                    && node.type === Syntax.VariableDeclaration
+                if (node.type === Syntax.VariableDeclaration
                     && node.declarations) {
                     for (const d of node.declarations) {
                         if (d.init &&
