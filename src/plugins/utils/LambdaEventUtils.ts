@@ -380,7 +380,6 @@ class LambdaEventUtils {
         span.setTag(SpanTags.TRIGGER_DOMAIN_NAME, domainName);
         span.setTag(SpanTags.TRIGGER_CLASS_NAME, className);
         span.setTag(SpanTags.TRIGGER_OPERATION_NAMES, operationNames);
-        span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
     }
 }
 
