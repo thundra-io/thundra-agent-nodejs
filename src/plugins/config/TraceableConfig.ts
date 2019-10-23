@@ -6,8 +6,6 @@ class TraceableConfig {
     private $traceReturnValue: boolean;
     private $traceError: boolean;
     private $traceLineByLine: boolean;
-    private $traceLinesWithSource: boolean;
-    private $traceLocalVariables: boolean;
     private $regExpFunction: IMinimatch;
     private $regExpFile: IMinimatch;
 
@@ -20,8 +18,6 @@ class TraceableConfig {
         this.$traceReturnValue = false;
         this.$traceError = true;
         this.$traceLineByLine = false;
-        this.$traceLinesWithSource = false;
-        this.$traceLocalVariables = false;
         this.$regExpFunction = new Minimatch(pattern);
         const split = pattern.split('.');
         this.$regExpFile = new Minimatch(split.slice(0, split.length - 1).join('.') + '.*');
@@ -67,22 +63,6 @@ class TraceableConfig {
         this.$traceLineByLine = traceLineByLine;
     }
 
-    get traceLinesWithSource(): boolean {
-        return this.$traceLinesWithSource;
-    }
-
-    set traceLinesWithSource(traceLinesWithSource: boolean) {
-        this.$traceLinesWithSource = traceLinesWithSource;
-    }
-
-    get traceLocalVariables(): boolean {
-        return this.$traceLocalVariables;
-    }
-
-    set traceLocalVariables(traceLocalVariables: boolean) {
-        this.$traceLocalVariables = traceLocalVariables;
-    }
-
     setProperty(key: string, value: any) {
         switch (key) {
             case 'traceArgs':
@@ -96,12 +76,6 @@ class TraceableConfig {
                 break;
             case 'traceLineByLine' :
                 this.$traceLineByLine = (value === 'true');
-                break;
-            case 'traceLinesWithSource' :
-                this.$traceLinesWithSource = (value === 'true');
-                break;
-            case 'traceLocalVariables' :
-                this.$traceLocalVariables = (value === 'true');
                 break;
         }
     }
@@ -120,8 +94,6 @@ class TraceableConfig {
         this.$traceReturnValue = options.traceReturnValue;
         this.$traceError = options.traceError;
         this.$traceLineByLine = options.traceLineByLine;
-        this.$traceLinesWithSource = options.traceLinesWithSource;
-        this.$traceLocalVariables = options.traceLocalVariables;
     }
 }
 
