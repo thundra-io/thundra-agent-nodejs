@@ -113,9 +113,10 @@ class Instrumenter {
     }
 
     addTraceHooks(code: any, wrapFunctions: any, relPath: string, wrappedFile: any) {
+        const self = this;
+        self.updates.clear();
         try {
             const codeLines = code.split('\n');
-            const self = this;
             const tracedLines = new Set();
             const localVars = new Map();
             const output = falafel(code, {
@@ -135,7 +136,6 @@ class Instrumenter {
 
                 if (name && node.body.type === Syntax.BlockStatement) {
                     if (instrumentOption === null) {
-                        self.updates.clear();
                         return;
                     }
 
@@ -275,6 +275,8 @@ class Instrumenter {
             return instrumentedCode;
         } catch (e) {
             console.log(e);
+        } finally {
+            self.updates.clear();
         }
     }
 
