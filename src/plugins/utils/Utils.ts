@@ -404,8 +404,7 @@ class Utils {
 
     static getApplicationId(originalContext: any, pluginContext: any) {
         const arn = originalContext.invokedFunctionArn;
-        const region = Utils.getAWSRegion(arn)
-            || Utils.getConfiguration(envVariableKeys.AWS_REGION)
+        const region = Utils.getConfiguration(envVariableKeys.AWS_REGION)
             || 'local';
         const accountNo = Utils.getIfSAMLocalDebugging() ? 'sam_local'
             : (Utils.getAWSAccountNo(arn)
