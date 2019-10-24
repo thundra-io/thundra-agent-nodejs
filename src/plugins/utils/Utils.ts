@@ -402,10 +402,6 @@ class Utils {
         return Utils.getARNPart(arn, 3);
     }
 
-    static getAWSFunctionName(arn: string) {
-        return Utils.getARNPart(arn, 6);
-    }
-
     static getApplicationId(originalContext: any, pluginContext: any) {
         const arn = originalContext.invokedFunctionArn;
         const region = Utils.getAWSRegion(arn)
@@ -415,7 +411,7 @@ class Utils {
             : (Utils.getAWSAccountNo(arn)
                 || pluginContext.apiKey
                 || 'guest');
-        const functionName = Utils.getAWSFunctionName(arn)
+        const functionName = originalContext.functionName
             || Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
             || 'lambda-app';
 
