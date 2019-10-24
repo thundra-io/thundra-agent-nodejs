@@ -402,14 +402,17 @@ class Utils {
         return Utils.getARNPart(arn, 3);
     }
 
-    static getAWSFunctionName(arn: string) {
-        return Utils.getARNPart(arn, 6);
-    }
-
-    static getApplicationId(arn: string) {
-        const region = Utils.getAWSRegion(arn);
-        const accountNo = Utils.getIfSAMLocalDebugging() ? 'sam_local' : Utils.getAWSAccountNo(arn);
-        const functionName = Utils.getAWSFunctionName(arn);
+    static getApplicationId(originalContext: any, pluginContext: any) {
+        const arn = originalContext.invokedFunctionArn;
+        const region = Utils.getConfiguration(envVariableKeys.AWS_REGION)
+            || 'local';
+        const accountNo = Utils.getIfSAMLocalDebugging() ? 'sam_local'
+            : (Utils.getAWSAccountNo(arn)
+                || pluginContext.apiKey
+                || 'guest');
+        const functionName = originalContext.functionName
+            || Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
+            || 'lambda-app';
 
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
     }
