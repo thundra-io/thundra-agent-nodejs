@@ -245,6 +245,11 @@ export const DBTags = {
     DB_USER: 'db.user',
 };
 
+export const SecurityTags = {
+    BLOCKED: 'security.blocked',
+    VIOLATED: 'security.violated',
+};
+
 export const MongoDBTags = {
     MONGODB_COMMAND: 'mongodb.command',
     MONGODB_COMMAND_NAME: 'mongodb.command.name',

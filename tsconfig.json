@@ -8,8 +8,7 @@
         "outDir": "./dist",
         "preserveConstEnums": true,
         "lib": [
-            "es5",  
-            "es6"
+            "es2016"
         ],
         "removeComments": false,
         "sourceMap": true,
