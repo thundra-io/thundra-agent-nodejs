@@ -21,7 +21,7 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
         }
 
         for (const op of this.blacklist) {
-            if (op.matches) {
+            if (op.matches(span)) {
                 this.handleSecurityIssue(span);
                 return false;
             }
@@ -31,13 +31,14 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
 
         if (hasWhitelist) {
             for (const op of this.whitelist) {
-                if (op.matches) {
+                if (op.matches(span)) {
                     return false;
                 }
             }
-
             this.handleSecurityIssue(span);
         }
+
+        return false;
     }
 
     onSpanFinished(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
@@ -54,8 +55,10 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
 
     handleSecurityIssue(span: ThundraSpan) {
         if (this.block) {
+            const error = new SecurityError('Operaiton was blocked due to security configuration');
             span.setTag(SecurityTags.BLOCKED, true);
-            throw new SecurityError('Operaiton was blocked due to security configuration');
+            span.setErrorTag(error);
+            throw error;
         } else {
             span.setTag(SecurityTags.VIOLATED, true);
         }
@@ -65,7 +68,7 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
 class SecurityError extends Error {
     constructor(message: string) {
         super(message);
-        this.name = this.constructor.name;
+        this.name = 'SecurityError';
         Error.captureStackTrace(this, this.constructor);
     }
 }
@@ -98,7 +101,7 @@ class Operation {
                 if (Array.isArray(tagVal) && !tagVal.includes(span.getTag(tagKey))) {
                     matched = false;
                     break;
-                } else if (span.getTag(tagKey) !== tagVal) {
+                } else if (!Array.isArray(tagVal) && span.getTag(tagKey) !== tagVal) {
                     matched = false;
                     break;
                 }
