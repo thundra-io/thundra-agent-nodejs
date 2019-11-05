@@ -80,7 +80,7 @@ class Operation {
 
     constructor(config: any = {}) {
         this.className = get(config, 'className', '');
-        this.operationTypes = get(config, 'operationTypes');
+        this.operationTypes = get(config, 'operations');
         this.tags = get(config, 'tags');
     }
 
