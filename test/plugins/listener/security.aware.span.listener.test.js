@@ -11,7 +11,7 @@ describe('SecurityAwareSpanListener', () => {
                 tags: {
                     'http.host': ['www.google.com', 'www.yahoo.com']
                 },
-                operationTypes: [
+                operations: [
                     'GET'
                 ],
             },
@@ -20,7 +20,7 @@ describe('SecurityAwareSpanListener', () => {
                 tags: {
                     'aws.dynamodb.table.name': ['Users']
                 },
-                operationTypes: [
+                operations: [
                     'READ'
                 ],
             }
@@ -31,7 +31,7 @@ describe('SecurityAwareSpanListener', () => {
                 tags: {
                     'http.host': ['www.foo.com', 'www.bar.com']
                 },
-                operationTypes: [
+                operations: [
                     'POST'
                 ],
             },
@@ -40,7 +40,7 @@ describe('SecurityAwareSpanListener', () => {
                 tags: {
                     'aws.sns.topic.name': ['foo-topic'] 
                 },
-                operationTypes: [
+                operations: [
                     'WRITE'
                 ],
             }
@@ -69,7 +69,7 @@ describe('SecurityAwareSpanListener', () => {
                 tags: {
                     'http.host': ['www.google.com', 'www.yahoo.com']
                 },
-                operationTypes: [
+                operations: [
                     'GET'
                 ],
             },
@@ -78,7 +78,7 @@ describe('SecurityAwareSpanListener', () => {
                 tags: {
                     'aws.dynamodb.table.name': ['Users']
                 },
-                operationTypes: [
+                operations: [
                     'READ'
                 ],
             }
