@@ -150,7 +150,7 @@ describe('AWS Integration', () => {
             expect(span.className).toBe('AWS-S3');
             expect(span.domainName).toBe('Storage');
 
-            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['operation.type']).toBe('LIST');
             expect(span.tags['aws.s3.bucket.name']).not.toBeTruthy();
             expect(span.tags['aws.request.name']).toBe('listBuckets');
             expect(span.tags['aws.s3.object.name']).not.toBeTruthy();
@@ -342,11 +342,12 @@ describe('AWS Integration', () => {
 
             expect(span.tags['aws.request.name']).toBe('listQueues');
             expect(span.tags['aws.sqs.queue.name']).not.toBeTruthy();
-            expect(span.tags['operation.type']).toBe('');
-            expect(span.tags['topology.vertex']).not.toBeTruthy();
-            expect(span.tags['trigger.domainName']).not.toBeTruthy();
-            expect(span.tags['trigger.className']).not.toBeTruthy();
-            expect(span.tags['trigger.operationNames']).not.toBeTruthy();
+            expect(span.tags['operation.type']).toBe('LIST');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(undefined);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -496,7 +497,7 @@ describe('AWS Integration', () => {
 
             expect(span.tags['aws.request.name']).toBe('checkIfPhoneNumberIsOptedOut');
             expect(span.tags['aws.sns.topic.name']).toBe(undefined);
-            expect(span.tags['operation.type']).toBe('');
+            expect(span.tags['operation.type']).toBe('READ');
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -623,7 +624,7 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['aws.request.name']).toBe('startQueryExecution');
-            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['db.instance']).toBe('sample-db');
             expect(span.tags['db.statement']).toBe('sample-query');
             expect(span.tags['aws.athena.s3.outputLocation']).toBe('sample-output-location');
@@ -653,7 +654,7 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['aws.request.name']).toBe('startQueryExecution');
-            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['db.instance']).toBe('sample-db');
             expect(span.tags['db.statement']).toBeUndefined();
             expect(span.tags['aws.athena.s3.outputLocation']).toBe('sample-output-location');
@@ -682,7 +683,7 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['aws.request.name']).toBe('stopQueryExecution');
-            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['db.instance']).toBeUndefined();
             expect(span.tags['db.statement']).toBeUndefined();
             expect(span.tags['aws.athena.s3.outputLocation']).toBeUndefined();

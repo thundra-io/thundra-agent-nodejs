@@ -12,7 +12,7 @@ describe('SecurityAwareSpanListener', () => {
                     'http.host': ['www.google.com', 'www.yahoo.com']
                 },
                 operationTypes: [
-                    'TODO'
+                    'GET'
                 ],
             },
             {
@@ -21,7 +21,7 @@ describe('SecurityAwareSpanListener', () => {
                     'aws.dynamodb.table.name': ['Users']
                 },
                 operationTypes: [
-                    'TODO'
+                    'READ'
                 ],
             }
         ],
@@ -32,7 +32,7 @@ describe('SecurityAwareSpanListener', () => {
                     'http.host': ['www.foo.com', 'www.bar.com']
                 },
                 operationTypes: [
-                    'TODO'
+                    'POST'
                 ],
             },
             {
@@ -41,7 +41,7 @@ describe('SecurityAwareSpanListener', () => {
                     'aws.sns.topic.name': ['foo-topic'] 
                 },
                 operationTypes: [
-                    'TODO'
+                    'WRITE'
                 ],
             }
         ]
@@ -55,10 +55,10 @@ describe('SecurityAwareSpanListener', () => {
         expect(sasl.blacklist.length).toBe(2);
         expect(sasl.whitelist[0].className).toBe('HTTP');
         expect(sasl.whitelist[0].tags).toEqual({ 'http.host': ['www.google.com', 'www.yahoo.com']});
-        expect(sasl.whitelist[0].operationTypes).toEqual(['TODO']);
+        expect(sasl.whitelist[0].operationTypes).toEqual(['GET']);
         expect(sasl.whitelist[1].className).toBe('AWS-DynamoDB');
         expect(sasl.whitelist[1].tags).toEqual({ 'aws.dynamodb.table.name': ['Users']});
-        expect(sasl.whitelist[1].operationTypes).toEqual(['TODO']);
+        expect(sasl.whitelist[1].operationTypes).toEqual(['READ']);
     });
 
     const wlSaslConfig = {
@@ -70,7 +70,7 @@ describe('SecurityAwareSpanListener', () => {
                     'http.host': ['www.google.com', 'www.yahoo.com']
                 },
                 operationTypes: [
-                    'TODO'
+                    'GET'
                 ],
             },
             {
@@ -79,7 +79,7 @@ describe('SecurityAwareSpanListener', () => {
                     'aws.dynamodb.table.name': ['Users']
                 },
                 operationTypes: [
-                    'TODO'
+                    'READ'
                 ],
             }
         ]
@@ -90,11 +90,13 @@ describe('SecurityAwareSpanListener', () => {
         const span1 = new ThundraSpan();
         span1.className = 'HTTP';
         span1.setTag('http.host', 'www.google.com');
+        span1.setTag(SpanTags.OPERATION_TYPE, 'GET');
         span1.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         
         const span2 = new ThundraSpan();
         span2.className = 'HTTP';
         span2.setTag('http.host', 'www.yahoo.com');
+        span2.setTag(SpanTags.OPERATION_TYPE, 'GET');
         span2.setTag(SpanTags.TOPOLOGY_VERTEX, true);
 
         wlSasl.onSpanStarted(span1);
@@ -108,11 +110,19 @@ describe('SecurityAwareSpanListener', () => {
         const span3 = new ThundraSpan();
         span3.className = 'HTTP';
         span3.setTag('http.host', 'www.example.com');
+        span3.setTag(SpanTags.OPERATION_TYPE, 'POST');
         span3.setTag(SpanTags.TOPOLOGY_VERTEX, true);
 
         const span4 = new ThundraSpan();
         span4.className = 'AWS-DynamoDB';
+        span4.setTag(SpanTags.OPERATION_TYPE, 'WRITE');
         span4.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+
+        const span5 = new ThundraSpan();
+        span5.className = 'HTTP';
+        span5.setTag('http.host', 'www.google.com');
+        span5.setTag(SpanTags.OPERATION_TYPE, 'POST');
+        span5.setTag(SpanTags.TOPOLOGY_VERTEX, true);
 
         try {
             wlSasl.onSpanStarted(span3);
@@ -131,5 +141,14 @@ describe('SecurityAwareSpanListener', () => {
         expect(span4.getTag('error.kind')).toEqual('SecurityError');
         expect(span4.getTag('error.kind')).toEqual('SecurityError');
         expect(span4.getTag(SecurityTags.BLOCKED)).toBeTruthy();
+
+        try {
+            wlSasl.onSpanStarted(span5);
+        } catch (err) {}
+
+        expect(span5.getTag('error')).toBeTruthy();
+        expect(span5.getTag('error.kind')).toEqual('SecurityError');
+        expect(span5.getTag('error.kind')).toEqual('SecurityError');
+        expect(span5.getTag(SecurityTags.BLOCKED)).toBeTruthy();
     });
 });

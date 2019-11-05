@@ -83,6 +83,10 @@ class Utils {
         return typeof value === 'string' || value instanceof String;
     }
 
+    static capitalize(value: string): string {
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
     static parseError(err: any) {
         const error: any = { errorMessage: '', errorType: 'Unknown Error', stack: null, code: 0 };
         if (err instanceof Error) {

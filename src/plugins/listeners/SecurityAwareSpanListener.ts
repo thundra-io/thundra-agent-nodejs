@@ -112,7 +112,7 @@ class Operation {
     }
 
     getOperationType(span: ThundraSpan): string {
-        return 'TODO';
+        return get(span.tags, SpanTags.OPERATION_TYPE);
     }
 }
 
