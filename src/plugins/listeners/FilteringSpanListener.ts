@@ -31,8 +31,12 @@ class FilteringSpanListener implements ThundraSpanListener {
     }
 
     onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
+        return false;
+    }
+
+    onSpanInitialized(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (this.spanFilterer && this.spanFilterer.accept(span)) {
-            return this.listener.onSpanStarted(span, me, callback, args, callbackAlreadyCalled);
+            return this.listener.onSpanInitialized(span, me, callback, args, callbackAlreadyCalled);
         }
 
         return false;

@@ -103,6 +103,8 @@ class RedisIntegration implements Integration {
                         },
                     });
 
+                    span._initialized();
+
                     const originalCallback = options.callback;
 
                     const wrappedCallback = (err: any, res: any) => {

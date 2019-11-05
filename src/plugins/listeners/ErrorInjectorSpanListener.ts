@@ -25,6 +25,10 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
     }
 
     onSpanStarted(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
+        return false;
+    }
+
+    onSpanInitialized(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callback && !this.injectOnFinish) {
             if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
                 this._injectErrorWithCallback(span, me, callback);

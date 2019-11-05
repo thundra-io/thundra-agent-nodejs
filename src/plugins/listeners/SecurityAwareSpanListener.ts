@@ -16,6 +16,10 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
     }
 
     onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
+        return false;
+    }
+
+    onSpanInitialized(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (!this.isExternalOperation(span)) {
             return false;
         }

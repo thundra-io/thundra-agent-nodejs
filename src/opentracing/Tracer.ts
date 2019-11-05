@@ -143,6 +143,11 @@ class ThundraTracer extends Tracer {
     this.activeSpans.delete(span.spanContext.spanId);
   }
 
+  _initialized(span: ThundraSpan, options?: any) {
+    options = options ? options : {};
+    this.recorder.record(span, SpanEvent.SPAN_INITIALIZE, options);
+  }
+
   _inject(spanContext: any, format: any, carrier: any): ThundraTracer {
     try {
       this.propagators[format].inject(spanContext, carrier);

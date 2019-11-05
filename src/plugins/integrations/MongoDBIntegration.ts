@@ -82,6 +82,8 @@ class MongoDBIntegration implements Integration {
                 },
             });
 
+            span._initialized();
+
             this.spans[event.requestId] = span;
         } catch (error) {
             if (span) {

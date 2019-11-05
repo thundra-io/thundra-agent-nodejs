@@ -125,7 +125,7 @@ describe('SecurityAwareSpanListener', () => {
         span5.setTag(SpanTags.TOPOLOGY_VERTEX, true);
 
         try {
-            wlSasl.onSpanStarted(span3);
+            wlSasl.onSpanInitialized(span3);
         } catch (err) {}
 
         expect(span3.getTag('error')).toBeTruthy();
@@ -134,7 +134,7 @@ describe('SecurityAwareSpanListener', () => {
         expect(span3.getTag(SecurityTags.BLOCKED)).toBeTruthy();
 
         try {
-            wlSasl.onSpanStarted(span4);
+            wlSasl.onSpanInitialized(span4);
         } catch (err) {}
 
         expect(span4.getTag('error')).toBeTruthy();
@@ -143,7 +143,7 @@ describe('SecurityAwareSpanListener', () => {
         expect(span4.getTag(SecurityTags.BLOCKED)).toBeTruthy();
 
         try {
-            wlSasl.onSpanStarted(span5);
+            wlSasl.onSpanInitialized(span5);
         } catch (err) {}
 
         expect(span5.getTag('error')).toBeTruthy();

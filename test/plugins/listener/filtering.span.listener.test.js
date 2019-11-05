@@ -27,8 +27,8 @@ describe('FilteringSpanListener', () => {
         const nonMatchingCallback = jest.fn();
         
         //Act
-        filteringListener.onSpanStarted(matchingSpan, this, matchingCallback, [2, 'value']);
-        const callbackCalled = filteringListener.onSpanStarted(nonMatchingSpan, this, nonMatchingCallback, [2, 'value']);
+        filteringListener.onSpanInitialized(matchingSpan, this, matchingCallback, [2, 'value']);
+        const callbackCalled = filteringListener.onSpanInitialized(nonMatchingSpan, this, nonMatchingCallback, [2, 'value']);
         
         // Assert
         expect(matchingCallback).toBeCalledWith(new Error(filteringListener.listener.DEFAULT_ERROR_MESSAGE));

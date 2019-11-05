@@ -19,16 +19,20 @@ class TagInjectorSpanListener implements ThundraSpanListener {
     }
 
     onSpanStarted(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
+        return false;
+    }
+
+    onSpanInitialized(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         const existingTags = get(span, 'tags', {});
         const newTags = {...existingTags, ...this.tags};
 
         span.tags = newTags;
 
-        return !callbackAlreadyCalled;
+        return false;
     }
 
     onSpanFinished(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
-        return !callbackAlreadyCalled;
+        return false;
     }
 
     failOnError() {

@@ -101,6 +101,8 @@ class PostgreIntegration implements Integration {
                         });
                     }
 
+                    span._initialized();
+
                     const originalCallback = pgQuery.callback;
 
                     pgQuery.callback = (err: any, res: any) => {

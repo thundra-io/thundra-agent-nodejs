@@ -90,6 +90,8 @@ class IORedisIntegration implements Integration {
                         },
                     });
 
+                    span._initialized();
+
                     if (typeof command.callback === 'function') {
                         command.callback = plugin.patchEnd(span, command.callback);
                     }

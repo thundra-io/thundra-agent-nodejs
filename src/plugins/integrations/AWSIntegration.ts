@@ -720,6 +720,8 @@ class AWSIntegration implements Integration {
                     }
                     const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
 
+                    activeSpan._initialized();
+
                     if (originalCallback) {
                         const me = this;
                         const wrappedCallback = (err: any, data: any) => {

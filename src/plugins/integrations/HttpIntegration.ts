@@ -127,6 +127,8 @@ class HttpIntegration implements Integration {
                         }
                     };
 
+                    span._initialized();
+
                     const req = request.call(this, options, wrappedCallback);
 
                     req.on('response', (res: any) => {

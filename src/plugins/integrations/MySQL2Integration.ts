@@ -99,6 +99,8 @@ class MySQL2Integration implements Integration {
                         });
                     }
 
+                    span._initialized();
+
                     const originalCallback = sequence.onResult;
 
                     const wrappedCallback = (err: any, res: any) => {

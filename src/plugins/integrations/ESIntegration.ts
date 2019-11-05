@@ -131,6 +131,8 @@ class ESIntegration implements Integration {
                         [SpanTags.OPERATION_TYPE]: params.method,
                     });
 
+                    span._initialized();
+
                     const originalCallback = cb;
 
                     const wrappedCallback = (err: any, res: any) => {

@@ -20,6 +20,10 @@ class LatencyInjectorSpanListener implements ThundraSpanListener {
     }
 
     onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
+        return false;
+    }
+
+    onSpanInitialized(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
             if (callback && !this.injectOnFinish) {
                 const sleep = this.randomizeDelay ? Utils.getRandomInt(this.delay) : this.delay;
