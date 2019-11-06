@@ -17,6 +17,7 @@ import * as opentracing from 'opentracing';
 import LambdaEventUtils from '../utils/LambdaEventUtils';
 import InvocationSupport from '../support/InvocationSupport';
 import ThundraChaosError from '../error/ThundraChaosError';
+import AWSOperationTypesConfig from './AWSOperationTypes';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -25,7 +26,6 @@ const md5 = require('md5');
 const has = require('lodash.has');
 const trim = require('lodash.trim');
 const get = require('lodash.get');
-const AWSOperationTypesConfig = require('./AWSOperationTypes.json');
 
 const thundraWrapped = '__thundra_wrapped';
 const moduleName = 'aws-sdk';

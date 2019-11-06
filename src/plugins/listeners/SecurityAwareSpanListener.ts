@@ -2,6 +2,7 @@ import ThundraSpanListener from './ThundraSpanListener';
 import ThundraSpan from '../../opentracing/Span';
 import { SpanTags, SecurityTags } from '../../Constants';
 import ThundraChaosError from '../error/ThundraChaosError';
+import InvocationSupport from '../support/InvocationSupport';
 
 const get = require('lodash.get');
 
@@ -63,9 +64,11 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
             const error = new SecurityError('Operation was blocked due to security configuration');
             span.setTag(SecurityTags.BLOCKED, true);
             span.setErrorTag(error);
+            InvocationSupport.setAgentTag(SecurityTags.BLOCKED, true);
             throw error;
         } else {
             span.setTag(SecurityTags.VIOLATED, true);
+            InvocationSupport.setAgentTag(SecurityTags.VIOLATED, true);
         }
     }
 }
