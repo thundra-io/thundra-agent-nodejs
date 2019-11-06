@@ -765,17 +765,18 @@ class AWSIntegration implements Integration {
                         return originalFunction.apply(this, [originalCallback]);
                     }
                 } catch (error) {
-                    if (error instanceof ThundraChaosError) {
-                        this.response.error = error;
-                    } else {
-                        ThundraLogger.getInstance().error(error);
-                    }
-
-                    const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
                     if (activeSpan) {
                         activeSpan.close();
                     }
-                    return originalFunction.apply(this, [callback]);
+
+                    if (error instanceof ThundraChaosError) {
+                        this.response.error = error;
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
+                        return originalFunction.apply(this, [callback]);
+                    }
                 }
             };
         }

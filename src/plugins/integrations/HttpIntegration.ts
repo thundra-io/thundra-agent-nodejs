@@ -185,10 +185,11 @@ class HttpIntegration implements Integration {
                     return req;
 
                 } catch (error) {
+                    if (span) {
+                        span.close();
+                    }
+
                     if (error instanceof ThundraChaosError) {
-                        if (span) {
-                            span.close();
-                        }
                         throw error;
                     } else {
                         ThundraLogger.getInstance().error(error);
