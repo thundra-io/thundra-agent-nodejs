@@ -1,6 +1,7 @@
 import ThundraSpanListener from './ThundraSpanListener';
 import ThundraSpan from '../../opentracing/Span';
 import { SpanTags, SecurityTags } from '../../Constants';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const get = require('lodash.get');
 
@@ -69,11 +70,10 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
     }
 }
 
-class SecurityError extends Error {
+class SecurityError extends ThundraChaosError {
     constructor(message: string) {
         super(message);
         this.name = 'SecurityError';
-        Error.captureStackTrace(this, this.constructor);
     }
 }
 
