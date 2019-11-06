@@ -9,6 +9,7 @@ import {
     DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,
 } from '../../Constants';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -110,8 +111,12 @@ class IORedisIntegration implements Integration {
                         span.close();
                     }
 
-                    ThundraLogger.getInstance().error(error);
-                    return original.call(this, command);
+                    if (error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        return original.call(this, command);
+                    }
                 }
             };
         }

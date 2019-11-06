@@ -8,6 +8,7 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const has = require('lodash.has');
 const shimmer = require('shimmer');
@@ -163,8 +164,12 @@ class ESIntegration implements Integration {
                         span.close();
                     }
 
-                    ThundraLogger.getInstance().error(error);
-                    return request.call(this, params, cb);
+                    if (error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        return request.call(this, params, cb);
+                    }
                 }
             };
         }

@@ -8,6 +8,7 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -125,8 +126,12 @@ class MySQL2Integration implements Integration {
                         span.close();
                     }
 
-                    ThundraLogger.getInstance().error(error);
-                    query.call(this, sql, values, cb);
+                    if (error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        query.call(this, sql, values, cb);
+                    }
                 }
             };
         }
