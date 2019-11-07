@@ -86,9 +86,7 @@ class MySQLIntegration implements Integration {
                         [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                     });
 
-                    const sequence = query.call(this, sql, values, cb);
-
-                    const statement = sequence.sql;
+                    const statement = sql;
 
                     if (statement) {
                         const statementType = statement.split(' ')[0].toUpperCase();
