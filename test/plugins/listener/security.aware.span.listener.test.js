@@ -9,40 +9,32 @@ describe('SecurityAwareSpanListener', () => {
             {
                 className: 'HTTP',
                 tags: {
-                    'http.host': ['www.google.com', 'www.yahoo.com']
+                    'http.host': ['www.google.com', 'www.yahoo.com'],
+                    'operation.type': ['GET']
                 },
-                operations: [
-                    'GET'
-                ],
             },
             {
                 className: 'AWS-DynamoDB',
                 tags: {
-                    'aws.dynamodb.table.name': ['Users']
+                    'aws.dynamodb.table.name': ['Users'],
+                    'operation.type': ['READ']
                 },
-                operations: [
-                    'READ'
-                ],
             }
         ],
         blacklist: [
             {
                 className: 'HTTP',
                 tags: {
-                    'http.host': ['www.foo.com', 'www.bar.com']
+                    'http.host': ['www.foo.com', 'www.bar.com'],
+                    'operation.type': ['POST']
                 },
-                operations: [
-                    'POST'
-                ],
             },
             {
                 className: 'AWS-SNS',
                 tags: {
-                    'aws.sns.topic.name': ['foo-topic'] 
+                    'aws.sns.topic.name': ['foo-topic'],
+                    'operation.type': ['WRITE']
                 },
-                operations: [
-                    'WRITE'
-                ],
             }
         ]
     };
@@ -54,11 +46,13 @@ describe('SecurityAwareSpanListener', () => {
         expect(sasl.whitelist.length).toBe(2);
         expect(sasl.blacklist.length).toBe(2);
         expect(sasl.whitelist[0].className).toBe('HTTP');
-        expect(sasl.whitelist[0].tags).toEqual({ 'http.host': ['www.google.com', 'www.yahoo.com']});
-        expect(sasl.whitelist[0].operationTypes).toEqual(['GET']);
+        expect(sasl.whitelist[0].tags).toEqual({ 'http.host': ['www.google.com', 'www.yahoo.com'], 'operation.type': ['GET']});
         expect(sasl.whitelist[1].className).toBe('AWS-DynamoDB');
-        expect(sasl.whitelist[1].tags).toEqual({ 'aws.dynamodb.table.name': ['Users']});
-        expect(sasl.whitelist[1].operationTypes).toEqual(['READ']);
+        expect(sasl.whitelist[1].tags).toEqual({ 'aws.dynamodb.table.name': ['Users'], 'operation.type': ['READ']});
+        expect(sasl.blacklist[0].className).toBe('HTTP');
+        expect(sasl.blacklist[0].tags).toEqual({ 'http.host': ['www.foo.com', 'www.bar.com'], 'operation.type': ['POST']});
+        expect(sasl.blacklist[1].className).toBe('AWS-SNS');
+        expect(sasl.blacklist[1].tags).toEqual({ 'aws.sns.topic.name': ['foo-topic'], 'operation.type': ['WRITE']});
     });
 
     const wlSaslConfig = {
@@ -67,20 +61,16 @@ describe('SecurityAwareSpanListener', () => {
             {
                 className: 'HTTP',
                 tags: {
-                    'http.host': ['www.google.com', 'www.yahoo.com']
+                    'http.host': ['www.google.com', 'www.yahoo.com'],
+                    'operation.type': ['GET']
                 },
-                operations: [
-                    'GET'
-                ],
             },
             {
                 className: 'AWS-DynamoDB',
                 tags: {
-                    'aws.dynamodb.table.name': ['Users']
+                    'aws.dynamodb.table.name': ['Users'],
+                    'operation.type': ['READ']
                 },
-                operations: [
-                    'READ'
-                ],
             }
         ]
     };

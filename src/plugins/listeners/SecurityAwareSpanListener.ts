@@ -82,12 +82,10 @@ class SecurityError extends ThundraChaosError {
 
 class Operation {
     private className: string;
-    private operationTypes: string[];
     private tags: any;
 
     constructor(config: any = {}) {
         this.className = get(config, 'className', '');
-        this.operationTypes = get(config, 'operations');
         this.tags = get(config, 'tags');
     }
 
@@ -96,10 +94,6 @@ class Operation {
 
         if (this.className) {
             matched = this.className === span.className;
-        }
-
-        if (matched && this.operationTypes) {
-            matched = this.operationTypes.includes(this.getOperationType(span));
         }
 
         if (matched && this.tags) {
@@ -116,10 +110,6 @@ class Operation {
         }
 
         return matched;
-    }
-
-    getOperationType(span: ThundraSpan): string {
-        return get(span.tags, SpanTags.OPERATION_TYPE);
     }
 }
 
