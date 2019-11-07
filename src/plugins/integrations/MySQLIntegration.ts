@@ -100,6 +100,8 @@ class MySQLIntegration implements Integration {
 
                     span._initialized();
 
+                    const sequence = query.call(this, sql, values, cb);
+
                     const originalCallback = sequence.onResult;
 
                     const wrappedCallback = (err: any, res: any) => {
