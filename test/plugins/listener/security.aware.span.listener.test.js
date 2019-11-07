@@ -49,7 +49,7 @@ describe('SecurityAwareSpanListener', () => {
 
     const sasl = new SecurityAwareSpanListener(saslConfig);
 
-    it('Should use the values given in the config', () => {
+    test('Should use the values given in the config', () => {
         expect(sasl.block).toBe(true);
         expect(sasl.whitelist.length).toBe(2);
         expect(sasl.blacklist.length).toBe(2);
@@ -86,7 +86,7 @@ describe('SecurityAwareSpanListener', () => {
     };
 
     const wlSasl = new SecurityAwareSpanListener(wlSaslConfig);
-    it('Should whitelist spans', () => {
+    test('Should whitelist spans', () => {
         const span1 = new ThundraSpan();
         span1.className = 'HTTP';
         span1.setTag('http.host', 'www.google.com');
