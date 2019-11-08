@@ -64,7 +64,7 @@ const AWSOperationTypes: any = {
       SubscribeToShard: 'READ',
       AddTagsToStream: 'TAGGING',
       RemoveTagsFromStream: 'TAGGING',
-      DecreaseStreamRetentionPeriod: 'WRTITE',
+      DecreaseStreamRetentionPeriod: 'WRITE',
       DeregisterStreamConsumer: 'WRITE',
       DisableEnhancedMonitoring: 'WRITE',
       EnableEnhancedMonitoring: 'WRITE',

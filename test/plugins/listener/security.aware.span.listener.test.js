@@ -122,6 +122,7 @@ describe('SecurityAwareSpanListener', () => {
         expect(span3.getTag('error.kind')).toEqual('SecurityError');
         expect(span3.getTag('error.kind')).toEqual('SecurityError');
         expect(span3.getTag(SecurityTags.BLOCKED)).toBeTruthy();
+        expect(span3.getTag(SecurityTags.VIOLATED)).toBeTruthy();
 
         try {
             wlSasl.onSpanInitialized(span4);
@@ -131,6 +132,7 @@ describe('SecurityAwareSpanListener', () => {
         expect(span4.getTag('error.kind')).toEqual('SecurityError');
         expect(span4.getTag('error.kind')).toEqual('SecurityError');
         expect(span4.getTag(SecurityTags.BLOCKED)).toBeTruthy();
+        expect(span4.getTag(SecurityTags.VIOLATED)).toBeTruthy();
 
         try {
             wlSasl.onSpanInitialized(span5);
@@ -140,5 +142,6 @@ describe('SecurityAwareSpanListener', () => {
         expect(span5.getTag('error.kind')).toEqual('SecurityError');
         expect(span5.getTag('error.kind')).toEqual('SecurityError');
         expect(span5.getTag(SecurityTags.BLOCKED)).toBeTruthy();
+        expect(span5.getTag(SecurityTags.VIOLATED)).toBeTruthy();
     });
 });

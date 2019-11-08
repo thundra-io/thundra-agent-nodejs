@@ -62,9 +62,11 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
     handleSecurityIssue(span: ThundraSpan) {
         if (this.block) {
             const error = new SecurityError('Operation was blocked due to security configuration');
-            span.setTag(SecurityTags.BLOCKED, true);
             span.setErrorTag(error);
+            span.setTag(SecurityTags.BLOCKED, true);
+            span.setTag(SecurityTags.VIOLATED, true);
             InvocationSupport.setAgentTag(SecurityTags.BLOCKED, true);
+            InvocationSupport.setAgentTag(SecurityTags.VIOLATED, true);
             throw error;
         } else {
             span.setTag(SecurityTags.VIOLATED, true);

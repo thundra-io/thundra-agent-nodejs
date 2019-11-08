@@ -813,4 +813,53 @@ describe('AWS Integration', () => {
             expect(span.finishTime).toBeTruthy();
         });
     });
+
+    test('should get correct operationTypes', () => {
+        if (!AWSIntegration.AWSOperationTypes) {
+            AWSIntegration.parseAWSOperationTypes();
+        }
+        const testCases = [
+            // Exception cases
+            { className: 'AWS-Lambda', operationName: 'ListTags', expected: 'READ'},
+            { className: 'AWS-Lambda', operationName: 'EnableReplication', expected: 'PERMISSION'},
+            { className: 'AWS-S3', operationName: 'HeadBucket', expected: 'LIST'},
+            { className: 'AWS-S3', operationName: 'ListJobs', expected: 'READ'},
+            { className: 'AWS-SNS', operationName: 'OptInPhoneNumber', expected: 'WRITE'},
+            { className: 'AWS-SNS', operationName: 'ListPhoneNumbersOptedOut', expected: 'READ'},
+            { className: 'AWS-Athena', operationName: 'BatchGetQueryExecution', expected: 'READ'},
+            { className: 'AWS-Athena', operationName: 'UntagResource', expected: 'TAGGING'},
+            { className: 'AWS-Kinesis', operationName: 'RegisterStreamConsumer', expected: 'WRITE'},
+            { className: 'AWS-Kinesis', operationName: 'SplitShard', expected: 'WRITE'},
+            { className: 'AWS-Firehose', operationName: 'StopDeliveryStreamEncryption', expected: 'WRITE'},
+            { className: 'AWS-Firehose', operationName: 'DescribeDeliveryStream', expected: 'LIST'},
+            { className: 'AWS-SQS', operationName: 'PurgeQueue', expected: 'WRITE'},
+            { className: 'AWS-SQS', operationName: 'ListQueueTags', expected: 'READ'},
+            { className: 'AWS-DynamoDB', operationName: 'PurchaseReservedCapacityOfferings', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'Scan', expected: 'READ'},
+            // Check according to patterns
+            { className: 'AWS-DynamoDB', operationName: 'ListFooOperation', expected: 'LIST'},
+            { className: 'AWS-DynamoDB', operationName: 'GetFooOperation', expected: 'READ'},
+            { className: 'AWS-DynamoDB', operationName: 'CreateFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'DeleteFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'InvokeFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'PublishFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'PutFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'UpdateFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'DescribeFooOperation', expected: 'READ'},
+            { className: 'AWS-DynamoDB', operationName: 'ChangeFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'SendFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'FooOperationPermission', expected: 'PERMISSION'},
+            { className: 'AWS-DynamoDB', operationName: 'FooOperationTagging', expected: 'TAGGING'},
+            { className: 'AWS-DynamoDB', operationName: 'FooOperationTags', expected: 'TAGGING'},
+            { className: 'AWS-DynamoDB', operationName: 'SetFooOperation', expected: 'WRITE'},
+            // Nonmatching cases
+            { className: 'AWS-DynamoDB', operationName: 'FooSetOperation', expected: ''},
+            { className: 'AWS-DynamoDB', operationName: 'FooListOperation', expected: ''},
+            { className: 'AWS-DynamoDB', operationName: 'FooSendOperation', expected: ''},
+        ];
+
+        for (const testCase of testCases) {
+            expect(AWSIntegration.getOperationType(testCase.operationName, testCase.className)).toBe(testCase.expected);
+        }
+    })
 });

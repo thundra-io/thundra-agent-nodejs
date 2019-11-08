@@ -2,11 +2,11 @@ import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import {
     AwsSDKTags, AwsSQSTags, AwsSNSTags, SpanTags, AwsDynamoTags,
-    SNSRequestTypes, SQSRequestTypes, AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
-    SpanTypes, DynamoDBRequestTypes, KinesisRequestTypes, ClassNames, DomainNames,
-    DBTags, DBTypes, FirehoseRequestTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST, S3RequestTypes,
-    LambdaRequestType, envVariableKeys, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-    AthenaOperationTypes, AwsAthenaTags,
+    AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
+    SpanTypes, DynamoDBRequestTypes, ClassNames, DomainNames,
+    DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
+    envVariableKeys, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    AwsAthenaTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
