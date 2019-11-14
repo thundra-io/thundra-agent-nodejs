@@ -1,8 +1,11 @@
-module.exports.dynamo = (AWS, params) => {
+module.exports.dynamo = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
         const ddb = new AWS.DynamoDB({ apiVersion: '2012-10-08', dynamoDbCrc32: false });
-
+        const params = {
+            Item: {'id': {S: '1'}},
+            TableName: 'test-table',
+        };
         ddb.putItem(params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
@@ -88,7 +91,7 @@ module.exports.sqs = (AWS) => {
         const sqs = new AWS.SQS();
         const params = {
             MessageBody: 'Hello Thundra!',
-            QueueUrl: 'testqueue',
+            QueueUrl: 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
             DelaySeconds: 0
         };
 

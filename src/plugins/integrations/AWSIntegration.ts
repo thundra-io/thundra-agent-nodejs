@@ -718,7 +718,7 @@ class AWSIntegration implements Integration {
                             },
                         });
                     }
-                    const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
+                    const originalFunction = integration.getOriginalFuntion(wrappedFunctionName);
 
                     activeSpan._initialized();
 
@@ -774,7 +774,7 @@ class AWSIntegration implements Integration {
                         throw error;
                     } else {
                         ThundraLogger.getInstance().error(error);
-                        const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
+                        const originalFunction = integration.getOriginalFuntion(wrappedFunctionName);
                         return originalFunction.apply(this, [callback]);
                     }
                 }
@@ -798,6 +798,10 @@ class AWSIntegration implements Integration {
         if (this.lib) {
             lib[thundraWrapped] = true;
         }
+    }
+
+    getOriginalFuntion(wrappedFunctionName: string) {
+        return get(this, `wrappedFuncs.${wrappedFunctionName}`);
     }
 
     setUnwrapped(lib: any) {
