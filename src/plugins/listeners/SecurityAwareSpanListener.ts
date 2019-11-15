@@ -13,8 +13,16 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
 
     constructor(config: any = {}) {
         this.block = get(config, 'block', false);
-        this.whitelist = get(config, 'whitelist', []).map((opConfig: any) => new Operation(opConfig));
-        this.blacklist = get(config, 'blacklist', []).map((opConfig: any) => new Operation(opConfig));
+        this.whitelist = get(config, 'whitelist');
+        this.blacklist = get(config, 'blacklist');
+
+        if (Array.isArray(this.whitelist)) {
+            this.whitelist = this.whitelist.map((opConfig: any) => new Operation(opConfig));
+        }
+
+        if (Array.isArray(this.blacklist)) {
+            this.blacklist = this.blacklist.map((opConfig: any) => new Operation(opConfig));
+        }
     }
 
     onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
@@ -25,15 +33,17 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
         if (!this.isExternalOperation(span)) {
             return false;
         }
+        const hasWhitelist = Array.isArray(this.whitelist);
+        const hasBlacklist = Array.isArray(this.blacklist);
 
-        for (const op of this.blacklist) {
-            if (op.matches(span)) {
-                this.handleSecurityIssue(span);
-                return false;
+        if (hasBlacklist) {
+            for (const op of this.blacklist) {
+                if (op.matches(span)) {
+                    this.handleSecurityIssue(span);
+                    return false;
+                }
             }
         }
-
-        const hasWhitelist = Array.isArray(this.whitelist) && this.whitelist.length > 0;
 
         if (hasWhitelist) {
             for (const op of this.whitelist) {
@@ -95,18 +105,24 @@ class Operation {
         let matched = true;
 
         if (this.className) {
-            matched = this.className === span.className;
+            matched = this.className === '*' || this.className === span.className;
         }
 
         if (matched && this.tags) {
             for (const tagKey of Object.keys(this.tags)) {
                 const tagVal = get(this.tags, tagKey, []);
-                if (Array.isArray(tagVal) && !tagVal.includes(span.getTag(tagKey))) {
-                    matched = false;
-                    break;
-                } else if (!Array.isArray(tagVal) && span.getTag(tagKey) !== tagVal) {
-                    matched = false;
-                    break;
+                if (Array.isArray(tagVal)) {
+                    if (!tagVal.includes(span.getTag(tagKey))) {
+                        matched = false;
+                        break;
+                    }
+                } else if (!Array.isArray(tagVal)) {
+                    if (tagVal === '*') {
+                        continue;
+                    } else if (span.getTag(tagKey) !== tagVal) {
+                        matched = false;
+                        break;
+                    }
                 }
             }
         }
