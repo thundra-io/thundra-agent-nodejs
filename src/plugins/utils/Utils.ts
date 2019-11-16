@@ -23,6 +23,7 @@ import InvocationSupport from '../support/InvocationSupport';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
+const koalas = require('koalas');
 
 declare var __non_webpack_require__: any;
 const customReq = typeof __non_webpack_require__ !== 'undefined'
@@ -45,6 +46,10 @@ class Utils {
 
     static getConfiguration(key: string, defaultValue?: any): any {
         return process.env[key] ? process.env[key] : defaultValue;
+    }
+
+    static getNumericConfiguration(key: string, defaultValue?: number): number {
+        return koalas(parseInt(Utils.getConfiguration(key, defaultValue), 10));
     }
 
     static getCpuUsage() {
@@ -129,6 +134,27 @@ class Utils {
     }
 
     static readProcIoPromise() {
+        return new Promise((resolve, reject) => {
+            readFile(PROC_IO_PATH, (err, file) => {
+                const procIoData = {
+                    readBytes: 0,
+                    writeBytes: 0,
+                };
+
+                if (err) {
+                    ThundraLogger.getInstance().error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
+                } else {
+                    const procIoArray = file.toString().split('\n');
+                    procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
+                    procIoData.writeBytes = parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1), 0);
+                }
+
+                return resolve(procIoData);
+            });
+        });
+    }
+
+    static readProcNetworkIoSync(procId: number) {
         return new Promise((resolve, reject) => {
             readFile(PROC_IO_PATH, (err, file) => {
                 const procIoData = {

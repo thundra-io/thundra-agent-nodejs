@@ -90,6 +90,13 @@ export const envVariableKeys = {
         'thundra_agent_trace_integrations_http_set_error_on_4xx_response_code_disable',
     THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_5XX:
         'thundra_agent_trace_integrations_http_set_error_on_5xx_response_code_disable',
+
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE: 'thundra_agent_lambda_debugger_enable',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT: 'thundra_agent_lambda_debugger_port',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX: 'thundra_agent_lambda_debugger_wait_max',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT: 'thundra_agent_lambda_debugger_broker_port',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST: 'thundra_agent_lambda_debugger_broker_host',
+
 };
 
 export function getTimeoutMargin(region: string) {
@@ -782,3 +789,6 @@ export const StdOutLogContext = 'STDOUT';
 export const StdErrorLogContext = 'STDERR';
 
 export const DefaultMongoCommandSizeLimit = 128 * 1024;
+
+export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT = 1111;
+export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST = 'debug.thundra.io';
