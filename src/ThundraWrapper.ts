@@ -229,7 +229,7 @@ class ThundraWrapper {
                         '/opt/socat',
                         [
                             'TCP:' + this.brokerHost + ':' + this.brokerPort,
-                            'TCP:localhost:' + this.debuggerPort,
+                            'TCP:localhost:' + this.debuggerPort + ',forever',
                         ],
                         {detached: true});
                 this.inspector.open(this.debuggerPort, 'localhost', true);
