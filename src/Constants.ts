@@ -159,6 +159,21 @@ export function getAPIEndpoint(region: string) {
     return 'api.thundra.io';
 }
 
+export function getDefaultDebugBrokerEndpoint(region: string) {
+    if (region) {
+        if (region.startsWith('us-west-')) {
+            return 'debug.thundra.io';
+        } else if (region.startsWith('us-east-')
+            || region.startsWith('sa-')
+            || region.startsWith('ca-')) {
+            return 'us-east-1.debug.thundra.io';
+        } else if (region.startsWith('eu-')) {
+            return 'eu-west-2.debug.thundra.io';
+        }
+    }
+    return 'debug.thundra.io';
+}
+
 export const MONITORING_DATA_PATH = '/monitoring-data';
 export const COMPOSITE_MONITORING_DATA_PATH = '/composite-monitoring-data';
 
@@ -791,4 +806,5 @@ export const StdErrorLogContext = 'STDERR';
 export const DefaultMongoCommandSizeLimit = 128 * 1024;
 
 export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT = 1111;
-export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST = 'debug.thundra.io';
+export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST =
+    getDefaultDebugBrokerEndpoint(process.env[envVariableKeys.AWS_REGION]);
