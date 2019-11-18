@@ -398,7 +398,7 @@ describe('SecurityAwareSpanListener', () => {
                     {
                         className: 'HTTP',
                         tags: {
-                            'http.host': "*",
+                            'http.host': ["*"],
                             'operation.type': ['GET']
                         },
                     },

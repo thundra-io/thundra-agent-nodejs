@@ -112,7 +112,9 @@ class Operation {
             for (const tagKey of Object.keys(this.tags)) {
                 const tagVal = get(this.tags, tagKey, []);
                 if (Array.isArray(tagVal)) {
-                    if (!tagVal.includes(span.getTag(tagKey))) {
+                    if (tagVal.includes('*')) {
+                        continue;
+                    } else if (!tagVal.includes(span.getTag(tagKey))) {
                         matched = false;
                         break;
                     }
