@@ -18,7 +18,7 @@ module.exports.dynamo = (AWS) => {
 
 module.exports.s3GetObject = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({ region: 'us-west-2' });
+        AWS.config.update({ region: 'us-west-2', maxRetries: 0 });
         const s3 = new AWS.S3();
         var getParams = {
             Bucket: 'test',

@@ -2,7 +2,6 @@ import ESIntegrations from '../../dist/plugins/integrations/ESIntegration';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import ES from './utils/es.integration.utils';
-import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
 describe('Elastic Search Integration', () => {
     test('should instrument ES calls with single host', () => {

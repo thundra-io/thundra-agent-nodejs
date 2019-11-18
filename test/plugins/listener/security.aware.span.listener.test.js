@@ -453,7 +453,6 @@ describe('SecurityAwareSpanListener', () => {
                 expect(span.getTag(SecurityTags.BLOCKED)).toBeTruthy();
                 expect(span.getTag(SecurityTags.VIOLATED)).toBeTruthy();
             }
-
         });
     });
 });

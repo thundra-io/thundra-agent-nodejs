@@ -1,7 +1,7 @@
 import Integration from './Integration';
 import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
 } from '../../Constants';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
@@ -101,7 +101,7 @@ class ESIntegration implements Integration {
                     span = tracer._startSpan(normalizedPath, {
                         childOf: parentSpan,
                         domainName: DomainNames.DB,
-                        className: DBTypes.ELASTICSEARCH.toUpperCase(),
+                        className: ClassNames.ELASTICSEARCH,
                         disableActiveStart: true,
                     });
 

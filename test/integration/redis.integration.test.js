@@ -21,11 +21,11 @@ describe('Redis Integration', () => {
             const spanList = tracer.getRecorder().spanList;
 
             let writeCommandSpan;
-            spanList.forEach((span) => {
+            for (const span of spanList) {
                 if (span.tags['redis.command.type'] === 'WRITE') {
                     writeCommandSpan = span;
                 }
-            });
+            }
 
             expect(spanList.length).toBe(4);
 

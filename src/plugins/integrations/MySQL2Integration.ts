@@ -1,7 +1,7 @@
 import Integration from './Integration';
 import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
 } from '../../Constants';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
@@ -69,7 +69,7 @@ class MySQL2Integration implements Integration {
                     span = tracer._startSpan(this.config.database, {
                         childOf: parentSpan,
                         domainName: DomainNames.DB,
-                        className: DBTypes.MYSQL.toUpperCase(),
+                        className: ClassNames.MYSQL,
                         disableActiveStart: true,
                     });
 

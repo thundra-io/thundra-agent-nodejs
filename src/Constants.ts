@@ -230,6 +230,8 @@ export const ClassNames = {
     APIGATEWAY: 'AWS-APIGateway',
     ATHENA: 'AWS-Athena',
     MONGODB: 'MONGODB',
+    ELASTICSEARCH: 'ELASTICSEARCH',
+    MYSQL: 'MYSQL',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
