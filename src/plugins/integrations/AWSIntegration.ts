@@ -3,7 +3,7 @@ import ThundraTracer from '../../opentracing/Tracer';
 import {
     AwsSDKTags, AwsSQSTags, AwsSNSTags, SpanTags, AwsDynamoTags,
     AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
-    SpanTypes, DynamoDBRequestTypes, ClassNames, DomainNames,
+    SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
     envVariableKeys, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
     AwsAthenaTags,
@@ -486,7 +486,6 @@ class AWSIntegration implements Integration {
                             }
                         }
                     } else if (serviceName === 'dynamodb') {
-                        const statementType = DynamoDBRequestTypes[operationName];
                         const tableName = Utils.getDynamoDBTableName(request);
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.DYNAMODB);
 
@@ -500,7 +499,7 @@ class AWSIntegration implements Integration {
                             tags: {
                                 [DB_TYPE]: DBTypes.DYNAMODB,
                                 [DB_INSTANCE]: serviceEndpoint,
-                                [DBTags.DB_STATEMENT_TYPE]: statementType ? statementType : '',
+                                [DBTags.DB_STATEMENT_TYPE]: operationType,
                                 [SpanTags.OPERATION_TYPE]: operationType,
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_DYNAMO,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
@@ -508,7 +507,7 @@ class AWSIntegration implements Integration {
                             },
                         });
 
-                        if (statementType) {
+                        if (operationType) {
                             activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
                             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
                             activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);

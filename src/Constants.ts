@@ -417,28 +417,6 @@ export const MongoDBCommandTypes = {
     LOGAPPLICATIONMESSAGE: 'EXECUTE',
 };
 
-export const AthenaOperationTypes = {
-    batchGetNamedQuery: 'READ',
-    batchGetQueryExecution: 'READ',
-    createNamedQuery: 'WRITE',
-    createWorkGroup: 'WRITE',
-    deleteNamedQuery: 'DELETE',
-    deleteWorkGroup: 'DELETE',
-    getNamedQuery: 'READ',
-    getQueryExecution: 'READ',
-    getQueryResults: 'READ',
-    getWorkGroup: 'READ',
-    listNamedQueries: 'READ',
-    listQueryExecutions: 'READ',
-    listTagsForResource: 'READ',
-    listWorkGroups: 'READ',
-    startQueryExecution: 'EXECUTE',
-    stopQueryExecution: 'EXECUTE',
-    tagResource: 'WRITE',
-    untagResource: 'DELETE',
-    updateWorkGroup: 'WRITE',
-};
-
 export const DBTypes = {
     DYNAMODB: 'aws-dynamodb',
     REDIS: 'redis',
@@ -575,24 +553,6 @@ export const LISTENERS: any = {
     SecurityAwareSpanListener,
 };
 
-export const SQSRequestTypes: any = {
-    receiveMessage: 'READ',
-    sendMessage: 'WRITE',
-    sendMessageBatch: 'WRITE',
-    deleteMessage: 'DELETE',
-    deleteMessageBatch: 'DELETE',
-};
-
-export const SNSRequestTypes: any = {
-    write: 'WRITE',
-    publish: 'WRITE',
-};
-
-export const LambdaRequestType: any = {
-    invokeAsync: 'CALL',
-    invoke: 'CALL',
-};
-
 export const RedisCommandTypes: any = {
     APPEND: 'WRITE',
     BGREWRITEAOF: 'WRITE',
@@ -723,53 +683,6 @@ export const RedisCommandTypes: any = {
     XREAD: 'READ',
     XREADGROUP: 'READ',
     XPENDING: 'READ',
-};
-
-export const DynamoDBRequestTypes: any = {
-    batchGetItem: 'READ',
-    batchWriteItem: 'WRITE',
-    createTable: 'WRITE',
-    createGlobalTable: 'WRITE',
-    deleteItem: 'DELETE',
-    deleteTable: 'DELETE',
-    getItem: 'READ',
-    putItem: 'WRITE',
-    query: 'READ',
-    scan: 'READ',
-    updateItem: 'WRITE',
-
-};
-
-export const KinesisRequestTypes: any = {
-    getRecords: 'READ',
-    putRecords: 'WRITE',
-    putRecord: 'WRITE',
-};
-
-export const FirehoseRequestTypes: any = {
-    putRecordBatch: 'WRITE',
-    putRecord: 'WRITE',
-};
-
-export const S3RequestTypes: any = {
-    deleteBucket: 'DELETE',
-    createBucket: 'WRITE',
-    copyObject: 'WRITE',
-    deleteObject: 'DELETE',
-    deleteObjects: 'DELETE',
-    getObject: 'READ',
-    getObjects: 'READ',
-    listBuckets: 'READ',
-    putObject: 'WRITE',
-    putObjectAcl: 'WRITE',
-    getBucketAcl: 'READ',
-    getObjectAcl: 'READ',
-    getSignedUrl: 'READ',
-    headBucket: 'READ',
-    headObject: 'READ',
-    listObjects: 'READ',
-    listObjectsV2: 'READ',
-    putBucketAcl: 'WRITE',
 };
 
 export const AwsXrayConstants: any = {
