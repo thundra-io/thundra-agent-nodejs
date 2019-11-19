@@ -6,7 +6,6 @@ import AWSCalls from './integration/utils/aws.integration.utils';
 import HTTPCalls from './integration/utils/http.integration.utils';
 import ESCalls from './integration/utils/es.integration.utils';
 import RedisCalls from './integration/utils/redis.integration.utils';
-import IORedisCalls from './integration/utils/ioredis.integration.utils';
 import MySQLCalls from './integration/utils/mysql.integration.utils';
 import MongoCalls from './integration/utils/mongodb.integration.utils';
 import ThundraWrapper from '../dist/ThundraWrapper';
@@ -334,7 +333,7 @@ describe('whitelist config', () => {
         })
     });
 
-    describe.skip('using redis integration', () => {
+    describe('using redis integration', () => {
         const redis = require('redis');
         const ioredis = require('ioredis');
 
@@ -353,7 +352,7 @@ describe('whitelist config', () => {
         });
         
         test('should whitelist ioredis query operation', () => {
-            const originalFunction = () => IORedisCalls.set(ioredis);
+            const originalFunction = () => RedisCalls.set(ioredis);
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
@@ -580,7 +579,7 @@ describe('blacklist config', () => {
         });
         
         test('should blacklist ioredis query operation', () => {
-            const originalFunction = () => IORedisCalls.set(ioredis);
+            const originalFunction = () => RedisCalls.set(ioredis);
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
