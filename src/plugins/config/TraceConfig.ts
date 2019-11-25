@@ -1,6 +1,6 @@
 import BasePluginConfig from './BasePluginConfig';
-import TraceableConfig from './TraceableConfig';
-import {envVariableKeys, INTEGRATIONS } from '../../Constants';
+import { TraceableConfig } from '@thundra/instrumenter';
+import { envVariableKeys } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
 import Utils from '../utils/Utils';
 import ThundraLogger from '../../ThundraLogger';

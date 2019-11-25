@@ -1,80 +1,33 @@
 import TraceConfig from '../../plugins/config/TraceConfig';
-import TraceableConfig, { TracableConfigCheckLevel } from '../../plugins/config/TraceableConfig';
-import { envVariableKeys, TRACE_DEF_SEPERATOR, Syntax, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
+import { envVariableKeys, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
-import NodePointer, { LINE_POINTER_TYPE, RETURN_POINTER_TYPE } from './NodePointer';
 import Utils from '../../plugins/utils/Utils';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraTracer from '../Tracer';
 import ThundraSpan from '../Span';
+import { ThundraSourceCodeInstrumenter } from '@thundra/instrumenter';
 
 const Module = require('module');
-const falafel = require('falafel');
-const util = require('util');
 const path = require('path');
+const get = require('lodash.get');
 
-const TRACE_ENTRY = 'var __thundraEntryData__ = __thundraTraceEntry__({name: %s, path: %s, args: %s, argNames: %s});';
-const TRACE_LINE = 'if (typeof __thundraEntryData__ !== \'undefined\') \
-                        __thundraTraceLine__({ \
-                            entryData: __thundraEntryData__, \
-                            line: %d, \
-                            source: %s, \
-                            localVarNames: %s, \
-                            localVarValues: %s, \
-                            argNames: %s, \
-                            argValues: %s \
-                        });';
-const TRACE_EXIT = '__thundraTraceExit__({entryData: __thundraEntryData__, exception: %s, returnValue: %s, exceptionValue: %s});';
-
-const ARG_NAMES_POINTER = '/* ___%thundraArgNames%___ */';
-const ARG_VALUES_POINTER = '/* ___%thundraArgValues%___ */';
-
-const ARG_NAMES_PATTERN = new RegExp(ARG_NAMES_POINTER.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
-const ARG_VALUES_PATTERN = new RegExp(ARG_VALUES_POINTER.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
-
-const NODE_TYPES_FOR_LINE_TRACING = [
-    'ExpressionStatement',
-    'BreakStatement',
-    'ContinueStatement',
-    'VariableDeclaration',
-    'ReturnStatement',
-    'ThrowStatement',
-    'TryStatement',
-    'FunctionDeclaration',
-    'IfStatement',
-    'WhileStatement',
-    'DoWhileStatement',
-    'ForStatement',
-    'ForInStatement',
-    'SwitchStatement',
-    'WithStatement',
-];
-
-// To keep line numbers sync between the original and instrumented code,
-// it is better to keep injected code at the same line with the original code
-const TRACE_INJECTION_SEPARATOR = ' ';
-const DEBUG_INSTRUMENTATION = false;
+const TRACE_DEF_SEPERATOR: string = '.';
 
 /*
     Most of the code is derived from njsTrace : https://github.com/ValYouW/njsTrace
 */
 class Instrumenter {
-
-    traceConfig: TraceConfig;
     origCompile: any;
-    updates: Map<NodePointer, string> = new Map();
     tracer: ThundraTracer;
+    sourceCodeInstrumenter: ThundraSourceCodeInstrumenter;
 
     constructor(traceConfig: TraceConfig) {
-        this.traceConfig = traceConfig;
-        if (traceConfig) {
-            this.tracer = traceConfig.tracer;
-        }
-    }
+        const traceableConfigs = get(traceConfig, 'traceableConfigs');
+        const traceableConfigPrefix = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_FILE_PREFIX);
 
-    shouldTraceFile(relPath: string): boolean {
-        return this.getThundraTraceableConfig(relPath + '.*', TracableConfigCheckLevel.FILE) !== null;
+        this.sourceCodeInstrumenter = new ThundraSourceCodeInstrumenter(traceableConfigs, traceableConfigPrefix);
+        this.tracer = get(traceConfig, 'tracer');
     }
 
     unhookModuleCompile() {
@@ -92,7 +45,9 @@ class Instrumenter {
             let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPERATOR);
             relPathWithDots = relPathWithDots.replace('.js', '');
 
-            if (self.shouldTraceFile(relPathWithDots)) {
+            const sci = self.sourceCodeInstrumenter;
+
+            if (sci.shouldTraceFile(relPathWithDots)) {
                 let wrapped = true;
                 if (Module.wrapper.length === 2) {
                     content = Module.wrapper[0] + '\n' + content + Module.wrapper[1];
@@ -100,7 +55,7 @@ class Instrumenter {
                     wrapped = false;
                 }
                 try {
-                    content = self.addTraceHooks(content, relPathWithDots, wrapped);
+                    content = sci.addTraceHooks(content, relPathWithDots, wrapped);
                     if (Module.wrapper.length === 2) {
                         content = content.substring(Module.wrapper[0].length, content.length - Module.wrapper[1].length);
                     }
@@ -110,346 +65,6 @@ class Instrumenter {
             }
             self.origCompile.call(this, content, filename);
         };
-    }
-
-    addTraceHooks(code: any, relPath: string, wrappedFile: any) {
-        const self = this;
-        self.updates.clear();
-        try {
-            const codeLines = code.split('\n');
-            const tracedLines = new Set();
-            const localVars = new Map();
-            const output = falafel(code, {
-                ranges: true,
-                locations: true,
-                ecmaVersion: 8,
-            }, function processASTNode(node: any) {
-                const startLine = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
-                let name = self.getFunctionName(node);
-                if (name && name.startsWith('module.exports.')) {
-                    name = name.substring('module.exports.'.length);
-                }
-                const instrumentOption =
-                    name
-                        ? self.getThundraTraceableConfig(relPath + '.' + name, TracableConfigCheckLevel.FUNCTION)
-                        : null;
-
-                if (name && node.body.type === Syntax.BlockStatement) {
-                    if (instrumentOption === null) {
-                        return;
-                    }
-
-                    const funcDec = node.source().slice(0, node.body.range[0] - node.range[0]);
-                    let origFuncBody = node.body.source();
-                    origFuncBody = origFuncBody.slice(1, origFuncBody.length - 1);
-
-                    if (wrappedFile && node.loc.start.line === 1) {
-                        return;
-                    }
-
-                    const aNames = node.params.map((p: any) => '\'' + p.name + '\'').join(',');
-                    const aValues = node.params.map((p: any) => p.name).join(',');
-
-                    let args = 'null';
-                    let argNames = 'null';
-                    if (instrumentOption.traceArgs) {
-                        args = '[' + aValues + ']';
-                        argNames = '[' + aNames + ']';
-                    }
-
-                    const traceEntry = util.format(TRACE_ENTRY, JSON.stringify(name), JSON.stringify(relPath), args, argNames);
-                    const traceExit = util.format(TRACE_EXIT, 'false', 'null', 'null');
-
-                    const newFuncBody =
-                        TRACE_INJECTION_SEPARATOR + traceEntry +
-                        TRACE_INJECTION_SEPARATOR + origFuncBody +
-                        TRACE_INJECTION_SEPARATOR + traceExit +
-                        TRACE_INJECTION_SEPARATOR;
-
-                    const traceEX = util.format(TRACE_EXIT, 'true', 'null',
-                        instrumentOption.traceError ? '__thundraEX__' : 'null');
-                    let funcCode =
-                        funcDec +
-                        '{' +
-                            TRACE_INJECTION_SEPARATOR +
-                            'try {' +
-                                newFuncBody +
-                            '} catch(__thundraEX__) {' + TRACE_INJECTION_SEPARATOR +
-                                traceEX + TRACE_INJECTION_SEPARATOR +
-                                'throw __thundraEX__;' + TRACE_INJECTION_SEPARATOR +
-                            '}' +
-                            TRACE_INJECTION_SEPARATOR +
-                        '}';
-
-                    for (const e of self.updates.entries()) {
-                        const nodePointer: NodePointer = e[0];
-                        const type: number = nodePointer.type;
-                        const pointer: string = nodePointer.pointer;
-                        const update: string = e[1];
-                        if (type === LINE_POINTER_TYPE && instrumentOption.traceLineByLine) {
-                            if (funcCode.includes(pointer)) {
-                                funcCode = funcCode.replace(pointer, update);
-                                self.updates.delete(nodePointer);
-                            }
-                        }
-                        if (type === RETURN_POINTER_TYPE && instrumentOption.traceReturnValue) {
-                            if (funcCode.includes(pointer)) {
-                                funcCode = funcCode.replace(pointer, update);
-                                self.updates.delete(nodePointer);
-                            }
-                        }
-                    }
-
-                    funcCode = funcCode.replace(ARG_NAMES_PATTERN, aNames);
-                    funcCode = funcCode.replace(ARG_VALUES_PATTERN, aValues);
-
-                    node.update(funcCode);
-                } else if (node.type === Syntax.ReturnStatement) {
-                    const traceLine =
-                        self.checkTraceLine(node, tracedLines, localVars, wrappedFile, codeLines);
-                    const id = Math.floor(Math.random() * 10000);
-                    const line = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
-                    const linePointer = '/* ___%thundraLine@' + line + '%___ */';
-                    const returnPointer = '/* __%thundraReturn@' + id + '%__ */';
-                    if (node.argument) {
-                        const tmpVar = '__thundraTmp' + id + '__';
-                        const traceExit = util.format(TRACE_EXIT, 'false', tmpVar, 'null');
-                        const traceReturn =
-                            '{' +
-                                TRACE_INJECTION_SEPARATOR + 'var ' + tmpVar + ' = ' + node.argument.source() + ';' +
-                                TRACE_INJECTION_SEPARATOR + returnPointer +
-                                TRACE_INJECTION_SEPARATOR + 'return ' + tmpVar + ';' +
-                                TRACE_INJECTION_SEPARATOR +
-                            '}';
-                        if (traceLine) {
-                            node.update(linePointer + ' ' + traceReturn);
-                            self.updates.set(new NodePointer(LINE_POINTER_TYPE, linePointer), traceLine);
-                            self.updates.set(new NodePointer(RETURN_POINTER_TYPE, returnPointer), traceExit);
-                        } else {
-                            node.update(traceReturn);
-                            self.updates.set(new NodePointer(RETURN_POINTER_TYPE, returnPointer), traceReturn);
-                        }
-                    } else {
-                        const traceExit = util.format(TRACE_EXIT, 'false', startLine, 'null');
-                        const traceReturn =
-                            '{' +
-                                traceExit + ' ' + node.source() +
-                            '}';
-                        if (traceLine) {
-                            node.update(linePointer + ' ' + returnPointer);
-                            self.updates.set(new NodePointer(LINE_POINTER_TYPE, linePointer), traceLine);
-                            self.updates.set(new NodePointer(RETURN_POINTER_TYPE, returnPointer), traceReturn);
-                        } else {
-                            node.update(returnPointer);
-                            self.updates.set(new NodePointer(RETURN_POINTER_TYPE, returnPointer), traceReturn);
-                        }
-                    }
-                } else {
-                    const traceLine =
-                        self.checkTraceLine(node, tracedLines, localVars, wrappedFile, codeLines);
-                    if (traceLine) {
-                        const line = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
-                        const linePointer = '/* ___%thundraLine@' + line + '%___ */';
-                        node.update(linePointer + ' ' + node.source());
-                        self.updates.set(new NodePointer(LINE_POINTER_TYPE, linePointer), traceLine);
-                    }
-                }
-            });
-            const instrumentedCode = output.toString();
-            if (DEBUG_INSTRUMENTATION) {
-                console.log('==================================================');
-                console.log('File: ' + relPath);
-                console.log('Original code: ' + code);
-                console.log('Instrumented code: ' + instrumentedCode);
-                console.log('==================================================');
-            }
-            return instrumentedCode;
-        } catch (e) {
-            console.log(e);
-        } finally {
-            self.updates.clear();
-        }
-    }
-
-    checkTraceLine(node: any,
-                   tracedLines: Set<number>,
-                   localVars: Map<string, number>,
-                   wrappedFile: boolean,
-                   codeLines: string[]) {
-        if (node.type === Syntax.BlockStatement) {
-            // Remove local variables which are out of scope anymore
-            for (const e of localVars.entries()) {
-                const localVarName = e[0];
-                const localVarDefPos = e[1];
-                if (localVarDefPos >= node.start && localVarDefPos <= node.end) {
-                    localVars.delete(localVarName);
-                }
-            }
-            return null;
-        } else {
-            let traceLine = null;
-            if (node.loc && node.loc.start) {
-                const line = wrappedFile ? node.loc.start.line - 1 : node.loc.start.line;
-                if (NODE_TYPES_FOR_LINE_TRACING.indexOf(node.type) > -1 && node.parent.type === Syntax.BlockStatement) {
-                    if (!tracedLines.has(line)) {
-                        const lineSource = codeLines[line].trim();
-                        let localVarValues = '[';
-                        let localVarNames = '[';
-                        let added = false;
-                        for (const e of localVars.entries()) {
-                            const localVarName = e[0];
-                            const localVarPos = e[1];
-                            if (!this.shouldTraceLocalVariable(localVarPos, node, wrappedFile)) {
-                                continue;
-                            }
-                            if (added) {
-                                localVarValues += ', ';
-                                localVarNames += ', ';
-                            }
-                            // If somehow, variable is out of scope (maybe because of a bug in our parser)
-                            // add check to understand whether or not it is undefined in current scope
-                            localVarValues +=
-                                'typeof ' + localVarName + ' !== \'undefined\'' +
-                                ' ? ' + localVarName +
-                                ' : undefined';
-                            localVarNames += '\'' + localVarName + '\'';
-                            added = true;
-                        }
-                        localVarValues += ']';
-                        localVarNames += ']';
-                        traceLine =
-                            util.format(
-                                TRACE_LINE,
-                                line,
-                                JSON.stringify(lineSource),
-                                localVarNames,
-                                localVarValues,
-                                '[' + ARG_NAMES_POINTER + ']',
-                                '[' + ARG_VALUES_POINTER + ']',
-                            );
-                        tracedLines.add(line);
-                    }
-                }
-                if (node.type === Syntax.VariableDeclaration
-                    && node.declarations) {
-                    for (const d of node.declarations) {
-                        if (d.init &&
-                            (d.init.type === Syntax.FunctionExpression
-                                || d.init.type === Syntax.ArrowFunctionExpression)) {
-                            continue;
-                        }
-                        if (d.id && d.id.name) {
-                            localVars.set(d.id.name, node.start);
-                        }
-                    }
-                }
-            }
-            return traceLine;
-        }
-    }
-
-    shouldTraceLocalVariable(localVarPos: number, node: any, wrappedFile: boolean) {
-        if (localVarPos < node.start) {
-            let n = this.getParentBlock(node);
-            let n2 = this.getParentBlock(n);
-            while (n) {
-                if (wrappedFile && !n2) {
-                    break;
-                }
-                if (localVarPos >= n.start && localVarPos <= n.end) {
-                    return true;
-                }
-                n = this.getParentBlock(n);
-                n2 = this.getParentBlock(n);
-            }
-        }
-        return false;
-    }
-
-    getParentBlock(node: any) {
-        let n = node.parent;
-        while (n) {
-            if (n && n.type === Syntax.BlockStatement) {
-                return n;
-            }
-            n = n.parent;
-        }
-        return null;
-    }
-
-    isFunctionNode(node: any) {
-        return (node.type === Syntax.FunctionDeclaration ||
-            node.type === Syntax.FunctionExpression || node.type === Syntax.ArrowFunctionExpression) && node.range;
-    }
-
-    getFunctionName(node: any) {
-        if (!this.isFunctionNode(node)) {
-            return;
-        }
-        if (node.id) {
-            return node.id.name;
-        }
-
-        if (node.type === Syntax.FunctionDeclaration) {
-            return '';
-        }
-
-        const parent = node.parent;
-        switch (parent.type) {
-            case Syntax.AssignmentExpression:
-                if (parent.left.range) {
-                    return parent.left.source().replace(/"/g, '\\"');
-                }
-                break;
-
-            case Syntax.VariableDeclarator:
-                return parent.id.name;
-
-            case Syntax.CallExpression:
-                return parent.callee.id ? parent.callee.id.name : '[Anonymous]';
-            default:
-                if (typeof parent.length === 'number') {
-                    return parent.id ? parent.id.name : '[Anonymous]';
-                } else if (parent.key && parent.key.type === 'Identifier' &&
-                    parent.value === node && parent.key.name) {
-                    return parent.key.name;
-                }
-        }
-        return '[Anonymous]';
-    }
-
-    getThundraTraceableConfig(traceableConfigStr: string, checkLevel: TracableConfigCheckLevel): TraceableConfig {
-        try {
-            if (traceableConfigStr.includes('node_modules') || !this.traceConfig || !this.traceConfig.traceableConfigs) {
-                return null;
-            }
-
-            const traceableConfigPrefix = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_FILE_PREFIX);
-            if (traceableConfigPrefix && TracableConfigCheckLevel.FILE) {
-                const prefixes = traceableConfigPrefix.split(',');
-                for (const prefix of prefixes) {
-                    if (traceableConfigPrefix.startsWith(prefix)) {
-                        return new TraceableConfig(traceableConfigPrefix);
-                    }
-                }
-            }
-
-            for (const traceableConfig of this.traceConfig.traceableConfigs) {
-                if (checkLevel === TracableConfigCheckLevel.FILE) {
-                    if (traceableConfig.shouldTraceFile(traceableConfigStr)) {
-                        return traceableConfig;
-                    }
-                } else {
-                    if (traceableConfig.shouldTraceFunction(traceableConfigStr)) {
-                        return traceableConfig;
-                    }
-                }
-            }
-        } catch (e) {
-            return null;
-        }
-
-        return null;
     }
 
     setGlobalFunction() {
