@@ -110,7 +110,7 @@ class Operation {
             matched = this.className === '*' || this.className === span.className;
         }
 
-        if (this.operationName) {
+        if (matched && this.operationName) {
             matched = this.operationName === '*' || this.operationName === span.operationName;
         }
 
