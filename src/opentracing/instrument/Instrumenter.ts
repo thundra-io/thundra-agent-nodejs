@@ -100,7 +100,7 @@ class Instrumenter {
                     wrapped = false;
                 }
                 try {
-                    content = self.addTraceHooks(content, true, relPathWithDots, wrapped);
+                    content = self.addTraceHooks(content, relPathWithDots, wrapped);
                     if (Module.wrapper.length === 2) {
                         content = content.substring(Module.wrapper[0].length, content.length - Module.wrapper[1].length);
                     }
@@ -112,7 +112,7 @@ class Instrumenter {
         };
     }
 
-    addTraceHooks(code: any, wrapFunctions: any, relPath: string, wrappedFile: any) {
+    addTraceHooks(code: any, relPath: string, wrappedFile: any) {
         const self = this;
         self.updates.clear();
         try {
@@ -166,53 +166,44 @@ class Instrumenter {
                         TRACE_INJECTION_SEPARATOR + traceExit +
                         TRACE_INJECTION_SEPARATOR;
 
-                    if (wrapFunctions) {
-                        const traceEX = util.format(TRACE_EXIT, 'true', 'null',
-                            instrumentOption.traceError ? '__thundraEX__' : 'null');
-                        let funcCode =
-                            funcDec +
-                            '{' +
-                                TRACE_INJECTION_SEPARATOR +
-                                'try {' +
-                                    newFuncBody +
-                                '} catch(__thundraEX__) {' + TRACE_INJECTION_SEPARATOR +
-                                    traceEX + TRACE_INJECTION_SEPARATOR +
-                                    'throw __thundraEX__;' + TRACE_INJECTION_SEPARATOR +
-                                '}' +
-                                TRACE_INJECTION_SEPARATOR +
-                            '}';
+                    const traceEX = util.format(TRACE_EXIT, 'true', 'null',
+                        instrumentOption.traceError ? '__thundraEX__' : 'null');
+                    let funcCode =
+                        funcDec +
+                        '{' +
+                            TRACE_INJECTION_SEPARATOR +
+                            'try {' +
+                                newFuncBody +
+                            '} catch(__thundraEX__) {' + TRACE_INJECTION_SEPARATOR +
+                                traceEX + TRACE_INJECTION_SEPARATOR +
+                                'throw __thundraEX__;' + TRACE_INJECTION_SEPARATOR +
+                            '}' +
+                            TRACE_INJECTION_SEPARATOR +
+                        '}';
 
-                        for (const e of self.updates.entries()) {
-                            const nodePointer: NodePointer = e[0];
-                            const type: number = nodePointer.type;
-                            const pointer: string = nodePointer.pointer;
-                            const update: string = e[1];
-                            if (type === LINE_POINTER_TYPE && instrumentOption.traceLineByLine) {
-                                if (funcCode.includes(pointer)) {
-                                    funcCode = funcCode.replace(pointer, update);
-                                    self.updates.delete(nodePointer);
-                                }
-                            }
-                            if (type === RETURN_POINTER_TYPE && instrumentOption.traceReturnValue) {
-                                if (funcCode.includes(pointer)) {
-                                    funcCode = funcCode.replace(pointer, update);
-                                    self.updates.delete(nodePointer);
-                                }
+                    for (const e of self.updates.entries()) {
+                        const nodePointer: NodePointer = e[0];
+                        const type: number = nodePointer.type;
+                        const pointer: string = nodePointer.pointer;
+                        const update: string = e[1];
+                        if (type === LINE_POINTER_TYPE && instrumentOption.traceLineByLine) {
+                            if (funcCode.includes(pointer)) {
+                                funcCode = funcCode.replace(pointer, update);
+                                self.updates.delete(nodePointer);
                             }
                         }
-
-                        funcCode = funcCode.replace(ARG_NAMES_PATTERN, aNames);
-                        funcCode = funcCode.replace(ARG_VALUES_PATTERN, aValues);
-
-                        node.update(funcCode);
-                    } else {
-                        const funcCode =
-                            funcDec +
-                            '{' +
-                                newFuncBody +
-                            '}';
-                        node.update(funcCode);
+                        if (type === RETURN_POINTER_TYPE && instrumentOption.traceReturnValue) {
+                            if (funcCode.includes(pointer)) {
+                                funcCode = funcCode.replace(pointer, update);
+                                self.updates.delete(nodePointer);
+                            }
+                        }
                     }
+
+                    funcCode = funcCode.replace(ARG_NAMES_PATTERN, aNames);
+                    funcCode = funcCode.replace(ARG_VALUES_PATTERN, aValues);
+
+                    node.update(funcCode);
                 } else if (node.type === Syntax.ReturnStatement) {
                     const traceLine =
                         self.checkTraceLine(node, tracedLines, localVars, wrappedFile, codeLines);
