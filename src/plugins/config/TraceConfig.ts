@@ -146,7 +146,7 @@ class TraceConfig extends BasePluginConfig {
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {
                 try {
-                    this.traceableConfigs.push(this.parseTraceableConfigEnvVariable(process.env[key]));
+                    this.traceableConfigs.push(TraceableConfig.fromString(process.env[key]));
                 } catch (ex) {
                     ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
                 }
@@ -181,19 +181,6 @@ class TraceConfig extends BasePluginConfig {
         if (options.tracer) {
             this.tracer = options.tracer;
         }
-    }
-
-    parseTraceableConfigEnvVariable(value: string): TraceableConfig {
-        const idx1 = value.indexOf('[');
-        const idx2 = value.indexOf(']');
-        const args = value.substring(idx1 + 1, idx2).split(',');
-        const pattern = idx1 < 0 ? value : value.substring(0, idx1);
-        const option: TraceableConfig = new TraceableConfig(pattern);
-        for (const arg of args) {
-            const tupple = arg.split('=');
-            option.setProperty(tupple[0], tupple[1]);
-        }
-        return option;
     }
 
     parseIntegrationsEnvVariable(value: string): IntegrationConfig[] {
