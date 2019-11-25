@@ -119,6 +119,36 @@ describe('SecurityAwareSpanListener', () => {
                 }
             }
         });
+        
+        test('should handle operationName', () => {
+            const wlSaslConfig = {
+                block: true,
+                whitelist: [
+                    {
+                        className: 'ELASTICSEARCH',
+                        operationName: 'foobar',
+                        tags: {
+                            'http.host': ['host1.com', 'host2.com'],
+                            'operation.type': ['READ']
+                        },
+                    }
+                ]
+            };
+        
+            const wlSasl = new SecurityAwareSpanListener(wlSaslConfig);
+
+            const span = new ThundraSpan();
+            span.className = 'ELASTICSEARCH';
+            span.operationName = 'foobar';
+            span.setTag('http.host', 'host1.com');
+            span.setTag(SpanTags.OPERATION_TYPE, 'READ');
+            span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+
+            wlSasl.onSpanInitialized(span);
+        
+            expect(span.getTag(SecurityTags.BLOCKED)).toBeUndefined();
+            expect(span.getTag(SecurityTags.VIOLATED)).toBeUndefined();
+        });
 
         test('should block nothing when no whitelist exists', () => {
             const wlSaslConfig = {
@@ -321,6 +351,42 @@ describe('SecurityAwareSpanListener', () => {
                 }
             }
         });
+
+        test('should handle operationName', () => {
+            const blSaslConfig = {
+                block: true,
+                blacklist: [
+                    {
+                        className: 'ELASTICSEARCH',
+                        operationName: 'foobar',
+                        tags: {
+                            'http.host': ['host1.com', 'host2.com'],
+                            'operation.type': ['READ']
+                        },
+                    }
+                ]
+            };
+        
+            const blSasl = new SecurityAwareSpanListener(blSaslConfig);
+
+            const span = new ThundraSpan();
+            span.className = 'ELASTICSEARCH';
+            span.operationName = 'foobar';
+            span.setTag('http.host', 'host1.com');
+            span.setTag(SpanTags.OPERATION_TYPE, 'READ');
+            span.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+
+            try {
+                blSasl.onSpanInitialized(span);
+            } catch (err) {}
+    
+            expect(span.getTag('error')).toBeTruthy();
+            expect(span.getTag('error.kind')).toEqual(securityErrorType);
+            expect(span.getTag('error.message')).toEqual(securityErrorMessage);
+            expect(span.getTag(SecurityTags.BLOCKED)).toBeTruthy();
+            expect(span.getTag(SecurityTags.VIOLATED)).toBeTruthy();
+        });
+
 
         test('should block nothing when no whitelist exists', () => {
             const wlSaslConfig = {
