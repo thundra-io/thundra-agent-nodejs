@@ -8,6 +8,7 @@ describe('Elastic Search Integration', () => {
         const tracer = new ThundraTracer();
         const integration = new ESIntegrations({
             tracer,
+            esPathDepth: 2,
         });
         const sdk = require('elasticsearch');
 
@@ -15,7 +16,7 @@ describe('Elastic Search Integration', () => {
 
         return ES.query(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
-            expect(span.operationName).toBe('/twitter/tweets/_search');
+            expect(span.operationName).toBe('/twitter/tweets');
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
 
@@ -30,7 +31,8 @@ describe('Elastic Search Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
 
-            expect(span.tags['elasticsearch.url']).toEqual('/twitter/tweets/_search');
+            expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
+            expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/tweets');
             expect(span.tags['elasticsearch.method']).toEqual('POST');
             expect(span.tags['elasticsearch.params']).toEqual('{}');
             expect(span.tags['elasticsearch.body']).toEqual('{"query":{"match":{"body":"elasticsearch"}}}');
@@ -41,6 +43,7 @@ describe('Elastic Search Integration', () => {
         const tracer = new ThundraTracer();
         const integration = new ESIntegrations({
             tracer,
+            esPathDepth: 1
         });
         const sdk = require('elasticsearch');
 
@@ -50,7 +53,7 @@ describe('Elastic Search Integration', () => {
 
         return ES.queryWithMultipleHost(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
-            expect(span.operationName).toBe('/twitter/tweets/_search');
+            expect(span.operationName).toBe('/twitter');
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
 
@@ -65,7 +68,8 @@ describe('Elastic Search Integration', () => {
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
 
-            expect(span.tags['elasticsearch.url']).toEqual('/twitter/tweets/_search');
+            expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
+            expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter');
             expect(span.tags['elasticsearch.method']).toEqual('POST');
             expect(span.tags['elasticsearch.params']).toEqual('{}');
             expect(span.tags['elasticsearch.body']).toEqual('{"query":{"match":{"body":"elasticsearch"}}}');
@@ -77,6 +81,7 @@ describe('Elastic Search Integration', () => {
         const integration = new ESIntegrations({
             disableInstrumentation: true,
             maskElasticSearchStatement: true,
+            esPathDepth: 2,
             tracer,
         });
         const sdk = require('elasticsearch');
@@ -90,7 +95,7 @@ describe('Elastic Search Integration', () => {
             expect(span.tags['elasticsearch.body']).not.toBeTruthy();
             expect(span.tags['db.statement']).not.toBeTruthy();
 
-            expect(span.operationName).toBe('/twitter/tweets/_search');
+            expect(span.operationName).toBe('/twitter/tweets');
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
             expect(span.tags['operation.type']).toBe('POST');
@@ -101,7 +106,8 @@ describe('Elastic Search Integration', () => {
             expect(span.tags['trigger.domainName']).toEqual('API');
             expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
-            expect(span.tags['elasticsearch.url']).toEqual('/twitter/tweets/_search');
+            expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
+            expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/tweets');
             expect(span.tags['elasticsearch.method']).toEqual('POST');
             
         });

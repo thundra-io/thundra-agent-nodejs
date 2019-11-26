@@ -446,7 +446,8 @@ export const RedisTags = {
 };
 
 export const ESTags = {
-    ES_URL: 'elasticsearch.url',
+    ES_URI: 'elasticsearch.uri',
+    ES_NORMALIZED_URI: 'elasticsearch.normalized_uri',
     ES_METHOD: 'elasticsearch.method',
     ES_PARAMS: 'elasticsearch.params',
     ES_BODY: 'elasticsearch.body',

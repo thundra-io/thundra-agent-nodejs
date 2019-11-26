@@ -115,8 +115,8 @@ const operationList = [
     {
         className: ClassNames.ELASTICSEARCH,
         tags: {
-            "elasticsearch.url": [
-                "/twitter/tweets/_search"
+            "elasticsearch.normalized_uri": [
+                "/twitter"
             ],
             "operation.type": [
                 "POST"

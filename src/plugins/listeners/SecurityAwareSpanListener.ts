@@ -99,7 +99,6 @@ class Operation {
 
     constructor(config: any = {}) {
         this.className = get(config, 'className');
-        this.operationName = get(config, 'operationName');
         this.tags = get(config, 'tags');
     }
 
@@ -108,10 +107,6 @@ class Operation {
 
         if (this.className) {
             matched = this.className === '*' || this.className === span.className;
-        }
-
-        if (matched && this.operationName) {
-            matched = this.operationName === '*' || this.operationName === span.operationName;
         }
 
         if (matched && this.tags) {
