@@ -402,14 +402,23 @@ class Utils {
         return Utils.getARNPart(arn, 3);
     }
 
+    static getAccountNo(arn: string, pluginContext: any) {
+        if (Utils.getIfSAMLocalDebugging()) {
+            return 'sam_local';
+        } else if (Utils.getIfSLSLocalDebugging()) {
+            return 'sls_local';
+        } else {
+            return (Utils.getAWSAccountNo(arn)
+                || pluginContext.apiKey
+                || 'guest');
+        }
+    }
+
     static getApplicationId(originalContext: any, pluginContext: any) {
         const arn = originalContext.invokedFunctionArn;
         const region = Utils.getConfiguration(envVariableKeys.AWS_REGION)
             || 'local';
-        const accountNo = Utils.getIfSAMLocalDebugging() ? 'sam_local'
-            : (Utils.getAWSAccountNo(arn)
-                || pluginContext.apiKey
-                || 'guest');
+        const accountNo = Utils.getAccountNo(arn, pluginContext);
         const functionName = originalContext.functionName
             || Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
             || 'lambda-app';
@@ -427,6 +436,10 @@ class Utils {
 
     static getIfSAMLocalDebugging() {
         return Utils.getConfiguration(envVariableKeys.AWS_SAM_LOCAL) === 'true';
+    }
+
+    static getIfSLSLocalDebugging() {
+        return Utils.getConfiguration(envVariableKeys.SLS_LOCAL) === 'true';
     }
 
     static getXRayTraceInfo() {
