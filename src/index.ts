@@ -7,7 +7,7 @@ import ThundraConfig from './plugins/config/ThundraConfig';
 import TraceConfig from './plugins/config/TraceConfig';
 import MetricConfig from './plugins/config/MetricConfig';
 import InvocationConfig from './plugins/config/InvocationConfig';
-import TraceableConfig from './plugins/config/TraceableConfig';
+import { TraceableConfig } from '@thundra/instrumenter';
 import IntegrationConfig from './plugins/config/IntegrationConfig';
 import Utils from './plugins/utils/Utils';
 import LogConfig from './plugins/config/LogConfig';

@@ -167,21 +167,6 @@ export const PROC_IO_PATH: string = '/proc/self/io';
 export const ARGS_TAG_NAME: string = 'method.args';
 export const RETURN_VALUE_TAG_NAME: string = 'method.return_value';
 
-export const TRACE_DEF_SEPERATOR: string = '.';
-
-export const Syntax = {
-    FunctionDeclaration: 'FunctionDeclaration',
-    FunctionExpression: 'FunctionExpression',
-    ArrowFunctionExpression: 'ArrowFunctionExpression',
-    AssignmentExpression: 'AssignmentExpression',
-    VariableDeclarator: 'VariableDeclarator',
-    CallExpression: 'CallExpression',
-    CatchClause: 'CatchClause',
-    ReturnStatement: 'ReturnStatement',
-    BlockStatement: 'BlockStatement',
-    VariableDeclaration: 'VariableDeclaration',
-};
-
 export const logLevels: any = {
     0: 0,
     1: 1,
