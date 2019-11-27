@@ -16,6 +16,24 @@ module.exports.get = (http) => {
     });
 };
 
+module.exports.getAPIGW = (http) => {
+    return new Promise((resolve) => {
+        const url = 'https://34zsqapxkj.execute-api.eu-west-1.amazonaws.com/default/apigwtest';
+        http.get(url, (resp) => {
+            let data = '';
+            resp.on('data', (chunk) => {
+                data += chunk;
+            });
+            resp.on('end', () => {
+                resolve(data);
+            });
+        }).on('error', (err) => {
+            // We resolve with error.
+            resolve(err);
+        });
+    });
+};
+
 module.exports.getError = (http) => {
     return new Promise((resolve) => {
         const url = 'http://httpstat.us/404';

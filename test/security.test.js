@@ -1,7 +1,7 @@
 const thundra = require('../dist/index');
 import Utils from '../dist/plugins/utils/Utils';
 import { createMockContext } from './mocks/mocks';
-import { envVariableKeys, SecurityTags, ClassNames, SpanTags } from '../dist/Constants';
+import { envVariableKeys, SecurityTags, ClassNames } from '../dist/Constants';
 import AWSCalls from './integration/utils/aws.integration.utils';
 import HTTPCalls from './integration/utils/http.integration.utils';
 import ESCalls from './integration/utils/es.integration.utils';
@@ -105,7 +105,8 @@ const operationList = [
         className: ClassNames.HTTP,
         tags: {
             "http.host": [
-                "jsonplaceholder.typicode.com"
+                "jsonplaceholder.typicode.com",
+                "34zsqapxkj.execute-api.eu-west-1.amazonaws.com"
             ],
             "operation.type": [
                 "GET"
@@ -307,6 +308,7 @@ describe('whitelist config', () => {
 
     describe('using http integration', () => {
         const http = require('http');
+        const https = require('https');
 
         test('should whitelist http get operation', () => {
             const originalFunction = () => HTTPCalls.get(http);
@@ -314,6 +316,17 @@ describe('whitelist config', () => {
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
                 const span = recorder.spanList[1];
+                checkIfWhitelisted(span);
+            });
+        });
+        
+        test('should whitelist api-gateway get operation', () => {
+            const originalFunction = () => HTTPCalls.getAPIGW(https);
+            const wrappedFunc = thundraWrapper(originalFunction);
+
+            return wrappedFunc(originalEvent, originalContext).then(() => {
+                const span = recorder.spanList[1];
+                console.log(span.tags);
                 checkIfWhitelisted(span);
             });
         });
@@ -534,9 +547,20 @@ describe('blacklist config', () => {
 
     describe('using http integration', () => {
         const http = require('http');
+        const https = require('https');
 
         test('should blacklist http get operation', () => {
             const originalFunction = () => HTTPCalls.get(http);
+            const wrappedFunc = thundraWrapper(originalFunction);
+
+            return wrappedFunc(originalEvent, originalContext).catch(() => {
+                const span = recorder.spanList[1];
+                checkIfBlacklisted(span);
+            });
+        });
+        
+        test('should blacklist api-gateway get operation', () => {
+            const originalFunction = () => HTTPCalls.getAPIGW(https);
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
