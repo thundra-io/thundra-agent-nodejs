@@ -55,6 +55,7 @@ export const envVariableKeys = {
     AWS_LAMBDA_FUNCTION_VERSION: 'AWS_LAMBDA_FUNCTION_VERSION',
     AWS_REGION: 'AWS_REGION',
     AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',
+    AWS_LAMBDA_FUNCTION_NAME: 'AWS_LAMBDA_FUNCTION_NAME',
 
     THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX: 'thundra_agent_lambda_application_tag_',
     THUNDRA_APPLICATION_ID: 'thundra_agent_lambda_application_id',
@@ -159,21 +160,6 @@ export const PROC_STAT_PATH: string = '/proc/self/stat';
 export const PROC_IO_PATH: string = '/proc/self/io';
 export const ARGS_TAG_NAME: string = 'method.args';
 export const RETURN_VALUE_TAG_NAME: string = 'method.return_value';
-
-export const TRACE_DEF_SEPERATOR: string = '.';
-
-export const Syntax = {
-    FunctionDeclaration: 'FunctionDeclaration',
-    FunctionExpression: 'FunctionExpression',
-    ArrowFunctionExpression: 'ArrowFunctionExpression',
-    AssignmentExpression: 'AssignmentExpression',
-    VariableDeclarator: 'VariableDeclarator',
-    CallExpression: 'CallExpression',
-    CatchClause: 'CatchClause',
-    ReturnStatement: 'ReturnStatement',
-    BlockStatement: 'BlockStatement',
-    VariableDeclaration: 'VariableDeclaration',
-};
 
 export const logLevels: any = {
     0: 0,

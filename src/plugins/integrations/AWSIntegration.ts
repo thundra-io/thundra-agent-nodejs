@@ -722,8 +722,7 @@ class AWSIntegration implements Integration {
                     activeSpan._initialized();
 
                     if (originalCallback) {
-                        const me = this;
-                        const wrappedCallback = (err: any, data: any) => {
+                        const wrappedCallback = function (err: any, data: any) {
                             if (err && activeSpan) {
                                 activeSpan.setErrorTag(err);
                             }
@@ -731,7 +730,7 @@ class AWSIntegration implements Integration {
                                 AWSIntegration.injectTraceLink(activeSpan, request, config);
                             }
                             if (activeSpan) {
-                                activeSpan.closeWithCallback(me, originalCallback, [err, data]);
+                                activeSpan.closeWithCallback(this, originalCallback, [err, data]);
                             }
                         };
 

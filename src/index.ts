@@ -7,7 +7,7 @@ import ThundraConfig from './plugins/config/ThundraConfig';
 import TraceConfig from './plugins/config/TraceConfig';
 import MetricConfig from './plugins/config/MetricConfig';
 import InvocationConfig from './plugins/config/InvocationConfig';
-import TraceableConfig from './plugins/config/TraceableConfig';
+import { TraceableConfig } from '@thundra/instrumenter';
 import IntegrationConfig from './plugins/config/IntegrationConfig';
 import Utils from './plugins/utils/Utils';
 import LogConfig from './plugins/config/LogConfig';
@@ -112,7 +112,7 @@ module.exports = (options: any) => {
 
         const thundraWrappedHandler: any = (originalEvent: any, originalContext: any, originalCallback: any) => {
             // Creating applicationId here, since we need the information in context
-            const applicationId = Utils.getApplicationId(originalContext.invokedFunctionArn);
+            const applicationId = Utils.getApplicationId(originalContext, pluginContext);
             pluginContext.applicationId = applicationId;
 
             config.plugins.forEach((plugin: any) => {

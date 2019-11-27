@@ -33,7 +33,6 @@ module.exports = {
         }),
         commonjs({
             namedExports: {
-                'minimatch': ['Minimatch', 'IMinimatch'],
                 'opentracing': ['initGlobalTracer'],
             }
         })

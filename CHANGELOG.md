@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## 2.6.5 - November 01, 2019
+#### Fixed
+- Fixed AWS service callback scope issue
+
+## 2.6.4 - October 24, 2019
+#### Fixed
+- Fixed broken application id generation on serverless local invoke
+
+## 2.6.3 - October 23, 2019
+#### Fixed
+- Fixed configuration check while instrumenting custom modules
+
 ## 2.6.2 - October 12, 2019
 #### Added
 - Added line by line tracing support
