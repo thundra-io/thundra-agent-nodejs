@@ -1,5 +1,6 @@
 import ThundraTracer from '../../../dist/opentracing/Tracer';
 import Utils from '../../../dist/plugins/utils/Utils';
+import {envVariableKeys} from '../../../dist/Constants';
 
 describe('Thundra Tracer', () => {
 
@@ -7,10 +8,37 @@ describe('Thundra Tracer', () => {
         // Arrange
         const tracer = new ThundraTracer({});
 
-        process.env['thundra_agent_lambda_trace_span_listener'] = 'FilteringSpanListener[listener=LatencyInjectorSpanListener,config.delay=370,'+
-        'config.injectOnFinish=true,config.randomizeDelay=true,'+
-        'filter1.className=AWS-SQS,filter1.domainName=Messaging,filter1.tag.foo=bar,' +
-        'filter2.className=HTTP,filter2.operationName=http_request,filter2.tag.http.host=foobar.com]';
+        const listenerConfig = {
+            type: "FilteringSpanListener",
+            config: {
+                listener: {
+                    type: "LatencyInjectorSpanListener",
+                    config: {
+                        delay: 370,
+                        injectOnFinish: true,
+                        randomizeDelay: true
+                    }
+                },
+                filters: [
+                    {
+                        className: "AWS-SQS",
+                        domainName: "Messaging",
+                        tags: {
+                            "foo": "bar"
+                        }
+                    },
+                    {
+                        className: "HTTP",
+                        operationName: "http_request",
+                        tags: {
+                            "http.host": "foobar.com",
+                        }
+                    }
+                ]
+            }
+        };
+
+        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = JSON.stringify(listenerConfig);
 
         //Act
         const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
@@ -39,7 +67,8 @@ describe('Thundra Tracer', () => {
         expect(listener.spanFilterer.spanFilters[1].className).toBe('HTTP');   
         expect(listener.spanFilterer.spanFilters[1].getTag('http.host')).toBe('foobar.com');
 
-        process.env['thundra_agent_lambda_trace_span_listener'] = null;
+        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = null;
+        tracer.destroy();
     });
 
     it('Should read listener config from environment variable with multiple filters and listener', () => {
@@ -47,9 +76,31 @@ describe('Thundra Tracer', () => {
         // Arrange
         const tracer = new ThundraTracer({});
 
-        process.env['thundra_agent_lambda_trace_span_listener'] = 'FilteringSpanListener[listener=ErrorInjectorSpanListener,config.errorType=NameError,' + 
-        'config.errorMessage="foo",config.injectOnFinish=true,config.injectCountFreq=3,' + 
-        'filter.className=AWS-SQS,filter.domainName=Messaging,filter.tag.foo=bar]';
+        const listenerConfig = {
+            type: "FilteringSpanListener",
+            config: {
+                listener: {
+                    type: "ErrorInjectorSpanListener",
+                    config: {
+                        errorType: "NameError",
+                        errorMessage: "foo",
+                        injectOnFinish: true,
+                        injectCountFreq: 3
+                    }
+                },
+                filters: [
+                    {
+                        className: "AWS-SQS",
+                        domainName: "Messaging",
+                        tags: {
+                            "foo": "bar"
+                        }
+                    }
+                ]
+            }
+        };
+
+        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = JSON.stringify(listenerConfig);
 
         //Act
         const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
@@ -76,7 +127,7 @@ describe('Thundra Tracer', () => {
         expect(listener.spanFilterer.spanFilters[0].getTag('foo')).toBe('bar');    
         
 
-        process.env['thundra_agent_lambda_trace_span_listener'] = null;
+        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = null;
         tracer.destroy();
     });
 
@@ -85,7 +136,7 @@ describe('Thundra Tracer', () => {
         // Arrange
         const tracer = new ThundraTracer({});
 
-        process.env['thundra_agent_lambda_trace_span_listener'] = 'InvalidSpanListener[]';
+        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = 'InvalidSpanListener[]';
 
         //Act
         const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
@@ -93,7 +144,7 @@ describe('Thundra Tracer', () => {
         //Assert
         expect(listeners.length).toBe(0);
        
-        process.env['thundra_agent_lambda_trace_span_listener'] = null;
+        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = null;
         tracer.destroy();
     });
 });   

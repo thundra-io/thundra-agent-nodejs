@@ -23,6 +23,7 @@ import InvocationSupport from '../support/InvocationSupport';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
+const zlib = require('zlib');
 const koalas = require('koalas');
 
 declare var __non_webpack_require__: any;
@@ -85,6 +86,10 @@ class Utils {
 
     static isString(value: any): boolean {
         return typeof value === 'string' || value instanceof String;
+    }
+
+    static capitalize(value: string): string {
+        return value.charAt(0).toUpperCase() + value.slice(1);
     }
 
     static parseError(err: any) {
@@ -352,56 +357,36 @@ class Utils {
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF)) {
                 try {
-                    const value = process.env[key];
-                    const configStartIndex = value.indexOf('[');
-                    const configEndIndex = value.lastIndexOf(']');
+                    let value = process.env[key];
 
-                    if (configStartIndex > 0 && configEndIndex > 0) {
-                        const listenerClassName = value.substring(0, configStartIndex);
-                        const configDefs = value.substring(configStartIndex + 1, configEndIndex).split(',');
-                        const configs: any = {};
-                        for (let configDef of configDefs) {
-                            if (!configDef || configDef === '') {
-                                continue;
-                            }
-
-                            configDef = configDef.trim();
-                            const separatorIndex = configDef.indexOf('=');
-                            if (separatorIndex < 1) {
-                                throw new Error(
-                                    'Span listener config definitions must ' +
-                                    'be in \'key=value\' format where \'value\' can be empty');
-                            }
-                            const paramName = configDef.substring(0, separatorIndex);
-                            const paramValue = configDef.substring(separatorIndex + 1);
-                            configs[paramName.trim()] = paramValue.trim();
-                        }
-
-                        const listenerClass = LISTENERS[listenerClassName];
-                        if (!listenerClass) {
-                            throw new Error('No listener found with name: ' + listenerClassName);
-                        }
-
-                        const listener = new listenerClass(configs);
-                        tracer.addSpanListener(listener);
-                        listeners.push(listener);
-                    } else {
-                        const listenerClass = LISTENERS[value];
-                        if (!listenerClass) {
-                            throw new Error('No listener found with name: ' + value);
-                        }
-                        const listener = new listenerClass({});
-                        tracer.addSpanListener(listener);
-                        listeners.push(listener);
+                    if (!value.startsWith('{')) {
+                        // Span listener config is given encoded
+                        value = this.decodeSpanListenerConfig(value);
                     }
+
+                    const listenerDef = JSON.parse(value);
+                    const listenerClass = LISTENERS[listenerDef.type];
+                    const listenerConfig = listenerDef.config;
+
+                    const listenerInstance = new listenerClass(listenerConfig);
+
+                    tracer.addSpanListener(listenerInstance);
+                    listeners.push(listenerInstance);
                 } catch (ex) {
                     ThundraLogger.getInstance().error(
                         `Cannot parse span listener def ${key} with reason: ${ex.message}`);
                 }
-
-                return listeners;
             }
         }
+
+        return listeners;
+    }
+
+    static decodeSpanListenerConfig(encoded: string) {
+        const buffer = Buffer.from(encoded, 'base64');
+        const spanListenerConfig = zlib.unzipSync(buffer).toString();
+
+        return spanListenerConfig;
     }
 
     static stripCommonFields(monitoringData: BaseMonitoringData) {

@@ -2,11 +2,11 @@ import Integration from './Integration';
 import ThundraTracer from '../../opentracing/Tracer';
 import {
     AwsSDKTags, AwsSQSTags, AwsSNSTags, SpanTags, AwsDynamoTags,
-    SNSRequestTypes, SQSRequestTypes, AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
-    SpanTypes, DynamoDBRequestTypes, KinesisRequestTypes, ClassNames, DomainNames,
-    DBTags, DBTypes, FirehoseRequestTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST, S3RequestTypes,
-    LambdaRequestType, envVariableKeys, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-    AthenaOperationTypes, AwsAthenaTags,
+    AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
+    SpanTypes, ClassNames, DomainNames,
+    DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
+    envVariableKeys, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    AwsAthenaTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
@@ -17,6 +17,7 @@ import * as opentracing from 'opentracing';
 import LambdaEventUtils from '../utils/LambdaEventUtils';
 import InvocationSupport from '../support/InvocationSupport';
 import ThundraChaosError from '../error/ThundraChaosError';
+import AWSOperationTypesConfig from './AWSOperationTypes';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
@@ -25,12 +26,14 @@ const md5 = require('md5');
 const has = require('lodash.has');
 const trim = require('lodash.trim');
 const get = require('lodash.get');
-const thundraWrapped = '__thundra_wrapped';
 
+const thundraWrapped = '__thundra_wrapped';
 const moduleName = 'aws-sdk';
 const resolvePaths = ['/var/task'];
 
 class AWSIntegration implements Integration {
+    static AWSOperationTypes: any = undefined;
+
     version: string;
     lib: any;
     config: any;
@@ -179,6 +182,47 @@ class AWSIntegration implements Integration {
         return [];
     }
 
+    static getOperationType(operationName: string, className: string): string {
+        const awsOpTypes = AWSIntegration.AWSOperationTypes;
+        if (!awsOpTypes) {
+            return '';
+        }
+
+        const { exclusions, patterns } = awsOpTypes;
+
+        operationName = Utils.capitalize(operationName);
+        if (has(exclusions, `${className}.${operationName}`)) {
+            return get(exclusions, `${className}.${operationName}`);
+        }
+
+        for (const pattern of patterns) {
+            if (pattern.expression.test(operationName)) {
+                return pattern.operationType;
+            }
+        }
+
+        return '';
+    }
+
+    static parseAWSOperationTypes() {
+        if (AWSIntegration.AWSOperationTypes) {
+            return;
+        }
+
+        AWSIntegration.AWSOperationTypes = {
+            exclusions: AWSOperationTypesConfig.exclusions,
+            patterns: [],
+        };
+
+        for (const pattern in AWSOperationTypesConfig.patterns) {
+            const operationType = AWSOperationTypesConfig.patterns[pattern];
+            AWSIntegration.AWSOperationTypes.patterns.push({
+                expression: new RegExp(pattern, 'i'),
+                operationType,
+            });
+        }
+    }
+
     static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
         try {
             if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
@@ -301,6 +345,8 @@ class AWSIntegration implements Integration {
     }
 
     wrap(lib: any, config: any) {
+        AWSIntegration.parseAWSOperationTypes();
+
         const integration = this;
         function wrapper(wrappedFunction: any, wrappedFunctionName: string) {
             integration.wrappedFuncs[wrappedFunctionName] = wrappedFunction;
@@ -326,7 +372,7 @@ class AWSIntegration implements Integration {
                     const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
 
                     if (serviceName === 'sqs') {
-                        const operationType = SQSRequestTypes[operationName];
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SQS);
                         let queueName = Utils.getQueueName(request.params.QueueUrl);
                         queueName = queueName ? queueName.substring(queueName.lastIndexOf('/') + 1) : queueName;
 
@@ -339,7 +385,7 @@ class AWSIntegration implements Integration {
                             tags: {
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SQS,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                                [SpanTags.OPERATION_TYPE]: operationType ? operationType : '',
+                                [SpanTags.OPERATION_TYPE]: operationType,
                             },
                         });
 
@@ -379,7 +425,7 @@ class AWSIntegration implements Integration {
                             }
                         }
                     } else if (serviceName === 'sns') {
-                        const operationType = SNSRequestTypes[operationName];
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SNS);
 
                         let spanName = null;
                         let topicName = null;
@@ -407,7 +453,7 @@ class AWSIntegration implements Integration {
                             tags: {
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SNS,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                                [SpanTags.OPERATION_TYPE]: operationType ? operationType : '',
+                                [SpanTags.OPERATION_TYPE]: operationType,
                             },
                         });
 
@@ -440,8 +486,8 @@ class AWSIntegration implements Integration {
                             }
                         }
                     } else if (serviceName === 'dynamodb') {
-                        const statementType = DynamoDBRequestTypes[operationName];
                         const tableName = Utils.getDynamoDBTableName(request);
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.DYNAMODB);
 
                         const spanName = koalas(tableName, AWS_SERVICE_REQUEST);
 
@@ -453,15 +499,15 @@ class AWSIntegration implements Integration {
                             tags: {
                                 [DB_TYPE]: DBTypes.DYNAMODB,
                                 [DB_INSTANCE]: serviceEndpoint,
-                                [DBTags.DB_STATEMENT_TYPE]: statementType ? statementType : '',
-                                [SpanTags.OPERATION_TYPE]: statementType ? statementType : '',
+                                [DBTags.DB_STATEMENT_TYPE]: operationType,
+                                [SpanTags.OPERATION_TYPE]: operationType,
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_DYNAMO,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
                                 [DBTags.DB_STATEMENT]: config.maskDynamoDBStatement ? undefined : { ...request.params },
                             },
                         });
 
-                        if (statementType) {
+                        if (operationType) {
                             activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
                             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
                             activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
@@ -480,7 +526,7 @@ class AWSIntegration implements Integration {
                             }
                         }
                     } else if (serviceName === 's3') {
-                        const operationType = S3RequestTypes[operationName];
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.S3);
                         const spanName = koalas(request.params.Bucket, AWS_SERVICE_REQUEST);
 
                         activeSpan = tracer._startSpan(spanName, {
@@ -490,7 +536,7 @@ class AWSIntegration implements Integration {
                             disableActiveStart: true,
                             tags: {
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_S3,
-                                [SpanTags.OPERATION_TYPE]: operationType ? operationType : '',
+                                [SpanTags.OPERATION_TYPE]: operationType,
                                 [AwsS3Tags.BUCKET_NAME]: request.params.Bucket,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
                             },
@@ -504,7 +550,7 @@ class AWSIntegration implements Integration {
                             activeSpan.setTag(AwsS3Tags.OBJECT_NAME, request.params.Key);
                         }
                     } else if (serviceName === 'lambda') {
-                        const operationType = LambdaRequestType[operationName];
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.LAMBDA);
                         const spanName = koalas(request.params.FunctionName, AWS_SERVICE_REQUEST);
 
                         activeSpan = tracer._startSpan(spanName, {
@@ -550,6 +596,7 @@ class AWSIntegration implements Integration {
                             }
                         }
                     } else if (serviceName === 'kinesis') {
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.KINESIS);
                         const spanName = koalas(request.params.StreamName, AWS_SERVICE_REQUEST);
 
                         activeSpan = tracer._startSpan(spanName, {
@@ -558,8 +605,7 @@ class AWSIntegration implements Integration {
                             className: ClassNames.KINESIS,
                             disableActiveStart: true,
                             tags: {
-                                [SpanTags.OPERATION_TYPE]: KinesisRequestTypes[operationName] ?
-                                    KinesisRequestTypes[operationName] : '',
+                                [SpanTags.OPERATION_TYPE]: operationType,
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_KINESIS,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
                             },
@@ -574,6 +620,7 @@ class AWSIntegration implements Integration {
                             activeSpan.setTag(AwsKinesisTags.STREAM_NAME, request.params.StreamName);
                         }
                     } else if (serviceName === 'firehose') {
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.FIREHOSE);
                         const spanName = koalas(request.params.DeliveryStreamName, AWS_SERVICE_REQUEST);
 
                         activeSpan = tracer._startSpan(spanName, {
@@ -582,8 +629,7 @@ class AWSIntegration implements Integration {
                             className: ClassNames.FIREHOSE,
                             disableActiveStart: true,
                             tags: {
-                                [SpanTags.OPERATION_TYPE]: FirehoseRequestTypes[operationName] ?
-                                    FirehoseRequestTypes[operationName] : '',
+                                [SpanTags.OPERATION_TYPE]: operationType,
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_FIREHOSE,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
                             },
@@ -601,7 +647,7 @@ class AWSIntegration implements Integration {
                         const dbName: string = get(request, 'params.Database',
                             get(request, 'params.QueryExecutionContext.Database', ''));
                         const outputLocation: string = get(request, 'params.ResultConfiguration.OutputLocation', '');
-                        const operationType: string = get(AthenaOperationTypes, operationName, '');
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.ATHENA);
 
                         let queryExecIds: string[] = [];
                         let namedQueryIds: string[] = [];
@@ -658,18 +704,22 @@ class AWSIntegration implements Integration {
                             }
                         }
                     } else {
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.AWSSERVICE);
                         activeSpan = tracer._startSpan(AWS_SERVICE_REQUEST, {
                             childOf: parentSpan,
                             domainName: DomainNames.AWS,
                             className: ClassNames.AWSSERVICE,
                             disableActiveStart: true,
                             tags: {
+                                [SpanTags.OPERATION_TYPE]: operationType,
                                 [AwsSDKTags.SERVICE_NAME]: serviceName,
-                                [AwsSDKTags.REQUEST_NAME]: request.operation,
+                                [AwsSDKTags.REQUEST_NAME]: operationName,
                             },
                         });
                     }
-                    const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
+                    const originalFunction = integration.getOriginalFuntion(wrappedFunctionName);
+
+                    activeSpan._initialized();
 
                     if (originalCallback) {
                         const wrappedCallback = function (err: any, data: any) {
@@ -713,17 +763,18 @@ class AWSIntegration implements Integration {
                         return originalFunction.apply(this, [originalCallback]);
                     }
                 } catch (error) {
-                    if (error instanceof ThundraChaosError) {
-                        this.response.error = error;
-                    } else {
-                        ThundraLogger.getInstance().error(error);
-                    }
-
-                    const originalFunction = integration.wrappedFuncs[wrappedFunctionName];
                     if (activeSpan) {
                         activeSpan.close();
                     }
-                    return originalFunction.apply(this, [callback]);
+
+                    if (error instanceof ThundraChaosError) {
+                        this.response.error = error;
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        const originalFunction = integration.getOriginalFuntion(wrappedFunctionName);
+                        return originalFunction.apply(this, [callback]);
+                    }
                 }
             };
         }
@@ -745,6 +796,10 @@ class AWSIntegration implements Integration {
         if (this.lib) {
             lib[thundraWrapped] = true;
         }
+    }
+
+    getOriginalFuntion(wrappedFunctionName: string) {
+        return get(this, `wrappedFuncs.${wrappedFunctionName}`);
     }
 
     setUnwrapped(lib: any) {

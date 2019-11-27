@@ -25,6 +25,7 @@ describe('Recorder', () => {
         const span = new ThundraSpan();
         recorder.record(span, 0);
         recorder.record(span, 1);
+        recorder.record(span, 2);
         it('should record span in memory', () => {
             expect(recorder.getActiveSpan()).toBe(undefined);
         });
@@ -35,6 +36,7 @@ describe('Recorder', () => {
         const node = new ThundraSpan();
         recorder.record(node, 0);
         recorder.record(node, 1);
+        recorder.record(node, 2);
         recorder.destroy();
         it('should destroy', () => {
             expect(recorder.spanList.length).toBe(0);

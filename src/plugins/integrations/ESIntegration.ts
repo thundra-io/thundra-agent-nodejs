@@ -1,13 +1,14 @@
 import Integration from './Integration';
 import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
 } from '../../Constants';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const has = require('lodash.has');
 const shimmer = require('shimmer');
@@ -100,7 +101,7 @@ class ESIntegration implements Integration {
                     span = tracer._startSpan(normalizedPath, {
                         childOf: parentSpan,
                         domainName: DomainNames.DB,
-                        className: DBTypes.ELASTICSEARCH.toUpperCase(),
+                        className: ClassNames.ELASTICSEARCH,
                         disableActiveStart: true,
                     });
 
@@ -113,7 +114,8 @@ class ESIntegration implements Integration {
                         [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                         [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
                         [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
-                        [ESTags.ES_URL]: params.path,
+                        [ESTags.ES_URI]: params.path,
+                        [ESTags.ES_NORMALIZED_URI]: normalizedPath,
                         [ESTags.ES_METHOD]: params.method,
                         [ESTags.ES_PARAMS]: config.maskElasticSearchStatement ?
                             undefined : JSON.stringify(params.query),
@@ -130,6 +132,8 @@ class ESIntegration implements Integration {
                         [DBTags.DB_STATEMENT_TYPE]: params.method,
                         [SpanTags.OPERATION_TYPE]: params.method,
                     });
+
+                    span._initialized();
 
                     const originalCallback = cb;
 
@@ -161,8 +165,12 @@ class ESIntegration implements Integration {
                         span.close();
                     }
 
-                    ThundraLogger.getInstance().error(error);
-                    return request.call(this, params, cb);
+                    if (error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        return request.call(this, params, cb);
+                    }
                 }
             };
         }

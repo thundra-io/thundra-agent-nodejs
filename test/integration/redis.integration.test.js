@@ -13,19 +13,15 @@ describe('Redis Integration', () => {
         });
         const sdk = require('redis');
 
-        integration.wrap(sdk, {});
-
-        tracer.getRecorder().spanList = [];
-
         return Redis.set(sdk).then((data) => {
             const spanList = tracer.getRecorder().spanList;
 
             let writeCommandSpan;
-            spanList.forEach((span) => {
+            for (const span of spanList) {
                 if (span.tags['redis.command.type'] === 'WRITE') {
                     writeCommandSpan = span;
                 }
-            });
+            }
 
             expect(spanList.length).toBe(4);
 
@@ -45,7 +41,6 @@ describe('Redis Integration', () => {
             expect(writeCommandSpan.tags['trigger.domainName']).toEqual('API');
             expect(writeCommandSpan.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(writeCommandSpan.tags['trigger.operationNames']).toEqual(['functionName']);
-
         });
     });
 });

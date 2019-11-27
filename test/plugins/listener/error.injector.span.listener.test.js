@@ -31,7 +31,7 @@ describe('ErrorInjectorSpanListener', () => {
         // Act
         for (var i = 0; i < 50; i++) {
             try {
-                listener.onSpanStarted(span);
+                listener.onSpanInitialized(span);
             } catch (err) {
                 injectedErrorCount++;
             }
@@ -54,7 +54,7 @@ describe('ErrorInjectorSpanListener', () => {
 
         // Act
         try {
-            listener.onSpanStarted(span);
+            listener.onSpanInitialized(span);
             // eslint-disable-next-line no-empty
         } catch (err) {
 
@@ -79,7 +79,7 @@ describe('ErrorInjectorSpanListener', () => {
 
         // Act
         //onSpanStarted should not throw exception
-        listener.onSpanStarted(span);
+        listener.onSpanInitialized(span);
         try {
             listener.onSpanFinished(span);
             // eslint-disable-next-line no-empty
@@ -99,7 +99,7 @@ describe('ErrorInjectorSpanListener', () => {
         const callback = jest.fn();
         const args = ['argument1', 1];
         // Act    
-        listener.onSpanStarted(span, this, callback, args);
+        listener.onSpanInitialized(span, this, callback, args);
 
         // Assert
         expect(listener.counter).toBe(1);

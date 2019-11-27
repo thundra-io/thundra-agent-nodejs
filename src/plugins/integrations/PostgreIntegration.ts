@@ -8,6 +8,7 @@ import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -101,6 +102,8 @@ class PostgreIntegration implements Integration {
                         });
                     }
 
+                    span._initialized();
+
                     const originalCallback = pgQuery.callback;
 
                     pgQuery.callback = (err: any, res: any) => {
@@ -117,8 +120,12 @@ class PostgreIntegration implements Integration {
                         span.close();
                     }
 
-                    ThundraLogger.getInstance().error(error);
-                    query.apply(this, arguments);
+                    if (error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        query.apply(this, arguments);
+                    }
                 }
             };
         }
