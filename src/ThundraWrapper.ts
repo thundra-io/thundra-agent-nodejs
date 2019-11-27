@@ -242,6 +242,13 @@ class ThundraWrapper {
     }
 
     finishDebuggerProxyIfAvailable(): void {
+        try {
+            if (this.inspector) {
+                this.inspector.close();
+            }
+        } catch (e) {
+            ThundraLogger.getInstance().error(e);
+        }
         if (this.debuggerProxy) {
             try {
                 this.debuggerProxy.kill('SIGKILL');
@@ -250,11 +257,6 @@ class ThundraWrapper {
             } finally {
                 this.debuggerProxy = null;
             }
-        }
-        try {
-            this.inspector.close();
-        } catch (e) {
-            ThundraLogger.getInstance().error(e);
         }
     }
 
