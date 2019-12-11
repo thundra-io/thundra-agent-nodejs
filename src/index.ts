@@ -7,7 +7,7 @@ import ThundraConfig from './plugins/config/ThundraConfig';
 import TraceConfig from './plugins/config/TraceConfig';
 import MetricConfig from './plugins/config/MetricConfig';
 import InvocationConfig from './plugins/config/InvocationConfig';
-import TraceableConfig from './plugins/config/TraceableConfig';
+import { TraceableConfig } from '@thundra/instrumenter';
 import IntegrationConfig from './plugins/config/IntegrationConfig';
 import Utils from './plugins/utils/Utils';
 import LogConfig from './plugins/config/LogConfig';
@@ -24,7 +24,9 @@ import ApplicationSupport from './plugins/support/ApplicationSupport';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
-import SpanFilter from './plugins/listeners/SpanFilter';
+import TagInjectorSpanListener from './plugins/listeners/TagInjectorSpanListener';
+import StandardSpanFilter from './plugins/listeners/StandardSpanFilter';
+import CompositeSpanFilter from './plugins/listeners/CompositeSpanFilter';
 import StandardSpanFilterer from './plugins/listeners/StandardSpanFilterer';
 import CompositeSampler from './opentracing/sampler/CompositeSampler';
 import CountAwareSampler from './opentracing/sampler/CountAwareSampler';
@@ -186,6 +188,8 @@ module.exports.listeners = {
     ErrorInjectorSpanListener,
     FilteringSpanListener,
     LatencyInjectorSpanListener,
-    SpanFilter,
+    TagInjectorSpanListener,
+    StandardSpanFilter,
+    CompositeSpanFilter,
     StandardSpanFilterer,
 };

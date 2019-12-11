@@ -1,13 +1,14 @@
 import Integration from './Integration';
 import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
 } from '../../Constants';
 import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -68,7 +69,7 @@ class MySQL2Integration implements Integration {
                     span = tracer._startSpan(this.config.database, {
                         childOf: parentSpan,
                         domainName: DomainNames.DB,
-                        className: DBTypes.MYSQL.toUpperCase(),
+                        className: ClassNames.MYSQL,
                         disableActiveStart: true,
                     });
 
@@ -99,6 +100,8 @@ class MySQL2Integration implements Integration {
                         });
                     }
 
+                    span._initialized();
+
                     const originalCallback = sequence.onResult;
 
                     const wrappedCallback = (err: any, res: any) => {
@@ -123,8 +126,12 @@ class MySQL2Integration implements Integration {
                         span.close();
                     }
 
-                    ThundraLogger.getInstance().error(error);
-                    query.call(this, sql, values, cb);
+                    if (error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        query.call(this, sql, values, cb);
+                    }
                 }
             };
         }

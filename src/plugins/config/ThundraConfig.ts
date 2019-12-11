@@ -38,12 +38,7 @@ class ThundraConfig {
         this.invocationConfig = new InvocationConfig(options.invocationConfig);
         this.xrayConfig = new AwsXRayConfig(options.xrayConfig);
 
-        this.trustAllCert = koalas(Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES), options.trustAllCert, false);
-
-        this.trustAllCert = Utils.getConfiguration(
-                envVariableKeys.THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES) ? Utils.getConfiguration(
-                    envVariableKeys.THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES) === 'true' : options.trustAllCert;
+        this.trustAllCert = koalas(options.trustAllCert, false);
 
         this.warmupAware = Utils.getConfiguration(
                 envVariableKeys.THUNDRA_LAMBDA_WARMUP_AWARE) ? Utils.getConfiguration(

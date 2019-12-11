@@ -9,10 +9,14 @@ import * as url from 'url';
 import ThundraLogger from '../../ThundraLogger';
 import InvocationSupport from '../support/InvocationSupport';
 import HttpError from '../error/HttpError';
+import ThundraSpan from '../../opentracing/Span';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 const semver = require('semver');
+
+const thundraEndpointPattern = /^api[-\w]*\.thundra\.io$/;
 
 class HttpIntegration implements Integration {
     version: string;
@@ -34,7 +38,7 @@ class HttpIntegration implements Integration {
             return true;
         }
 
-        if (host === 'api.thundra.io' ||
+        if (thundraEndpointPattern.test(host) ||
             host === 'serverless.com' ||
             host.indexOf('amazonaws.com') !== -1) {
             return false;
@@ -64,6 +68,7 @@ class HttpIntegration implements Integration {
 
         function wrapper(request: any) {
             return function requestWrapper(options: any, callback: any) {
+                let span: ThundraSpan;
                 try {
                     const tracer = plugin.config.tracer;
 
@@ -89,7 +94,7 @@ class HttpIntegration implements Integration {
 
                     const parentSpan = tracer.getActiveSpan();
                     const operationName = host + plugin.getNormalizedPath(path);
-                    const span = tracer._startSpan(operationName, {
+                    span = tracer._startSpan(operationName, {
                         childOf: parentSpan,
                         domainName: DomainNames.API,
                         className: ClassNames.HTTP,
@@ -118,6 +123,7 @@ class HttpIntegration implements Integration {
                     });
 
                     const me = this;
+
                     const wrappedCallback = (err: any, res: any) => {
                         if (err && span) {
                             span.setErrorTag(err);
@@ -126,6 +132,8 @@ class HttpIntegration implements Integration {
                             span.closeWithCallback(me, callback, [err, res]);
                         }
                     };
+
+                    span._initialized();
 
                     const req = request.call(this, options, wrappedCallback);
 
@@ -177,8 +185,16 @@ class HttpIntegration implements Integration {
                     return req;
 
                 } catch (error) {
-                    ThundraLogger.getInstance().error(error);
-                    return request.apply(this, [options, callback]);
+                    if (span) {
+                        span.close();
+                    }
+
+                    if (error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        return request.apply(this, [options, callback]);
+                    }
                 }
             };
         }

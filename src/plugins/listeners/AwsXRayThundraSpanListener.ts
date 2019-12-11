@@ -40,6 +40,10 @@ class AwsXRayThundraSpanListener  implements ThundraSpanListener {
         return false;
     }
 
+    onSpanInitialized(span: ThundraSpan): boolean {
+        return false;
+    }
+
     onSpanFinished(span: ThundraSpan): boolean {
         try {
             if (!AWSXRay) {
