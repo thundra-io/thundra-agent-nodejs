@@ -20,6 +20,10 @@ class ThundraLogger {
         }
     }
 
+    info(message: any) {
+        console.log(message);
+    }
+
     error(error: any) {
         console.error(error);
     }

@@ -4,25 +4,34 @@ import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 const md5 = require('md5');
-jest.setTimeout(30000);
+const sdk = require('aws-sdk');
+
+beforeAll(() => {
+    AWSIntegration.prototype.getOriginalFuntion = jest.fn(() => {
+        return (cb) => {
+            cb(Error('foo error'), null);
+        }
+    });
+});
 
 describe('AWS Integration', () => {
-    InvocationSupport.setFunctionName('functionName');
+    let tracer;
+    let integration;
+
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new AWSIntegration({ tracer });
+    });
+
+    afterEach(() => {
+        tracer.destroy();
+    });
 
     test('should instrument AWS DynamoDB calls ', () => {
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            dynamoDBTraceInjectionEnabled: true,
-            tracer
-        });
-        const sdk = require('aws-sdk');
+        integration.config.dynamoDBTraceInjectionEnabled = true;
 
-        const putParams = {
-            Item: {'id': {S: '1'}},
-            TableName: 'test-table',
-        };
-        
-        return AWS.dynamo(sdk, putParams).then(() => {
+        return AWS.dynamo(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             
             expect(span.operationName).toBe('test-table');
@@ -45,22 +54,11 @@ describe('AWS Integration', () => {
     });
 
     test('should mask AWS DynamoDB statements ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            disableInstrumentation: true,
-            maskDynamoDBStatement: true,
-            dynamoDBTraceInjectionEnabled: true,
-            tracer,
-        });
+        integration.config.disableInstrumentation = true;
+        integration.config.maskDynamoDBStatement = true;
+        integration.config.dynamoDBTraceInjectionEnabled = true;
 
-        const sdk = require('aws-sdk');
-
-        const putParams = {
-            Item: {'id': {S: '1'}},
-            TableName: 'test-table',
-        };
-        
-        return AWS.dynamo(sdk, putParams).then(() => {
+        return AWS.dynamo(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             
             expect(span.tags['db.statement']).not.toBeTruthy();
@@ -84,11 +82,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS S3 GetObject call ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -100,8 +93,8 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
 
+        integration.getOriginalFuntion = () => mockSend;
 
         return AWS.s3GetObject(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -123,12 +116,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS S3 ListBucket call ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -140,7 +127,7 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        integration.getOriginalFuntion = () => mockSend;
         
         return AWS.s3ListBuckets(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -150,7 +137,7 @@ describe('AWS Integration', () => {
             expect(span.className).toBe('AWS-S3');
             expect(span.domainName).toBe('Storage');
 
-            expect(span.tags['operation.type']).toBe('READ');
+            expect(span.tags['operation.type']).toBe('LIST');
             expect(span.tags['aws.s3.bucket.name']).not.toBeTruthy();
             expect(span.tags['aws.request.name']).toBe('listBuckets');
             expect(span.tags['aws.s3.object.name']).not.toBeTruthy();
@@ -164,12 +151,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Lambda invoke call ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer
-        });
-        const sdk = require('aws-sdk');
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -181,7 +162,7 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        integration.getOriginalFuntion = () => mockSend;
         
         return AWS.lambda(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -206,13 +187,7 @@ describe('AWS Integration', () => {
     });
 
     test('should mask AWS Lambda Payload', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            maskLambdaPayload: true,
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
+        integration.config.maskLambdaPayload = true;
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -224,7 +199,7 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        integration.getOriginalFuntion = () => mockSend;
 
         return AWS.lambda(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -238,25 +213,7 @@ describe('AWS Integration', () => {
         });
     });
 
-    test('should instrument AWS Lambda calls ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
-        return AWS.lambdaGetAccountSettings(sdk).then(() => {
-            expect(tracer.getRecorder().spanList[0]).toBeTruthy();
-        });
-    });
-    
     test('should instrument AWS SQS calls ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -268,19 +225,19 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        integration.getOriginalFuntion = () => mockSend;
         
         return AWS.sqs(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
-            expect(span.operationName).toBe('testqueue');
+            expect(span.operationName).toBe('MyQueue');
 
             expect(span.className).toBe('AWS-SQS');
             expect(span.domainName).toBe('Messaging');
 
             expect(span.tags['aws.sqs.message']).toBe('Hello Thundra!');
             expect(span.tags['aws.request.name']).toBe('sendMessage');
-            expect(span.tags['aws.sqs.queue.name']).toBe('testqueue');
+            expect(span.tags['aws.sqs.queue.name']).toBe('MyQueue');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trigger.domainName']).toEqual('API');
@@ -292,13 +249,7 @@ describe('AWS Integration', () => {
     });
 
     test('should mask AWS SQS message ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            maskSQSMessage: true,
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
+        integration.config.maskSQSMessage = true;
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -311,12 +262,12 @@ describe('AWS Integration', () => {
             cb(null, {result: 'success'});
         });
 
-        integration.wrappedFuncs.send = mockSend;
+        integration.getOriginalFuntion = () => mockSend;
 
         return AWS.sqs(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
-            expect(span.operationName).toBe('testqueue');
+            expect(span.operationName).toBe('MyQueue');
 
             expect(span.className).toBe('AWS-SQS');
             expect(span.domainName).toBe('Messaging');
@@ -326,12 +277,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS sqs_list_queue calls', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         return AWS.sqs_list_queue(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             
@@ -342,23 +287,18 @@ describe('AWS Integration', () => {
 
             expect(span.tags['aws.request.name']).toBe('listQueues');
             expect(span.tags['aws.sqs.queue.name']).not.toBeTruthy();
-            expect(span.tags['operation.type']).toBe('');
-            expect(span.tags['topology.vertex']).not.toBeTruthy();
-            expect(span.tags['trigger.domainName']).not.toBeTruthy();
-            expect(span.tags['trigger.className']).not.toBeTruthy();
-            expect(span.tags['trigger.operationNames']).not.toBeTruthy();
+            expect(span.tags['operation.type']).toBe('LIST');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.tags['trace.links']).toEqual(undefined);
             expect(span.finishTime).toBeTruthy();
         });
     });
   
     
     test('should instrument AWS SNS publish to topic calls ', () => {
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -370,7 +310,8 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        
+        integration.getOriginalFuntion = () => mockSend;
         
         return AWS.sns_topic(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -394,14 +335,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS SNS publish to target calls ', () => {
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
-        integration.wrap(sdk, {});
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -413,7 +346,8 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        
+        integration.getOriginalFuntion = () => mockSend;
 
         return AWS.sns_target(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -437,14 +371,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS SNS publish to SMS calls ', () => {
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
-        integration.wrap(sdk, {});
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -456,7 +382,8 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        
+        integration.getOriginalFuntion = () => mockSend;
 
         return AWS.sns_sms(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -480,12 +407,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS SNS call without publish', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
@@ -496,19 +417,12 @@ describe('AWS Integration', () => {
 
             expect(span.tags['aws.request.name']).toBe('checkIfPhoneNumberIsOptedOut');
             expect(span.tags['aws.sns.topic.name']).toBe(undefined);
-            expect(span.tags['operation.type']).toBe('');
+            expect(span.tags['operation.type']).toBe('READ');
             expect(span.finishTime).toBeTruthy();
         });
     });
     
     test('should mask SNS Message', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            maskSNSMessage: true,
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         return AWS.sns_checkIfPhoneNumberIsOptedOut(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
 
@@ -522,12 +436,6 @@ describe('AWS Integration', () => {
     }); 
     
     test('should instrument AWS Kinesis calls ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -542,7 +450,8 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        
+        integration.getOriginalFuntion = () => mockSend;
         
         return AWS.kinesis(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -565,12 +474,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Firehose calls ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const date = 'Tue, 5 Apr 2019 22:12:31 GMT';
@@ -584,7 +487,8 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        
+        integration.getOriginalFuntion = () => mockSend;
 
         const dataHash = md5('STRING_VALUE');
         const traceLinks = [0, 1, 2].map((i) => `us-west-2:STRING_VALUE:${timestamp + i}:${dataHash}`);
@@ -609,12 +513,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena calls ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         return AWS.athenaStartQueryExec(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.operationName).toBe('sample-db');
@@ -623,7 +521,7 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['aws.request.name']).toBe('startQueryExecution');
-            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['db.instance']).toBe('sample-db');
             expect(span.tags['db.statement']).toBe('sample-query');
             expect(span.tags['aws.athena.s3.outputLocation']).toBe('sample-output-location');
@@ -638,13 +536,7 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena statement masked ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            maskAthenaStatement: true,
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
+        integration.config.maskAthenaStatement = true;
         return AWS.athenaStartQueryExec(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.operationName).toBe('sample-db');
@@ -653,7 +545,7 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['aws.request.name']).toBe('startQueryExecution');
-            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['db.instance']).toBe('sample-db');
             expect(span.tags['db.statement']).toBeUndefined();
             expect(span.tags['aws.athena.s3.outputLocation']).toBe('sample-output-location');
@@ -668,12 +560,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena stop query execution ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         return AWS.athenaStopQueryExec(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.operationName).toBe('AWSServiceRequest');
@@ -682,7 +568,7 @@ describe('AWS Integration', () => {
             expect(span.domainName).toBe('DB');
 
             expect(span.tags['aws.request.name']).toBe('stopQueryExecution');
-            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['db.instance']).toBeUndefined();
             expect(span.tags['db.statement']).toBeUndefined();
             expect(span.tags['aws.athena.s3.outputLocation']).toBeUndefined();
@@ -697,12 +583,7 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena batch get named query ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
+        integration.config.maskAthenaStatement = false;
         return AWS.athenaBatchGetNamedQuery(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.operationName).toBe('AWSServiceRequest');
@@ -726,12 +607,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena batch get query execution ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         return AWS.athenaBatchGetQueryExec(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.operationName).toBe('AWSServiceRequest');
@@ -755,11 +630,6 @@ describe('AWS Integration', () => {
     });
 
     test('should instrument AWS Athena create named query ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
         const mockSend = jest.fn((cb) => {
             let req = mockSend.mock.instances[0];
             req.response = {
@@ -769,7 +639,8 @@ describe('AWS Integration', () => {
             };
             cb(null, {result: 'success'});
         });
-        integration.wrappedFuncs.send = mockSend;
+        
+        integration.getOriginalFuntion = () => mockSend;
 
         return AWS.athenaCreateNamedQuery(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
@@ -795,12 +666,6 @@ describe('AWS Integration', () => {
     });
     
     test('should instrument AWS KMS calls ', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
-
         return AWS.kms(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.operationName).toBe('AWSServiceRequest');
@@ -812,4 +677,53 @@ describe('AWS Integration', () => {
             expect(span.finishTime).toBeTruthy();
         });
     });
+
+    test('should get correct operationTypes', () => {
+        if (!AWSIntegration.AWSOperationTypes) {
+            AWSIntegration.parseAWSOperationTypes();
+        }
+        const testCases = [
+            // Exception cases
+            { className: 'AWS-Lambda', operationName: 'ListTags', expected: 'READ'},
+            { className: 'AWS-Lambda', operationName: 'EnableReplication', expected: 'PERMISSION'},
+            { className: 'AWS-S3', operationName: 'HeadBucket', expected: 'LIST'},
+            { className: 'AWS-S3', operationName: 'ListJobs', expected: 'READ'},
+            { className: 'AWS-SNS', operationName: 'OptInPhoneNumber', expected: 'WRITE'},
+            { className: 'AWS-SNS', operationName: 'ListPhoneNumbersOptedOut', expected: 'READ'},
+            { className: 'AWS-Athena', operationName: 'BatchGetQueryExecution', expected: 'READ'},
+            { className: 'AWS-Athena', operationName: 'UntagResource', expected: 'TAGGING'},
+            { className: 'AWS-Kinesis', operationName: 'RegisterStreamConsumer', expected: 'WRITE'},
+            { className: 'AWS-Kinesis', operationName: 'SplitShard', expected: 'WRITE'},
+            { className: 'AWS-Firehose', operationName: 'StopDeliveryStreamEncryption', expected: 'WRITE'},
+            { className: 'AWS-Firehose', operationName: 'DescribeDeliveryStream', expected: 'LIST'},
+            { className: 'AWS-SQS', operationName: 'PurgeQueue', expected: 'WRITE'},
+            { className: 'AWS-SQS', operationName: 'ListQueueTags', expected: 'READ'},
+            { className: 'AWS-DynamoDB', operationName: 'PurchaseReservedCapacityOfferings', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'Scan', expected: 'READ'},
+            // Check according to patterns
+            { className: 'AWS-DynamoDB', operationName: 'ListFooOperation', expected: 'LIST'},
+            { className: 'AWS-DynamoDB', operationName: 'GetFooOperation', expected: 'READ'},
+            { className: 'AWS-DynamoDB', operationName: 'CreateFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'DeleteFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'InvokeFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'PublishFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'PutFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'UpdateFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'DescribeFooOperation', expected: 'READ'},
+            { className: 'AWS-DynamoDB', operationName: 'ChangeFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'SendFooOperation', expected: 'WRITE'},
+            { className: 'AWS-DynamoDB', operationName: 'FooOperationPermission', expected: 'PERMISSION'},
+            { className: 'AWS-DynamoDB', operationName: 'FooOperationTagging', expected: 'TAGGING'},
+            { className: 'AWS-DynamoDB', operationName: 'FooOperationTags', expected: 'TAGGING'},
+            { className: 'AWS-DynamoDB', operationName: 'SetFooOperation', expected: 'WRITE'},
+            // Nonmatching cases
+            { className: 'AWS-DynamoDB', operationName: 'FooSetOperation', expected: ''},
+            { className: 'AWS-DynamoDB', operationName: 'FooListOperation', expected: ''},
+            { className: 'AWS-DynamoDB', operationName: 'FooSendOperation', expected: ''},
+        ];
+
+        for (const testCase of testCases) {
+            expect(AWSIntegration.getOperationType(testCase.operationName, testCase.className)).toBe(testCase.expected);
+        }
+    })
 });

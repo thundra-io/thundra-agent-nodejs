@@ -8,6 +8,7 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const get = require('lodash.get');
 
@@ -82,13 +83,19 @@ class MongoDBIntegration implements Integration {
                 },
             });
 
+            span._initialized();
+
             this.spans[event.requestId] = span;
         } catch (error) {
             if (span) {
                 span.close();
             }
 
-            ThundraLogger.getInstance().error(error);
+            if (error instanceof ThundraChaosError) {
+                throw error;
+            } else {
+                ThundraLogger.getInstance().error(error);
+            }
         }
     }
 

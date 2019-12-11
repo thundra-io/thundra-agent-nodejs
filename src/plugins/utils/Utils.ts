@@ -23,6 +23,8 @@ import InvocationSupport from '../support/InvocationSupport';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
+const zlib = require('zlib');
+const koalas = require('koalas');
 
 declare var __non_webpack_require__: any;
 const customReq = typeof __non_webpack_require__ !== 'undefined'
@@ -45,6 +47,10 @@ class Utils {
 
     static getConfiguration(key: string, defaultValue?: any): any {
         return process.env[key] ? process.env[key] : defaultValue;
+    }
+
+    static getNumericConfiguration(key: string, defaultValue?: number): number {
+        return koalas(parseInt(Utils.getConfiguration(key, defaultValue), 10));
     }
 
     static getCpuUsage() {
@@ -80,6 +86,10 @@ class Utils {
 
     static isString(value: any): boolean {
         return typeof value === 'string' || value instanceof String;
+    }
+
+    static capitalize(value: string): string {
+        return value.charAt(0).toUpperCase() + value.slice(1);
     }
 
     static parseError(err: any) {
@@ -129,6 +139,27 @@ class Utils {
     }
 
     static readProcIoPromise() {
+        return new Promise((resolve, reject) => {
+            readFile(PROC_IO_PATH, (err, file) => {
+                const procIoData = {
+                    readBytes: 0,
+                    writeBytes: 0,
+                };
+
+                if (err) {
+                    ThundraLogger.getInstance().error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
+                } else {
+                    const procIoArray = file.toString().split('\n');
+                    procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
+                    procIoData.writeBytes = parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1), 0);
+                }
+
+                return resolve(procIoData);
+            });
+        });
+    }
+
+    static readProcNetworkIoSync(procId: number) {
         return new Promise((resolve, reject) => {
             readFile(PROC_IO_PATH, (err, file) => {
                 const procIoData = {
@@ -326,56 +357,36 @@ class Utils {
         for (const key of Object.keys(process.env)) {
             if (key.startsWith(envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF)) {
                 try {
-                    const value = process.env[key];
-                    const configStartIndex = value.indexOf('[');
-                    const configEndIndex = value.lastIndexOf(']');
+                    let value = process.env[key];
 
-                    if (configStartIndex > 0 && configEndIndex > 0) {
-                        const listenerClassName = value.substring(0, configStartIndex);
-                        const configDefs = value.substring(configStartIndex + 1, configEndIndex).split(',');
-                        const configs: any = {};
-                        for (let configDef of configDefs) {
-                            if (!configDef || configDef === '') {
-                                continue;
-                            }
-
-                            configDef = configDef.trim();
-                            const separatorIndex = configDef.indexOf('=');
-                            if (separatorIndex < 1) {
-                                throw new Error(
-                                    'Span listener config definitions must ' +
-                                    'be in \'key=value\' format where \'value\' can be empty');
-                            }
-                            const paramName = configDef.substring(0, separatorIndex);
-                            const paramValue = configDef.substring(separatorIndex + 1);
-                            configs[paramName.trim()] = paramValue.trim();
-                        }
-
-                        const listenerClass = LISTENERS[listenerClassName];
-                        if (!listenerClass) {
-                            throw new Error('No listener found with name: ' + listenerClassName);
-                        }
-
-                        const listener = new listenerClass(configs);
-                        tracer.addSpanListener(listener);
-                        listeners.push(listener);
-                    } else {
-                        const listenerClass = LISTENERS[value];
-                        if (!listenerClass) {
-                            throw new Error('No listener found with name: ' + value);
-                        }
-                        const listener = new listenerClass({});
-                        tracer.addSpanListener(listener);
-                        listeners.push(listener);
+                    if (!value.startsWith('{')) {
+                        // Span listener config is given encoded
+                        value = this.decodeSpanListenerConfig(value);
                     }
+
+                    const listenerDef = JSON.parse(value);
+                    const listenerClass = LISTENERS[listenerDef.type];
+                    const listenerConfig = listenerDef.config;
+
+                    const listenerInstance = new listenerClass(listenerConfig);
+
+                    tracer.addSpanListener(listenerInstance);
+                    listeners.push(listenerInstance);
                 } catch (ex) {
                     ThundraLogger.getInstance().error(
                         `Cannot parse span listener def ${key} with reason: ${ex.message}`);
                 }
-
-                return listeners;
             }
         }
+
+        return listeners;
+    }
+
+    static decodeSpanListenerConfig(encoded: string) {
+        const buffer = Buffer.from(encoded, 'base64');
+        const spanListenerConfig = zlib.unzipSync(buffer).toString();
+
+        return spanListenerConfig;
     }
 
     static stripCommonFields(monitoringData: BaseMonitoringData) {
@@ -402,14 +413,23 @@ class Utils {
         return Utils.getARNPart(arn, 3);
     }
 
+    static getAccountNo(arn: string, pluginContext: any) {
+        if (Utils.getIfSAMLocalDebugging()) {
+            return 'sam_local';
+        } else if (Utils.getIfSLSLocalDebugging()) {
+            return 'sls_local';
+        } else {
+            return (Utils.getAWSAccountNo(arn)
+                || pluginContext.apiKey
+                || 'guest');
+        }
+    }
+
     static getApplicationId(originalContext: any, pluginContext: any) {
         const arn = originalContext.invokedFunctionArn;
         const region = Utils.getConfiguration(envVariableKeys.AWS_REGION)
             || 'local';
-        const accountNo = Utils.getIfSAMLocalDebugging() ? 'sam_local'
-            : (Utils.getAWSAccountNo(arn)
-                || pluginContext.apiKey
-                || 'guest');
+        const accountNo = Utils.getAccountNo(arn, pluginContext);
         const functionName = originalContext.functionName
             || Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
             || 'lambda-app';
@@ -427,6 +447,10 @@ class Utils {
 
     static getIfSAMLocalDebugging() {
         return Utils.getConfiguration(envVariableKeys.AWS_SAM_LOCAL) === 'true';
+    }
+
+    static getIfSLSLocalDebugging() {
+        return Utils.getConfiguration(envVariableKeys.SLS_LOCAL) === 'true';
     }
 
     static getXRayTraceInfo() {

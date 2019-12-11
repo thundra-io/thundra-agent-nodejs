@@ -4,8 +4,10 @@ import SpanFilter from './SpanFilter';
 
 class StandardSpanFilterer implements SpanFilterer {
     private spanFilters: SpanFilter[];
+    private all: boolean;
 
-    constructor(spanFilters: SpanFilter[]) {
+    constructor(spanFilters: SpanFilter[], all: boolean = false) {
+        this.all = all;
         this.spanFilters = spanFilters ? spanFilters : [];
     }
 
@@ -14,12 +16,16 @@ class StandardSpanFilterer implements SpanFilterer {
             return true;
         }
 
+        let result = this.all;
+
         for (const spanFilter of this.spanFilters) {
-            if (spanFilter.accept(span)) {
-                return true;
+            if (this.all) {
+                result = result && spanFilter.accept(span);
+            } else {
+                result = result || spanFilter.accept(span);
             }
         }
-        return false;
+        return result;
     }
 
     addFilter(spanFilter: SpanFilter): void {

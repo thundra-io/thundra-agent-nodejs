@@ -9,6 +9,7 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
+import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -103,6 +104,8 @@ class RedisIntegration implements Integration {
                         },
                     });
 
+                    span._initialized();
+
                     const originalCallback = options.callback;
 
                     const wrappedCallback = (err: any, res: any) => {
@@ -117,13 +120,16 @@ class RedisIntegration implements Integration {
 
                     return internalSendCommand.call(this, options);
                 } catch (error) {
-
                     if (span) {
                         span.close();
                     }
 
-                    ThundraLogger.getInstance().error(error);
-                    internalSendCommand.call(this, options);
+                    if (error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        ThundraLogger.getInstance().error(error);
+                        internalSendCommand.call(this, options);
+                    }
                 }
             };
         }
