@@ -1,7 +1,7 @@
 import FilteringSpanListener from '../../../dist/plugins/listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from '../../../dist/plugins/listeners/ErrorInjectorSpanListener';
 import StandardSpanFilterer from '../../../dist/plugins/listeners/StandardSpanFilterer';
-import SpanFilter from '../../../dist/plugins/listeners/SpanFilter';
+import StandardSpanFilter from '../../../dist/plugins/listeners/StandardSpanFilter';
 import ThundraSpan from '../../../dist/opentracing/Span';
 
 describe('FilteringSpanListener', () => {
@@ -14,7 +14,7 @@ describe('FilteringSpanListener', () => {
 
         filteringListener.spanFilterer = new StandardSpanFilterer();
 
-        const filter =  new SpanFilter();
+        const filter =  new StandardSpanFilter();
         filter.className = 'HTTP';
         filteringListener.spanFilterer.addFilter(filter);
 
@@ -27,8 +27,8 @@ describe('FilteringSpanListener', () => {
         const nonMatchingCallback = jest.fn();
         
         //Act
-        filteringListener.onSpanStarted(matchingSpan, this, matchingCallback, [2, 'value']);
-        const callbackCalled = filteringListener.onSpanStarted(nonMatchingSpan, this, nonMatchingCallback, [2, 'value']);
+        filteringListener.onSpanInitialized(matchingSpan, this, matchingCallback, [2, 'value']);
+        const callbackCalled = filteringListener.onSpanInitialized(nonMatchingSpan, this, nonMatchingCallback, [2, 'value']);
         
         // Assert
         expect(matchingCallback).toBeCalledWith(new Error(filteringListener.listener.DEFAULT_ERROR_MESSAGE));

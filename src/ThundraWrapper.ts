@@ -11,7 +11,7 @@
 * Wrapped context methods (done, succeed, fail) and callback call report function.
 *
 * report function uses the Reporter instance to make a single request to send reports if async monitoring is
-* not enabled (environment variable thundra_lambda_publish_cloudwatch_enable is not set). After reporting it calls
+* not enabled (environment variable thundra_lambda_report_cloudwatch_enable is not set). After reporting it calls
 * original callback/succeed/done/fail.
 *
 */
@@ -23,6 +23,13 @@ import ThundraConfig from './plugins/config/ThundraConfig';
 import PluginContext from './plugins/PluginContext';
 import ThundraLogger from './ThundraLogger';
 import InvocationSupport from './plugins/support/InvocationSupport';
+import {
+    envVariableKeys,
+    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT,
+    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST,
+} from './Constants';
+import Utils from './plugins/utils/Utils';
+import { readFileSync, existsSync } from 'fs';
 
 class ThundraWrapper {
 
@@ -40,6 +47,13 @@ class ThundraWrapper {
     private timeout: NodeJS.Timer;
     private resolve: any;
     private reject: any;
+    private inspector: any;
+    private spawn: any;
+    private debuggerPort: number;
+    private debuggerMaxWaitTime: number;
+    private brokerHost: string;
+    private brokerPort: number;
+    private debuggerProxy: any;
 
     constructor(self: any, event: any, context: any, callback: any,
                 originalFunction: any, plugins: any, pluginContext: PluginContext) {
@@ -85,6 +99,10 @@ class ThundraWrapper {
 
         this.timeout = this.setupTimeoutHandler(this);
         InvocationSupport.setFunctionName(this.originalContext.functionName);
+
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE) === 'true') {
+            this.initDebugger();
+        }
     }
 
     wrappedCallback = (error: any, result: any) => {
@@ -105,9 +123,146 @@ class ThundraWrapper {
         } else if (this.resolve) {
             this.resolve(result);
         }
+        this.finishDebuggerProxyIfAvailable();
+    }
+
+    initDebugger(): void {
+        try {
+            if (!existsSync('/opt/socat')) {
+                throw new Error(
+                    '"Socat" is not exist under "/opt/socat". \
+                    Please be sure that "socat" layer is added or it is available under "/opt/socat"');
+            }
+
+            this.inspector = require('inspector');
+            this.spawn = require('child_process').spawn;
+
+            const debuggerPort =
+                Utils.getNumericConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT,
+                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT);
+            const brokerHost =
+                Utils.getConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST,
+                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST);
+            const brokerPort =
+                Utils.getNumericConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT,
+                    -1);
+            const debuggerMaxWaitTime =
+                Utils.getNumericConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX,
+                    60 * 1000);
+
+            if (brokerPort === -1) {
+                throw new Error(
+                    'For debugging, you must set debug broker port through \
+                    \'thundra_agent_lambda_debug_broker_port\' environment variable');
+            }
+
+            this.debuggerPort = debuggerPort;
+            this.debuggerMaxWaitTime = debuggerMaxWaitTime;
+            this.brokerPort = brokerPort;
+            this.brokerHost = brokerHost;
+        } catch (e) {
+            this.spawn = null;
+            this.inspector = null;
+        }
+    }
+
+    getDebuggerProxyIOMetrics(): any {
+        try {
+            const ioContent = readFileSync('/proc/' + this.debuggerProxy.pid + '/io', 'utf8');
+            const ioMetrics = ioContent.split('\n');
+            return {
+                rchar: ioMetrics[0],
+                wchar: ioMetrics[1],
+            };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    waitForDebugger(): void {
+        const sleep = require('system-sleep');
+        let prevRchar = 0;
+        let prevWchar = 0;
+        let initCompleted = false;
+        const logger: ThundraLogger = ThundraLogger.getInstance();
+        logger.info('Waiting for debugger to handshake ...');
+        const startTime = Date.now();
+        while ((Date.now() - startTime) < this.debuggerMaxWaitTime) {
+            try {
+                const debuggerIoMetrics = this.getDebuggerProxyIOMetrics();
+                if (!debuggerIoMetrics) {
+                    sleep(1000);
+                    break;
+                }
+                if (prevRchar !== 0 && prevWchar !== 0 &&
+                    debuggerIoMetrics.rchar === prevRchar && debuggerIoMetrics.wchar === prevWchar) {
+                    initCompleted = true;
+                    break;
+                }
+                prevRchar = debuggerIoMetrics.rchar;
+                prevWchar = debuggerIoMetrics.wchar;
+            } catch (e) {
+                logger.error(e);
+                break;
+            }
+            sleep(1000);
+        }
+        if (initCompleted) {
+            logger.info('Completed debugger handshake');
+        } else {
+            logger.error('Couldn\'t complete debugger handshake in ' + this.debuggerMaxWaitTime + ' milliseconds.');
+        }
+    }
+
+    startDebuggerProxyIfAvailable(): void {
+        if (this.debuggerProxy) {
+            this.finishDebuggerProxyIfAvailable();
+        }
+        if (this.spawn && this.inspector) {
+            try {
+                this.debuggerProxy =
+                    this.spawn(
+                        '/opt/socat',
+                        [
+                            'TCP:' + this.brokerHost + ':' + this.brokerPort,
+                            'TCP:localhost:' + this.debuggerPort + ',forever',
+                        ],
+                        {detached: true});
+                this.inspector.open(this.debuggerPort, 'localhost', true);
+                this.waitForDebugger();
+            } catch (e) {
+                this.debuggerProxy = null;
+                ThundraLogger.getInstance().error(e);
+            }
+        }
+    }
+
+    finishDebuggerProxyIfAvailable(): void {
+        try {
+            if (this.inspector) {
+                this.inspector.close();
+            }
+        } catch (e) {
+            ThundraLogger.getInstance().error(e);
+        }
+        if (this.debuggerProxy) {
+            try {
+                this.debuggerProxy.kill('SIGKILL');
+            } catch (e) {
+                ThundraLogger.getInstance().error(e);
+            } finally {
+                this.debuggerProxy = null;
+            }
+        }
     }
 
     invoke() {
+        this.startDebuggerProxyIfAvailable();
+
         const beforeInvocationData = {
             originalContext: this.originalContext,
             originalEvent: this.originalEvent,

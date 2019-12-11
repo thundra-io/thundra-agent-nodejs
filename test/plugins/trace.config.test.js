@@ -1,5 +1,4 @@
 import TraceConfig  from '../../dist/plugins/config/TraceConfig';
-import TraceableConfig from '../../dist/plugins/config/TraceableConfig';
 import Utils from '../utils';
 
 describe('TraceConfig', () => {
@@ -48,25 +47,6 @@ describe('TraceConfig', () => {
         expect(traceConfig.traceableConfigs[0].traceReturnValue).toBe(false);
         expect(traceConfig.traceableConfigs[0].pattern).toBe('business.f*');
 
-    });
-});
-
-describe('TraceOption', () => {
-
-    it('should test shouldTrace', () => {
-        const traceableConfigs = new TraceableConfig('album.get*');
-        expect(traceableConfigs.shouldTraceFunction('album.getAlbum')).toBeTruthy();
-        expect(traceableConfigs.shouldTraceFunction('album.setAlbum')).toBeFalsy();
-    });
-
-    it('should test shouldTrace with exactly match', () => {
-        const traceableConfigs = new TraceableConfig('business.go');
-        expect(traceableConfigs.shouldTraceFunction('business.go')).toBeTruthy();
-    });
-
-    it('should test shouldTraceFile', () => {
-        const traceableConfigs = new TraceableConfig('business.go');
-        expect(traceableConfigs.shouldTraceFile('business.*')).toBeTruthy();
     });
 });
 

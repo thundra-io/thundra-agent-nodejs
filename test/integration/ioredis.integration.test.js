@@ -13,10 +13,6 @@ describe('IORedis Integration', () => {
         });
         const sdk = require('ioredis');
 
-        integration.wrap(sdk, {});
-
-        tracer.getRecorder().spanList = [];
-
         return Redis.set(sdk).then((data) => {
             const spanList = tracer.getRecorder().spanList;
 
@@ -44,7 +40,6 @@ describe('IORedis Integration', () => {
             expect(writeCommandSpan.tags['trigger.domainName']).toEqual('API');
             expect(writeCommandSpan.tags['trigger.className']).toEqual('AWS-Lambda');
             expect(writeCommandSpan.tags['trigger.operationNames']).toEqual(['functionName']);
-
         });
     });
 });

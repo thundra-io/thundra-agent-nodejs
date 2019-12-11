@@ -1,5 +1,5 @@
 import ThundraSpan from '../../../opentracing/Span';
-import { SpanTags } from '../../../Constants';
+import { SpanTags, SecurityTags } from '../../../Constants';
 
 class Resource {
     resourceType: string;
@@ -11,6 +11,8 @@ class Resource {
     resourceDuration: number;
     resourceMaxDuration: number;
     resourceAvgDuration: number;
+    resourceBlockedCount: number;
+    resourceViolatedCount: number;
 
     constructor(opt: any = {}) {
         this.resourceType = opt.resourceType;
@@ -22,6 +24,8 @@ class Resource {
         this.resourceDuration = opt.resourceDuration;
         this.resourceMaxDuration = opt.resourceMaxDuration;
         this.resourceAvgDuration = opt.resourceAvgDuration;
+        this.resourceBlockedCount = opt.resourceBlockedCount || 0;
+        this.resourceViolatedCount = opt.resourceViolatedCount || 0;
     }
 
     public init(span: ThundraSpan) {
@@ -38,6 +42,8 @@ class Resource {
         this.resourceDuration = span.getDuration();
         this.resourceMaxDuration = span.getDuration();
         this.resourceAvgDuration = span.getDuration();
+        this.resourceBlockedCount = span.getTag(SecurityTags.BLOCKED) ? 1 : 0;
+        this.resourceViolatedCount = span.getTag(SecurityTags.VIOLATED) ? 1 : 0;
     }
 
     public merge(resource: Resource): void {
@@ -60,6 +66,8 @@ class Resource {
             if (resource.resourceMaxDuration > this.resourceMaxDuration) {
                 this.resourceMaxDuration = resource.resourceMaxDuration;
             }
+            this.resourceBlockedCount += resource.resourceBlockedCount;
+            this.resourceViolatedCount += resource.resourceViolatedCount;
         }
     }
 
