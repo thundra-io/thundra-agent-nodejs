@@ -11,6 +11,8 @@ import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
+import TagInjectorSpanListener from './plugins/listeners/TagInjectorSpanListener';
+import SecurityAwareSpanListener from './plugins/listeners/SecurityAwareSpanListener';
 const { version } = require('../package.json');
 
 export const envVariableKeys = {
@@ -25,7 +27,6 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_REPORT_REST_BASEURL: 'thundra_agent_lambda_report_rest_baseUrl',
     THUNDRA_LAMBDA_REPORT_REST_COMPOSITE_ENABLED: 'thundra_agent_lambda_report_rest_composite_enabled',
     THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE: 'thundra_agent_lambda_report_cloudwatch_enable',
-    THUNDRA_AGENT_LAMBDA_TRUST_ALL_CERTIFICATES: 'thundra_agent_lambda_publish_report_rest_trustAllCertificates',
     THUNDRA_DISABLE_TRACE: 'thundra_agent_lambda_trace_disable',
     THUNDRA_DISABLE_METRIC: 'thundra_agent_lambda_metric_disable',
     THUNDRA_DISABLE_LOG: 'thundra_agent_lambda_log_disable',
@@ -48,6 +49,8 @@ export const envVariableKeys = {
     DISABLE_SPAN_CONTEXT_INJECTION: 'thundra_agent_trace_instrument_integrations_spanContext_disable',
     THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID: 'thundra_agent_lambda_trace_use_propagated_transaction_id',
 
+    SLS_LOCAL: 'IS_LOCAL',
+
     AWS_SAM_LOCAL: 'AWS_SAM_LOCAL',
     AWS_LAMBDA_APPLICATION_ID: 'AWS_LAMBDA_APPLICATION_ID',
     AWS_LAMBDA_LOG_STREAM_NAME: 'AWS_LAMBDA_LOG_STREAM_NAME',
@@ -59,7 +62,7 @@ export const envVariableKeys = {
     THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX: 'thundra_agent_lambda_application_tag_',
     THUNDRA_APPLICATION_ID: 'thundra_agent_lambda_application_id',
     THUNDRA_APPLICATION_NAME: 'thundra_agent_lambda_application_name',
-    THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF : 'thundra_agent_lambda_trace_span_listener',
+    THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF : 'thundra_agent_lambda_trace_span_listenerConfig',
 
     THUNDRA_AGENT_LAMBDA_SAMPLE_TIMED_OUT_INVOCATIONS: 'thundra_agent_lambda_sample_timed_out_invocations',
     THUNDRA_MASK_REDIS_STATEMENT: 'thundra_agent_lambda_trace_integrations_redis_command_mask',
@@ -78,7 +81,7 @@ export const envVariableKeys = {
     THUNDRA_MASK_SNS_MESSAGE: 'thundra_agent_lambda_trace_integrations_aws_sns_message_mask',
     THUNDRA_MASK_SQS_MESSAGE: 'thundra_agent_lambda_trace_integrations_aws_sqs_message_mask',
     THUNDRA_MASK_LAMBDA_PAYLOAD: 'thundra_agent_lambda_trace_integrations_aws_lambda_payload_mask',
-    THUNDRA_MASK_HTTP_BODY: 'thundra_agent_lambda_trace_integrations_aws_http_body_mask',
+    THUNDRA_MASK_HTTP_BODY: 'thundra_agent_lambda_trace_integrations_http_body_mask',
     THUNDRA_MASK_ERROR_STACK_TRACE: 'thundra_agent_lambda_error_stacktrace_mask',
 
     THUNDRA_AGENT_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_sampler_timeAware_timeFreq',
@@ -90,6 +93,13 @@ export const envVariableKeys = {
         'thundra_agent_trace_integrations_http_set_error_on_4xx_response_code_disable',
     THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_5XX:
         'thundra_agent_trace_integrations_http_set_error_on_5xx_response_code_disable',
+
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE: 'thundra_agent_lambda_debugger_enable',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT: 'thundra_agent_lambda_debugger_port',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX: 'thundra_agent_lambda_debugger_wait_max',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT: 'thundra_agent_lambda_debugger_broker_port',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST: 'thundra_agent_lambda_debugger_broker_host',
+
 };
 
 export function getTimeoutMargin(region: string) {
@@ -160,21 +170,6 @@ export const PROC_IO_PATH: string = '/proc/self/io';
 export const ARGS_TAG_NAME: string = 'method.args';
 export const RETURN_VALUE_TAG_NAME: string = 'method.return_value';
 
-export const TRACE_DEF_SEPERATOR: string = '.';
-
-export const Syntax = {
-    FunctionDeclaration: 'FunctionDeclaration',
-    FunctionExpression: 'FunctionExpression',
-    ArrowFunctionExpression: 'ArrowFunctionExpression',
-    AssignmentExpression: 'AssignmentExpression',
-    VariableDeclarator: 'VariableDeclarator',
-    CallExpression: 'CallExpression',
-    CatchClause: 'CatchClause',
-    ReturnStatement: 'ReturnStatement',
-    BlockStatement: 'BlockStatement',
-    VariableDeclaration: 'VariableDeclaration',
-};
-
 export const logLevels: any = {
     0: 0,
     1: 1,
@@ -230,6 +225,8 @@ export const ClassNames = {
     APIGATEWAY: 'AWS-APIGateway',
     ATHENA: 'AWS-Athena',
     MONGODB: 'MONGODB',
+    ELASTICSEARCH: 'ELASTICSEARCH',
+    MYSQL: 'MYSQL',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -242,6 +239,11 @@ export const DBTags = {
     DB_HOST: 'db.host',
     DB_PORT: 'db.port',
     DB_USER: 'db.user',
+};
+
+export const SecurityTags = {
+    BLOCKED: 'security.blocked',
+    VIOLATED: 'security.violated',
 };
 
 export const MongoDBTags = {
@@ -410,28 +412,6 @@ export const MongoDBCommandTypes = {
     LOGAPPLICATIONMESSAGE: 'EXECUTE',
 };
 
-export const AthenaOperationTypes = {
-    batchGetNamedQuery: 'READ',
-    batchGetQueryExecution: 'READ',
-    createNamedQuery: 'WRITE',
-    createWorkGroup: 'WRITE',
-    deleteNamedQuery: 'DELETE',
-    deleteWorkGroup: 'DELETE',
-    getNamedQuery: 'READ',
-    getQueryExecution: 'READ',
-    getQueryResults: 'READ',
-    getWorkGroup: 'READ',
-    listNamedQueries: 'READ',
-    listQueryExecutions: 'READ',
-    listTagsForResource: 'READ',
-    listWorkGroups: 'READ',
-    startQueryExecution: 'EXECUTE',
-    stopQueryExecution: 'EXECUTE',
-    tagResource: 'WRITE',
-    untagResource: 'DELETE',
-    updateWorkGroup: 'WRITE',
-};
-
 export const DBTypes = {
     DYNAMODB: 'aws-dynamodb',
     REDIS: 'redis',
@@ -461,7 +441,8 @@ export const RedisTags = {
 };
 
 export const ESTags = {
-    ES_URL: 'elasticsearch.url',
+    ES_URI: 'elasticsearch.uri',
+    ES_NORMALIZED_URI: 'elasticsearch.normalized_uri',
     ES_METHOD: 'elasticsearch.method',
     ES_PARAMS: 'elasticsearch.params',
     ES_BODY: 'elasticsearch.body',
@@ -564,24 +545,8 @@ export const LISTENERS: any = {
     FilteringSpanListener,
     ErrorInjectorSpanListener,
     LatencyInjectorSpanListener,
-};
-
-export const SQSRequestTypes: any = {
-    receiveMessage: 'READ',
-    sendMessage: 'WRITE',
-    sendMessageBatch: 'WRITE',
-    deleteMessage: 'DELETE',
-    deleteMessageBatch: 'DELETE',
-};
-
-export const SNSRequestTypes: any = {
-    write: 'WRITE',
-    publish: 'WRITE',
-};
-
-export const LambdaRequestType: any = {
-    invokeAsync: 'CALL',
-    invoke: 'CALL',
+    TagInjectorSpanListener,
+    SecurityAwareSpanListener,
 };
 
 export const RedisCommandTypes: any = {
@@ -716,53 +681,6 @@ export const RedisCommandTypes: any = {
     XPENDING: 'READ',
 };
 
-export const DynamoDBRequestTypes: any = {
-    batchGetItem: 'READ',
-    batchWriteItem: 'WRITE',
-    createTable: 'WRITE',
-    createGlobalTable: 'WRITE',
-    deleteItem: 'DELETE',
-    deleteTable: 'DELETE',
-    getItem: 'READ',
-    putItem: 'WRITE',
-    query: 'READ',
-    scan: 'READ',
-    updateItem: 'WRITE',
-
-};
-
-export const KinesisRequestTypes: any = {
-    getRecords: 'READ',
-    putRecords: 'WRITE',
-    putRecord: 'WRITE',
-};
-
-export const FirehoseRequestTypes: any = {
-    putRecordBatch: 'WRITE',
-    putRecord: 'WRITE',
-};
-
-export const S3RequestTypes: any = {
-    deleteBucket: 'DELETE',
-    createBucket: 'WRITE',
-    copyObject: 'WRITE',
-    deleteObject: 'DELETE',
-    deleteObjects: 'DELETE',
-    getObject: 'READ',
-    getObjects: 'READ',
-    listBuckets: 'READ',
-    putObject: 'WRITE',
-    putObjectAcl: 'WRITE',
-    getBucketAcl: 'READ',
-    getObjectAcl: 'READ',
-    getSignedUrl: 'READ',
-    headBucket: 'READ',
-    headObject: 'READ',
-    listObjects: 'READ',
-    listObjectsV2: 'READ',
-    putBucketAcl: 'WRITE',
-};
-
 export const AwsXrayConstants: any = {
     DEFAULT_OPERATION_NAME: 'AWS X-Ray',
     XRAY_SUBSEGMENTED_TAG_NAME: 'THUNDRA::XRAY_SUBSEGMENTED',
@@ -782,3 +700,6 @@ export const StdOutLogContext = 'STDOUT';
 export const StdErrorLogContext = 'STDERR';
 
 export const DefaultMongoCommandSizeLimit = 128 * 1024;
+
+export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT = 1111;
+export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST = 'debug.thundra.io';

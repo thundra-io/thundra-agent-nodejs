@@ -142,6 +142,10 @@ class ThundraSpan extends Span {
     }
   }
 
+  _initialized() {
+    this.parentTracer._initialized(this);
+  }
+
   close(finishTime: number = Date.now()) {
     if (this.finishTime !== 0) {
       ThundraLogger.getInstance().debug('Span is already closed.');
@@ -189,6 +193,7 @@ class ThundraSpan extends Span {
 
 export enum SpanEvent {
   SPAN_START,
+  SPAN_INITIALIZE,
   SPAN_FINISH,
 }
 
