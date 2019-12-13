@@ -89,6 +89,7 @@ class Instrumenter {
                 span.className = 'Method';
                 span.setTag(ARGS_TAG_NAME, spanArguments);
                 span.setTag('method.source', args.source);
+                span.setTag('method.startLine', args.startLine);
 
                 return {
                     span,
