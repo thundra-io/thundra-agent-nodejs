@@ -11,7 +11,6 @@ import { ThundraSourceCodeInstrumenter } from '@thundra/instrumenter';
 const Module = require('module');
 const path = require('path');
 const get = require('lodash.get');
-const mode = 'line';
 
 const TRACE_DEF_SEPERATOR: string = '.';
 
