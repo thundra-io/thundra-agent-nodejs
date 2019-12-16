@@ -100,139 +100,69 @@ class Instrumenter {
         };
 
         global.__thundraTraceLine__ = function (args: any) {
-            if (mode === 'line') {
-                try {
-                    const entryData = args.entryData;
-                    const methodSpan = entryData.span;
-                    const line = args.line;
-                    const localVars = new Array();
-                    const varNames = new Array();
-                    const varValues = new Array();
-                    const localVarNames = args.localVarNames;
-                    const localVarValues = args.localVarValues;
-                    const argNames = args.argNames;
-                    const argValues = args.argValues;
+            try {
+                const entryData = args.entryData;
+                const methodSpan = entryData.span;
+                const line = args.line;
+                const localVars = new Array();
+                const varNames = new Array();
+                const varValues = new Array();
+                const localVarNames = args.localVarNames;
+                const localVarValues = args.localVarValues;
+                const argNames = args.argNames;
+                const argValues = args.argValues;
 
-                    if (argNames) {
-                        varNames.push(...argNames);
-                    }
-                    if (argValues) {
-                        varValues.push(...argValues);
-                    }
-                    if (localVarNames) {
-                        varNames.push(...localVarNames);
-                    }
-                    if (localVarValues) {
-                        varValues.push(...localVarValues);
-                    }
+                if (argNames) {
+                    varNames.push(...argNames);
+                }
+                if (argValues) {
+                    varValues.push(...argValues);
+                }
+                if (localVarNames) {
+                    varNames.push(...localVarNames);
+                }
+                if (localVarValues) {
+                    varValues.push(...localVarValues);
+                }
 
-                    if (varNames.length === varValues.length) {
-                        for (let i = 0; i < varNames.length; i++) {
-                            const varName = varNames[i];
-                            const varValue = varValues[i];
-                            let processedVarValue = varValue ? varValue.toString() : null;
+                if (varNames.length === varValues.length) {
+                    for (let i = 0; i < varNames.length; i++) {
+                        const varName = varNames[i];
+                        const varValue = varValues[i];
+                        let processedVarValue = varValue ? varValue.toString() : null;
+                        try {
+                            processedVarValue = JSON.stringify(varValue);
                             try {
-                                processedVarValue = JSON.stringify(varValue);
-                                try {
-                                    processedVarValue = JSON.parse(processedVarValue);
-                                } catch (e) {
-                                    // Ignore
-                                }
+                                processedVarValue = JSON.parse(processedVarValue);
                             } catch (e) {
                                 // Ignore
                             }
-                            const localVar: any = {
-                                name: varName,
-                                value: processedVarValue,
-                                type: typeof varValue,
-                            };
-                            localVars.push(localVar);
+                        } catch (e) {
+                            // Ignore
                         }
+                        const localVar: any = {
+                            name: varName,
+                            value: processedVarValue,
+                            type: typeof varValue,
+                        };
+                        localVars.push(localVar);
                     }
-
-                    const methodLineTag = {
-                        line,
-                        localVars,
-                    };
-
-                    let currentLines = methodSpan.getTag('method.lines');
-                    if (!currentLines) {
-                        currentLines = [];
-                    }
-
-                    methodSpan.setTag('method.lines', [...currentLines, methodLineTag]);
-                } catch (ex) {
-                    tracer.finishSpan();
                 }
+
+                const methodLineTag = {
+                    line,
+                    localVars,
+                };
+
+                let currentLines = methodSpan.getTag('method.lines');
+                if (!currentLines) {
+                    currentLines = [];
+                }
+
+                methodSpan.setTag('method.lines', [...currentLines, methodLineTag]);
+            } catch (ex) {
+                // Ignore
             }
-            // else if (mode === 'span') {
-            //     try {
-            //         const entryData = args.entryData;
-            //         if (entryData.latestLineSpan) {
-            //             entryData.latestLineSpan.finish();
-            //         }
-
-            //         const line = args.line;
-            //         const source = args.source;
-            //         const localVars = new Array();
-            //         const varNames = new Array();
-            //         const varValues = new Array();
-            //         const localVarNames = args.localVarNames;
-            //         const localVarValues = args.localVarValues;
-            //         const argNames = args.argNames;
-            //         const argValues = args.argValues;
-
-            //         if (argNames) {
-            //             varNames.push(...argNames);
-            //         }
-            //         if (argValues) {
-            //             varValues.push(...argValues);
-            //         }
-            //         if (localVarNames) {
-            //             varNames.push(...localVarNames);
-            //         }
-            //         if (localVarValues) {
-            //             varValues.push(...localVarValues);
-            //         }
-
-            //         if (varNames.length === varValues.length) {
-            //             for (let i = 0; i < varNames.length; i++) {
-            //                 const varName = varNames[i];
-            //                 const varValue = varValues[i];
-            //                 let processedVarValue = varValue ? varValue.toString() : null;
-            //                 try {
-            //                     processedVarValue = JSON.stringify(varValue);
-            //                     try {
-            //                         processedVarValue = JSON.parse(processedVarValue);
-            //                     } catch (e) {
-            //                         // Ignore
-            //                     }
-            //                 } catch (e) {
-            //                     // Ignore
-            //                 }
-            //                 const localVar: any = {
-            //                     name: varName,
-            //                     value: processedVarValue,
-            //                     type: typeof varValue,
-            //                 };
-            //                 localVars.push(localVar);
-            //             }
-            //         }
-            //         const methodLineTag = {
-            //             line,
-            //             source,
-            //             localVars,
-            //         };
-
-            //         const span = tracer.startSpan('@' + args.line) as ThundraSpan;
-            //         span.className = 'Line';
-            //         span.setTag('method.lines', [methodLineTag]);
-
-            //         entryData.latestLineSpan = span;
-            //     } catch (ex) {
-            //         tracer.finishSpan();
-            //     }
-            // }
         };
 
         global.__thundraTraceExit__ = function (args: any) {
