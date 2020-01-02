@@ -96,6 +96,7 @@ export const envVariableKeys = {
 
     THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE: 'thundra_agent_lambda_debugger_enable',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT: 'thundra_agent_lambda_debugger_port',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_LOGS_ENABLE: 'thundra_agent_lambda_debugger_logs_enable',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX: 'thundra_agent_lambda_debugger_wait_max',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT: 'thundra_agent_lambda_debugger_broker_port',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST: 'thundra_agent_lambda_debugger_broker_host',

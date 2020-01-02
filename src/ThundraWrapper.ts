@@ -29,7 +29,9 @@ import {
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST,
 } from './Constants';
 import Utils from './plugins/utils/Utils';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync } from 'fs';
+
+const path = require('path');
 
 class ThundraWrapper {
 
@@ -48,12 +50,13 @@ class ThundraWrapper {
     private resolve: any;
     private reject: any;
     private inspector: any;
-    private spawn: any;
+    private fork: any;
     private debuggerPort: number;
     private debuggerMaxWaitTime: number;
     private brokerHost: string;
     private brokerPort: number;
     private debuggerProxy: any;
+    private debuggerLogsEnabled: boolean;
 
     constructor(self: any, event: any, context: any, callback: any,
                 originalFunction: any, plugins: any, pluginContext: PluginContext) {
@@ -128,14 +131,8 @@ class ThundraWrapper {
 
     initDebugger(): void {
         try {
-            if (!existsSync('/opt/socat')) {
-                throw new Error(
-                    '"Socat" is not exist under "/opt/socat". \
-                    Please be sure that "socat" layer is added or it is available under "/opt/socat"');
-            }
-
             this.inspector = require('inspector');
-            this.spawn = require('child_process').spawn;
+            this.fork = require('child_process').fork;
 
             const debuggerPort =
                 Utils.getNumericConfiguration(
@@ -153,6 +150,10 @@ class ThundraWrapper {
                 Utils.getNumericConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX,
                     60 * 1000);
+            const debuggerLogsEnabled =
+                Utils.getConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_LOGS_ENABLE,
+                    false) === 'true';
 
             if (brokerPort === -1) {
                 throw new Error(
@@ -164,8 +165,9 @@ class ThundraWrapper {
             this.debuggerMaxWaitTime = debuggerMaxWaitTime;
             this.brokerPort = brokerPort;
             this.brokerHost = brokerHost;
+            this.debuggerLogsEnabled = debuggerLogsEnabled;
         } catch (e) {
-            this.spawn = null;
+            this.fork = null;
             this.inspector = null;
         }
     }
@@ -222,16 +224,21 @@ class ThundraWrapper {
         if (this.debuggerProxy) {
             this.finishDebuggerProxyIfAvailable();
         }
-        if (this.spawn && this.inspector) {
+        if (this.fork && this.inspector) {
             try {
-                this.debuggerProxy =
-                    this.spawn(
-                        '/opt/socat',
-                        [
-                            'TCP:' + this.brokerHost + ':' + this.brokerPort,
-                            'TCP:localhost:' + this.debuggerPort + ',forever',
-                        ],
-                        {detached: true});
+                this.debuggerProxy = this.fork(
+                    path.join(__dirname, 'DebugBridge.js'),
+                    [],
+                    {
+                        detached: true,
+                        env: {
+                            BROKER_HOST: this.brokerHost,
+                            BROKER_PORT: this.brokerPort,
+                            DEBUGGER_PORT: this.debuggerPort,
+                            LOGS_ENABLED: this.debuggerLogsEnabled,
+                        },
+                    },
+                );
                 this.inspector.open(this.debuggerPort, 'localhost', true);
                 this.waitForDebugger();
             } catch (e) {
