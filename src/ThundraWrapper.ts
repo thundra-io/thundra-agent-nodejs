@@ -258,7 +258,7 @@ class ThundraWrapper {
         }
         if (this.debuggerProxy) {
             try {
-                this.debuggerProxy.kill('SIGKILL');
+                this.debuggerProxy.kill();
             } catch (e) {
                 ThundraLogger.getInstance().error(e);
             } finally {

@@ -4,6 +4,7 @@ const { DEBUGGER_PORT, BROKER_HOST, BROKER_PORT, LOGS_ENABLED } = process.env;
 const debuggerSocket = new net.Socket();
 const brokerSocket = new net.Socket();
 const shutdownSockets = () => {
+    log('debugBridge: shutting down the sockets');
     debuggerSocket.end();
     brokerSocket.end();
 };
@@ -24,6 +25,7 @@ debuggerSocket.on('connect', () => {
 });
 debuggerSocket.on('end', () => {
     log('debuggerSocket: disconnected from the main lambda process');
+    brokerSocket.end();
 });
 debuggerSocket.on('error', (err) => {
     log('debuggerSocket:' + err);
@@ -39,6 +41,7 @@ brokerSocket.on('data', (data) => {
 });
 brokerSocket.on('end', () => {
     log('brokerSocket: disconnected from the the Thundra broker');
+    debuggerSocket.end();
 });
 brokerSocket.on('error', (err) => {
     log('brokerSocket:' + err);
