@@ -39,7 +39,7 @@ const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
 let tracer: ThundraTracer;
 
-module.exports = (options: any) => {
+module.exports = (options?: any) => {
     const config = new ThundraConfig(options);
 
     if (!(config.apiKey) || config.disableThundra) {
