@@ -9,15 +9,15 @@ const shutdownSockets = () => {
     brokerSocket.end();
 };
 
-const log = (msg) => {
+const log = (msg: any) => {
     if (LOGS_ENABLED === 'true') {
         console.log(msg);
     }
-}
+};
 
 // Setup debugger socket
 debuggerSocket.connect({ port: DEBUGGER_PORT });
-debuggerSocket.on('data', (data) => {
+debuggerSocket.on('data', (data: any) => {
     brokerSocket.write(data);
 });
 debuggerSocket.on('connect', () => {
@@ -27,7 +27,7 @@ debuggerSocket.on('end', () => {
     log('debuggerSocket: disconnected from the main lambda process');
     brokerSocket.end();
 });
-debuggerSocket.on('error', (err) => {
+debuggerSocket.on('error', (err: any) => {
     log('debuggerSocket:' + err);
 });
 
@@ -36,14 +36,14 @@ brokerSocket.connect({ host: BROKER_HOST, port: BROKER_PORT });
 brokerSocket.on('connect', () => {
     log('brokerSocket: connection established with the Thundra broker');
 });
-brokerSocket.on('data', (data) => {
+brokerSocket.on('data', (data: any) => {
     debuggerSocket.write(data);
 });
 brokerSocket.on('end', () => {
     log('brokerSocket: disconnected from the the Thundra broker');
     debuggerSocket.end();
 });
-brokerSocket.on('error', (err) => {
+brokerSocket.on('error', (err: any) => {
     log('brokerSocket:' + err);
 });
 

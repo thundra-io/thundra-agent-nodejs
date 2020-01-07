@@ -227,7 +227,7 @@ class ThundraWrapper {
         if (this.fork && this.inspector) {
             try {
                 this.debuggerProxy = this.fork(
-                    path.join(__dirname, 'DebugBridge.js'),
+                    path.join(__dirname, 'debugBridge.js'),
                     [],
                     {
                         detached: true,
