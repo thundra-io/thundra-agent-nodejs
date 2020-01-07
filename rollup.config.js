@@ -40,7 +40,7 @@ module.exports = [
         ]
     },
     {
-        input: './src/Handler.ts',
+        input: './src/handler.ts',
         output: {
             file: 'dist/handler.js',
             format: 'cjs',
