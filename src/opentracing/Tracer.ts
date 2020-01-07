@@ -9,175 +9,195 @@ import HttpPropagator from './propagation/Http';
 import BinaryPropagator from './propagation/Binary';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpanContext from './SpanContext';
+import { LineByLineTags } from '../Constants';
 
 class ThundraTracer extends Tracer {
-  static instance: ThundraTracer;
+    static instance: ThundraTracer;
 
-  tags: any;
-  recorder: ThundraRecorder;
-  activeSpans: Map<string, ThundraSpan>;
-  transactionId: string;
-  propagators: any;
+    tags: any;
+    recorder: ThundraRecorder;
+    activeSpans: Map<string, ThundraSpan>;
+    transactionId: string;
+    propagators: any;
 
-  private invokeCallback = true;
+    private invokeCallback = true;
 
-  constructor(config: any = {}) {
-    super();
+    constructor(config: any = {}) {
+        super();
 
-    this.tags = config.tags;
-    this.recorder = config.recorder ? config.recorder : new ThundraRecorder();
-    this.activeSpans = new Map<string, ThundraSpan>();
+        this.tags = config.tags;
+        this.recorder = config.recorder ? config.recorder : new ThundraRecorder();
+        this.activeSpans = new Map<string, ThundraSpan>();
 
-    this.propagators = {
-      [opentracing.FORMAT_TEXT_MAP]: new TextMapPropagator(),
-      [opentracing.FORMAT_HTTP_HEADERS]: new HttpPropagator(),
-      [opentracing.FORMAT_BINARY]: new BinaryPropagator(),
-    };
-  }
-
-  getActiveSpan(): ThundraSpan {
-    return this.recorder.getActiveSpan();
-  }
-
-  setActiveSpan(span: ThundraSpan) {
-    this.recorder.setActiveSpan(span);
-  }
-
-  removeActiveSpan(): ThundraSpan {
-    return this.recorder.removeActiveSpan();
-  }
-
-  finishSpan(): void {
-    if (this.getActiveSpan()) {
-      this.getActiveSpan().finish();
-    }
-  }
-
-  getRecorder(): ThundraRecorder {
-    return this.recorder;
-  }
-
-  destroy(): void {
-    this.recorder.destroy();
-    this.activeSpans.clear();
-  }
-
-  addSpanListener(listener: ThundraSpanListener) {
-    if (!listener) {
-      throw new Error('No listener provided.');
+        this.propagators = {
+            [opentracing.FORMAT_TEXT_MAP]: new TextMapPropagator(),
+            [opentracing.FORMAT_HTTP_HEADERS]: new HttpPropagator(),
+            [opentracing.FORMAT_BINARY]: new BinaryPropagator(),
+        };
     }
 
-    if (this.shouldInvokeCallback()) {
-      this.recorder.addSpanListener(listener);
-    } else {
-      throw new Error('There can be only one Span Listener which is responsible for invoking span callback');
-    }
-  }
-
-  wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
-    const activeSpan = this.getActiveSpan();
-    const span: ThundraSpan = this.startSpan(spanName, { childOf: activeSpan }) as ThundraSpan;
-    // tslint:disable-next-line:no-angle-bracket-type-assertion
-    return <T> ((...args: any[]) => {
-      try {
-        const returnValue = func(...args);
-        span.finish();
-        return returnValue;
-      } catch (error) {
-        span.finish();
-        throw error;
-      }
-    });
-  }
-
-  _startSpan(name: any, fields: any) {
-    const tags: any = {};
-    let span;
-    const rootTraceId = fields.rootTraceId ? fields.rootTraceId : Utils.generateId();
-
-    const parentContext = fields.parentContext ? fields.parentContext : Utils.getParentContext(fields.references);
-
-    if (!fields.propagated && (parentContext && !this.activeSpans.get(parentContext.spanId))) {
-      throw new Error('Invalid spanId : ' + parentContext.spanId);
+    getActiveSpan(): ThundraSpan {
+        return this.recorder.getActiveSpan();
     }
 
-    if (parentContext) {
-      span = new ThundraSpan(this, {
-        operationName: fields.operationName || name,
-        parent: parentContext,
-        tags: Object.assign(tags, this.tags, fields.tags),
-        startTime: fields.startTime,
-        rootTraceId,
-        className: fields.className,
-        domainName: fields.domainName,
-        transactionId: this.transactionId,
-      });
-    } else {
-      span = new ThundraSpan(this, {
-        operationName: name,
-        parent: this.getActiveSpan() ? this.getActiveSpan().spanContext : null,
-        tags: Object.assign(tags, this.tags, fields.tags),
-        rootTraceId,
-        startTime: Date.now(),
-        className: fields.className,
-        domainName: fields.domainName,
-        transactionId: this.transactionId,
-      });
+    setActiveSpan(span: ThundraSpan) {
+        this.recorder.setActiveSpan(span);
     }
 
-    this.recorder.record(
-      span,
-      SpanEvent.SPAN_START,
-      {
-        disableActiveSpanHandling: fields.disableActiveStart === true,
-        me: fields.me,
-        callback: fields.callback,
-        args: fields.args,
-      });
-    this.activeSpans.set(span.spanContext.spanId, span);
-    return span;
-  }
-
-  _record(span: ThundraSpan, options?: any) {
-    this.recorder.record(span, SpanEvent.SPAN_FINISH, options);
-    this.activeSpans.delete(span.spanContext.spanId);
-  }
-
-  _initialized(span: ThundraSpan, options?: any) {
-    options = options ? options : {};
-    this.recorder.record(span, SpanEvent.SPAN_INITIALIZE, options);
-  }
-
-  _inject(spanContext: any, format: any, carrier: any): ThundraTracer {
-    try {
-      this.propagators[format].inject(spanContext, carrier);
-    } catch (e) {
-      ThundraLogger.getInstance().error(e);
+    removeActiveSpan(): ThundraSpan {
+        return this.recorder.removeActiveSpan();
     }
 
-    return this;
-  }
-
-  _extract(format: any, carrier: any): ThundraSpanContext {
-    try {
-      return this.propagators[format].extract(carrier);
-    } catch (e) {
-      ThundraLogger.getInstance().error(e);
-      return null;
+    finishSpan(): void {
+        if (this.getActiveSpan()) {
+            this.getActiveSpan().finish();
+        }
     }
-  }
 
-  _isSampled(span: ThundraSpan) {
-    return true;
-  }
+    getRecorder(): ThundraRecorder {
+        return this.recorder;
+    }
 
-  shouldInvokeCallback(): boolean {
-    return this.invokeCallback;
-  }
+    destroy(): void {
+        this.recorder.destroy();
+        this.activeSpans.clear();
+    }
 
-  disableInvokeCallback(): void {
-    this.invokeCallback = false;
-  }
+    addSpanListener(listener: ThundraSpanListener) {
+        if (!listener) {
+            throw new Error('No listener provided.');
+        }
+
+        if (this.shouldInvokeCallback()) {
+            this.recorder.addSpanListener(listener);
+        } else {
+            throw new Error('There can be only one Span Listener which is responsible for invoking span callback');
+        }
+    }
+
+    wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
+        const activeSpan = this.getActiveSpan();
+        const span: ThundraSpan = this.startSpan(spanName, { childOf: activeSpan }) as ThundraSpan;
+        // tslint:disable-next-line:no-angle-bracket-type-assertion
+        return <T> ((...args: any[]) => {
+            try {
+                const returnValue = func(...args);
+                span.finish();
+                return returnValue;
+            } catch (error) {
+                span.finish();
+                throw error;
+            }
+        });
+    }
+
+    _startSpan(name: any, fields: any) {
+        const tags: any = {};
+        let span;
+        const rootTraceId = fields.rootTraceId ? fields.rootTraceId : Utils.generateId();
+
+        const parentContext = fields.parentContext ? fields.parentContext : Utils.getParentContext(fields.references);
+
+        if (!fields.propagated && (parentContext && !this.activeSpans.get(parentContext.spanId))) {
+            throw new Error('Invalid spanId : ' + parentContext.spanId);
+        }
+
+        if (parentContext) {
+            span = new ThundraSpan(this, {
+                operationName: fields.operationName || name,
+                parent: parentContext,
+                tags: Object.assign(tags, this.tags, fields.tags),
+                startTime: fields.startTime,
+                rootTraceId,
+                className: fields.className,
+                domainName: fields.domainName,
+                transactionId: this.transactionId,
+            });
+        } else {
+            span = new ThundraSpan(this, {
+                operationName: name,
+                parent: this.getActiveSpan() ? this.getActiveSpan().spanContext : null,
+                tags: Object.assign(tags, this.tags, fields.tags),
+                rootTraceId,
+                startTime: Date.now(),
+                className: fields.className,
+                domainName: fields.domainName,
+                transactionId: this.transactionId,
+            });
+        }
+
+        const parentSpan = this.getActiveSpan();
+        if (parentSpan && parentSpan.getTag(LineByLineTags.LINES)) {
+            this._injectLineByLineTags(span, parentSpan);
+        }
+
+        this.recorder.record(
+            span,
+            SpanEvent.SPAN_START,
+            {
+                disableActiveSpanHandling: fields.disableActiveStart === true,
+                me: fields.me,
+                callback: fields.callback,
+                args: fields.args,
+            });
+        this.activeSpans.set(span.spanContext.spanId, span);
+        return span;
+    }
+
+    _injectLineByLineTags(span: ThundraSpan, parentSpan: ThundraSpan) {
+        const lines = parentSpan.getTag(LineByLineTags.LINES);
+        if (lines && lines.length > 0) {
+            const lastLine = lines[lines.length - 1];
+            const spanId = span.spanContext.spanId;
+
+            if (!lastLine[LineByLineTags.NEXT_SPAN_IDS]) {
+                lastLine[LineByLineTags.NEXT_SPAN_IDS] = [];
+            }
+
+            lastLine[LineByLineTags.NEXT_SPAN_IDS] = [...lastLine[LineByLineTags.NEXT_SPAN_IDS], spanId];
+        }
+    }
+
+    _record(span: ThundraSpan, options?: any) {
+        this.recorder.record(span, SpanEvent.SPAN_FINISH, options);
+        this.activeSpans.delete(span.spanContext.spanId);
+    }
+
+    _initialized(span: ThundraSpan, options?: any) {
+        options = options ? options : {};
+        this.recorder.record(span, SpanEvent.SPAN_INITIALIZE, options);
+    }
+
+    _inject(spanContext: any, format: any, carrier: any): ThundraTracer {
+        try {
+            this.propagators[format].inject(spanContext, carrier);
+        } catch (e) {
+            ThundraLogger.getInstance().error(e);
+        }
+
+        return this;
+    }
+
+    _extract(format: any, carrier: any): ThundraSpanContext {
+        try {
+            return this.propagators[format].extract(carrier);
+        } catch (e) {
+            ThundraLogger.getInstance().error(e);
+            return null;
+        }
+    }
+
+    _isSampled(span: ThundraSpan) {
+        return true;
+    }
+
+    shouldInvokeCallback(): boolean {
+        return this.invokeCallback;
+    }
+
+    disableInvokeCallback(): void {
+        this.invokeCallback = false;
+    }
 }
 
 export default ThundraTracer;

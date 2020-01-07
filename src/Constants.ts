@@ -252,6 +252,13 @@ export const MongoDBTags = {
     MONGODB_COLLECTION: 'mongodb.collection.name',
 };
 
+export const LineByLineTags = {
+    LINES: 'method.lines',
+    SOURCE: 'method.source',
+    START_LINE: 'method.startLine',
+    NEXT_SPAN_IDS: 'nextSpanIds',
+};
+
 export const MongoDBCommandTypes = {
     // Aggregate Commands
     AGGREGATE: 'READ',

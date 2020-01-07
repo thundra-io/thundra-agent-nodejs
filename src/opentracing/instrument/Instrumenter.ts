@@ -1,5 +1,4 @@
 import TraceConfig from '../../plugins/config/TraceConfig';
-import { envVariableKeys, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/utils/Utils';
@@ -7,6 +6,7 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraTracer from '../Tracer';
 import ThundraSpan from '../Span';
 import { ThundraSourceCodeInstrumenter } from '@thundra/instrumenter';
+import { envVariableKeys, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Constants';
 
 const Module = require('module');
 const path = require('path');
@@ -87,8 +87,8 @@ class Instrumenter {
 
                 span.className = 'Method';
                 span.setTag(ARGS_TAG_NAME, spanArguments);
-                span.setTag('method.source', args.source);
-                span.setTag('method.startLine', args.startLine);
+                span.setTag(LineByLineTags.SOURCE, args.source);
+                span.setTag(LineByLineTags.START_LINE, args.startLine);
 
                 return {
                     span,
@@ -153,12 +153,12 @@ class Instrumenter {
                     localVars,
                 };
 
-                let currentLines = methodSpan.getTag('method.lines');
+                let currentLines = methodSpan.getTag(LineByLineTags.LINES);
                 if (!currentLines) {
                     currentLines = [];
                 }
 
-                methodSpan.setTag('method.lines', [...currentLines, methodLineTag]);
+                methodSpan.setTag(LineByLineTags.LINES, [...currentLines, methodLineTag]);
             } catch (ex) {
                 // Ignore
             }
