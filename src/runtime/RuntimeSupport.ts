@@ -14,7 +14,7 @@ const UPPER_FOLDER_SUBSTRING = '..';
 export function loadHandler(appPath: string, handlerString: string) {
   if (handlerString.includes(UPPER_FOLDER_SUBSTRING)) {
     throw new BadHandlerFormat(
-      `'${handlerString}' is not a valid handler name. Use absolute paths when specifying root directories in handler names.`,
+      `'${handlerString}' is not a valid handler name. Try to use absolute paths.`,
     );
   }
 
