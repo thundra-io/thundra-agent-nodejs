@@ -3,49 +3,17 @@
 const path = require('path');
 const fs = require('fs');
 
-class ImportModuleError extends Error {}
-class HandlerNotFound extends Error {}
-class MalformedHandlerName extends Error {}
-class UserCodeSyntaxError extends Error {}
+class InvalidModule extends Error {}
+class InvalidHandler extends Error {}
+class BadHandlerFormat extends Error {}
+class UserCodeError extends Error {}
 
 const FUNCTION_PATTERN = /^([^.]*)\.(.*)$/;
 const UPPER_FOLDER_SUBSTRING = '..';
 
-function getHandler(object: any, nestedProperty: any) {
-  return nestedProperty.split('.').reduce((nested: any, key: any) => {
-    return nested && nested[key];
-  }, object);
-}
-
-function requireModule(appPath: string, modulePath: string, module: string) {
-  const lambdaStylePath: string = path.resolve(appPath, modulePath, module);
-  if (fs.existsSync(modulePath) || fs.existsSync(modulePath + '.js')) {
-    return require(lambdaStylePath);
-  } else {
-    const nodeStylePath: string = require.resolve(module, {
-      paths: [appPath, modulePath],
-    });
-    return require(nodeStylePath);
-  }
-}
-
-function loadUserModule(appRoot: string, moduleRoot: string, module: string) {
-  try {
-    return requireModule(appRoot, moduleRoot, module);
-  } catch (e) {
-    if (e instanceof SyntaxError) {
-      throw new UserCodeSyntaxError(e.toString());
-    } else if (e.code !== undefined && e.code === 'MODULE_NOT_FOUND') {
-      throw new ImportModuleError(e.toString());
-    } else {
-      throw e;
-    }
-  }
-}
-
 export function loadHandler(appPath: string, handlerString: string) {
   if (handlerString.includes(UPPER_FOLDER_SUBSTRING)) {
-    throw new MalformedHandlerName(
+    throw new BadHandlerFormat(
       `'${handlerString}' is not a valid handler name. Use absolute paths when specifying root directories in handler names.`,
     );
   }
@@ -58,21 +26,45 @@ export function loadHandler(appPath: string, handlerString: string) {
 
   const match = moduleAndHandler.match(FUNCTION_PATTERN);
   if (!match || match.length !== 3) {
-    throw new MalformedHandlerName('Bad handler');
+    throw new BadHandlerFormat('Bad handler');
   }
   const [module, handlerPath] = [match[1], match[2]];
 
-  const userModule = loadUserModule(appPath, modulePath, module);
-  const handlerFunc = getHandler(userModule, handlerPath);
+  let userModule;
+  let handlerFunc;
+
+  try {
+    const lambdaStylePath: string = path.resolve(appPath, modulePath, module);
+    if (fs.existsSync(modulePath) || fs.existsSync(modulePath + '.js')) {
+      userModule = require(lambdaStylePath);
+    } else {
+      const nodeStylePath: string = require.resolve(module, {
+        paths: [appPath, modulePath],
+      });
+      userModule = require(nodeStylePath);
+    }
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      throw new UserCodeError(e.toString());
+    } else if (e.code !== undefined && e.code === 'MODULE_NOT_FOUND') {
+      throw new InvalidModule(e.toString());
+    } else {
+      throw e;
+    }
+  }
+
+  handlerFunc = handlerPath.split('.').reduce((nested: any, key: any) => {
+    return nested && nested[key];
+  }, userModule);
 
   if (!handlerFunc) {
-    throw new HandlerNotFound(
+    throw new InvalidHandler(
       `Couldn't find ${handlerString}, it might be undefined or not exported`,
     );
   }
 
   if (typeof handlerFunc !== 'function') {
-    throw new HandlerNotFound(`Type of ${handlerString} is not a function`);
+    throw new InvalidHandler(`Type of ${handlerString} is not a function`);
   }
 
   return handlerFunc;
