@@ -38,7 +38,7 @@ export function loadHandler(appPath: string, handlerString: string) {
     if (fs.existsSync(modulePath) || fs.existsSync(modulePath + '.js')) {
       userModule = require(lambdaStylePath);
     } else {
-      const nodeStylePath: string = require.resolve(module, {
+      const nodeStylePath = require.resolve(module, {
         paths: [appPath, modulePath],
       });
       userModule = require(nodeStylePath);
@@ -47,7 +47,16 @@ export function loadHandler(appPath: string, handlerString: string) {
     if (e instanceof SyntaxError) {
       throw new UserCodeError(e.toString());
     } else if (e.code !== undefined && e.code === 'MODULE_NOT_FOUND') {
-      throw new InvalidModule(e.toString());
+      try {
+        // Add relative path prefix to try resolve again for nodejs12.x
+        // https://github.com/nodejs/node/issues/27583
+        const nodeStylePath = require.resolve('./' + module, {
+          paths: [appPath, modulePath],
+        });
+        userModule = require(nodeStylePath);
+      } catch (err) {
+        throw new InvalidModule(e.toString());
+      }
     } else {
       throw e;
     }
