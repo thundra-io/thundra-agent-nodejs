@@ -21,6 +21,7 @@ class TraceConfig extends BasePluginConfig {
     disableInstrumentation: boolean;
     disableHttp4xxError: boolean;
     disableHttp5xxError: boolean;
+    disableTagHttpError: boolean;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
     maskRedisStatement: boolean;
@@ -65,6 +66,10 @@ class TraceConfig extends BasePluginConfig {
         this.disableHttp4xxError = Utils.getConfiguration(
             envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_4XX) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_4XX) === 'true' : options.disableHttp4xxError;
+
+        this.disableTagHttpError = Utils.getConfiguration(
+            envVariableKeys.THUNDRA_LAMBDA_TAG_HTTP_ERROR_RESPONSES_DISABLE) ? Utils.getConfiguration(
+                envVariableKeys.THUNDRA_LAMBDA_TAG_HTTP_ERROR_RESPONSES_DISABLE) === 'true' : options.disableTagHttpError;
 
         this.disableHttp5xxError = Utils.getConfiguration(
             envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_5XX) ? Utils.getConfiguration(

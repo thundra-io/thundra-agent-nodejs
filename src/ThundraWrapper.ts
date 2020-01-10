@@ -353,7 +353,7 @@ class ThundraWrapper {
                     response: result,
                 };
 
-                if (this.isErrorResponse(result)) {
+                if (!this.config.traceConfig.disableTagHttpError && this.isHTTPErrorResponse(result)) {
                     afterInvocationData = {
                         error: new HttpError('Lambda returned with error response.'),
                         originalEvent: this.originalEvent,
@@ -388,7 +388,7 @@ class ThundraWrapper {
         }
     }
 
-    isErrorResponse(result: any) {
+    isHTTPErrorResponse(result: any) {
         let isError = false;
         if (this.isValidResponse(result) && typeof result.body === 'string') {
             const statusCode = result.statusCode.toString();

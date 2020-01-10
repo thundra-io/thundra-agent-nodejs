@@ -37,6 +37,7 @@ export const envVariableKeys = {
     THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP: 'thundra_agent_lambda_trace_response_skip',
     THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE: 'thundra_agent_lambda_trace_instrument_disable',
     THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG: 'thundra_agent_lambda_trace_instrument_traceableConfig',
+    THUNDRA_LAMBDA_TAG_HTTP_ERROR_RESPONSES_DISABLE: 'thundra_agent_lambda_tag_http_error_responses_disable',
     THUNDRA_LAMBDA_TRACE_INSTRUMENT_FILE_PREFIX: 'thundra_agent_lambda_trace_instrument_file_prefix',
     THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE: 'thundra_agent_lambda_trace_instrument_integrations_disable',
     THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE: 'thundra_agent_lambda_log_console_disable',
