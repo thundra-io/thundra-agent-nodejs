@@ -10,7 +10,8 @@ const userHandler = loadHandler(
 );
 
 const thundra = require('@thundra/core')();
+const wrappedUserFunc = thundra(userHandler);
 
 exports.wrapper = (event: any, context: any, callback: any) => {
-  return thundra(userHandler)(event, context, callback);
+  return wrappedUserFunc(event, context, callback);
 };
