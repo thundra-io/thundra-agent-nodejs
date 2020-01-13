@@ -70,14 +70,6 @@ class PostgreIntegration implements Integration {
         return text;
     }
 
-    getCallback(res: any, args: any[]) {
-        if (res.callback) {
-            return res.callback;
-        } else if (args.length > 0 && args[args.length - 1] === 'function') {
-            return args[args.length - 1];
-        }
-    }
-
     wrap(lib: any, config: any) {
         const integration = this;
         function wrapper(query: any, args: any) {
