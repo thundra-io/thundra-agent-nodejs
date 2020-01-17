@@ -1,13 +1,13 @@
 import BasePluginConfig from './BasePluginConfig';
 import ThundraTracer from '../../opentracing/Tracer';
-const koalas = require('koalas');
+const get = require('lodash.get');
 
 class AwsXRayConfig extends BasePluginConfig {
     tracer: ThundraTracer;
 
     constructor(options: any) {
         options = options ? options : {};
-        super(koalas(options.enabled, false));
+        super(get(options, 'enabled', false));
     }
 }
 

@@ -4,7 +4,7 @@ import CountAwareSampler from '../../opentracing/sampler/CountAwareSampler';
 import TimeAwareSampler from '../../opentracing/sampler/TimeAwareSampler';
 import CompositeSampler from '../../opentracing/sampler/CompositeSampler';
 import ThundraTracer from '../../opentracing/Tracer';
-const koalas = require('koalas');
+const get = require('lodash.get');
 
 class MetricConfig extends BasePluginConfig {
     sampler: Sampler<any>;
@@ -12,7 +12,7 @@ class MetricConfig extends BasePluginConfig {
 
     constructor(options: any) {
         options = options ? options : {};
-        super(koalas(options.enabled, true));
+        super(get(options, 'enabled', true));
 
         const countAwareSampler = new CountAwareSampler();
         const timeAwareSampler = new TimeAwareSampler();

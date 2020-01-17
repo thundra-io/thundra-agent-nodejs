@@ -8,7 +8,7 @@ import Integration from '../integrations/Integration';
 import Instrumenter from '../../opentracing/instrument/Instrumenter';
 import Sampler from '../../opentracing/sampler/Sampler';
 import ThundraTracer from '../../opentracing/Tracer';
-const koalas = require('koalas');
+const get = require('lodash.get');
 
 class TraceConfig extends BasePluginConfig {
     disableRequest: boolean;
@@ -46,17 +46,17 @@ class TraceConfig extends BasePluginConfig {
 
     constructor(options: any) {
         options = options ? options : {};
-        super(koalas(options.enabled, true));
+        super(get(options, 'enabled', true));
         this.disableRequest = Utils.getConfiguration(
             envVariableKeys.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP) === 'true' : options.disableRequest;
         this.disableResponse = Utils.getConfiguration(
             envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) ? Utils.getConfiguration(
                 envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) === 'true' : options.disableResponse;
-        this.maskRequest = koalas(options.maskRequest, null);
-        this.maskResponse = koalas(options.maskResponse, null);
-        this.disabledIntegrations = koalas([]);
-        this.tracerConfig = koalas(options.tracerConfig, {});
+        this.maskRequest = options.maskRequest;
+        this.maskResponse = options.maskResponse;
+        this.disabledIntegrations = [];
+        this.tracerConfig = get(options, 'tracerConfig', {});
         this.traceableConfigs = [];
         this.disableInstrumentation = Utils.getConfiguration(
             envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) ? Utils.getConfiguration(
@@ -140,7 +140,7 @@ class TraceConfig extends BasePluginConfig {
         ) ? parseInt(Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_ELASTICSEARCH_URL_DEPTH), 10)
             : 1;
 
-        this.runSamplerOnEachSpan = koalas(options.runCustomSamplerOnEachSpan, false);
+        this.runSamplerOnEachSpan = get(options, 'runCustomSamplerOnEachSpan', false);
         this.sampler = options.sampler;
 
         for (const key of Object.keys(process.env)) {
