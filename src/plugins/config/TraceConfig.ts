@@ -201,6 +201,13 @@ class TraceConfig extends BasePluginConfig {
         }
         return disabled;
     }
+
+    updateConfig(options: any) {
+        this.maskRequest = get(options, 'traceConfig.maskRequest', this.maskRequest);
+        this.maskResponse = get(options, 'traceConfig.maskResponse', this.maskResponse);
+        this.runSamplerOnEachSpan = get(options, 'traceConfig.runCustomSamplerOnEachSpan', this.runSamplerOnEachSpan);
+        this.sampler = get(options, 'traceConfig.sampler', this.sampler);
+    }
 }
 
 export default TraceConfig;

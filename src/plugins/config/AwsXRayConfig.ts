@@ -9,6 +9,10 @@ class AwsXRayConfig extends BasePluginConfig {
         options = options ? options : {};
         super(get(options, 'enabled', false));
     }
+
+    updateConfig(options: any) {
+        this.enabled = get(options, 'xrayConfig.enabled', this.enabled);
+    }
 }
 
 export default AwsXRayConfig;

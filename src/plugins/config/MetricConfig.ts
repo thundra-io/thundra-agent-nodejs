@@ -23,6 +23,11 @@ class MetricConfig extends BasePluginConfig {
 
         this.sampler = options.sampler ? options.sampler : new CompositeSampler(samplers);
     }
+
+    updateConfig(options: any) {
+        this.sampler = get(options, 'metricConfig.sampler', this.sampler);
+        this.enabled = get(options, 'metricConfig.enabled', this.enabled);
+    }
 }
 
 export default MetricConfig;

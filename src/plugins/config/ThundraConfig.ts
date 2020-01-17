@@ -6,9 +6,10 @@ import LogConfig from './LogConfig';
 import Utils from '../utils/Utils';
 import AwsXRayConfig from './AwsXRayConfig';
 const get = require('lodash.get');
+const koalas = require('koalas');
 
 class ThundraConfig {
-    static extraConfig: any = {};
+    static configUpdates: any = {};
 
     initialConfig: any;
     trustAllCert: boolean;
@@ -25,36 +26,15 @@ class ThundraConfig {
     enableCompositeData: boolean;
 
     constructor(options: any) {
-        this.initialConfig = options ? options : {};
-        this.setConfig(this.initialConfig);
-    }
+        options = options ? options : {};
 
-    static updateConfig(options: any) {
-        const extraConfig = ThundraConfig.extraConfig;
-        ThundraConfig.extraConfig = {...extraConfig, ...options};
-    }
-
-    refreshConfig() {
-        // No extraKeys, no need to update the initialConfig
-        if (Object.keys(ThundraConfig.extraConfig).length === 0) {
-            return;
-        }
-
-        const extraConfig = ThundraConfig.extraConfig;
-        const initialConfig = this.initialConfig;
-        const finalConfig = {...initialConfig, ...extraConfig};
-
-        this.setConfig(finalConfig);
-    }
-
-    setConfig(options: any) {
+        this.initialConfig = options;
         this.apiKey = Utils.getConfiguration(envVariableKeys.THUNDRA_APIKEY, options.apiKey);
         this.disableThundra = Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE)
             ? Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE) === 'true'
             : options.disableThundra;
-        this.timeoutMargin = Utils.getNumericConfiguration(envVariableKeys.THUNDRA_LAMBDA_TIMEOUT_MARGIN)
-            || options.timeoutMargin
-            || TIMEOUT_MARGIN;
+        this.timeoutMargin = koalas(parseInt(Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TIMEOUT_MARGIN), 10),
+            options.timeoutMargin, TIMEOUT_MARGIN);
         this.traceConfig = new TraceConfig(options.traceConfig);
         this.metricConfig = new MetricConfig(options.metricConfig);
         this.logConfig = new LogConfig(options.logConfig);
@@ -74,6 +54,31 @@ class ThundraConfig {
         this.enableCompositeData = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_COMPOSITE_ENABLED)
             ? Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_COMPOSITE_ENABLED) === 'true'
             : options.enableCompositeData;
+    }
+
+    static updateConfig(options: any) {
+        const configUpdates = ThundraConfig.configUpdates;
+        ThundraConfig.configUpdates = { ...configUpdates, ...options };
+    }
+
+    refreshConfig() {
+        // No extraKeys, no need to update the initialConfig
+        if (Object.keys(ThundraConfig.configUpdates).length === 0) {
+            return;
+        }
+
+        const configUpdates = ThundraConfig.configUpdates;
+        const initialConfig = this.initialConfig;
+        const updatedConfig = { ...initialConfig, ...configUpdates };
+
+        this.traceConfig.updateConfig(updatedConfig);
+        this.metricConfig.updateConfig(updatedConfig);
+        this.logConfig.updateConfig(updatedConfig);
+        this.xrayConfig.updateConfig(updatedConfig);
+
+        this.trustAllCert = get(updatedConfig, 'trustAllCert', this.trustAllCert);
+
+        ThundraConfig.configUpdates = {};
     }
 }
 

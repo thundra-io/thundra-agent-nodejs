@@ -12,6 +12,11 @@ class LogConfig extends BasePluginConfig {
         super(get(options, 'enabled', true));
         this.sampler = options.sampler;
     }
+
+    updateConfig(options: any) {
+        this.sampler = get(options, 'logConfig.sampler', this.sampler);
+        this.enabled = get(options, 'logConfig.enabled', this.enabled);
+    }
 }
 
 export default LogConfig;
