@@ -11,7 +11,6 @@ const koalas = require('koalas');
 class ThundraConfig {
     static configUpdates: any = {};
 
-    initialConfig: any;
     trustAllCert: boolean;
     warmupAware: boolean;
     apiKey: string;
@@ -28,7 +27,6 @@ class ThundraConfig {
     constructor(options: any) {
         options = options ? options : {};
 
-        this.initialConfig = options;
         this.apiKey = Utils.getConfiguration(envVariableKeys.THUNDRA_APIKEY, options.apiKey);
         this.disableThundra = Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE)
             ? Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE) === 'true'
@@ -68,15 +66,13 @@ class ThundraConfig {
         }
 
         const configUpdates = ThundraConfig.configUpdates;
-        const initialConfig = this.initialConfig;
-        const updatedConfig = { ...initialConfig, ...configUpdates };
 
-        this.traceConfig.updateConfig(updatedConfig);
-        this.metricConfig.updateConfig(updatedConfig);
-        this.logConfig.updateConfig(updatedConfig);
-        this.xrayConfig.updateConfig(updatedConfig);
+        this.traceConfig.updateConfig(configUpdates);
+        this.metricConfig.updateConfig(configUpdates);
+        this.logConfig.updateConfig(configUpdates);
+        this.xrayConfig.updateConfig(configUpdates);
 
-        this.trustAllCert = get(updatedConfig, 'trustAllCert', this.trustAllCert);
+        this.trustAllCert = get(configUpdates, 'trustAllCert', this.trustAllCert);
 
         ThundraConfig.configUpdates = {};
     }
