@@ -29,7 +29,6 @@ const log = (msg: any) => {
 // Setup debugger socket
 debuggerSocket.connect({ port: DEBUGGER_PORT });
 debuggerSocket.on('data', (data: any) => {
-    log(`debuggerSocket: ${data}`);
     brokerSocket.send(data);
 });
 debuggerSocket.on('connect', () => {
@@ -48,7 +47,6 @@ brokerSocket.on('open', () => {
     log('brokerSocket: connection established with the Thundra broker');
 });
 brokerSocket.on('message', (data: any) => {
-    log(`brokerSocket: ${data}`);
     debuggerSocket.write(data);
 });
 brokerSocket.on('close', (code: Number, reason: string) => {
