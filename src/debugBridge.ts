@@ -20,9 +20,9 @@ const shutdownSockets = () => {
     brokerSocket.close();
 };
 
-const log = (msg: any) => {
+const log = (...params: any[]) => {
     if (LOGS_ENABLED === 'true') {
-        console.log(msg);
+        console.log(...params);
     }
 };
 
