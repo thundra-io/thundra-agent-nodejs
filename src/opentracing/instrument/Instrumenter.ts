@@ -11,6 +11,7 @@ import { envVariableKeys, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags }
 const Module = require('module');
 const path = require('path');
 const get = require('lodash.get');
+const stringify = require('json-stringify-safe');
 
 const TRACE_DEF_SEPERATOR: string = '.';
 
@@ -130,7 +131,7 @@ class Instrumenter {
                         const varValue = varValues[i];
                         let processedVarValue = varValue ? varValue.toString() : null;
                         try {
-                            processedVarValue = JSON.stringify(varValue);
+                            processedVarValue = stringify(varValue);
                             try {
                                 processedVarValue = JSON.parse(processedVarValue);
                             } catch (e) {

@@ -85,6 +85,7 @@
   "dependencies": {
     "@thundra/instrumenter": "^1.0.0",
     "@thundra/warmup": "1.0.0",
+    "json-stringify-safe": "^5.0.1",
     "koalas": "^1.0.2",
     "lodash.flatten": "^4.4.0",
     "lodash.get": "^4.4.2",
