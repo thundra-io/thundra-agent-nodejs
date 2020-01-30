@@ -131,6 +131,7 @@ class Instrumenter {
                         const varValue = varValues[i];
                         let processedVarValue = varValue ? varValue.toString() : null;
                         try {
+                            // Cycle aware stringify operation
                             processedVarValue = stringify(varValue);
                             try {
                                 processedVarValue = JSON.parse(processedVarValue);
