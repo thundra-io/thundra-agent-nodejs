@@ -78,7 +78,7 @@ class Instrumenter {
                 if (args.args) {
                     for (let i = 0; i < args.args.length; i++) {
                         const argType = typeof args.args[i];
-                        let argValue = args.args[i];
+                        let argValue = JSON.parse(stringify(args.args[i]));
                         if (argType === 'function') {
                             argValue = argValue.toString();
                         }
@@ -178,7 +178,8 @@ class Instrumenter {
                 const span = (entryData && entryData.span) ? entryData.span : tracer.getActiveSpan();
                 if (!args.exception) {
                     if (args.returnValue) {
-                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, args.returnValue));
+                        const returnValue = JSON.parse(stringify(args.returnValue));
+                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, returnValue));
                     }
                 } else {
                     span.setErrorTag(args.exceptionValue);
