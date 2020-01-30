@@ -24,7 +24,6 @@ import InvocationSupport from '../support/InvocationSupport';
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
 const zlib = require('zlib');
-const koalas = require('koalas');
 
 declare var __non_webpack_require__: any;
 const customReq = typeof __non_webpack_require__ !== 'undefined'
@@ -50,7 +49,7 @@ class Utils {
     }
 
     static getNumericConfiguration(key: string, defaultValue?: number): number {
-        return koalas(parseInt(Utils.getConfiguration(key, defaultValue), 10));
+        return parseInt(Utils.getConfiguration(key, defaultValue), 10);
     }
 
     static getCpuUsage() {

@@ -21,7 +21,6 @@ import AWSOperationTypesConfig from './AWSOperationTypes';
 
 const shimmer = require('shimmer');
 const Hook = require('require-in-the-middle');
-const koalas = require('koalas');
 const md5 = require('md5');
 const has = require('lodash.has');
 const trim = require('lodash.trim');
@@ -376,7 +375,7 @@ class AWSIntegration implements Integration {
                         let queueName = Utils.getQueueName(request.params.QueueUrl);
                         queueName = queueName ? queueName.substring(queueName.lastIndexOf('/') + 1) : queueName;
 
-                        const spanName = koalas(queueName, AWS_SERVICE_REQUEST);
+                        const spanName = queueName || AWS_SERVICE_REQUEST;
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
                             domainName: DomainNames.MESSAGING,
@@ -443,7 +442,7 @@ class AWSIntegration implements Integration {
                             phoneNumber = request.params.PhoneNumber;
                             spanName = phoneNumber;
                         }
-                        spanName = koalas(spanName, AWS_SERVICE_REQUEST);
+                        spanName = spanName || AWS_SERVICE_REQUEST;
 
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
@@ -489,7 +488,7 @@ class AWSIntegration implements Integration {
                         const tableName = Utils.getDynamoDBTableName(request);
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.DYNAMODB);
 
-                        const spanName = koalas(tableName, AWS_SERVICE_REQUEST);
+                        const spanName = tableName || AWS_SERVICE_REQUEST;
 
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
@@ -527,7 +526,7 @@ class AWSIntegration implements Integration {
                         }
                     } else if (serviceName === 's3') {
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.S3);
-                        const spanName = koalas(request.params.Bucket, AWS_SERVICE_REQUEST);
+                        const spanName = get(request, 'params.Bucket', AWS_SERVICE_REQUEST);
 
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
@@ -551,7 +550,7 @@ class AWSIntegration implements Integration {
                         }
                     } else if (serviceName === 'lambda') {
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.LAMBDA);
-                        const spanName = koalas(request.params.FunctionName, AWS_SERVICE_REQUEST);
+                        const spanName = get(request, 'params.FunctionName', AWS_SERVICE_REQUEST);
 
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
@@ -597,7 +596,7 @@ class AWSIntegration implements Integration {
                         }
                     } else if (serviceName === 'kinesis') {
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.KINESIS);
-                        const spanName = koalas(request.params.StreamName, AWS_SERVICE_REQUEST);
+                        const spanName = get(request, 'params.StreamName', AWS_SERVICE_REQUEST);
 
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
@@ -621,7 +620,7 @@ class AWSIntegration implements Integration {
                         }
                     } else if (serviceName === 'firehose') {
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.FIREHOSE);
-                        const spanName = koalas(request.params.DeliveryStreamName, AWS_SERVICE_REQUEST);
+                        const spanName = get(request, 'params.DeliveryStreamName', AWS_SERVICE_REQUEST);
 
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,

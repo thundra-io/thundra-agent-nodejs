@@ -1,10 +1,10 @@
 import BasePluginConfig from './BasePluginConfig';
-const koalas = require('koalas');
+const get = require('lodash.get');
 class IntegrationConfig  extends BasePluginConfig {
     name: string;
     options: any;
     constructor(name: string, options: any) {
-        super(koalas(options.enabled, true));
+        super(get(options, 'enabled', true));
         this.name = name;
         this.options = options;
     }

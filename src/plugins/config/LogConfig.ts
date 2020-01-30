@@ -1,7 +1,7 @@
 import BasePluginConfig from './BasePluginConfig';
 import Sampler from '../../opentracing/sampler/Sampler';
 import ThundraTracer from '../../opentracing/Tracer';
-const koalas = require('koalas');
+const get = require('lodash.get');
 
 class LogConfig extends BasePluginConfig {
     sampler: Sampler<any>;
@@ -9,8 +9,13 @@ class LogConfig extends BasePluginConfig {
 
     constructor(options: any) {
         options = options ? options : {};
-        super(koalas(options.enabled, true));
+        super(get(options, 'enabled', true));
         this.sampler = options.sampler;
+    }
+
+    updateConfig(options: any) {
+        this.sampler = get(options, 'logConfig.sampler', this.sampler);
+        this.enabled = get(options, 'logConfig.enabled', this.enabled);
     }
 }
 

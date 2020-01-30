@@ -39,8 +39,9 @@ const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
 let tracer: ThundraTracer;
 
-module.exports = (options: any) => {
+module.exports = (options?: any) => {
     const config = new ThundraConfig(options);
+    const plugins: any[] = [];
 
     if (!(config.apiKey) || config.disableThundra) {
         return (originalFunc: any) => originalFunc;
@@ -48,7 +49,7 @@ module.exports = (options: any) => {
 
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
         const tracePlugin = TracePlugin(config.traceConfig);
-        config.plugins.push(tracePlugin);
+        plugins.push(tracePlugin);
 
         tracer = tracePlugin.tracer;
         config.metricConfig.tracer = tracer;
@@ -59,7 +60,7 @@ module.exports = (options: any) => {
 
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC, 'true') === 'true') && config.metricConfig.enabled) {
         const metricPlugin = MetricPlugin(config.metricConfig);
-        config.plugins.push(metricPlugin);
+        plugins.push(metricPlugin);
     }
 
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG, 'true') === 'true') && config.logConfig.enabled) {
@@ -69,16 +70,16 @@ module.exports = (options: any) => {
         }
         const logInstance = Log.getInstance();
         logInstance.enable();
-        config.plugins.push(logInstance);
+        plugins.push(logInstance);
     }
 
     if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_XRAY) === 'true') && config.xrayConfig.enabled) {
         const aws = AwsXRayPlugin(config.metricConfig);
-        config.plugins.push(aws);
+        plugins.push(aws);
     }
 
     const invocationPlugin = InvocationPlugin(config.invocationConfig);
-    config.plugins.push(invocationPlugin);
+    plugins.push(invocationPlugin);
 
     if (config.trustAllCert) {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -115,7 +116,7 @@ module.exports = (options: any) => {
             const applicationId = Utils.getApplicationId(originalContext, pluginContext);
             pluginContext.applicationId = applicationId;
 
-            config.plugins.forEach((plugin: any) => {
+            plugins.forEach((plugin: any) => {
                 plugin.setPluginContext(pluginContext);
             });
 
@@ -126,7 +127,7 @@ module.exports = (options: any) => {
                 originalContext,
                 originalCallback,
                 originalFunc,
-                config.plugins,
+                plugins,
                 pluginContext,
             );
             return thundraWrapper.invoke();
@@ -183,7 +184,7 @@ module.exports.samplers = {
 
 module.exports.InvocationSupport = InvocationSupport;
 module.exports.InvocationTraceSupport = InvocationTraceSupport;
-
+module.exports.updateConfig = ThundraConfig.updateConfig;
 module.exports.listeners = {
     ErrorInjectorSpanListener,
     FilteringSpanListener,

@@ -261,6 +261,8 @@ class ThundraWrapper {
     }
 
     invoke() {
+        // Refresh config to check if config updated
+        this.config.refreshConfig();
         this.startDebuggerProxyIfAvailable();
 
         const beforeInvocationData = {

@@ -1,6 +1,6 @@
 {
   "name": "@thundra/core",
-  "version": "2.7.0",
+  "version": "2.7.4",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
@@ -68,7 +68,7 @@
     "nock": "^10.0.6",
     "npm-run-all": "^4.1.1",
     "opentracing": "0.14.1",
-    "pg": "6.4.0",
+    "pg": "6.4.2",
     "redis": "^2.8.0",
     "release-it": "^7.5.0",
     "rollup": "^1.16.4",

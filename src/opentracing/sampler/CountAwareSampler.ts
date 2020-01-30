@@ -1,6 +1,7 @@
 import Sampler from './Sampler';
 import { envVariableKeys } from '../../Constants';
 import Utils from '../../plugins/utils/Utils';
+
 const koalas = require('koalas');
 
 class CountAwareSampler implements Sampler<null> {
