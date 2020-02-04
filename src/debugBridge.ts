@@ -1,14 +1,14 @@
 const net = require('net');
 const WebSocket = require('ws');
 
-const { DEBUGGER_PORT, BROKER_HOST, BROKER_PORT, LOGS_ENABLED } = process.env;
+const { DEBUGGER_PORT, BROKER_HOST, BROKER_PORT, LOGS_ENABLED, AUTH_TOKEN, SESSION_NAME } = process.env;
 const debuggerSocket = new net.Socket();
 const brokerSocket = new WebSocket(
     `ws://${BROKER_HOST}:${BROKER_PORT}`,
     {
         headers: {
-            'x-thundra-auth-token': 'thundra',
-            'x-thundra-session-name': 'test',
+            'x-thundra-auth-token': AUTH_TOKEN,
+            'x-thundra-session-name': SESSION_NAME,
             'x-thundra-protocol-version': '1.0',
         },
     },

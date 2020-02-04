@@ -100,7 +100,8 @@ export const envVariableKeys = {
     THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX: 'thundra_agent_lambda_debugger_wait_max',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT: 'thundra_agent_lambda_debugger_broker_port',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST: 'thundra_agent_lambda_debugger_broker_host',
-
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME: 'thundra_agent_lambda_debugger_session_name',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN: 'thundra_agent_lambda_debugger_auth_token',
 };
 
 export function getTimeoutMargin(region: string) {

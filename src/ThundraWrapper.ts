@@ -54,6 +54,8 @@ class ThundraWrapper {
     private debuggerPort: number;
     private debuggerMaxWaitTime: number;
     private brokerHost: string;
+    private sessionName: string;
+    private authToken: string;
     private brokerPort: number;
     private debuggerProxy: any;
     private debuggerLogsEnabled: boolean;
@@ -146,6 +148,14 @@ class ThundraWrapper {
                 Utils.getNumericConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT,
                     -1);
+            const authToken =
+                Utils.getConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN,
+                    '');
+            const sessionName =
+                Utils.getConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
+                    '');
             const debuggerMaxWaitTime =
                 Utils.getNumericConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX,
@@ -165,6 +175,8 @@ class ThundraWrapper {
             this.debuggerMaxWaitTime = debuggerMaxWaitTime;
             this.brokerPort = brokerPort;
             this.brokerHost = brokerHost;
+            this.sessionName = sessionName;
+            this.authToken = authToken;
             this.debuggerLogsEnabled = debuggerLogsEnabled;
         } catch (e) {
             this.fork = null;
@@ -234,6 +246,8 @@ class ThundraWrapper {
                         env: {
                             BROKER_HOST: this.brokerHost,
                             BROKER_PORT: this.brokerPort,
+                            SESSION_NAME: this.sessionName,
+                            AUTH_TOKEN: this.authToken,
                             DEBUGGER_PORT: this.debuggerPort,
                             LOGS_ENABLED: this.debuggerLogsEnabled,
                         },
