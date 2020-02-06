@@ -110,7 +110,7 @@ module.exports = (options: any) => {
             return originalFunc;
         }
 
-        const thundraWrappedHandler: any = (originalEvent: any, originalContext: any, originalCallback: any) => {
+        const thundraWrappedHandler: any = async (originalEvent: any, originalContext: any, originalCallback: any) => {
             // Creating applicationId here, since we need the information in context
             const applicationId = Utils.getApplicationId(originalContext, pluginContext);
             pluginContext.applicationId = applicationId;
@@ -129,7 +129,7 @@ module.exports = (options: any) => {
                 config.plugins,
                 pluginContext,
             );
-            return thundraWrapper.invoke();
+            return await thundraWrapper.invoke();
         };
         // Set thundraWrapped to true, to not double wrap the user handler
         thundraWrappedHandler.thundraWrapped = true;

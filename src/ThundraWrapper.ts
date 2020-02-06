@@ -197,19 +197,21 @@ class ThundraWrapper {
         }
     }
 
-    waitForDebugger(): void {
-        const sleep = require('system-sleep');
+    async waitForDebugger() {
         let prevRchar = 0;
         let prevWchar = 0;
         let initCompleted = false;
         const logger: ThundraLogger = ThundraLogger.getInstance();
         logger.info('Waiting for debugger to handshake ...');
+
+        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
         const startTime = Date.now();
         while ((Date.now() - startTime) < this.debuggerMaxWaitTime) {
             try {
                 const debuggerIoMetrics = this.getDebuggerProxyIOMetrics();
                 if (!debuggerIoMetrics) {
-                    sleep(1000);
+                    await sleep(1000);
                     break;
                 }
                 if (prevRchar !== 0 && prevWchar !== 0 &&
@@ -223,7 +225,7 @@ class ThundraWrapper {
                 logger.error(e);
                 break;
             }
-            sleep(1000);
+            await sleep(1000);
         }
         if (initCompleted) {
             logger.info('Completed debugger handshake');
@@ -232,7 +234,7 @@ class ThundraWrapper {
         }
     }
 
-    startDebuggerProxyIfAvailable(): void {
+    async startDebuggerProxyIfAvailable() {
         if (this.debuggerProxy) {
             this.finishDebuggerProxyIfAvailable();
         }
@@ -254,7 +256,7 @@ class ThundraWrapper {
                     },
                 );
                 this.inspector.open(this.debuggerPort, 'localhost', true);
-                this.waitForDebugger();
+                await this.waitForDebugger();
             } catch (e) {
                 this.debuggerProxy = null;
                 ThundraLogger.getInstance().error(e);
@@ -281,8 +283,8 @@ class ThundraWrapper {
         }
     }
 
-    invoke() {
-        this.startDebuggerProxyIfAvailable();
+    async invoke() {
+        await this.startDebuggerProxyIfAvailable();
 
         const beforeInvocationData = {
             originalContext: this.originalContext,
