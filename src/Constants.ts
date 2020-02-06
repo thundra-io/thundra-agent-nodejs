@@ -229,6 +229,7 @@ export const ClassNames = {
     MONGODB: 'MONGODB',
     ELASTICSEARCH: 'ELASTICSEARCH',
     MYSQL: 'MYSQL',
+    EVENTBRIDGE: 'AWS-EventBridge',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -536,6 +537,7 @@ export const SpanTypes = {
     AWS_S3: 'AWS-S3',
     AWS_LAMBDA: 'AWS-Lambda',
     AWS_ATHENA: 'AWS-Athena',
+    AWS_EVENTBRIDGE: 'AWS-EventBridge',
 };
 
 export const INTEGRATIONS: any = {

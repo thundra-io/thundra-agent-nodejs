@@ -334,6 +334,11 @@ class AWSIntegration implements Integration {
                 if (has(response, 'data.NamedQueryId')) {
                     span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, [response.data.NamedQueryId]);
                 }
+            } else if (serviceName === 'events') {
+                const eventId = get(response, 'id', false);
+                if (eventId) {
+                    traceLinks = [eventId];
+                }
             }
             if (traceLinks.length > 0) {
                 span.setTag(SpanTags.TRACE_LINKS, traceLinks);
@@ -701,6 +706,30 @@ class AWSIntegration implements Integration {
                             if (namedQueryIds.length > 0) {
                                 activeSpan.setTag(AwsAthenaTags.REQUEST_NAMED_QUERY_IDS, namedQueryIds);
                             }
+                        }
+                    } else if (serviceName === 'events') {
+
+                        console.log('eventbridge wrap', JSON.stringify(request.params, null, 2));
+                        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.EVENTBRIDGE);
+                        const spanName = get(request, 'params.Entries[0].DetailType', AWS_SERVICE_REQUEST);
+
+                        activeSpan = tracer._startSpan(spanName, {
+                            childOf: parentSpan,
+                            domainName: DomainNames.MESSAGING,
+                            className: ClassNames.EVENTBRIDGE,
+                            disableActiveStart: true,
+                            tags: {
+                                [SpanTags.SPAN_TYPE]: SpanTypes.AWS_EVENTBRIDGE,
+                                [SpanTags.OPERATION_TYPE]: operationType,
+                                [AwsSDKTags.REQUEST_NAME]: operationName,
+                            },
+                        });
+
+                        if (operationType) {
+                            activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
+                            activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+                            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+                            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
                         }
                     } else {
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.AWSSERVICE);
