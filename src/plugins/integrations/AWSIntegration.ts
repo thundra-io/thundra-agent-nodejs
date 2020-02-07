@@ -6,7 +6,7 @@ import {
     SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
     envVariableKeys, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-    AwsAthenaTags,
+    AwsAthenaTags, AwsEventBridgeTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
@@ -709,10 +709,20 @@ class AWSIntegration implements Integration {
                         }
                     } else if (serviceName === 'events') {
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.EVENTBRIDGE);
-                        /*const spanName = get(request, 'params.Entries[0].DetailType', AWS_SERVICE_REQUEST);*/
-                        const spanName = AWS_SERVICE_REQUEST;
+                        let spanName = AwsEventBridgeTags.SERVICE_REQUEST;
 
-                        const entries = get(request, 'params.Entries', null);
+                        const entries = get(request, 'params.Entries', []);
+                        const eventBusMap: Set<string> = new Set<string>();
+                        for (const entry of entries) {
+                            const eventBusName = get(entry, 'EventBusName', null);
+                            if (eventBusName) {
+                                eventBusMap.add(eventBusName);
+                            }
+                        }
+                        if (eventBusMap.size === 1) {
+                            spanName = eventBusMap.values().next().value;
+                        }
+
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
                             domainName: DomainNames.MESSAGING,
@@ -723,6 +733,7 @@ class AWSIntegration implements Integration {
                                 [SpanTags.OPERATION_TYPE]: operationType,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
                                 [SpanTags.SPAN_RESOURCES]: entries.map((entry: any) => entry.DetailType),
+                                [AwsEventBridgeTags.EVENT_BUS_NAME]: spanName
                             },
                         });
 

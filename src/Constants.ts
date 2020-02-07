@@ -234,6 +234,11 @@ export const ClassNames = {
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
 
+export const AwsEventBridgeTags = {
+    SERVICE_REQUEST: 'AWSEventBridgeRequest',
+    EVENT_BUS_NAME: 'event.bus.name',
+};
+
 export const DBTags = {
     DB_STATEMENT: 'db.statement',
     DB_STATEMENT_TYPE: 'db.statement.type',
