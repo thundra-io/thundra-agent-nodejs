@@ -23,12 +23,26 @@ class InvocationTraceSupport {
                             filter((span: ThundraSpan) => span.spanContext.spanId !== rootSpanId);
 
             for (const span of spans) {
-                const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span);
-                if (resourceId) {
-                    const resource = resourcesMap.get(resourceId);
-                    const newResource = new Resource();
-                    newResource.init(span);
-                    resource ? resource.merge(newResource) : resourcesMap.set(resourceId, newResource);
+                const entries = span.getTag(SpanTags.SPAN_RESOURCES);
+                if (entries) {
+                    for (const entry of entries) {
+                        const entryId = InvocationTraceSupport.generateResourceIdFromSpan(span, entry);
+                        if (entryId) {
+                            const resource = resourcesMap.get(entryId);
+                            const newResource = new Resource();
+                            newResource.init(span);
+                            newResource.resourceName = entry;
+                            resource ? resource.merge(newResource) : resourcesMap.set(entryId, newResource);
+                        }
+                    }
+                } else {
+                    const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span);
+                    if (resourceId) {
+                        const resource = resourcesMap.get(resourceId);
+                        const newResource = new Resource();
+                        newResource.init(span);
+                        resource ? resource.merge(newResource) : resourcesMap.set(resourceId, newResource);
+                    }
                 }
             }
 
@@ -39,9 +53,12 @@ class InvocationTraceSupport {
         }
     }
 
-    static generateResourceIdFromSpan(span: ThundraSpan): string {
+    static generateResourceIdFromSpan(span: ThundraSpan, entryId?: string): string {
         if (span.className && span.operationName) {
             let id = `${span.className.toUpperCase()}\$${span.operationName}`;
+            if (entryId) {
+                id = id + `\$${entryId}`;
+            }
             if (span.getTag(SpanTags.OPERATION_TYPE)) {
                 id = id + `\$${span.getTag(SpanTags.OPERATION_TYPE)}`;
             }

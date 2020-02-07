@@ -518,6 +518,7 @@ export const SpanTags = {
     TRIGGER_OPERATION_NAMES: 'trigger.operationNames',
     TOPOLOGY_VERTEX: 'topology.vertex',
     TRACE_LINKS: 'trace.links',
+    SPAN_RESOURCES: 'span.resources',
 };
 
 export const TriggerHeaderTags = {

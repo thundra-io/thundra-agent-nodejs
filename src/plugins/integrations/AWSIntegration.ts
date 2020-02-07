@@ -708,11 +708,11 @@ class AWSIntegration implements Integration {
                             }
                         }
                     } else if (serviceName === 'events') {
-
-                        console.log('eventbridge wrap', JSON.stringify(request.params, null, 2));
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.EVENTBRIDGE);
-                        const spanName = get(request, 'params.Entries[0].DetailType', AWS_SERVICE_REQUEST);
+                        /*const spanName = get(request, 'params.Entries[0].DetailType', AWS_SERVICE_REQUEST);*/
+                        const spanName = AWS_SERVICE_REQUEST;
 
+                        const entries = get(request, 'params.Entries', null);
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
                             domainName: DomainNames.MESSAGING,
@@ -722,6 +722,7 @@ class AWSIntegration implements Integration {
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_EVENTBRIDGE,
                                 [SpanTags.OPERATION_TYPE]: operationType,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
+                                [SpanTags.SPAN_RESOURCES]: entries.map((entry: any) => entry.DetailType),
                             },
                         });
 
