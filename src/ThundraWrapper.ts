@@ -274,7 +274,9 @@ class ThundraWrapper {
         }
         if (this.debuggerProxy) {
             try {
-                this.debuggerProxy.kill();
+                if (!this.debuggerProxy.killed) {
+                    this.debuggerProxy.kill();
+                }
             } catch (e) {
                 ThundraLogger.getInstance().error(e);
             } finally {
@@ -447,6 +449,13 @@ class ThundraWrapper {
         const endTime = Math.min(configEndTime, maxEndTime);
 
         return setTimeout(() => {
+            if (this.debuggerProxy) {
+                // Debugger proxy exists, let it know about the timeout
+                if (!this.debuggerProxy.killed) {
+                    this.debuggerProxy.kill('SIGHUP');
+                }
+                this.debuggerProxy = null;
+            }
             wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
             wrapperInstance.reported = false;
         }, endTime);
