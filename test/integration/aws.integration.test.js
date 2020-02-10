@@ -664,6 +664,78 @@ describe('AWS Integration', () => {
             expect(span.finishTime).toBeTruthy();
         });
     });
+
+    test('should instrument AWS EventBridge calls ', () => {
+        return AWS.eventBridgePutEvent(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('default');
+
+            expect(span.className).toBe('AWS-EventBridge');
+            expect(span.domainName).toBe('Messaging');
+            expect(span.tags['aws.request.name']).toBe('putEvents');
+            expect(span.tags['operation.type']).toBe('WRITE');
+            expect(span.tags['aws.eventbridge.eventbus.name']).toBe('default');
+            expect(span.tags['resource.names']).toEqual(["detail-type-1", "detail-type-2"]);
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+    test('should instrument AWS EventBridge calls with different bus ', () => {
+        return AWS.eventBridgePutEventDifferentBus(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('AWSEventBridgeRequest');
+
+            expect(span.className).toBe('AWS-EventBridge');
+            expect(span.domainName).toBe('Messaging');
+            expect(span.tags['aws.request.name']).toBe('putEvents');
+            expect(span.tags['operation.type']).toBe('WRITE');
+            expect(span.tags['aws.eventbridge.eventbus.name']).toBe('AWSEventBridgeRequest');
+            expect(span.tags['resource.names']).toEqual(["detail-type-1", "detail-type-2"]);
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+
+    test('should instrument AWS EventBridge listEventBuses call ', () => {
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                httpResponse: {
+                    headers: {'x-amz-request-id': 'EXAMPLE_REQUEST_ID_123'}
+                }
+            };
+            cb(null, {result: 'success'});
+        });
+        integration.getOriginalFuntion = () => mockSend;
+
+        return AWS.eventBridgeListEventBuses(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('AWSEventBridgeRequest');
+
+            expect(span.className).toBe('AWS-EventBridge');
+            expect(span.domainName).toBe('Messaging');
+
+            expect(span.tags['operation.type']).toBe('LIST');
+            expect(span.tags['aws.eventbridge.eventbus.name']).toBe('AWSEventBridgeRequest');
+            expect(span.tags['aws.request.name']).toBe('listEventBuses');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
     
     test('should instrument AWS KMS calls ', () => { 
         return AWS.kms(sdk).then(() => {
@@ -700,6 +772,8 @@ describe('AWS Integration', () => {
             { className: 'AWS-SQS', operationName: 'ListQueueTags', expected: 'READ'},
             { className: 'AWS-DynamoDB', operationName: 'PurchaseReservedCapacityOfferings', expected: 'WRITE'},
             { className: 'AWS-DynamoDB', operationName: 'Scan', expected: 'READ'},
+            { className: 'AWS-EventBridge', operationName: 'TestEventPattern', expected: 'READ'},
+            { className: 'AWS-EventBridge', operationName: 'ActivateEventSource', expected: 'WRITE'},
             // Check according to patterns
             { className: 'AWS-DynamoDB', operationName: 'ListFooOperation', expected: 'LIST'},
             { className: 'AWS-DynamoDB', operationName: 'GetFooOperation', expected: 'READ'},
