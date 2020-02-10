@@ -223,8 +223,6 @@ class LambdaEventUtils {
         const traceLinks: any[] = [];
         const eventDetails: Set<string> = new Set<string>();
 
-        console.log('eventbridge inject ', JSON.stringify(originalEvent));
-
         traceLinks.push(originalEvent.id);
         eventDetails.add(originalEvent['detail-type']);
 

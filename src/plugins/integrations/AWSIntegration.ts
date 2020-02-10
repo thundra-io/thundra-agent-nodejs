@@ -732,7 +732,7 @@ class AWSIntegration implements Integration {
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_EVENTBRIDGE,
                                 [SpanTags.OPERATION_TYPE]: operationType,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
-                                [SpanTags.SPAN_RESOURCES]: entries.map((entry: any) => entry.DetailType),
+                                [SpanTags.RESOURCE_NAMES]: entries.map((entry: any) => entry.DetailType),
                                 [AwsEventBridgeTags.EVENT_BUS_NAME]: spanName,
                             },
                         });

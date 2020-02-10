@@ -236,7 +236,7 @@ export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
 
 export const AwsEventBridgeTags = {
     SERVICE_REQUEST: 'AWSEventBridgeRequest',
-    EVENT_BUS_NAME: 'event.bus.name',
+    EVENT_BUS_NAME: 'aws.eventbridge.eventbus.name',
 };
 
 export const DBTags = {
@@ -523,7 +523,7 @@ export const SpanTags = {
     TRIGGER_OPERATION_NAMES: 'trigger.operationNames',
     TOPOLOGY_VERTEX: 'topology.vertex',
     TRACE_LINKS: 'trace.links',
-    SPAN_RESOURCES: 'span.resources',
+    RESOURCE_NAMES: 'resource.names',
 };
 
 export const TriggerHeaderTags = {
