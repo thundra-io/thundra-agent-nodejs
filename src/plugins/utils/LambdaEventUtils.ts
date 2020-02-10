@@ -420,5 +420,5 @@ export enum LambdaEventType {
     APIGatewayProxy,
     APIGatewayPassThrough,
     Lambda,
-    EventBridge
+    EventBridge,
 }
