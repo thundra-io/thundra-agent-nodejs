@@ -1,10 +1,11 @@
 const net = require('net');
 const WebSocket = require('ws');
-const { DEBUGGER_PORT, BROKER_HOST, BROKER_PORT, LOGS_ENABLED, AUTH_TOKEN, SESSION_NAME } = process.env;
+const { DEBUGGER_PORT, BROKER_HOST, BROKER_PORT,
+    LOGS_ENABLED, AUTH_TOKEN, SESSION_NAME, SESSION_TIMEOUT } = process.env;
 
 const CLOSING_CODES: {[key: string]: number} = {
     NORMAL: 1000,
-    TIMEOUT: 4001,
+    TIMEOUT: 4000,
 };
 
 const log = (...params: any[]) => {
@@ -21,6 +22,7 @@ const brokerSocket = new WebSocket(
             'x-thundra-auth-token': AUTH_TOKEN,
             'x-thundra-session-name': SESSION_NAME,
             'x-thundra-protocol-version': '1.0',
+            'x-thundra-session-timeout': SESSION_TIMEOUT,
         },
     },
 );
@@ -32,7 +34,7 @@ debuggerSocket.on('data', (data: Buffer) => {
 debuggerSocket.on('end', () => {
     log('debuggerSocket: disconnected from the main lambda process');
     if (brokerSocket.readyState === WebSocket.OPEN) {
-        brokerSocket.close(CLOSING_CODES.NORMAL, 'NORMAL');
+        brokerSocket.close(CLOSING_CODES.NORMAL, 'Normal');
     }
 });
 debuggerSocket.on('error', (err: any) => {
@@ -74,7 +76,7 @@ brokerSocket.on('error', (err: any) => {
 
 process.on('SIGTERM', () => {
     if (brokerSocket.readyState === WebSocket.OPEN) {
-        brokerSocket.close(CLOSING_CODES.NORMAL, 'NORMAL');
+        brokerSocket.close(CLOSING_CODES.NORMAL, 'Normal');
     }
     if (debuggerSocket.destroyed) {
         debuggerSocket.end();
@@ -83,7 +85,7 @@ process.on('SIGTERM', () => {
 
 process.on('SIGHUP', () => {
     if (brokerSocket.readyState === WebSocket.OPEN) {
-        brokerSocket.close(CLOSING_CODES.TIMEOUT, 'TIMEOUT');
+        brokerSocket.close(CLOSING_CODES.TIMEOUT, 'SessionTimeout');
     }
     if (!debuggerSocket.destroyed) {
         debuggerSocket.end();

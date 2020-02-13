@@ -56,6 +56,7 @@ class ThundraWrapper {
     private brokerHost: string;
     private sessionName: string;
     private authToken: string;
+    private sessionTimeout: number;
     private brokerPort: number;
     private debuggerProxy: any;
     private debuggerLogsEnabled: boolean;
@@ -176,6 +177,7 @@ class ThundraWrapper {
             this.brokerPort = brokerPort;
             this.brokerHost = brokerHost;
             this.sessionName = sessionName;
+            this.sessionTimeout = Date.now() + this.originalContext.getRemainingTimeInMillis();
             this.authToken = authToken;
             this.debuggerLogsEnabled = debuggerLogsEnabled;
         } catch (e) {
@@ -249,6 +251,7 @@ class ThundraWrapper {
                             BROKER_HOST: this.brokerHost,
                             BROKER_PORT: this.brokerPort,
                             SESSION_NAME: this.sessionName,
+                            SESSION_TIMEOUT: this.sessionTimeout,
                             AUTH_TOKEN: this.authToken,
                             DEBUGGER_PORT: this.debuggerPort,
                             LOGS_ENABLED: this.debuggerLogsEnabled,
