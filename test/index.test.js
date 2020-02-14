@@ -1,6 +1,7 @@
 const Thundra = require('../dist/index');
 import Utils from '../dist/plugins/utils/Utils.js';
 import { createMockContext } from './mocks/mocks';
+import ThundraWrapper from '../dist/ThundraWrapper';
 
 beforeAll(() => {
     Utils.readProcIoPromise = jest.fn(() => {
@@ -14,6 +15,8 @@ beforeAll(() => {
             return resolve({ threadCount: 10 });
         });
     });
+
+    ThundraWrapper.prototype.executeAfteInvocationAndReport = jest.fn();
 });
 
 describe('thundra library', () => {
@@ -21,7 +24,7 @@ describe('thundra library', () => {
         const originalEvent = { key: 'value' };
         const originalContext = createMockContext();
         const originalCallback = jest.fn();
-        const originalFunction = jest.fn(() => originalCallback());
+        const originalFunction = jest.fn((event, context, callback) => callback());
         let thundraWrapper;
         let wrappedFunction;
 
@@ -30,7 +33,7 @@ describe('thundra library', () => {
 
             thundraWrapper = Thundra();
             wrappedFunction = thundraWrapper(originalFunction);
-            wrappedFunction(originalEvent, originalContext, originalCallback);
+            return wrappedFunction(originalEvent, originalContext, originalCallback);
         });
 
         it('should invoke the function', () => {
@@ -47,7 +50,7 @@ describe('thundra library', () => {
             const originalEvent = { key: 'value' };
             const originalContext = {};
             const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
+            const originalFunction = jest.fn((event, context, callback) => callback());
             let ThundraWrapper;
             let wrappedFunction;
 
@@ -56,7 +59,7 @@ describe('thundra library', () => {
 
                 ThundraWrapper = Thundra();
                 wrappedFunction = ThundraWrapper(originalFunction);
-                wrappedFunction(originalEvent, originalContext, originalCallback);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
             it('should not wrap', () => {
@@ -68,7 +71,7 @@ describe('thundra library', () => {
             const originalEvent = { key: 'value' };
             const originalContext = {};
             const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
+            const originalFunction = jest.fn((event, context, callback) => callback());
             let ThundraWrapper;
             let wrappedFunction;
             
@@ -77,7 +80,7 @@ describe('thundra library', () => {
                 
                 ThundraWrapper = Thundra({ apiKey: 'apiKey', disableThundra: true, plugins: [] });
                 wrappedFunction = ThundraWrapper(originalFunction);
-                wrappedFunction(originalEvent, originalContext, originalCallback);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
             it('should not wrap', () => {
@@ -89,7 +92,7 @@ describe('thundra library', () => {
             const originalEvent = { key: 'value' };
             const originalContext = {};
             const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
+            const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
 
@@ -97,7 +100,7 @@ describe('thundra library', () => {
                 process.env.thundra_agent_lambda_disable = 'true';
                 thundraWrapper = Thundra({ apiKey: 'apiKey' });
                 wrappedFunction = thundraWrapper(originalFunction);
-                wrappedFunction(originalEvent, originalContext, originalCallback);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
             it('should not wrap', () => {
@@ -111,7 +114,7 @@ describe('thundra library', () => {
             const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
+            const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
 
@@ -123,7 +126,7 @@ describe('thundra library', () => {
 
                 thundraWrapper = Thundra({apiKey: 'apiKey', disableTrace: true, disableMetric: true});
                 wrappedFunction = thundraWrapper(originalFunction);
-                wrappedFunction(originalEvent, originalContext, originalCallback);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
             
             it('should invoke the function', () => {
@@ -138,7 +141,7 @@ describe('thundra library', () => {
             const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
+            const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
 
@@ -150,7 +153,7 @@ describe('thundra library', () => {
 
                 thundraWrapper = Thundra({apiKey: 'apiKey'});
                 wrappedFunction = thundraWrapper(originalFunction);
-                wrappedFunction(originalEvent, originalContext, originalCallback);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
             it('should invoke the function', () => {
@@ -165,7 +168,7 @@ describe('thundra library', () => {
             const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
+            const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
             
@@ -177,7 +180,7 @@ describe('thundra library', () => {
 
                 thundraWrapper = Thundra({apiKey: 'apiKey'});
                 wrappedFunction = thundraWrapper(originalFunction);
-                wrappedFunction(originalEvent, originalContext, originalCallback);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
             it('should invoke the function', () => {
@@ -193,7 +196,7 @@ describe('thundra library', () => {
         const originalEvent = {};
         const originalContext = {};
         const originalCallback = jest.fn();
-        const originalFunction = jest.fn(() => originalCallback());
+        const originalFunction = jest.fn((event, context, callback) => callback());
         let thundraWrapper;
         let wrappedFunction;
 
@@ -204,7 +207,7 @@ describe('thundra library', () => {
 
             console.log = jest.fn();
             jest.useFakeTimers();
-            wrappedFunction(originalEvent, originalContext, originalCallback);
+            return wrappedFunction(originalEvent, originalContext, originalCallback);
             jest.runAllTimers();
         });
 
@@ -217,7 +220,7 @@ describe('thundra library', () => {
         const originalEvent = {};
         const originalContext = {};
         const originalCallback = jest.fn();
-        const originalFunction = jest.fn(() => originalCallback());
+        const originalFunction = jest.fn((event, context, callback) => callback());
         let thundraWrapper;
         let wrappedFunction;
         
@@ -226,10 +229,7 @@ describe('thundra library', () => {
             thundraWrapper = Thundra({ apiKey: 'apiKey' });
             wrappedFunction = thundraWrapper(originalFunction);
             
-            console['log'] = jest.fn();
-            jest.useFakeTimers();
-            wrappedFunction(originalEvent, originalContext, originalCallback);
-            jest.runAllTimers();
+            return wrappedFunction(originalEvent, originalContext, originalCallback);
         });
 
         it('should invoke the function', () => {
@@ -243,7 +243,7 @@ describe('thundra library', () => {
             const originalEvent = { key: 'value' };
             const originalContext = {};
             const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
+            const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
             
@@ -253,7 +253,7 @@ describe('thundra library', () => {
                 
                 thundraWrapper = new Thundra({ apiKey: 'apiKey', trustAllCert: true });
                 wrappedFunction = new thundraWrapper(originalFunction);
-                wrappedFunction(originalEvent, originalContext, originalCallback);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
             it('should set environment variable', () => {
@@ -265,7 +265,7 @@ describe('thundra library', () => {
             const originalEvent = { key: 'value' };
             const originalContext = {};
             const originalCallback = jest.fn();
-            const originalFunction = jest.fn(() => originalCallback());
+            const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
             
@@ -276,7 +276,7 @@ describe('thundra library', () => {
 
                 thundraWrapper = new Thundra({ apiKey: 'apiKey', trustAllCert: true });
                 wrappedFunction = new thundraWrapper(originalFunction); 
-                wrappedFunction(originalEvent, originalContext, originalCallback);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
             it('should set environment variable', () => {
