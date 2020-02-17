@@ -53,6 +53,7 @@ class ThundraWrapper {
     private fork: any;
     private debuggerPort: number;
     private debuggerMaxWaitTime: number;
+    private instrumentationDisabled: boolean;
     private brokerHost: string;
     private sessionName: string;
     private authToken: string;
@@ -62,7 +63,7 @@ class ThundraWrapper {
     private debuggerLogsEnabled: boolean;
 
     constructor(self: any, event: any, context: any, callback: any,
-                originalFunction: any, plugins: any, pluginContext: PluginContext) {
+                originalFunction: any, plugins: any, pluginContext: PluginContext, instrumentationDisabled: boolean) {
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
@@ -74,6 +75,7 @@ class ThundraWrapper {
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
         this.reported = false;
         this.reporter = new Reporter(pluginContext.config);
+        this.instrumentationDisabled = instrumentationDisabled;
         this.wrappedContext = {
             ...context,
             done: (error: any, result: any) => {
@@ -124,12 +126,12 @@ class ThundraWrapper {
     }
 
     onFinish(error: any, result: any): void {
+        this.finishDebuggerProxyIfAvailable();
         if (error && this.reject) {
             this.reject(error);
         } else if (this.resolve) {
             this.resolve(result);
         }
-        this.finishDebuggerProxyIfAvailable();
     }
 
     initDebugger(): void {
@@ -356,6 +358,10 @@ class ThundraWrapper {
     }
 
     async executeAfteInvocationAndReport(afterInvocationData: any) {
+        if (this.instrumentationDisabled) {
+            return;
+        }
+
         afterInvocationData.error ? InvocationSupport.setErrorenous(true) : InvocationSupport.setErrorenous(false);
 
         await this.executeHook('after-invocation', afterInvocationData, true);

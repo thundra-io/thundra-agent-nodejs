@@ -46,40 +46,19 @@ describe('thundra library', () => {
     });
 
     describe('thundra disabled', () => {
-        describe('by no apiKey', () => {
-            const originalEvent = { key: 'value' };
-            const originalContext = {};
-            const originalCallback = jest.fn();
-            const originalFunction = jest.fn((event, context, callback) => callback());
-            let ThundraWrapper;
-            let wrappedFunction;
-
-            beforeAll(() => {
-                delete process.env.thundra_apiKey;
-
-                ThundraWrapper = Thundra();
-                wrappedFunction = ThundraWrapper(originalFunction);
-                return wrappedFunction(originalEvent, originalContext, originalCallback);
-            });
-
-            it('should not wrap', () => {
-                expect(wrappedFunction).toBe(originalFunction);
-            });
-        });
-
         describe('by parameter', () => {
             const originalEvent = { key: 'value' };
             const originalContext = {};
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((event, context, callback) => callback());
-            let ThundraWrapper;
+            let thundraWrapper;
             let wrappedFunction;
             
             beforeAll(() => {
                 delete process.env.thundra_agent_lambda_disable;
                 
-                ThundraWrapper = Thundra({ apiKey: 'apiKey', disableThundra: true, plugins: [] });
-                wrappedFunction = ThundraWrapper(originalFunction);
+                thundraWrapper = Thundra({ apiKey: 'apiKey', disableThundra: true, plugins: [] });
+                wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 

@@ -42,43 +42,51 @@ let tracer: ThundraTracer;
 module.exports = (options: any) => {
     const config = new ThundraConfig(options);
 
-    if (!(config.apiKey) || config.disableThundra) {
+    if (config.disableThundra) {
         return (originalFunc: any) => originalFunc;
     }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
-        const tracePlugin = TracePlugin(config.traceConfig);
-        config.plugins.push(tracePlugin);
-
-        tracer = tracePlugin.tracer;
-        config.metricConfig.tracer = tracer;
-        config.logConfig.tracer = tracer;
-        config.xrayConfig.tracer = tracer;
-        InvocationTraceSupport.tracer = tracer;
+    if (!(config.apiKey)) {
+        console.warn(`Thundra API Key is not given, instrumentation is disabled.`);
     }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC, 'true') === 'true') && config.metricConfig.enabled) {
-        const metricPlugin = MetricPlugin(config.metricConfig);
-        config.plugins.push(metricPlugin);
-    }
+    const instrumentationDisabled: boolean = !(config.apiKey);
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG, 'true') === 'true') && config.logConfig.enabled) {
-        if (!Log.getInstance()) {
-            const logPlugin = new Log(config.logConfig);
-            Logger.getLogManager().addListener(logPlugin);
+    if (!instrumentationDisabled) {
+        if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
+            const tracePlugin = TracePlugin(config.traceConfig);
+            config.plugins.push(tracePlugin);
+
+            tracer = tracePlugin.tracer;
+            config.metricConfig.tracer = tracer;
+            config.logConfig.tracer = tracer;
+            config.xrayConfig.tracer = tracer;
+            InvocationTraceSupport.tracer = tracer;
         }
-        const logInstance = Log.getInstance();
-        logInstance.enable();
-        config.plugins.push(logInstance);
-    }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_XRAY) === 'true') && config.xrayConfig.enabled) {
-        const aws = AwsXRayPlugin(config.metricConfig);
-        config.plugins.push(aws);
-    }
+        if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC, 'true') === 'true') && config.metricConfig.enabled) {
+            const metricPlugin = MetricPlugin(config.metricConfig);
+            config.plugins.push(metricPlugin);
+        }
 
-    const invocationPlugin = InvocationPlugin(config.invocationConfig);
-    config.plugins.push(invocationPlugin);
+        if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG, 'true') === 'true') && config.logConfig.enabled) {
+            if (!Log.getInstance()) {
+                const logPlugin = new Log(config.logConfig);
+                Logger.getLogManager().addListener(logPlugin);
+            }
+            const logInstance = Log.getInstance();
+            logInstance.enable();
+            config.plugins.push(logInstance);
+        }
+
+        if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_XRAY) === 'true') && config.xrayConfig.enabled) {
+            const aws = AwsXRayPlugin(config.metricConfig);
+            config.plugins.push(aws);
+        }
+
+        const invocationPlugin = InvocationPlugin(config.invocationConfig);
+        config.plugins.push(invocationPlugin);
+    }
 
     if (config.trustAllCert) {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -128,6 +136,7 @@ module.exports = (options: any) => {
                 originalFunc,
                 config.plugins,
                 pluginContext,
+                instrumentationDisabled,
             );
             return await thundraWrapper.invoke();
         };
