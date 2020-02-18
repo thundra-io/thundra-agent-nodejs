@@ -27,6 +27,7 @@ import {
     envVariableKeys,
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT,
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST,
+    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
 } from './Constants';
 import Utils from './plugins/utils/Utils';
 import { readFileSync } from 'fs';
@@ -108,7 +109,7 @@ class ThundraWrapper {
         this.timeout = this.setupTimeoutHandler(this);
         InvocationSupport.setFunctionName(this.originalContext.functionName);
 
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE) === 'true') {
+        if (this.shouldInitDebugger()) {
             this.initDebugger();
         }
     }
@@ -117,6 +118,17 @@ class ThundraWrapper {
         this.report(error, result, () => {
             this.invokeCallback(error, result);
         });
+    }
+
+    shouldInitDebugger(): boolean {
+        const authToken = Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN);
+        const debuggerEnable = Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE);
+
+        if (debuggerEnable === 'false' || !authToken) {
+            return false;
+        }
+
+        return true;
     }
 
     invokeCallback(error: any, result: any): void {
@@ -158,7 +170,7 @@ class ThundraWrapper {
             const sessionName =
                 Utils.getConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
-                    '');
+                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME);
             const debuggerMaxWaitTime =
                 Utils.getNumericConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX,
@@ -279,7 +291,7 @@ class ThundraWrapper {
         }
         if (this.debuggerProxy) {
             try {
-                if (!this.debuggerProxy.killed) {
+                if (!this.debuggerProxy.killed) {
                     this.debuggerProxy.kill();
                 }
             } catch (e) {

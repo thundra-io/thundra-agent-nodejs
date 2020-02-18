@@ -2,6 +2,7 @@ import ThundraWrapper from '../dist/ThundraWrapper';
 import { createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext, createMockPromise } from './mocks/mocks';
 import HttpError from '../dist/plugins/error/HttpError';
 import TimeoutError from '../dist/plugins/error/TimeoutError';
+import { envVariableKeys } from '../dist/Constants';
 
 const pluginContext = createMockPluginContext();
 
@@ -343,6 +344,57 @@ describe('ThundraWrapper', () => {
 
         test('should not send reports', () => {
             expect(thundraWrapper.executeAfteInvocationAndReport).not.toBeCalled();
+        });
+    });
+    
+    describe('should correctly decide to init debugger', () => {
+        const originalCallback = jest.fn();
+        const originalFunction = jest.fn((e, c, cb) => cb());
+        const instrumentationDisabled = false;
+        const pc = createMockPluginContext();
+
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pc, instrumentationDisabled);
+
+        test('when debugger disabled and no token', () => {
+            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN];
+            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE] = 'false';
+
+            expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
+        });
+        
+        test('when debugger enabled and no token', () => {
+            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN];
+            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE] = 'true';
+
+            expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
+        });
+        
+        test('when debugger disabled and token exists', () => {
+            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN] = 'foobar';
+            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE] = 'false';
+
+            expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
+        });
+        
+        test('when no token and no enable setting exist', () => {
+            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN];
+            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE];
+
+            expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
+        });
+        
+        test('when token exists and no enable setting exists', () => {
+            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN] = 'foobar';
+            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE];
+
+            expect(thundraWrapper.shouldInitDebugger()).toBeTruthy();
+        });
+        
+        test('when token and enable setting exist', () => {
+            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN] = 'foobar';
+            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE] = 'true';
+
+            expect(thundraWrapper.shouldInitDebugger()).toBeTruthy();
         });
     });
 
