@@ -23,12 +23,26 @@ class InvocationTraceSupport {
                             filter((span: ThundraSpan) => span.spanContext.spanId !== rootSpanId);
 
             for (const span of spans) {
-                const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span);
-                if (resourceId) {
-                    const resource = resourcesMap.get(resourceId);
-                    const newResource = new Resource();
-                    newResource.init(span);
-                    resource ? resource.merge(newResource) : resourcesMap.set(resourceId, newResource);
+                const resourceNames = span.getTag(SpanTags.RESOURCE_NAMES);
+                if (resourceNames) {
+                    for (const resourceName of resourceNames) {
+                        const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span, resourceName);
+                        if (resourceId) {
+                            const resource = resourcesMap.get(resourceId);
+                            const newResource = new Resource();
+                            newResource.init(span);
+                            newResource.resourceName = resourceName;
+                            resource ? resource.merge(newResource) : resourcesMap.set(resourceId, newResource);
+                        }
+                    }
+                } else {
+                    const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span);
+                    if (resourceId) {
+                        const resource = resourcesMap.get(resourceId);
+                        const newResource = new Resource();
+                        newResource.init(span);
+                        resource ? resource.merge(newResource) : resourcesMap.set(resourceId, newResource);
+                    }
                 }
             }
 
@@ -39,9 +53,12 @@ class InvocationTraceSupport {
         }
     }
 
-    static generateResourceIdFromSpan(span: ThundraSpan): string {
+    static generateResourceIdFromSpan(span: ThundraSpan, resourceName?: string): string {
         if (span.className && span.operationName) {
-            let id = `${span.className.toUpperCase()}\$${span.operationName}`;
+            if (!resourceName) {
+                resourceName = span.operationName;
+            }
+            let id = `${span.className.toUpperCase()}\$${resourceName}`;
             if (span.getTag(SpanTags.OPERATION_TYPE)) {
                 id = id + `\$${span.getTag(SpanTags.OPERATION_TYPE)}`;
             }

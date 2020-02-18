@@ -229,9 +229,15 @@ export const ClassNames = {
     MONGODB: 'MONGODB',
     ELASTICSEARCH: 'ELASTICSEARCH',
     MYSQL: 'MYSQL',
+    EVENTBRIDGE: 'AWS-EventBridge',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
+
+export const AwsEventBridgeTags = {
+    SERVICE_REQUEST: 'AWSEventBridgeRequest',
+    EVENT_BUS_NAME: 'aws.eventbridge.eventbus.name',
+};
 
 export const DBTags = {
     DB_STATEMENT: 'db.statement',
@@ -517,6 +523,7 @@ export const SpanTags = {
     TRIGGER_OPERATION_NAMES: 'trigger.operationNames',
     TOPOLOGY_VERTEX: 'topology.vertex',
     TRACE_LINKS: 'trace.links',
+    RESOURCE_NAMES: 'resource.names',
 };
 
 export const TriggerHeaderTags = {
@@ -536,6 +543,7 @@ export const SpanTypes = {
     AWS_S3: 'AWS-S3',
     AWS_LAMBDA: 'AWS-Lambda',
     AWS_ATHENA: 'AWS-Athena',
+    AWS_EVENTBRIDGE: 'AWS-EventBridge',
 };
 
 export const INTEGRATIONS: any = {
