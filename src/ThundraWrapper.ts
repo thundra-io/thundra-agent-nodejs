@@ -28,6 +28,7 @@ import {
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT,
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST,
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
+    DEBUG_BRIDGE_FILE_NAME,
 } from './Constants';
 import Utils from './plugins/utils/Utils';
 import { readFileSync } from 'fs';
@@ -257,7 +258,7 @@ class ThundraWrapper {
         if (this.fork && this.inspector) {
             try {
                 this.debuggerProxy = this.fork(
-                    path.join(__dirname, 'debugBridge.js'),
+                    path.join(__dirname, DEBUG_BRIDGE_FILE_NAME),
                     [],
                     {
                         detached: true,

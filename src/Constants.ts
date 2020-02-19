@@ -708,3 +708,4 @@ export const DefaultMongoCommandSizeLimit = 128 * 1024;
 export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT = 1111;
 export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST = 'debug.thundra.io';
 export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME = 'default';
+export const DEBUG_BRIDGE_FILE_NAME = 'debugBridge.js';
