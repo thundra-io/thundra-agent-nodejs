@@ -28,7 +28,8 @@ import {
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT,
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST,
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
-    DEBUG_BRIDGE_FILE_NAME,
+    DEBUG_BRIDGE_FILE_NAME, BROKER_WS_HTTP_ERROR_PATTERN,
+    BROKER_WS_HTTP_ERR_CODE_TO_MSG,
 } from './Constants';
 import Utils from './plugins/utils/Utils';
 import { readFileSync } from 'fs';
@@ -273,7 +274,36 @@ class ThundraWrapper {
                         },
                     },
                 );
-                this.inspector.open(this.debuggerPort, 'localhost', true);
+                this.inspector.open(this.debuggerPort, 'localhost', false);
+
+                const waitForBrokerConnection = () => new Promise((resolve) => {
+                    this.debuggerProxy.once('message', (mes: any) => {
+                        if (mes === 'brokerConnect') {
+                            return resolve(false);
+                        }
+
+                        if (typeof mes === 'string') {
+                            const match = mes.match(BROKER_WS_HTTP_ERROR_PATTERN);
+                            if (match) {
+                                const errCode = Number(match[1]);
+                                const errMessage = BROKER_WS_HTTP_ERR_CODE_TO_MSG[errCode];
+
+                                if (errMessage) {
+                                    ThundraLogger.getInstance().error('Thundra Debugger: ' + errMessage);
+                                }
+                            }
+                        }
+                        return resolve(true);
+                    });
+                });
+
+                const brokerHasErr = await waitForBrokerConnection();
+
+                if (brokerHasErr) {
+                    this.finishDebuggerProxyIfAvailable();
+                    return;
+                }
+
                 await this.waitForDebugger();
             } catch (e) {
                 this.debuggerProxy = null;
@@ -286,6 +316,7 @@ class ThundraWrapper {
         try {
             if (this.inspector) {
                 this.inspector.close();
+                this.inspector = null;
             }
         } catch (e) {
             ThundraLogger.getInstance().error(e);

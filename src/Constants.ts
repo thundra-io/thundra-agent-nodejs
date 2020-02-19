@@ -709,3 +709,9 @@ export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT = 1111;
 export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST = 'debug.thundra.io';
 export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME = 'default';
 export const DEBUG_BRIDGE_FILE_NAME = 'debugBridge.js';
+export const BROKER_WS_HTTP_ERROR_PATTERN = /:\s*\D*(\d+)/;
+export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: {[key: number]: string} = {
+    429: `Reached the concurrent session limit, couldn't start Thundra debugger.`,
+    401: `Authentication is failed, check your Thundra debugger authentication token.`,
+    409: `Another session with the same session name exists, connection closed.`,
+};

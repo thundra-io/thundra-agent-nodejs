@@ -37,12 +37,13 @@ debuggerSocket.on('end', () => {
         brokerSocket.close(CLOSING_CODES.NORMAL, 'Normal');
     }
 });
-debuggerSocket.on('error', (err: any) => {
-    log('debuggerSocket:' + err);
+debuggerSocket.on('error', (err: Error) => {
+    log('debuggerSocket:', err.message);
 });
 
 // Setup broker socket
 let firstMessage = true;
+let brokerHSSuccess = false;
 const sendToDebugger = (data: Buffer) => {
     if (debuggerSocket.writable) {
         debuggerSocket.write(data);
@@ -54,6 +55,7 @@ const sendToDebugger = (data: Buffer) => {
 brokerSocket.on('message', (data: Buffer) => {
     if (firstMessage) {
         firstMessage = false;
+        process.send('brokerConnect');
         debuggerSocket.connect({ port: DEBUGGER_PORT }, () => {
             log('debuggerSocket: connection established with main lambda process');
         });
@@ -62,6 +64,7 @@ brokerSocket.on('message', (data: Buffer) => {
     sendToDebugger(data);
 });
 brokerSocket.on('open', () => {
+    brokerHSSuccess = true;
     log('brokerSocket: connection established with the Thundra broker');
 });
 brokerSocket.on('close', (code: Number, reason: string) => {
@@ -70,8 +73,12 @@ brokerSocket.on('close', (code: Number, reason: string) => {
         debuggerSocket.end();
     }
 });
-brokerSocket.on('error', (err: any) => {
-    log('brokerSocket:' + err);
+brokerSocket.on('error', (err: Error) => {
+    if (!brokerHSSuccess) {
+        // Error occured before handshake, main process should know it
+        process.send(err.message);
+    }
+    log('brokerSocket:', err.message);
 });
 
 process.on('SIGTERM', () => {
