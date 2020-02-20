@@ -26,10 +26,11 @@ import InvocationSupport from './plugins/support/InvocationSupport';
 import {
     envVariableKeys,
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT,
-    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST,
+    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST,
+    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT,
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
     DEBUG_BRIDGE_FILE_NAME, BROKER_WS_HTTP_ERROR_PATTERN,
-    BROKER_WS_HTTP_ERR_CODE_TO_MSG,
+    BROKER_WS_HTTP_ERR_CODE_TO_MSG, BROKER_WS_PROTOCOL,
 } from './Constants';
 import Utils from './plugins/utils/Utils';
 import { readFileSync } from 'fs';
@@ -160,11 +161,11 @@ class ThundraWrapper {
             const brokerHost =
                 Utils.getConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST,
-                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST);
+                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST);
             const brokerPort =
                 Utils.getNumericConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT,
-                    -1);
+                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT);
             const authToken =
                 Utils.getConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN,
@@ -271,6 +272,7 @@ class ThundraWrapper {
                             AUTH_TOKEN: this.authToken,
                             DEBUGGER_PORT: this.debuggerPort,
                             LOGS_ENABLED: this.debuggerLogsEnabled,
+                            BROKER_WS_PROTOCOL,
                         },
                     },
                 );
