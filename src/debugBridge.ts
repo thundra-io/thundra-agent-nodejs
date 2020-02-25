@@ -85,7 +85,7 @@ process.on('SIGTERM', () => {
     if (brokerSocket.readyState === WebSocket.OPEN) {
         brokerSocket.close(CLOSING_CODES.NORMAL, 'Normal');
     }
-    if (debuggerSocket.destroyed) {
+    if (!debuggerSocket.destroyed) {
         debuggerSocket.end();
     }
 });
