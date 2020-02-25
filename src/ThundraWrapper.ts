@@ -506,10 +506,15 @@ class ThundraWrapper {
         return setTimeout(() => {
             if (this.debuggerProxy) {
                 // Debugger proxy exists, let it know about the timeout
-                if (!this.debuggerProxy.killed) {
-                    this.debuggerProxy.kill('SIGHUP');
+                try {
+                    if (!this.debuggerProxy.killed) {
+                        this.debuggerProxy.kill('SIGHUP');
+                    }
+                } catch (e) {
+                    ThundraLogger.getInstance().error(e);
+                } finally {
+                    this.debuggerProxy = null;
                 }
-                this.debuggerProxy = null;
             }
             wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
             wrapperInstance.reported = false;
