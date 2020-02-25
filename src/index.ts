@@ -47,7 +47,7 @@ module.exports = (options: any) => {
     }
 
     if (!(config.apiKey)) {
-        console.warn(`Thundra API Key is not given, instrumentation is disabled.`);
+        console.warn(`Thundra API Key is not given, monitoring is disabled.`);
     }
 
     const monitoringDisabled: boolean = !(config.apiKey);
