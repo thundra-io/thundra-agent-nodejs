@@ -284,17 +284,20 @@ class ThundraWrapper {
                             return resolve(false);
                         }
 
+                        let errMessage: string;
                         if (typeof mes === 'string') {
                             const match = mes.match(BROKER_WS_HTTP_ERROR_PATTERN);
+
                             if (match) {
                                 const errCode = Number(match[1]);
-                                const errMessage = BROKER_WS_HTTP_ERR_CODE_TO_MSG[errCode];
-
-                                if (errMessage) {
-                                    ThundraLogger.getInstance().error('Thundra Debugger: ' + errMessage);
-                                }
+                                errMessage = BROKER_WS_HTTP_ERR_CODE_TO_MSG[errCode];
                             }
                         }
+
+                        // If errMessage is undefined replace it with the raw incoming message
+                        errMessage = errMessage || mes;
+                        ThundraLogger.getInstance().error('Thundra Debugger: ' + errMessage);
+
                         return resolve(true);
                     });
                 });
