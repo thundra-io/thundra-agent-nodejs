@@ -46,6 +46,9 @@ class LambdaEventUtils {
                 return LambdaEventType.APIGatewayPassThrough;
         } else if (originalContext.clientContext) {
             return LambdaEventType.Lambda;
+        } else if (originalEvent['detail-type'] && originalEvent.detail &&  originalEvent.version
+            && Array.isArray(originalEvent.resources)) {
+            return LambdaEventType.EventBridge;
         }
     }
 
@@ -212,6 +215,23 @@ class LambdaEventUtils {
         this.injectTrigerTragsForSpan(span, domainName, className, Array.from(bucketNames));
 
         return className;
+    }
+
+    static injectTriggerTagsForEventBridge(span: ThundraSpan, originalEvent: any): String {
+        const domainName = DomainNames.MESSAGING;
+        const className = ClassNames.EVENTBRIDGE;
+        const traceLinks: any[] = [];
+        const eventDetails: Set<string> = new Set<string>();
+
+        traceLinks.push(originalEvent.id);
+        eventDetails.add(originalEvent['detail-type']);
+
+        InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
+        this.injectTrigerTragsForInvocation(domainName, className, Array.from(eventDetails));
+        this.injectTrigerTragsForSpan(span, domainName, className, Array.from(eventDetails));
+
+        return className;
+
     }
 
     static injectTriggerTagsForCloudWatchSchedule(span: ThundraSpan, originalEvent: any): String {
@@ -398,4 +418,5 @@ export enum LambdaEventType {
     APIGatewayProxy,
     APIGatewayPassThrough,
     Lambda,
+    EventBridge,
 }

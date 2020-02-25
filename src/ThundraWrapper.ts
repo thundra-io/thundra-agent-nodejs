@@ -340,6 +340,8 @@ class ThundraWrapper {
     }
 
     async invoke() {
+        this.config.refreshConfig();
+
         await this.startDebuggerProxyIfAvailable();
 
         const beforeInvocationData = {

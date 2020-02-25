@@ -60,5 +60,27 @@ module.exports = [
                 },
             }),
         ],
+    },
+    {
+        input: './src/handler.ts',
+        output: {
+            file: 'dist/handler.js',
+            format: 'cjs',
+        },
+        plugins: [
+            typescript(),
+            terser({
+                warnings: 'verbose',
+                compress: {
+                    warnings: 'verbose',
+                },
+                mangle: {
+                    keep_fnames: true,
+                },
+                output: {
+                    beautify: false,
+                },
+            }),
+        ]
     }
 ];

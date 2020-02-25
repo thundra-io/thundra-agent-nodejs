@@ -1,5 +1,4 @@
 import TraceConfig from '../../plugins/config/TraceConfig';
-import { envVariableKeys, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME } from '../../Constants';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import Utils from '../../plugins/utils/Utils';
@@ -7,10 +6,12 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraTracer from '../Tracer';
 import ThundraSpan from '../Span';
 import { ThundraSourceCodeInstrumenter } from '@thundra/instrumenter';
+import { envVariableKeys, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Constants';
 
 const Module = require('module');
 const path = require('path');
 const get = require('lodash.get');
+const stringify = require('json-stringify-safe');
 
 const TRACE_DEF_SEPERATOR: string = '.';
 
@@ -72,20 +73,24 @@ class Instrumenter {
         global.__thundraTraceEntry__ = function (args: any) {
             try {
                 const span = tracer.startSpan(args.path + '.' + args.name) as ThundraSpan;
-                span.className = 'Method';
-
                 const spanArguments: Argument[] = [];
+
                 if (args.args) {
                     for (let i = 0; i < args.args.length; i++) {
                         const argType = typeof args.args[i];
-                        let argValue = args.args[i];
+                        let argValue = JSON.parse(stringify(args.args[i]));
                         if (argType === 'function') {
                             argValue = argValue.toString();
                         }
                         spanArguments.push(new Argument(args.argNames[i], argType, argValue));
                     }
                 }
+
+                span.className = 'Method';
                 span.setTag(ARGS_TAG_NAME, spanArguments);
+                span.setTag(LineByLineTags.SOURCE, args.source);
+                span.setTag(LineByLineTags.START_LINE, args.startLine);
+
                 return {
                     span,
                 };
@@ -97,12 +102,8 @@ class Instrumenter {
         global.__thundraTraceLine__ = function (args: any) {
             try {
                 const entryData = args.entryData;
-                if (entryData.latestLineSpan) {
-                    entryData.latestLineSpan.finish();
-                }
-
+                const methodSpan = entryData.span;
                 const line = args.line;
-                const source = args.source;
                 const localVars = new Array();
                 const varNames = new Array();
                 const varValues = new Array();
@@ -130,7 +131,8 @@ class Instrumenter {
                         const varValue = varValues[i];
                         let processedVarValue = varValue ? varValue.toString() : null;
                         try {
-                            processedVarValue = JSON.stringify(varValue);
+                            // Cycle aware stringify operation
+                            processedVarValue = stringify(varValue);
                             try {
                                 processedVarValue = JSON.parse(processedVarValue);
                             } catch (e) {
@@ -147,19 +149,20 @@ class Instrumenter {
                         localVars.push(localVar);
                     }
                 }
+
                 const methodLineTag = {
                     line,
-                    source,
                     localVars,
                 };
 
-                const span = tracer.startSpan('@' + args.line) as ThundraSpan;
-                span.className = 'Line';
-                span.setTag('method.lines', [methodLineTag]);
+                let currentLines = methodSpan.getTag(LineByLineTags.LINES);
+                if (!currentLines) {
+                    currentLines = [];
+                }
 
-                entryData.latestLineSpan = span;
+                methodSpan.setTag(LineByLineTags.LINES, [...currentLines, methodLineTag]);
             } catch (ex) {
-                tracer.finishSpan();
+                // Ignore
             }
         };
 
@@ -175,7 +178,8 @@ class Instrumenter {
                 const span = (entryData && entryData.span) ? entryData.span : tracer.getActiveSpan();
                 if (!args.exception) {
                     if (args.returnValue) {
-                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, args.returnValue));
+                        const returnValue = JSON.parse(stringify(args.returnValue));
+                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, returnValue));
                     }
                 } else {
                     span.setErrorTag(args.exceptionValue);

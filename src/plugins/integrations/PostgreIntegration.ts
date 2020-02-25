@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, ClassNames, DBTypes,
+    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes,
     SQLQueryOperationTypes, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
 } from '../../Constants';
 import Utils from '../utils/Utils';
@@ -23,7 +23,7 @@ class PostgreIntegration implements Integration {
     wrapped: boolean;
 
     constructor(config: any) {
-        this.version = '6.x';
+        this.version = '6.x || 7.x';
         this.wrapped = false;
         this.lib = Utils.tryRequire(moduleName);
 
@@ -45,6 +45,29 @@ class PostgreIntegration implements Integration {
                 this.wrap.call(this, this.lib, config);
             }
         }
+    }
+
+    getStatement(args: any[]) {
+        let text;
+        let values;
+
+        if (typeof args[0] === 'string') {
+            text = args[0];
+        } else if (typeof args[0] === 'object') {
+            text = args[0].text;
+        }
+
+        if (args[1] instanceof Array) {
+            values = args[1];
+        } else if (typeof args[0] === 'object') {
+            values = args[0].values;
+        }
+
+        if (values) {
+            text = Utils.replaceArgs(text, values);
+        }
+
+        return text;
     }
 
     wrap(lib: any, config: any) {
@@ -87,10 +110,29 @@ class PostgreIntegration implements Integration {
                         });
                     }
 
-                    const pgQuery = query.apply(this, arguments);
+                    const newArgs = [...arguments];
+                    const hasCallback = newArgs.length > 0 && typeof newArgs[newArgs.length - 1] === 'function';
+                    let originalCallback = () => {
+                        // empty callback
+                    };
 
-                    let statement = pgQuery.text;
-                    statement = Utils.replaceArgs(statement, pgQuery.values);
+                    if (hasCallback) {
+                        originalCallback = newArgs.pop();
+                    }
+
+                    const wrappedCallback = (err: any, res: any) => {
+                        if (err) {
+                            span.setErrorTag(err);
+                        }
+
+                        span.closeWithCallback(me, originalCallback, [err, res]);
+                    };
+
+                    newArgs.push(wrappedCallback);
+
+                    const originalRes = query.apply(this, newArgs);
+
+                    const statement = integration.getStatement(newArgs);
 
                     if (statement) {
                         const statementType = statement.split(' ')[0].toUpperCase();
@@ -104,17 +146,7 @@ class PostgreIntegration implements Integration {
 
                     span._initialized();
 
-                    const originalCallback = pgQuery.callback;
-
-                    pgQuery.callback = (err: any, res: any) => {
-                        if (err) {
-                            span.setErrorTag(err);
-                        }
-
-                        span.closeWithCallback(me, originalCallback, [err, res]);
-                    };
-
-                    return pgQuery;
+                    return originalRes;
                 } catch (error) {
                     if (span) {
                         span.close();

@@ -276,7 +276,8 @@ export class Trace {
         }
 
         if (conf && conf.maskRequest && typeof conf.maskRequest === 'function') {
-            return conf.maskRequest.call(this, originalEvent);
+            const eventCopy = JSON.parse(JSON.stringify(originalEvent));
+            return conf.maskRequest.call(this, eventCopy);
         }
 
         let enableRequestData = true;
@@ -307,7 +308,8 @@ export class Trace {
         }
 
         if (conf && conf.maskResponse && typeof conf.maskResponse === 'function') {
-            return conf.maskResponse.call(this, response);
+            const responseCopy = JSON.parse(JSON.stringify(response));
+            return conf.maskResponse.call(this, responseCopy);
         }
 
         return response;
@@ -354,6 +356,8 @@ export class Trace {
                 return LambdaEventUtils.injectTriggerTagsForLambda(span, originalContext);
             } else if (lambdaEventType === LambdaEventType.APIGatewayPassThrough) {
                 return LambdaEventUtils.injectTriggerTagsForAPIGatewayPassThrough(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.EventBridge) {
+                return LambdaEventUtils.injectTriggerTagsForEventBridge(span, originalEvent);
             }
         } catch (error) {
             ThundraLogger.getInstance().error('Cannot inject trigger tags. ' + error);
