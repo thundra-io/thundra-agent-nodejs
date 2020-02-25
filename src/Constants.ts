@@ -96,10 +96,12 @@ export const envVariableKeys = {
 
     THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE: 'thundra_agent_lambda_debugger_enable',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT: 'thundra_agent_lambda_debugger_port',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_LOGS_ENABLE: 'thundra_agent_lambda_debugger_logs_enable',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX: 'thundra_agent_lambda_debugger_wait_max',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT: 'thundra_agent_lambda_debugger_broker_port',
     THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST: 'thundra_agent_lambda_debugger_broker_host',
-
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME: 'thundra_agent_lambda_debugger_session_name',
+    THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN: 'thundra_agent_lambda_debugger_auth_token',
 };
 
 export function getTimeoutMargin(region: string) {
@@ -719,4 +721,14 @@ export const StdErrorLogContext = 'STDERR';
 export const DefaultMongoCommandSizeLimit = 128 * 1024;
 
 export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT = 1111;
-export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST = 'debug.thundra.io';
+export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST = 'debug.thundra.io';
+export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT = 444;
+export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME = 'default';
+export const DEBUG_BRIDGE_FILE_NAME = 'debugBridge.js';
+export const BROKER_WS_PROTOCOL = 'wss://';
+export const BROKER_WS_HTTP_ERROR_PATTERN = /:\s*\D*(\d+)/;
+export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: {[key: number]: string} = {
+    429: `Reached the concurrent session limit, couldn't start Thundra debugger.`,
+    401: `Authentication is failed, check your Thundra debugger authentication token.`,
+    409: `Another session with the same session name exists, connection closed.`,
+};

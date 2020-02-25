@@ -26,10 +26,16 @@ import InvocationSupport from './plugins/support/InvocationSupport';
 import {
     envVariableKeys,
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT,
-    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST,
+    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST,
+    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT,
+    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
+    DEBUG_BRIDGE_FILE_NAME, BROKER_WS_HTTP_ERROR_PATTERN,
+    BROKER_WS_HTTP_ERR_CODE_TO_MSG, BROKER_WS_PROTOCOL,
 } from './Constants';
 import Utils from './plugins/utils/Utils';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync } from 'fs';
+
+const path = require('path');
 
 class ThundraWrapper {
 
@@ -48,15 +54,20 @@ class ThundraWrapper {
     private resolve: any;
     private reject: any;
     private inspector: any;
-    private spawn: any;
+    private fork: any;
     private debuggerPort: number;
     private debuggerMaxWaitTime: number;
+    private monitoringDisabled: boolean;
     private brokerHost: string;
+    private sessionName: string;
+    private authToken: string;
+    private sessionTimeout: number;
     private brokerPort: number;
     private debuggerProxy: any;
+    private debuggerLogsEnabled: boolean;
 
     constructor(self: any, event: any, context: any, callback: any,
-                originalFunction: any, plugins: any, pluginContext: PluginContext) {
+                originalFunction: any, plugins: any, pluginContext: PluginContext, monitoringDisabled: boolean) {
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
@@ -68,6 +79,7 @@ class ThundraWrapper {
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
         this.reported = false;
         this.reporter = new Reporter(pluginContext.config);
+        this.monitoringDisabled = monitoringDisabled;
         this.wrappedContext = {
             ...context,
             done: (error: any, result: any) => {
@@ -100,7 +112,7 @@ class ThundraWrapper {
         this.timeout = this.setupTimeoutHandler(this);
         InvocationSupport.setFunctionName(this.originalContext.functionName);
 
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE) === 'true') {
+        if (this.shouldInitDebugger()) {
             this.initDebugger();
         }
     }
@@ -111,6 +123,17 @@ class ThundraWrapper {
         });
     }
 
+    shouldInitDebugger(): boolean {
+        const authToken = Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN);
+        const debuggerEnable = Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE);
+
+        if (debuggerEnable === 'false' || !authToken) {
+            return false;
+        }
+
+        return true;
+    }
+
     invokeCallback(error: any, result: any): void {
         if (typeof this.originalCallback === 'function') {
             this.originalCallback(error, result);
@@ -118,24 +141,18 @@ class ThundraWrapper {
     }
 
     onFinish(error: any, result: any): void {
+        this.finishDebuggerProxyIfAvailable();
         if (error && this.reject) {
             this.reject(error);
         } else if (this.resolve) {
             this.resolve(result);
         }
-        this.finishDebuggerProxyIfAvailable();
     }
 
     initDebugger(): void {
         try {
-            if (!existsSync('/opt/socat')) {
-                throw new Error(
-                    '"Socat" is not exist under "/opt/socat". \
-                    Please be sure that "socat" layer is added or it is available under "/opt/socat"');
-            }
-
             this.inspector = require('inspector');
-            this.spawn = require('child_process').spawn;
+            this.fork = require('child_process').fork;
 
             const debuggerPort =
                 Utils.getNumericConfiguration(
@@ -144,15 +161,27 @@ class ThundraWrapper {
             const brokerHost =
                 Utils.getConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST,
-                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_HOST);
+                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST);
             const brokerPort =
                 Utils.getNumericConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT,
-                    -1);
+                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT);
+            const authToken =
+                Utils.getConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN,
+                    '');
+            const sessionName =
+                Utils.getConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
+                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME);
             const debuggerMaxWaitTime =
                 Utils.getNumericConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX,
                     60 * 1000);
+            const debuggerLogsEnabled =
+                Utils.getConfiguration(
+                    envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_LOGS_ENABLE,
+                    false) === 'true';
 
             if (brokerPort === -1) {
                 throw new Error(
@@ -164,8 +193,12 @@ class ThundraWrapper {
             this.debuggerMaxWaitTime = debuggerMaxWaitTime;
             this.brokerPort = brokerPort;
             this.brokerHost = brokerHost;
+            this.sessionName = sessionName;
+            this.sessionTimeout = Date.now() + this.originalContext.getRemainingTimeInMillis();
+            this.authToken = authToken;
+            this.debuggerLogsEnabled = debuggerLogsEnabled;
         } catch (e) {
-            this.spawn = null;
+            this.fork = null;
             this.inspector = null;
         }
     }
@@ -183,19 +216,21 @@ class ThundraWrapper {
         }
     }
 
-    waitForDebugger(): void {
-        const sleep = require('system-sleep');
+    async waitForDebugger() {
         let prevRchar = 0;
         let prevWchar = 0;
         let initCompleted = false;
         const logger: ThundraLogger = ThundraLogger.getInstance();
         logger.info('Waiting for debugger to handshake ...');
+
+        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
         const startTime = Date.now();
         while ((Date.now() - startTime) < this.debuggerMaxWaitTime) {
             try {
                 const debuggerIoMetrics = this.getDebuggerProxyIOMetrics();
                 if (!debuggerIoMetrics) {
-                    sleep(1000);
+                    await sleep(1000);
                     break;
                 }
                 if (prevRchar !== 0 && prevWchar !== 0 &&
@@ -209,7 +244,7 @@ class ThundraWrapper {
                 logger.error(e);
                 break;
             }
-            sleep(1000);
+            await sleep(1000);
         }
         if (initCompleted) {
             logger.info('Completed debugger handshake');
@@ -218,22 +253,63 @@ class ThundraWrapper {
         }
     }
 
-    startDebuggerProxyIfAvailable(): void {
+    async startDebuggerProxyIfAvailable() {
         if (this.debuggerProxy) {
             this.finishDebuggerProxyIfAvailable();
         }
-        if (this.spawn && this.inspector) {
+        if (this.fork && this.inspector) {
             try {
-                this.debuggerProxy =
-                    this.spawn(
-                        '/opt/socat',
-                        [
-                            'TCP:' + this.brokerHost + ':' + this.brokerPort,
-                            'TCP:localhost:' + this.debuggerPort + ',forever',
-                        ],
-                        {detached: true});
-                this.inspector.open(this.debuggerPort, 'localhost', true);
-                this.waitForDebugger();
+                this.debuggerProxy = this.fork(
+                    path.join(__dirname, DEBUG_BRIDGE_FILE_NAME),
+                    [],
+                    {
+                        detached: true,
+                        env: {
+                            BROKER_HOST: this.brokerHost,
+                            BROKER_PORT: this.brokerPort,
+                            SESSION_NAME: this.sessionName,
+                            SESSION_TIMEOUT: this.sessionTimeout,
+                            AUTH_TOKEN: this.authToken,
+                            DEBUGGER_PORT: this.debuggerPort,
+                            LOGS_ENABLED: this.debuggerLogsEnabled,
+                            BROKER_WS_PROTOCOL,
+                        },
+                    },
+                );
+                this.inspector.open(this.debuggerPort, 'localhost', false);
+
+                const waitForBrokerConnection = () => new Promise((resolve) => {
+                    this.debuggerProxy.once('message', (mes: any) => {
+                        if (mes === 'brokerConnect') {
+                            return resolve(false);
+                        }
+
+                        let errMessage: string;
+                        if (typeof mes === 'string') {
+                            const match = mes.match(BROKER_WS_HTTP_ERROR_PATTERN);
+
+                            if (match) {
+                                const errCode = Number(match[1]);
+                                errMessage = BROKER_WS_HTTP_ERR_CODE_TO_MSG[errCode];
+                            }
+                        }
+
+                        // If errMessage is undefined replace it with the raw incoming message
+                        errMessage = errMessage || mes;
+                        ThundraLogger.getInstance().error('Thundra Debugger: ' + errMessage);
+
+                        return resolve(true);
+                    });
+                });
+
+                const brokerHasErr = await waitForBrokerConnection();
+
+                if (brokerHasErr) {
+                    this.finishDebuggerProxyIfAvailable();
+                    return;
+                }
+
+                await this.waitForDebugger();
             } catch (e) {
                 this.debuggerProxy = null;
                 ThundraLogger.getInstance().error(e);
@@ -245,13 +321,16 @@ class ThundraWrapper {
         try {
             if (this.inspector) {
                 this.inspector.close();
+                this.inspector = null;
             }
         } catch (e) {
             ThundraLogger.getInstance().error(e);
         }
         if (this.debuggerProxy) {
             try {
-                this.debuggerProxy.kill('SIGKILL');
+                if (!this.debuggerProxy.killed) {
+                    this.debuggerProxy.kill();
+                }
             } catch (e) {
                 ThundraLogger.getInstance().error(e);
             } finally {
@@ -260,10 +339,10 @@ class ThundraWrapper {
         }
     }
 
-    invoke() {
-        // Refresh config to check if config updated
+    async invoke() {
         this.config.refreshConfig();
-        this.startDebuggerProxyIfAvailable();
+
+        await this.startDebuggerProxyIfAvailable();
 
         const beforeInvocationData = {
             originalContext: this.originalContext,
@@ -330,6 +409,10 @@ class ThundraWrapper {
     }
 
     async executeAfteInvocationAndReport(afterInvocationData: any) {
+        if (this.monitoringDisabled) {
+            return;
+        }
+
         afterInvocationData.error ? InvocationSupport.setErrorenous(true) : InvocationSupport.setErrorenous(false);
 
         await this.executeHook('after-invocation', afterInvocationData, true);
@@ -426,6 +509,18 @@ class ThundraWrapper {
         const endTime = Math.min(configEndTime, maxEndTime);
 
         return setTimeout(() => {
+            if (this.debuggerProxy) {
+                // Debugger proxy exists, let it know about the timeout
+                try {
+                    if (!this.debuggerProxy.killed) {
+                        this.debuggerProxy.kill('SIGHUP');
+                    }
+                } catch (e) {
+                    ThundraLogger.getInstance().error(e);
+                } finally {
+                    this.debuggerProxy = null;
+                }
+            }
             wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
             wrapperInstance.reported = false;
         }, endTime);

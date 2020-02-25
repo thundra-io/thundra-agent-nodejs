@@ -43,43 +43,51 @@ module.exports = (options?: any) => {
     const config = new ThundraConfig(options);
     const plugins: any[] = [];
 
-    if (!(config.apiKey) || config.disableThundra) {
+    if (config.disableThundra) {
         return (originalFunc: any) => originalFunc;
     }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
-        const tracePlugin = TracePlugin(config.traceConfig);
-        plugins.push(tracePlugin);
-
-        tracer = tracePlugin.tracer;
-        config.metricConfig.tracer = tracer;
-        config.logConfig.tracer = tracer;
-        config.xrayConfig.tracer = tracer;
-        InvocationTraceSupport.tracer = tracer;
+    if (!(config.apiKey)) {
+        console.warn(`Thundra API Key is not given, monitoring is disabled.`);
     }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC, 'true') === 'true') && config.metricConfig.enabled) {
-        const metricPlugin = MetricPlugin(config.metricConfig);
-        plugins.push(metricPlugin);
-    }
+    const monitoringDisabled: boolean = !(config.apiKey);
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG, 'true') === 'true') && config.logConfig.enabled) {
-        if (!Log.getInstance()) {
-            const logPlugin = new Log(config.logConfig);
-            Logger.getLogManager().addListener(logPlugin);
+    if (!monitoringDisabled) {
+        if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
+            const tracePlugin = TracePlugin(config.traceConfig);
+            plugins.push(tracePlugin);
+
+            tracer = tracePlugin.tracer;
+            config.metricConfig.tracer = tracer;
+            config.logConfig.tracer = tracer;
+            config.xrayConfig.tracer = tracer;
+            InvocationTraceSupport.tracer = tracer;
         }
-        const logInstance = Log.getInstance();
-        logInstance.enable();
-        plugins.push(logInstance);
-    }
 
-    if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_XRAY) === 'true') && config.xrayConfig.enabled) {
-        const aws = AwsXRayPlugin(config.metricConfig);
-        plugins.push(aws);
-    }
+        if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_METRIC, 'true') === 'true') && config.metricConfig.enabled) {
+            const metricPlugin = MetricPlugin(config.metricConfig);
+            plugins.push(metricPlugin);
+        }
 
-    const invocationPlugin = InvocationPlugin(config.invocationConfig);
-    plugins.push(invocationPlugin);
+        if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_LOG, 'true') === 'true') && config.logConfig.enabled) {
+            if (!Log.getInstance()) {
+                const logPlugin = new Log(config.logConfig);
+                Logger.getLogManager().addListener(logPlugin);
+            }
+            const logInstance = Log.getInstance();
+            logInstance.enable();
+            plugins.push(logInstance);
+        }
+
+        if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_XRAY) === 'true') && config.xrayConfig.enabled) {
+            const aws = AwsXRayPlugin(config.metricConfig);
+            plugins.push(aws);
+        }
+
+        const invocationPlugin = InvocationPlugin(config.invocationConfig);
+        plugins.push(invocationPlugin);
+    }
 
     if (config.trustAllCert) {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -111,7 +119,7 @@ module.exports = (options?: any) => {
             return originalFunc;
         }
 
-        const thundraWrappedHandler: any = (originalEvent: any, originalContext: any, originalCallback: any) => {
+        const thundraWrappedHandler: any = async (originalEvent: any, originalContext: any, originalCallback: any) => {
             // Creating applicationId here, since we need the information in context
             const applicationId = Utils.getApplicationId(originalContext, pluginContext);
             pluginContext.applicationId = applicationId;
@@ -129,8 +137,9 @@ module.exports = (options?: any) => {
                 originalFunc,
                 plugins,
                 pluginContext,
+                monitoringDisabled,
             );
-            return thundraWrapper.invoke();
+            return await thundraWrapper.invoke();
         };
         // Set thundraWrapped to true, to not double wrap the user handler
         thundraWrappedHandler.thundraWrapped = true;

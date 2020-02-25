@@ -326,7 +326,6 @@ describe('whitelist config', () => {
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
                 const span = recorder.spanList[1];
-                console.log(span.tags);
                 checkIfWhitelisted(span);
             });
         });
