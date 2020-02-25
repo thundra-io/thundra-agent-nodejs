@@ -50,9 +50,9 @@ module.exports = (options: any) => {
         console.warn(`Thundra API Key is not given, instrumentation is disabled.`);
     }
 
-    const instrumentationDisabled: boolean = !(config.apiKey);
+    const monitoringDisabled: boolean = !(config.apiKey);
 
-    if (!instrumentationDisabled) {
+    if (!monitoringDisabled) {
         if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true') && config.traceConfig.enabled) {
             const tracePlugin = TracePlugin(config.traceConfig);
             config.plugins.push(tracePlugin);
@@ -136,7 +136,7 @@ module.exports = (options: any) => {
                 originalFunc,
                 config.plugins,
                 pluginContext,
-                instrumentationDisabled,
+                monitoringDisabled,
             );
             return await thundraWrapper.invoke();
         };
