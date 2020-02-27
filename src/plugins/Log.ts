@@ -134,21 +134,14 @@ class Log {
                         logTimestamp: Date.now(),
                     };
 
-                    this.reportLog(logInfo);
+                    if (this.captureLog) {
+                        this.reportLog(logInfo);
+                    }
 
                     originalConsoleMethod.apply(console, args);
                 };
             }
 
-        });
-    }
-
-    unShimConsole(): void {
-        ConsoleShimmedMethods.forEach((method) => {
-            const descriptor = Object.getOwnPropertyDescriptor(console, `original_${method}`);
-            if (descriptor) {
-                Object.defineProperty(console, method, descriptor);
-            }
         });
     }
 
@@ -161,9 +154,6 @@ class Log {
     }
 
     destroy(): void {
-        /*if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
-            this.unShimConsole();
-        }*/
     }
 }
 
