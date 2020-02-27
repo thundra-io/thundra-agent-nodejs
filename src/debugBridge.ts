@@ -8,6 +8,9 @@ const CLOSING_CODES: {[key: string]: number} = {
     TIMEOUT: 4000,
 };
 
+const RUNTIME = 'node';
+const PROTOCOL_VERSION = '1.0';
+
 const log = (...params: any[]) => {
     if (LOGS_ENABLED === 'true') {
         console.log(...params);
@@ -21,8 +24,9 @@ const brokerSocket = new WebSocket(
         headers: {
             'x-thundra-auth-token': AUTH_TOKEN,
             'x-thundra-session-name': SESSION_NAME,
-            'x-thundra-protocol-version': '1.0',
+            'x-thundra-protocol-version': PROTOCOL_VERSION,
             'x-thundra-session-timeout': SESSION_TIMEOUT,
+            'x-thundra-runtime': RUNTIME,
         },
     },
 );
