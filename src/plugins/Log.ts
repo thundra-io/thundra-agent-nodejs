@@ -24,8 +24,11 @@ class Log {
     pluginOrder: number = 4;
     consoleReference: any = console;
     config: LogConfig;
+    captureLog = false;
 
     constructor(options: LogConfig) {
+        console.log('update thundra log ');
+
         this.hooks = {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
@@ -37,6 +40,10 @@ class Log {
         this.enabled = false;
         Log.instance = this;
         this.config = options;
+
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
+            this.shimConsole();
+        }
     }
 
     static getInstance(): Log {
@@ -55,6 +62,7 @@ class Log {
     }
 
     beforeInvocation = (data: any) => {
+        this.captureLog = true;
         this.logs = [];
         this.reporter = data.reporter;
         this.logData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.LOG) as LogData;
@@ -64,10 +72,6 @@ class Log {
         this.logData.traceId = this.pluginContext.traceId;
 
         this.logData.tags = {};
-
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
-            this.shimConsole();
-        }
     }
 
     afterInvocation = (data: any) => {
@@ -93,6 +97,7 @@ class Log {
             ThundraLogger.getInstance().debug('Skipping reporting logs due to sampling.');
         }
 
+        this.captureLog = false;
         this.destroy();
     }
 
@@ -156,9 +161,9 @@ class Log {
     }
 
     destroy(): void {
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
+        /*if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
             this.unShimConsole();
-        }
+        }*/
     }
 }
 
