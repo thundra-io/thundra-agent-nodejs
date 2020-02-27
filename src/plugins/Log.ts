@@ -24,6 +24,7 @@ class Log {
     pluginOrder: number = 4;
     consoleReference: any = console;
     config: LogConfig;
+    captureLog = false;
 
     constructor(options: LogConfig) {
         this.hooks = {
@@ -37,6 +38,10 @@ class Log {
         this.enabled = false;
         Log.instance = this;
         this.config = options;
+
+        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
+            this.shimConsole();
+        }
     }
 
     static getInstance(): Log {
@@ -55,6 +60,7 @@ class Log {
     }
 
     beforeInvocation = (data: any) => {
+        this.captureLog = true;
         this.logs = [];
         this.reporter = data.reporter;
         this.logData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.LOG) as LogData;
@@ -64,10 +70,6 @@ class Log {
         this.logData.traceId = this.pluginContext.traceId;
 
         this.logData.tags = {};
-
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
-            this.shimConsole();
-        }
     }
 
     afterInvocation = (data: any) => {
@@ -93,7 +95,7 @@ class Log {
             ThundraLogger.getInstance().debug('Skipping reporting logs due to sampling.');
         }
 
-        this.destroy();
+        this.captureLog = false;
     }
 
     reportLog(logInfo: any): void {
@@ -119,31 +121,22 @@ class Log {
                 }
 
                 this.consoleReference[method] = (...args: any[]) => {
-                    const logLevel = method.toUpperCase() === 'LOG' ? 'INFO' : method.toUpperCase();
-
-                    const logInfo = {
-                        logMessage: util.format.apply(util, args),
-                        logLevel,
-                        logLevelCode: method === 'log' ? 2 : logLevels[method],
-                        logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
-                        logTimestamp: Date.now(),
-                    };
-
-                    this.reportLog(logInfo);
+                    if (this.captureLog) {
+                        const logLevel = method.toUpperCase() === 'LOG' ? 'INFO' : method.toUpperCase();
+                        const logInfo = {
+                            logMessage: util.format.apply(util, args),
+                            logLevel,
+                            logLevelCode: method === 'log' ? 2 : logLevels[method],
+                            logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
+                            logTimestamp: Date.now(),
+                        };
+                        this.reportLog(logInfo);
+                    }
 
                     originalConsoleMethod.apply(console, args);
                 };
             }
 
-        });
-    }
-
-    unShimConsole(): void {
-        ConsoleShimmedMethods.forEach((method) => {
-            const descriptor = Object.getOwnPropertyDescriptor(console, `original_${method}`);
-            if (descriptor) {
-                Object.defineProperty(console, method, descriptor);
-            }
         });
     }
 
@@ -155,11 +148,8 @@ class Log {
         this.enabled = false;
     }
 
-    destroy(): void {
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
-            this.unShimConsole();
-        }
-    }
+    // tslint:disable-next-line:no-empty
+    destroy(): void {}
 }
 
 export default Log;

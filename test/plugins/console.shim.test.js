@@ -43,13 +43,14 @@ describe('Log plugin shim console', () => {
 
 describe('Log plugin unshim console', () => {
     const logPlugin = new LogPlugin();
+    logPlugin.enable();
     const pluginContext = createMockPluginContext();
     const beforeInvocationData = createMockBeforeInvocationData();
     logPlugin.setPluginContext(pluginContext);
     logPlugin.beforeInvocation(beforeInvocationData);
-    logPlugin.unShimConsole();
+    logPlugin.afterInvocation();
 
-    it('should not capture console.log statements after unshim', () => {  
+    it('should not capture console.log statements after Invocation', () => {
         console.log('log');
         expect(logPlugin.logs.length).toBe(0);
     });       
