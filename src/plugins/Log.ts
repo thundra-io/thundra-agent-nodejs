@@ -96,7 +96,6 @@ class Log {
         }
 
         this.captureLog = false;
-        this.destroy();
     }
 
     reportLog(logInfo: any): void {
@@ -149,8 +148,8 @@ class Log {
         this.enabled = false;
     }
 
-    destroy(): void {
-    }
+    // tslint:disable-next-line:no-empty
+    destroy(): void {}
 }
 
 export default Log;
