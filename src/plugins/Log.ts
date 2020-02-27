@@ -27,8 +27,6 @@ class Log {
     captureLog = false;
 
     constructor(options: LogConfig) {
-        console.log('update thundra log ');
-
         this.hooks = {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
@@ -124,17 +122,15 @@ class Log {
                 }
 
                 this.consoleReference[method] = (...args: any[]) => {
-                    const logLevel = method.toUpperCase() === 'LOG' ? 'INFO' : method.toUpperCase();
-
-                    const logInfo = {
-                        logMessage: util.format.apply(util, args),
-                        logLevel,
-                        logLevelCode: method === 'log' ? 2 : logLevels[method],
-                        logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
-                        logTimestamp: Date.now(),
-                    };
-
                     if (this.captureLog) {
+                        const logLevel = method.toUpperCase() === 'LOG' ? 'INFO' : method.toUpperCase();
+                        const logInfo = {
+                            logMessage: util.format.apply(util, args),
+                            logLevel,
+                            logLevelCode: method === 'log' ? 2 : logLevels[method],
+                            logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
+                            logTimestamp: Date.now(),
+                        };
                         this.reportLog(logInfo);
                     }
 
