@@ -555,7 +555,9 @@ class AWSIntegration implements Integration {
                         }
                     } else if (serviceName === 'lambda') {
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.LAMBDA);
-                        const spanName = get(request, 'params.FunctionName', AWS_SERVICE_REQUEST);
+                        const normalizedFunctionName = Utils.normalizeFunctionName(
+                            get(request, 'params.FunctionName', AWS_SERVICE_REQUEST));
+                        const spanName = normalizedFunctionName.name;
 
                         activeSpan = tracer._startSpan(spanName, {
                             childOf: parentSpan,
@@ -564,10 +566,11 @@ class AWSIntegration implements Integration {
                             className: ClassNames.LAMBDA,
                             tags: {
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_LAMBDA,
-                                [SpanTags.OPERATION_TYPE]: operationType,
-                                [AwsLambdaTags.FUNCTION_QUALIFIER]: request.params.Qualifier,
-                                [AwsLambdaTags.INVOCATION_PAYLOAD]: config.maskLambdaPayload ? undefined : request.params.Payload,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
+                                [SpanTags.OPERATION_TYPE]: operationType,
+                                [AwsLambdaTags.FUNCTION_QUALIFIER]: normalizedFunctionName.qualifier,
+                                [AwsLambdaTags.INVOCATION_PAYLOAD]: config.maskLambdaPayload ? undefined : request.params.Payload,
+                                [AwsLambdaTags.FUNCTION_NAME]: normalizedFunctionName.name,
                                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
                             },
                         });
@@ -580,8 +583,6 @@ class AWSIntegration implements Integration {
                             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
                             activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
                             activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
-
-                            activeSpan.setTag(AwsLambdaTags.FUNCTION_NAME, spanName);
                         }
 
                         if (custom && operationName && operationName.includes && operationName.includes('invoke')) {
