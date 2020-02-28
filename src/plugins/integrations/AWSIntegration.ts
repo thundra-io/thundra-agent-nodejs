@@ -568,7 +568,7 @@ class AWSIntegration implements Integration {
                                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_LAMBDA,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
                                 [SpanTags.OPERATION_TYPE]: operationType,
-                                [AwsLambdaTags.FUNCTION_QUALIFIER]: normalizedFunctionName.qualifier,
+                                [AwsLambdaTags.FUNCTION_QUALIFIER]: request.params.Qualifier || normalizedFunctionName.qualifier,
                                 [AwsLambdaTags.INVOCATION_PAYLOAD]: config.maskLambdaPayload ? undefined : request.params.Payload,
                                 [AwsLambdaTags.FUNCTION_NAME]: normalizedFunctionName.name,
                                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
