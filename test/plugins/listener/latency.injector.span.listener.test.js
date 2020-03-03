@@ -11,7 +11,7 @@ describe('LatencyInjectorSpanListener', () => {
         const listener = new LatencyInjectorSpanListener(opt);
      
         // Assert
-        expect(listener.injectOnFinish).toBe(false);
+        expect(listener.injectOnFinish).toBe(true);
         expect(listener.delay).toBe(100);
         expect(listener.randomizeDelay).toBe(false);
     });
@@ -44,7 +44,7 @@ describe('LatencyInjectorSpanListener', () => {
         const listener = new LatencyInjectorSpanListener(opt);
         const span = new ThundraSpan();
         const callback = jest.fn();
-        listener.onSpanInitialized(span, this, callback, []);
+        listener.onSpanFinished(span, this, callback, []);
 
         // Assert        
         setTimeout(() => {
@@ -63,7 +63,7 @@ describe('LatencyInjectorSpanListener', () => {
         const listener = new LatencyInjectorSpanListener(opt);
         const span = new ThundraSpan();
         const callback = jest.fn();
-        listener.onSpanInitialized(span, this, callback, [2,'value']);
+        listener.onSpanFinished(span, this, callback, [2,'value']);
 
         // Assert        
         setTimeout(() => {
