@@ -335,9 +335,9 @@ class AWSIntegration implements Integration {
                     span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, [response.data.NamedQueryId]);
                 }
             } else if (serviceName === 'events') {
-                const eventId = get(response, 'id', false);
-                if (eventId) {
-                    traceLinks = [eventId];
+                const eventIds = get(response, 'data.Entries', []).map((e: any) => e.EventId);
+                if (eventIds) {
+                    traceLinks = eventIds;
                 }
             }
             if (traceLinks.length > 0) {
