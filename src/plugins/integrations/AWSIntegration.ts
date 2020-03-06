@@ -336,9 +336,7 @@ class AWSIntegration implements Integration {
                 }
             } else if (serviceName === 'events') {
                 const eventIds = get(response, 'data.Entries', []).map((e: any) => e.EventId);
-                if (eventIds) {
-                    traceLinks = eventIds;
-                }
+                traceLinks = eventIds;
             }
             if (traceLinks.length > 0) {
                 span.setTag(SpanTags.TRACE_LINKS, traceLinks);
