@@ -152,6 +152,7 @@ class HttpIntegration implements Integration {
                         if (!config.disableHttp4xxError && statusCode.startsWith('4')) {
                             span.setErrorTag(new HttpError(res.statusMessage));
                         }
+                        InvocationSupport.setTag(HttpTags.HTTP_STATUS, res.statusCode);
                         span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
                     });
 
