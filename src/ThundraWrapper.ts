@@ -475,22 +475,15 @@ class ThundraWrapper {
 
     isErrorResponse(result: any) {
         let isError = false;
-        if (this.isValidResponse(result) && typeof result.body === 'string') {
+        if (Utils.isValidResponse(result) && typeof result.body === 'string') {
             const statusCode = result.statusCode.toString();
             if (statusCode.startsWith('4') || statusCode.startsWith('5')) {
                 isError = true;
             }
-        } else if (this.isValidResponse(result)) {
+        } else if (Utils.isValidResponse(result)) {
             isError = true;
         }
         return isError;
-    }
-
-    isValidResponse(response: any) {
-        if (!response) {
-            return false;
-        }
-        return response.statusCode && typeof response.statusCode === 'number' && response.body;
     }
 
     setupTimeoutHandler(wrapperInstance: any): NodeJS.Timer | undefined {
