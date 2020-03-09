@@ -495,6 +495,13 @@ class Utils {
             return {name: parts[6], qualifier: parts[7]};
         }
     }
+
+    static isValidResponse(response: any) {
+        if (!response) {
+            return false;
+        }
+        return response.statusCode && typeof response.statusCode === 'number' && response.body;
+    }
 }
 
 export default Utils;

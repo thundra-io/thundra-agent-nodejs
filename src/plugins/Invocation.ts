@@ -3,7 +3,7 @@ import InvocationData from './data/invocation/InvocationData';
 import Utils from './utils/Utils';
 import TimeoutError from './error/TimeoutError';
 import InvocationConfig from './config/InvocationConfig';
-import {LAMBDA_FUNCTION_PLATFORM} from '../Constants';
+import {HttpTags, LAMBDA_FUNCTION_PLATFORM} from '../Constants';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 import InvocationSupport from './support/InvocationSupport';
@@ -123,6 +123,11 @@ class Invocation {
         this.invocationData.resources = InvocationTraceSupport.getResources(this.pluginContext.spanId);
         this.invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
         this.invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
+
+        if (Utils.isValidResponse(data.response)) {
+            this.invocationData.setUserTags({[HttpTags.HTTP_STATUS]: data.response.statusCode});
+        }
+
         const reportData = Utils.generateReport(this.invocationData, this.apiKey);
         this.report(reportData);
 
