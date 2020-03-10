@@ -500,7 +500,7 @@ class Utils {
         if (!response) {
             return false;
         }
-        return response.statusCode && typeof response.statusCode === 'number' && response.body;
+        return response.statusCode && typeof response.statusCode === 'number';
     }
 }
 
