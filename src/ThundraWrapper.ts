@@ -31,7 +31,7 @@ import {
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
     DEBUG_BRIDGE_FILE_NAME, BROKER_WS_HTTP_ERROR_PATTERN,
     BROKER_WS_HTTP_ERR_CODE_TO_MSG, BROKER_WS_PROTOCOL,
-    BROKER_WSS_PROTOCOL
+    BROKER_WSS_PROTOCOL,
 } from './Constants';
 import Utils from './plugins/utils/Utils';
 import { readFileSync } from 'fs';
