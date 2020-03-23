@@ -1,7 +1,7 @@
 const net = require('net');
 const WebSocket = require('ws');
 const { DEBUGGER_PORT, BROKER_HOST, BROKER_PORT,
-    LOGS_ENABLED, AUTH_TOKEN, SESSION_NAME, SESSION_TIMEOUT, BROKER_WS_PROTOCOL } = process.env;
+    LOGS_ENABLED, AUTH_TOKEN, SESSION_NAME, SESSION_TIMEOUT, BROKER_PROTOCOL } = process.env;
 
 const CLOSING_CODES: {[key: string]: number} = {
     NORMAL: 1000,
@@ -19,7 +19,7 @@ const log = (...params: any[]) => {
 
 const debuggerSocket = new net.Socket();
 const brokerSocket = new WebSocket(
-    `${BROKER_WS_PROTOCOL}${BROKER_HOST}:${BROKER_PORT}`,
+    `${BROKER_PROTOCOL}${BROKER_HOST}:${BROKER_PORT}`,
     {
         headers: {
             'x-thundra-auth-token': AUTH_TOKEN,

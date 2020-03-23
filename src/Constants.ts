@@ -725,7 +725,8 @@ export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST = 'debug.thundra.
 export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT = 444;
 export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME = 'default';
 export const DEBUG_BRIDGE_FILE_NAME = 'debugBridge.js';
-export const BROKER_WS_PROTOCOL = 'wss://';
+export const BROKER_WS_PROTOCOL = 'ws://';
+export const BROKER_WSS_PROTOCOL = 'wss://';
 export const BROKER_WS_HTTP_ERROR_PATTERN = /:\s*\D*(\d+)/;
 export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: {[key: number]: string} = {
     429: `Reached the concurrent session limit, couldn't start Thundra debugger.`,
