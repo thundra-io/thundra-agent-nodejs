@@ -31,6 +31,7 @@ import {
     DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
     DEBUG_BRIDGE_FILE_NAME, BROKER_WS_HTTP_ERROR_PATTERN,
     BROKER_WS_HTTP_ERR_CODE_TO_MSG, BROKER_WS_PROTOCOL,
+    BROKER_WSS_PROTOCOL,
 } from './Constants';
 import Utils from './plugins/utils/Utils';
 import { readFileSync } from 'fs';
@@ -60,6 +61,7 @@ class ThundraWrapper {
     private monitoringDisabled: boolean;
     private brokerHost: string;
     private sessionName: string;
+    private brokerProtocol: string;
     private authToken: string;
     private sessionTimeout: number;
     private brokerPort: number;
@@ -182,6 +184,12 @@ class ThundraWrapper {
                 Utils.getConfiguration(
                     envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_LOGS_ENABLE,
                     false) === 'true';
+            let brokerProtocol = BROKER_WSS_PROTOCOL;
+
+            if (brokerHost.startsWith(BROKER_WS_PROTOCOL) || brokerHost.startsWith(BROKER_WSS_PROTOCOL)) {
+                // If WebSocket protocol is already included in the broker address, do not add protocol string
+                brokerProtocol = '';
+            }
 
             if (brokerPort === -1) {
                 throw new Error(
@@ -191,6 +199,7 @@ class ThundraWrapper {
 
             this.debuggerPort = debuggerPort;
             this.debuggerMaxWaitTime = debuggerMaxWaitTime;
+            this.brokerProtocol = brokerProtocol;
             this.brokerPort = brokerPort;
             this.brokerHost = brokerHost;
             this.sessionName = sessionName;
@@ -272,7 +281,7 @@ class ThundraWrapper {
                             AUTH_TOKEN: this.authToken,
                             DEBUGGER_PORT: this.debuggerPort,
                             LOGS_ENABLED: this.debuggerLogsEnabled,
-                            BROKER_WS_PROTOCOL,
+                            BROKER_PROTOCOL: this.brokerProtocol,
                         },
                     },
                 );
