@@ -1,0 +1,22 @@
+{
+  "my": {
+    "key": "my-value"
+  },
+  "lambda": {
+    "my": {
+      "key2": "my-value2"
+    }
+  },
+  "thundra": {
+    "agent": {
+      "my": {
+        "key3": "my-value3"
+      },
+      "lambda": {
+        "my": {
+          "key4": "my-value4"
+        }
+      }
+    }
+  }
+}
