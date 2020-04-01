@@ -2,6 +2,7 @@ import ThundraWrapper from './ThundraWrapper';
 import TracePlugin from './plugins/Trace';
 import MetricPlugin from './plugins/Metric';
 import InvocationPlugin from './plugins/Invocation';
+import ConfigProvider from './config/ConfigProvider';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import TraceConfig from './plugins/config/TraceConfig';
 import MetricConfig from './plugins/config/MetricConfig';
@@ -37,6 +38,8 @@ const get = require('lodash.get');
 let tracer: ThundraTracer;
 
 module.exports = (options?: any) => {
+    ConfigProvider.init(options ? options.config : null);
+
     const config = new ThundraConfig(options);
     const plugins: any[] = [];
 
