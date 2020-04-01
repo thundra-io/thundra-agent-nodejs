@@ -1,7 +1,6 @@
 import ThundraWrapper from './ThundraWrapper';
 import TracePlugin from './plugins/Trace';
 import MetricPlugin from './plugins/Metric';
-import AwsXRayPlugin from './plugins/AwsXRay';
 import InvocationPlugin from './plugins/Invocation';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import TraceConfig from './plugins/config/TraceConfig';
@@ -14,10 +13,8 @@ import LogConfig from './plugins/config/LogConfig';
 import PluginContext from './plugins/PluginContext';
 import ThundraTracer from './opentracing/Tracer';
 import { envVariableKeys } from './Constants';
-import TimeAwareSamplerConfig from './plugins/config/TimeAwareSamplerConfig';
 import Logger from './plugins/Logger';
 import Log from './plugins/Log';
-import AwsXRayConfig from './plugins/config/AwsXRayConfig';
 import InvocationSupport from './plugins/support/InvocationSupport';
 import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
 import ApplicationSupport from './plugins/support/ApplicationSupport';
@@ -61,7 +58,6 @@ module.exports = (options?: any) => {
             tracer = tracePlugin.tracer;
             config.metricConfig.tracer = tracer;
             config.logConfig.tracer = tracer;
-            config.xrayConfig.tracer = tracer;
             InvocationTraceSupport.tracer = tracer;
         }
 
@@ -78,11 +74,6 @@ module.exports = (options?: any) => {
             const logInstance = Log.getInstance();
             logInstance.enable();
             plugins.push(logInstance);
-        }
-
-        if (!(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_XRAY) === 'true') && config.xrayConfig.enabled) {
-            const aws = AwsXRayPlugin(config.metricConfig);
-            plugins.push(aws);
         }
 
         const invocationPlugin = InvocationPlugin(config.invocationConfig);
@@ -178,8 +169,6 @@ module.exports.config = {
     LogConfig,
     TraceableConfig,
     IntegrationConfig,
-    TimeAwareSamplerConfig,
-    AwsXRayConfig,
 };
 
 module.exports.samplers = {

@@ -80,12 +80,43 @@ class ConfigProvider {
         ConfigProvider.configs.clear();
     }
 
-    static getConfiguration(key: string, defaultValue?: any): any {
-        return ConfigProvider.configs.get(key);
+    static names(): IterableIterator<string> {
+        return ConfigProvider.configs.keys();
     }
 
-    static getNumericConfiguration(key: string, defaultValue?: number): number {
-        return parseInt(ConfigProvider.getConfiguration(key, defaultValue), 10);
+    static values(): IterableIterator<any> {
+        return ConfigProvider.configs.values();
+    }
+
+    static entries(): IterableIterator<[string, any]> {
+        return ConfigProvider.configs.entries();
+    }
+
+    static get(key: string, defaultValue?: any): any {
+        const value: any = ConfigProvider.configs.get(key);
+        if (value) {
+            return value;
+        } else {
+            return defaultValue;
+        }
+    }
+
+    static getNumber(key: string, defaultValue?: number): number {
+        const value: any = ConfigProvider.get(key);
+        if (value) {
+            return parseInt(value, 10);
+        } else {
+            return defaultValue;
+        }
+    }
+
+    static getBoolean(key: string, defaultValue?: boolean): boolean {
+        const value: any = ConfigProvider.get(key);
+        if (value) {
+            return value === 'true';
+        } else {
+            return defaultValue;
+        }
     }
 
 }

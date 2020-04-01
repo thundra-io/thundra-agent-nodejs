@@ -30,7 +30,6 @@ export const envVariableKeys = {
     THUNDRA_DISABLE_TRACE: 'thundra_agent_lambda_trace_disable',
     THUNDRA_DISABLE_METRIC: 'thundra_agent_lambda_metric_disable',
     THUNDRA_DISABLE_LOG: 'thundra_agent_lambda_log_disable',
-    THUNDRA_DISABLE_XRAY: 'thundra_agent_lambda_xray_disable',
     _X_AMZN_TRACE_ID: '_X_AMZN_TRACE_ID',
 
     THUNDRA_LAMBDA_TRACE_REQUEST_SKIP: 'thundra_agent_lambda_trace_request_skip',
@@ -698,11 +697,6 @@ export const RedisCommandTypes: any = {
     XREAD: 'READ',
     XREADGROUP: 'READ',
     XPENDING: 'READ',
-};
-
-export const AwsXrayConstants: any = {
-    DEFAULT_OPERATION_NAME: 'AWS X-Ray',
-    XRAY_SUBSEGMENTED_TAG_NAME: 'THUNDRA::XRAY_SUBSEGMENTED',
 };
 
 export const SQLQueryOperationTypes: any = {

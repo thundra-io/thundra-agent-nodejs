@@ -1,9 +1,11 @@
 import Integration from './Integration';
 import * as opentracing from 'opentracing';
 import {
-    HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, envVariableKeys,
+    HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, TriggerHeaderTags,
 } from '../../Constants';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 import Utils from '../utils/Utils';
 import * as url from 'url';
 import ThundraLogger from '../../ThundraLogger';
@@ -101,7 +103,10 @@ class HttpIntegration implements Integration {
                         disableActiveStart: true,
                     });
 
-                    if (!(Utils.getConfiguration(envVariableKeys.DISABLE_SPAN_CONTEXT_INJECTION) === 'true')) {
+                    const injectSpanContext = ConfigProvider.getBoolean(
+                        ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE,
+                        false);
+                    if (!injectSpanContext) {
                         const headers = options.headers ? options.headers : {};
                         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
                         options.headers = headers;

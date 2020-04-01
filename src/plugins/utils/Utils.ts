@@ -5,6 +5,8 @@ import {
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys,
     LISTENERS, AGENT_VERSION,
 } from '../../Constants';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
@@ -31,6 +33,7 @@ const customReq = typeof __non_webpack_require__ !== 'undefined'
                         : require;
 
 class Utils {
+
     static generateId(): string {
         return uuidv4();
     }
@@ -42,6 +45,14 @@ class Utils {
             apiKey,
             dataModelVersion: DATA_MODEL_VERSION,
         };
+    }
+
+    static getEnvVar(key: string, defaultValue?: any): any {
+        return process.env[key] ? process.env[key] : defaultValue;
+    }
+
+    static getNumericEnvVar(key: string, defaultValue?: number): number {
+        return parseInt(Utils.getEnvVar(key, defaultValue), 10);
     }
 
     static getConfiguration(key: string, defaultValue?: any): any {
@@ -275,25 +286,33 @@ class Utils {
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
-        const domainName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_DOMAIN_NAME);
-        const className = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_CLASS_NAME);
-        const stage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
-        const applicationId = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_ID);
-        const applicationName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_NAME);
-        const applicationVersion = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_VERSION);
+        const applicationId = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_ID);
+        const applicationName = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_NAME);
+        const applicationClassName = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_CLASS_NAME);
+        const applicationDomainName = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME);
+        const applicationStage = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_STAGE);
+        const applicationVersion = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_VERSION);
 
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = AGENT_VERSION;
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
         monitoringData.applicationInstanceId = pluginContext ? pluginContext.applicationInstanceId : '';
-        monitoringData.applicationId = applicationId ? applicationId : (pluginContext ? pluginContext.applicationId : '');
-        monitoringData.applicationDomainName = domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
-        monitoringData.applicationClassName = className ? className : LAMBDA_APPLICATION_CLASS_NAME;
-        monitoringData.applicationName = applicationName ? applicationName :
-            (InvocationSupport.getFunctionName() ? InvocationSupport.getFunctionName() : '');
-        monitoringData.applicationVersion = applicationVersion ? applicationVersion :
-            (pluginContext ? pluginContext.applicationVersion : '');
-        monitoringData.applicationStage = stage ? stage : '';
+        monitoringData.applicationId = applicationId
+            ? applicationId
+            : (pluginContext ? pluginContext.applicationId : '');
+        monitoringData.applicationName = applicationName
+            ? applicationName
+            : (InvocationSupport.getFunctionName() ? InvocationSupport.getFunctionName() : '');
+        monitoringData.applicationClassName = applicationClassName
+            ? applicationClassName
+            : LAMBDA_APPLICATION_CLASS_NAME;
+        monitoringData.applicationDomainName = applicationDomainName
+            ? applicationDomainName
+            : LAMBDA_APPLICATION_DOMAIN_NAME;
+        monitoringData.applicationStage = applicationStage ? applicationStage : '';
+        monitoringData.applicationVersion = applicationVersion
+            ? applicationVersion
+            : (pluginContext ? pluginContext.applicationVersion : '');
         monitoringData.applicationRuntimeVersion = process.version;
 
         monitoringData.applicationTags = { ...monitoringData.applicationTags, ...ApplicationSupport.applicationTags };
@@ -502,6 +521,7 @@ class Utils {
         }
         return response.statusCode && typeof response.statusCode === 'number';
     }
+
 }
 
 export default Utils;
