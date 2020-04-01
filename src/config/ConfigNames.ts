@@ -131,7 +131,7 @@ class ConfigNames {
         'thundra.agent.trace.integrations.redis.command.mask';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK: string =
-        'thundra.agent.trace.integrations.rdb_statement.mask';
+        'thundra.agent.trace.integrations.rdb.statement.mask';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK: string =
         'thundra.agent.trace.integrations.elasticsearch.body.mask';
