@@ -11,7 +11,9 @@ class TimeAwareSampler implements Sampler<null> {
     latestTime: number;
 
     constructor(timeFreq?: number) {
-        this.timeFreq = koalas(ConfigProvider.get<number>(ConfigNames.THUNDRA_SAMPLER_TIMEAWARE_TIMEFREQ), timeFreq, 300000);
+        this.timeFreq = ConfigProvider.get<number>(
+            ConfigNames.THUNDRA_SAMPLER_TIMEAWARE_TIMEFREQ,
+            koalas(timeFreq, undefined)); // if timeFreq is not valid, it passes undefined to get the default value
         this.latestTime = 0;
     }
 

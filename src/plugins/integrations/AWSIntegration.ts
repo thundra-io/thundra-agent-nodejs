@@ -399,8 +399,7 @@ class AWSIntegration implements Integration {
                         }
 
                         const injectSpanContext = ConfigProvider.get<boolean>(
-                            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE,
-                            false);
+                            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE);
                         const messageAttributes = !injectSpanContext
                             ? AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan)
                             : null;
@@ -484,8 +483,7 @@ class AWSIntegration implements Integration {
 
                         if (operationName === 'publish') {
                             const injectSpanContext = ConfigProvider.get<boolean>(
-                                ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE,
-                                false);
+                                ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE);
                             const messageAttributes = !injectSpanContext
                                 ? AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan)
                                 : null;
@@ -582,8 +580,7 @@ class AWSIntegration implements Integration {
                         });
 
                         const injectSpanContext = ConfigProvider.get<boolean>(
-                            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE,
-                            false);
+                            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE);
                         const custom = !injectSpanContext
                             ? AWSIntegration.injectSpanContextIntoLambdaClientContext(tracer, activeSpan)
                             : null;

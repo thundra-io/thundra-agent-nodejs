@@ -714,10 +714,6 @@ export const StdErrorLogContext = 'STDERR';
 
 export const DefaultMongoCommandSizeLimit = 128 * 1024;
 
-export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT = 1111;
-export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST = 'debug.thundra.io';
-export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT = 444;
-export const DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME = 'default';
 export const DEBUG_BRIDGE_FILE_NAME = 'debugBridge.js';
 export const BROKER_WS_PROTOCOL = 'ws://';
 export const BROKER_WSS_PROTOCOL = 'wss://';

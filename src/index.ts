@@ -65,12 +65,12 @@ module.exports = (options?: any) => {
             InvocationTraceSupport.tracer = tracer;
         }
 
-        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_METRIC_DISABLE, true) && config.metricConfig.enabled) {
+        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_METRIC_DISABLE) && config.metricConfig.enabled) {
             const metricPlugin = MetricPlugin(config.metricConfig);
             plugins.push(metricPlugin);
         }
 
-        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE, true) && config.logConfig.enabled) {
+        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
             if (!Log.getInstance()) {
                 const logPlugin = new Log(config.logConfig);
                 Logger.getLogManager().addListener(logPlugin);
@@ -90,9 +90,9 @@ module.exports = (options?: any) => {
 
     ApplicationSupport.parseApplicationTags();
 
-    const logStreamName = ConfigProvider.get<string>(envVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME); // TODO: envVariableKeys -> ConfigNames
-    const region = ConfigProvider.get<string>(envVariableKeys.AWS_REGION);
-    const functionVersion = ConfigProvider.get<string>(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
+    const logStreamName = Utils.getEnvVar(envVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
+    const region = Utils.getEnvVar(envVariableKeys.AWS_REGION);
+    const functionVersion = Utils.getEnvVar(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
     const applicationInstanceId = logStreamName ? logStreamName.split(']').pop() : Utils.generateId();
 
     const pluginContext: PluginContext = new PluginContext({

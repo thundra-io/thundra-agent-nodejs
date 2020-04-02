@@ -278,33 +278,29 @@ class Utils {
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
-        const applicationId = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_ID);
-        const applicationName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME);
+        const applicationId = ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_APPLICATION_ID,
+            (pluginContext ? pluginContext.applicationId : ''));
+        const applicationName = ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_APPLICATION_NAME,
+            (InvocationSupport.getFunctionName() || ''));
         const applicationClassName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_CLASS_NAME);
         const applicationDomainName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME);
-        const applicationStage = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_STAGE);
-        const applicationVersion = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_VERSION);
+        const applicationStage = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_STAGE, '');
+        const applicationVersion = ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_APPLICATION_VERSION,
+            (pluginContext ? pluginContext.applicationVersion : ''));
 
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = AGENT_VERSION;
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
         monitoringData.applicationInstanceId = pluginContext ? pluginContext.applicationInstanceId : '';
-        monitoringData.applicationId = applicationId
-            ? applicationId
-            : (pluginContext ? pluginContext.applicationId : '');
-        monitoringData.applicationName = applicationName
-            ? applicationName
-            : (InvocationSupport.getFunctionName() ? InvocationSupport.getFunctionName() : '');
-        monitoringData.applicationClassName = applicationClassName
-            ? applicationClassName
-            : LAMBDA_APPLICATION_CLASS_NAME;
-        monitoringData.applicationDomainName = applicationDomainName
-            ? applicationDomainName
-            : LAMBDA_APPLICATION_DOMAIN_NAME;
-        monitoringData.applicationStage = applicationStage ? applicationStage : '';
-        monitoringData.applicationVersion = applicationVersion
-            ? applicationVersion
-            : (pluginContext ? pluginContext.applicationVersion : '');
+        monitoringData.applicationId = applicationId;
+        monitoringData.applicationName = applicationName;
+        monitoringData.applicationClassName = applicationClassName;
+        monitoringData.applicationDomainName = applicationDomainName;
+        monitoringData.applicationStage = applicationStage;
+        monitoringData.applicationVersion = applicationVersion;
         monitoringData.applicationRuntimeVersion = process.version;
 
         monitoringData.applicationTags = { ...monitoringData.applicationTags, ...ApplicationSupport.applicationTags };

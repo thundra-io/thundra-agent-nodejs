@@ -11,7 +11,9 @@ class CountAwareSampler implements Sampler<null> {
     counter: number;
 
     constructor(countFreq?: number) {
-        this.countFreq = koalas(ConfigProvider.get<number>(ConfigNames.THUNDRA_SAMPLER_COUNTAWARE_COUNTFREQ), countFreq, 100);
+        this.countFreq = ConfigProvider.get<number>(
+            ConfigNames.THUNDRA_SAMPLER_COUNTAWARE_COUNTFREQ,
+            koalas(countFreq, undefined)); // if countFreq is not valid, it passes undefined to get the default value
         this.counter = 0;
     }
 

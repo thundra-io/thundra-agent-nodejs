@@ -120,12 +120,8 @@ class TraceConfig extends BasePluginConfig {
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ON_LOAD,
             options.instrumentAWSOnLoad);
 
-        this.httpPathDepth = ConfigProvider.get<number>(
-            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH,
-            1);
-        this.esPathDepth = ConfigProvider.get<number>(
-            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_PATH_DEPTH,
-            1);
+        this.httpPathDepth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
+        this.esPathDepth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_PATH_DEPTH);
 
         this.runSamplerOnEachSpan = get(options, 'runCustomSamplerOnEachSpan', false);
         this.sampler = options.sampler;

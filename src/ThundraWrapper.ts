@@ -24,17 +24,14 @@ import PluginContext from './plugins/PluginContext';
 import ThundraLogger from './ThundraLogger';
 import InvocationSupport from './plugins/support/InvocationSupport';
 import {
-    envVariableKeys,
-    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT,
-    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST,
-    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT,
-    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME,
-    DEBUG_BRIDGE_FILE_NAME, BROKER_WS_HTTP_ERROR_PATTERN,
-    BROKER_WS_HTTP_ERR_CODE_TO_MSG, BROKER_WS_PROTOCOL,
+    BROKER_WS_HTTP_ERR_CODE_TO_MSG,
+    BROKER_WS_HTTP_ERROR_PATTERN,
+    BROKER_WS_PROTOCOL,
     BROKER_WSS_PROTOCOL,
+    DEBUG_BRIDGE_FILE_NAME,
 } from './Constants';
 import Utils from './plugins/utils/Utils';
-import { readFileSync } from 'fs';
+import {readFileSync} from 'fs';
 import ConfigProvider from './config/ConfigProvider';
 import ConfigNames from './config/ConfigNames';
 
@@ -159,33 +156,21 @@ class ThundraWrapper {
             this.fork = require('child_process').fork;
 
             const debuggerPort =
-                ConfigProvider.get<number>(
-                    ConfigNames.THUNDRA_LAMBDA_DEBUGGER_PORT,
-                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT);
+                ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_PORT);
             const brokerHost =
-                ConfigProvider.get<string>(
-                    ConfigNames.THUNDRA_LAMBDA_DEBUGGER_BROKER_HOST,
-                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST);
+                ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_BROKER_HOST);
             const brokerPort =
-                ConfigProvider.get<number>(
-                    ConfigNames.THUNDRA_LAMBDA_DEBUGGER_BROKER_PORT,
-                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT);
+                ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_BROKER_PORT);
             const authToken =
                 ConfigProvider.get<string>(
                     ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN,
                     '');
             const sessionName =
-                ConfigProvider.get<string>(
-                    ConfigNames.THUNDRA_LAMBDA_DEBUGGER_SESSION_NAME,
-                    DEFAULT_THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME);
+                ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_SESSION_NAME);
             const debuggerMaxWaitTime =
-                ConfigProvider.get<number>(
-                    ConfigNames.THUNDRA_LAMBDA_DEBUGGER_WAIT_MAX,
-                    60 * 1000);
+                ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_WAIT_MAX);
             const debuggerLogsEnabled =
-                ConfigProvider.get<boolean>(
-                    ConfigNames.THUNDRA_LAMBDA_DEBUGGER_LOGS_ENABLE,
-                    false);
+                ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_LOGS_ENABLE);
             let brokerProtocol = BROKER_WSS_PROTOCOL;
 
             if (brokerHost.startsWith(BROKER_WS_PROTOCOL) || brokerHost.startsWith(BROKER_WSS_PROTOCOL)) {

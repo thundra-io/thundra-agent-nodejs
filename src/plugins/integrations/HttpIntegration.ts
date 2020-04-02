@@ -104,8 +104,7 @@ class HttpIntegration implements Integration {
                     });
 
                     const injectSpanContext = ConfigProvider.get<boolean>(
-                        ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE,
-                        false);
+                        ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE);
                     if (!injectSpanContext) {
                         const headers = options.headers ? options.headers : {};
                         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
