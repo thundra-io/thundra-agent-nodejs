@@ -1,7 +1,7 @@
 class ConfigNames {
 
     public static readonly THUNDRA_APIKEY: string =
-        'thundra.apiKey';
+        'thundra.apikey';
 
     public static readonly THUNDRA_DEBUG_ENABLE: string =
         'thundra.agent.debug.enable';
@@ -10,7 +10,8 @@ class ConfigNames {
 
     public static readonly THUNDRA_DISABLE: string =
         'thundra.agent.disable';
-
+    public static readonly THUNDRA_TRACE_DISABLE: string =
+        'thundra.agent.trace.disable';
     public static readonly THUNDRA_METRIC_DISABLE: string =
         'thundra.agent.metric.disable';
     public static readonly THUNDRA_LOG_DISABLE: string =
@@ -25,9 +26,9 @@ class ConfigNames {
     public static readonly THUNDRA_APPLICATION_STAGE: string =
         'thundra.agent.application.stage';
     public static readonly THUNDRA_APPLICATION_DOMAIN_NAME: string =
-        'thundra.agent.application.domainName';
+        'thundra.agent.application.domainname';
     public static readonly THUNDRA_APPLICATION_CLASS_NAME: string =
-        'thundra.agent.application.className';
+        'thundra.agent.application.classname';
     public static readonly THUNDRA_APPLICATION_VERSION: string =
         'thundra.agent.application.version';
     public static readonly THUNDRA_APPLICATION_TAG_PREFIX: string =
@@ -36,16 +37,16 @@ class ConfigNames {
     /////////////////////////////////////////////////////////////////////////////
 
     public static readonly THUNDRA_REPORT_REST_BASEURL: string =
-        'thundra.agent.report.rest.baseUrl';
+        'thundra.agent.report.rest.baseurl';
     public static readonly THUNDRA_REPORT_REST_TRUSTALLCERTIFICATES: string =
-        'thundra.agent.report.rest.trustAllCertificates'
-    public static readonly THUNDRA_REPORT_CLOUDWATCH_ENABLE:
+        'thundra.agent.report.rest.trustallcertificates'
+    public static readonly THUNDRA_REPORT_CLOUDWATCH_ENABLE: string =
         'thundra.agent.report.cloudwatch.enable';
 
     /////////////////////////////////////////////////////////////////////////////
 
     public static readonly THUNDRA_LAMBDA_WARMUP_WARMUPAWARE: string =
-        'thundra.agent.lambda.warmup.warmupAware';
+        'thundra.agent.lambda.warmup.warmupaware';
 
     public static readonly THUNDRA_LAMBDA_TIMEOUT_MARGIN: string =
         'thundra.agent.lambda.timeout.margin';
@@ -69,21 +70,21 @@ class ConfigNames {
     public static readonly THUNDRA_TRACE_INSTRUMENT_DISABLE: string =
         'thundra.agent.trace.instrument.disable';
     public static readonly THUNDRA_TRACE_INSTRUMENT_CONFIG: string =
-        'thundra.agent.trace.instrument.traceableConfig';
+        'thundra.agent.trace.instrument.traceableconfig';
     public static readonly THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX: string =
         'thundra.agent.trace.instrument.file.prefix';
 
     /////////////////////////////////////////////////////////////////////////////
 
     public static readonly THUNDRA_TRACE_SPAN_LISTENERCONFIG: string =
-        'thundra.agent.trace.span.listenerConfig';
+        'thundra.agent.trace.span.listenerconfig';
 
     /////////////////////////////////////////////////////////////////////////////
 
     public static readonly THUNDRA_SAMPLER_TIMEAWARE_TIMEFREQ: string =
-        'thundra.agent.sampler.timeAware.timeFreq';
+        'thundra.agent.sampler.timeaware.timefreq';
     public static readonly THUNDRA_SAMPLER_COUNTAWARE_COUNTFREQ: string =
-        'thundra.agent.sampler.countAware.countFreq';
+        'thundra.agent.sampler.countaware.countfreq';
 
     /////////////////////////////////////////////////////////////////////////////
 
@@ -91,27 +92,27 @@ class ConfigNames {
         'thundra.agent.trace.integrations.disable';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ON_LOAD: string =
-        'thundra.agent.trace.integrations.aws.instrument.onLoad';
+        'thundra.agent.trace.integrations.aws.instrument.onload';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_MESSAGE_MASK: string =
         'thundra.agent.trace.integrations.aws.sns.message.mask';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE: string =
-        'thundra.agent.trace.integrations.aws.sns.traceInjection.disable';
+        'thundra.agent.trace.integrations.aws.sns.traceinjection.disable';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_MESSAGE_MASK: string =
         'thundra.agent.trace.integrations.aws.sqs.message.mask';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE: string =
-        'thundra.agent.trace.integrations.aws.sqs.traceInjection.disable';
+        'thundra.agent.trace.integrations.aws.sqs.traceinjection.disable';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_PAYLOAD_MASK: string =
         'thundra.agent.trace.integrations.aws.lambda.payload.mask';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE: string =
-        'thundra.agent.trace.integrations.aws.lambda.traceInjection.disable';
+        'thundra.agent.trace.integrations.aws.lambda.traceinjection.disable';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK: string =
         'thundra.agent.trace.integrations.aws.dynamodb.statement.mask';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_TRACEINJECTION_ENABLE: string =
-        'thundra.agent.trace.integrations.aws.dynamodb.traceInjection.enable';
+        'thundra.agent.trace.integrations.aws.dynamodb.traceinjection.enable';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_ATHENA_STATEMENT_MASK: string =
         'thundra.agent.trace.integrations.aws.athena.statement.mask';
@@ -121,11 +122,11 @@ class ConfigNames {
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH: string =
         'thundra.agent.trace.integrations.http.url.depth';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE: string =
-        'thundra.agent.trace.integrations.http.traceInjection.disable';
+        'thundra.agent.trace.integrations.http.traceinjection.disable';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_ON_4XX_DISABLE: string =
-        'thundra.agent.trace.integrations.http.error.on4XX.disable';
+        'thundra.agent.trace.integrations.http.error.on4xx.disable';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_ON_5XX_DISABLE: string =
-        'thundra.agent.trace.integrations.http.error.on5XX.disable';
+        'thundra.agent.trace.integrations.http.error.on5xx.disable';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK: string =
         'thundra.agent.trace.integrations.redis.command.mask';
@@ -146,7 +147,7 @@ class ConfigNames {
     public static readonly THUNDRA_LOG_CONSOLE_DISABLE: string =
         'thundra.agent.log.console.disable';
     public static readonly THUNDRA_LOG_LOGLEVEL: string =
-        'thundra.agent.log.logLevel';
+        'thundra.agent.log.loglevel';
 
     /////////////////////////////////////////////////////////////////////////////
 

@@ -30,6 +30,8 @@ import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';
 import Integration from './integrations/Integration';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
 
 const get = require('lodash.get');
 
@@ -68,7 +70,7 @@ export class Trace {
 
     initIntegrations(): void {
         if (!(this.config.disableInstrumentation) ||
-            !(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true')) {
+            !ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE)) {
             this.integrationsMap = new Map<string, Integration>();
 
             for (const key of Object.keys(INTEGRATIONS)) {
@@ -112,10 +114,7 @@ export class Trace {
 
         if (propagatedSpanContext) {
             this.pluginContext.traceId = propagatedSpanContext.traceId;
-            this.pluginContext.transactionId =
-                Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID) === 'true'
-                    ? propagatedSpanContext.transactionId
-                    : Utils.generateId();
+            this.pluginContext.transactionId = Utils.generateId();
             this.tracer.transactionId = this.pluginContext.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {

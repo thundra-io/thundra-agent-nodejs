@@ -48,10 +48,10 @@ class TraceConfig extends BasePluginConfig {
     constructor(options: any) {
         options = options ? options : {};
         super(get(options, 'enabled', true));
-        this.disableRequest = ConfigProvider.getBoolean(
+        this.disableRequest = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP,
             options.disableRequest);
-        this.disableResponse = ConfigProvider.getBoolean(
+        this.disableResponse = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP,
             options.disableResponse);
         this.maskRequest = options.maskRequest;
@@ -60,70 +60,70 @@ class TraceConfig extends BasePluginConfig {
         this.tracerConfig = get(options, 'tracerConfig', {});
         this.traceableConfigs = [];
 
-        this.disableInstrumentation = ConfigProvider.getBoolean(
+        this.disableInstrumentation = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE,
             options.disableInstrumentation);
 
-        this.maskRedisStatement = ConfigProvider.getBoolean(
+        this.maskRedisStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK,
             options.maskRedisStatement);
-        this.maskRdbStatement = ConfigProvider.getBoolean(
+        this.maskRdbStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK,
             options.maskRdbStatement);
-        this.maskDynamoDBStatement = ConfigProvider.getBoolean(
+        this.maskDynamoDBStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK,
             options.maskDynamoDBStatement);
-        this.maskSQSMessage = ConfigProvider.getBoolean(
+        this.maskSQSMessage = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_MESSAGE_MASK,
             options.maskSQSMessage);
-        this.maskSNSMessage = ConfigProvider.getBoolean(
+        this.maskSNSMessage = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_MESSAGE_MASK,
             options.maskSNSMessage);
-        this.maskLambdaPayload = ConfigProvider.getBoolean(
+        this.maskLambdaPayload = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_PAYLOAD_MASK,
             options.maskLambdaPayload);
-        this.maskAthenaStatement = ConfigProvider.getBoolean(
+        this.maskAthenaStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_ATHENA_STATEMENT_MASK,
             options.maskAthenaStatement);
-        this.maskElasticSearchStatement = ConfigProvider.getBoolean(
+        this.maskElasticSearchStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK,
             options.maskElasticSearchStatement);
-        this.maskMongoDBCommand = ConfigProvider.getBoolean(
+        this.maskMongoDBCommand = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_MONGODB_COMMAND_MASK,
             options.maskMongoDBCommand);
-        this.maskHttpBody = ConfigProvider.getBoolean(
+        this.maskHttpBody = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_MASK,
             options.maskHttpBody);
 
-        this.disableHttp4xxError = ConfigProvider.getBoolean(
+        this.disableHttp4xxError = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_ON_4XX_DISABLE,
             options.disableHttp4xxError);
-        this.disableHttp5xxError = ConfigProvider.getBoolean(
+        this.disableHttp5xxError = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_ON_5XX_DISABLE,
             options.disableHttp5xxError);
 
-        this.dynamoDBTraceInjectionEnabled = ConfigProvider.getBoolean(
+        this.dynamoDBTraceInjectionEnabled = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_TRACEINJECTION_ENABLE,
             options.dynamoDBTraceInjectionEnabled);
 
-        this.enableCloudWatchRequest = ConfigProvider.getBoolean(
+        this.enableCloudWatchRequest = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE,
             options.enableCloudWatchRequest);
-        this.enableFirehoseRequest = ConfigProvider.getBoolean(
+        this.enableFirehoseRequest = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE,
             options.enableFirehoseRequest);
-        this.enableKinesisRequest = ConfigProvider.getBoolean(
+        this.enableKinesisRequest = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE,
             options.enableKinesisRequest);
 
-        this.instrumentAWSOnLoad = ConfigProvider.getBoolean(
+        this.instrumentAWSOnLoad = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ON_LOAD,
             options.instrumentAWSOnLoad);
 
-        this.httpPathDepth = ConfigProvider.getNumber(
+        this.httpPathDepth = ConfigProvider.get<number>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH,
             1);
-        this.esPathDepth = ConfigProvider.getNumber(
+        this.esPathDepth = ConfigProvider.get<number>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_PATH_DEPTH,
             1);
 
@@ -133,7 +133,7 @@ class TraceConfig extends BasePluginConfig {
         for (const configName of ConfigProvider.names()) {
             if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_CONFIG)) {
                 try {
-                    this.traceableConfigs.push(TraceableConfig.fromString(ConfigProvider.get(configName)));
+                    this.traceableConfigs.push(TraceableConfig.fromString(ConfigProvider.get<string>(configName)));
                 } catch (ex) {
                     ThundraLogger.getInstance().error(`Cannot parse trace def ${configName}`);
                 }
@@ -148,7 +148,7 @@ class TraceConfig extends BasePluginConfig {
             }
         }
 
-        const disabledIntegrations = ConfigProvider.get(ConfigNames.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE);
+        const disabledIntegrations = ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE);
         if (disabledIntegrations) {
             this.disabledIntegrations.push(... this.parseIntegrationsConfig(disabledIntegrations));
         }

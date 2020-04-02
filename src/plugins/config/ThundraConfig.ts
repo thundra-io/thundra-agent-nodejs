@@ -25,20 +25,20 @@ class ThundraConfig {
     constructor(options: any) {
         options = options ? options : {};
 
-        this.apiKey = ConfigProvider.get(
-                ConfigNames.THUNDRA_APIKEY,
-                options.apiKey);
-        this.disableThundra = ConfigProvider.getBoolean(
-                ConfigNames.THUNDRA_DISABLE,
-                options.disableThundra);
+        this.apiKey = ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_APIKEY,
+            options.apiKey);
+        this.disableThundra = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_DISABLE,
+            options.disableThundra);
         this.timeoutMargin = koalas(
-                ConfigProvider.getNumber(ConfigNames.THUNDRA_LAMBDA_TIMEOUT_MARGIN),
-                options.timeoutMargin,
-                TIMEOUT_MARGIN);
-        this.trustAllCert = ConfigProvider.getBoolean(
-                ConfigNames.THUNDRA_REPORT_REST_TRUSTALLCERTIFICATES,
-                options.trustAllCert);
-        this.warmupAware = ConfigProvider.getBoolean(
+            ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_TIMEOUT_MARGIN),
+            options.timeoutMargin,
+            TIMEOUT_MARGIN);
+        this.trustAllCert = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_REPORT_REST_TRUSTALLCERTIFICATES,
+            options.trustAllCert);
+        this.warmupAware = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE,
             options.warmupAware);
 

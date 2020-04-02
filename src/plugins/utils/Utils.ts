@@ -55,14 +55,6 @@ class Utils {
         return parseInt(Utils.getEnvVar(key, defaultValue), 10);
     }
 
-    static getConfiguration(key: string, defaultValue?: any): any {
-        return process.env[key] ? process.env[key] : defaultValue;
-    }
-
-    static getNumericConfiguration(key: string, defaultValue?: number): number {
-        return parseInt(Utils.getConfiguration(key, defaultValue), 10);
-    }
-
     static getCpuUsage() {
         const cpus: os.CpuInfo[] = os.cpus();
         const procCpuUsage: NodeJS.CpuUsage = process.cpuUsage();
@@ -123,8 +115,8 @@ class Utils {
             error.errorMessage = JSON.stringify(error.errorMessage);
         }
 
-        error.stack = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_ERROR_STACK_TRACE) ?  '' :  error.stack;
+        error.stack = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK) ?  '' :  error.stack;
 
         return error;
     }
@@ -286,12 +278,12 @@ class Utils {
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
-        const applicationId = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_ID);
-        const applicationName = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_NAME);
-        const applicationClassName = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_CLASS_NAME);
-        const applicationDomainName = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME);
-        const applicationStage = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_STAGE);
-        const applicationVersion = ConfigProvider.get(ConfigNames.THUNDRA_APPLICATION_VERSION);
+        const applicationId = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_ID);
+        const applicationName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME);
+        const applicationClassName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_CLASS_NAME);
+        const applicationDomainName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME);
+        const applicationStage = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_STAGE);
+        const applicationVersion = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_VERSION);
 
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = AGENT_VERSION;
@@ -372,10 +364,10 @@ class Utils {
 
     static registerSpanListenersFromConfigurations(tracer: ThundraTracer): any {
         const listeners: any[] = [];
-        for (const key of Object.keys(process.env)) {
-            if (key.startsWith(envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF)) {
+        for (const key of ConfigProvider.names()) {
+            if (key.startsWith(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)) {
                 try {
-                    let value = process.env[key];
+                    let value = ConfigProvider.get<string>(key);
 
                     if (!value.startsWith('{')) {
                         // Span listener config is given encoded
@@ -445,11 +437,11 @@ class Utils {
 
     static getApplicationId(originalContext: any, pluginContext: any) {
         const arn = originalContext.invokedFunctionArn;
-        const region = Utils.getConfiguration(envVariableKeys.AWS_REGION)
+        const region = Utils.getEnvVar(envVariableKeys.AWS_REGION)
             || 'local';
         const accountNo = Utils.getAccountNo(arn, pluginContext);
         const functionName = originalContext.functionName
-            || Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
+            || Utils.getEnvVar(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
             || 'lambda-app';
 
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
@@ -464,17 +456,17 @@ class Utils {
     }
 
     static getIfSAMLocalDebugging() {
-        return Utils.getConfiguration(envVariableKeys.AWS_SAM_LOCAL) === 'true';
+        return Utils.getEnvVar(envVariableKeys.AWS_SAM_LOCAL) === 'true';
     }
 
     static getIfSLSLocalDebugging() {
-        return Utils.getConfiguration(envVariableKeys.SLS_LOCAL) === 'true';
+        return Utils.getEnvVar(envVariableKeys.SLS_LOCAL) === 'true';
     }
 
     static getXRayTraceInfo() {
         let traceID: string = '';
         let segmentID: string = '';
-        const xrayTraceHeader: string = Utils.getConfiguration(envVariableKeys._X_AMZN_TRACE_ID);
+        const xrayTraceHeader: string = Utils.getEnvVar(envVariableKeys._X_AMZN_TRACE_ID);
         if (xrayTraceHeader) {
             for (const traceHeaderPart of xrayTraceHeader.split(';')) {
                 const traceInfo = traceHeaderPart.split('=');

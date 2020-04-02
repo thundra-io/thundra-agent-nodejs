@@ -103,7 +103,7 @@ class HttpIntegration implements Integration {
                         disableActiveStart: true,
                     });
 
-                    const injectSpanContext = ConfigProvider.getBoolean(
+                    const injectSpanContext = ConfigProvider.get<boolean>(
                         ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE,
                         false);
                     if (!injectSpanContext) {

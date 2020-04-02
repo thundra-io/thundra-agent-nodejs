@@ -8,6 +8,8 @@ import ThundraLogger from './ThundraLogger';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import BaseMonitoringData from './plugins/data/base/BaseMonitoringData';
 import MonitoringDataType from './plugins/data/base/MonitoringDataType';
+import ConfigNames from './config/ConfigNames';
+import ConfigProvider from './config/ConfigProvider';
 
 const httpAgent = new http.Agent({
     keepAlive: true,
@@ -125,8 +127,7 @@ class Reporter {
             ThundraLogger.getInstance().error(`Cannot create batch request will send no report. ${err}`);
         }
 
-        const isAsync = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE) === 'true';
+        const isAsync = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE);
 
         const reportPromises: any[] = [];
         const currentMinute = Math.floor(Date.now() / 1000);

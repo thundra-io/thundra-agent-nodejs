@@ -398,7 +398,7 @@ class AWSIntegration implements Integration {
                             activeSpan.setTag(AwsSQSTags.QUEUE_NAME, queueName);
                         }
 
-                        const injectSpanContext = ConfigProvider.getBoolean(
+                        const injectSpanContext = ConfigProvider.get<boolean>(
                             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE,
                             false);
                         const messageAttributes = !injectSpanContext
@@ -483,7 +483,7 @@ class AWSIntegration implements Integration {
                         }
 
                         if (operationName === 'publish') {
-                            const injectSpanContext = ConfigProvider.getBoolean(
+                            const injectSpanContext = ConfigProvider.get<boolean>(
                                 ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE,
                                 false);
                             const messageAttributes = !injectSpanContext
@@ -581,7 +581,7 @@ class AWSIntegration implements Integration {
                             },
                         });
 
-                        const injectSpanContext = ConfigProvider.getBoolean(
+                        const injectSpanContext = ConfigProvider.get<boolean>(
                             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE,
                             false);
                         const custom = !injectSpanContext

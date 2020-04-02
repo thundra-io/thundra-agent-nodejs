@@ -146,17 +146,3 @@ describe('parseError', () => {
         });
     });
 });
-
-describe('getConfiguration', () => {
-    process.env['props1'] = 'envValue';
-    const result1 = Utils.getConfiguration('props1', 'defaultValue');
-    const result2 = Utils.getConfiguration('props2', 'defaultValue');
-
-    it('Should not override with default value when environment varible is set', () => {
-        expect(result1).toBe('envValue');
-    });
-
-    it('Should override with default value when environment varible is not set', () => {
-        expect(result2).toBe('defaultValue');
-    });
-});

@@ -1,6 +1,8 @@
+import ConfigMetadata from './ConfigMetadata';
+
 class ConfigProvider {
 
-    private static configs: Map<string, any> = new Map<string, any>();
+    private static configs: {[key: string]: any} = {};
 
     private static generateEnvVarNames(envVarName: string): Set<string> {
         envVarName = envVarName.replace('.', '_');
@@ -12,7 +14,7 @@ class ConfigProvider {
     }
 
     private static getAnyFromEnvVar(envVarNames: Set<string>): string {
-        for (let envVarName of envVarNames) {
+        for (const envVarName of envVarNames) {
             if (process.env[envVarName]) {
                 return process.env[envVarName];
             }
@@ -23,16 +25,30 @@ class ConfigProvider {
     private static traverseConfigObject(obj: any, path: string): void {
         Object.keys(obj).forEach((propName: string) => {
             const propVal: any = obj[propName];
-            var propPath: string = path + '.' + propName;
+            let propPath: string = path + '.' + propName;
             if (propVal instanceof Object) {
                 ConfigProvider.traverseConfigObject(propVal, propPath);
             } else {
                 if (!propPath.startsWith('thundra.agent.')) {
                     propPath = 'thundra.agent.' + propPath;
                 }
-                ConfigProvider.configs.set(propPath, propVal);
+                propPath = propPath.toLowerCase();
+                const propType = ConfigMetadata[propPath] ? ConfigMetadata[propPath].type : 'any';
+                ConfigProvider.configs[propPath] = this.parse(propVal, propType);
             }
-        })
+        });
+    }
+
+    private static parse(value: any, type: string): any {
+        if (value == undefined) {
+            return value;
+        }
+        switch (type) {
+            case 'string': return String(value);
+            case 'number': return Number(value);
+            case 'boolean': return Boolean(value);
+            default: return value;
+        }
     }
 
     static init(options?: any, configFilePath?: string): void {
@@ -43,7 +59,7 @@ class ConfigProvider {
                 Object.keys(configJson).forEach((configName: string) => {
                     const configVal: any = configJson[configName];
                     ConfigProvider.traverseConfigObject(configVal, configName);
-                })
+                });
             }
         } catch (e) {
         }
@@ -53,69 +69,52 @@ class ConfigProvider {
             Object.keys(options).forEach((optionName: string) => {
                 const optionVal: any = options[optionName];
                 ConfigProvider.traverseConfigObject(optionVal, optionName);
-            })
+            });
         }
 
         // 3. Fill configs from environment variables
         Object.keys(process.env).forEach((envVarName: string) => {
             if (envVarName.toUpperCase().startsWith('THUNDRA_AGENT_')) {
                 const envVarValue: string = process.env[envVarName];
-                envVarName = envVarName.toLowerCase().replace(/_/g, ".");
-                ConfigProvider.configs.set(envVarName, envVarValue);
+                envVarName = envVarName.toLowerCase().replace(/_/g, '.');
+                const envVarType = ConfigMetadata[envVarName] ? ConfigMetadata[envVarName].type : 'any';
+                ConfigProvider.configs[envVarName] = this.parse(envVarValue, envVarType);
             }
         });
 
         // 4. Add non-lambda aliases of configs
-        for (var entry of ConfigProvider.configs.entries()) {
-            const configName: string = entry[0];
-            const configValue: any = entry[1];
-            if (configName.startsWith("thundra.agent.lambda.")) {
-                const aliasConfigName: string = "thundra.agent." + configName.substring("thundra.agent.lambda.".length);
-                ConfigProvider.configs.set(aliasConfigName, configValue);
+        for (const key of Object.keys(ConfigProvider.configs)) {
+            const configName: string = key;
+            const configValue: any = ConfigProvider.configs[key];
+            if (configName.startsWith('thundra.agent.lambda.')) {
+                const aliasConfigName: string = 'thundra.agent.' + configName.substring('thundra.agent.lambda.'.length);
+                ConfigProvider.configs[aliasConfigName] = configValue;
             }
         }
     }
 
     static clear(): void {
-        ConfigProvider.configs.clear();
+        Object.keys(ConfigProvider.configs).forEach((key) => delete ConfigProvider.configs[key]);
     }
 
-    static names(): IterableIterator<string> {
-        return ConfigProvider.configs.keys();
+    static names(): string[] {
+        return Object.keys(ConfigProvider.configs);
     }
 
-    static values(): IterableIterator<any> {
-        return ConfigProvider.configs.values();
+    static values(): any[] {
+        return Object.keys(ConfigProvider.configs).map((key) => ConfigProvider.configs[key]);
     }
 
-    static entries(): IterableIterator<[string, any]> {
-        return ConfigProvider.configs.entries();
-    }
-
-    static get(key: string, defaultValue?: any): any {
-        const value: any = ConfigProvider.configs.get(key);
-        if (value) {
+    static get<T>(key: string, defaultValue?: T): T {
+        const value: T = ConfigProvider.configs[key];
+        if (value != undefined) {
             return value;
-        } else {
+        } else if (defaultValue !== undefined) {
             return defaultValue;
-        }
-    }
-
-    static getNumber(key: string, defaultValue?: number): number {
-        const value: any = ConfigProvider.get(key);
-        if (value) {
-            return parseInt(value, 10);
+        } else if (ConfigMetadata[key]) {
+            return ConfigMetadata[key].defaultValue as T;
         } else {
-            return defaultValue;
-        }
-    }
-
-    static getBoolean(key: string, defaultValue?: boolean): boolean {
-        const value: any = ConfigProvider.get(key);
-        if (value) {
-            return value === 'true';
-        } else {
-            return defaultValue;
+            return undefined;
         }
     }
 

@@ -8,6 +8,8 @@ import { ConsoleShimmedMethods, logLevels, StdOutLogContext, envVariableKeys, St
 import * as util from 'util';
 import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
 
 class Log {
     static instance: Log;
@@ -39,7 +41,7 @@ class Log {
         Log.instance = this;
         this.config = options;
 
-        if (Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE) !== 'true') {
+        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_CONSOLE_DISABLE)) {
             this.shimConsole();
         }
     }
@@ -84,7 +86,7 @@ class Log {
                     continue;
                 }
 
-                const levelConfig = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_LOGLEVEL);
+                const levelConfig = ConfigProvider.get<string>(ConfigNames.THUNDRA_LOG_LOGLEVEL);
                 const logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
 
                 if (logLevels[log.logLevel] >= logLevelFilter) {
