@@ -2,7 +2,7 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import { URL, MONITORING_DATA_PATH, envVariableKeys, COMPOSITE_MONITORING_DATA_PATH } from './Constants';
+import { URL, COMPOSITE_MONITORING_DATA_PATH } from './Constants';
 import Utils from './plugins/utils/Utils';
 import ThundraLogger from './ThundraLogger';
 import ThundraConfig from './plugins/config/ThundraConfig';
@@ -38,8 +38,7 @@ class Reporter {
     }
 
     createRequestOptions(u?: url.URL): http.RequestOptions {
-        const path = this.config.enableCompositeData ?
-            COMPOSITE_MONITORING_DATA_PATH : MONITORING_DATA_PATH;
+        const path = COMPOSITE_MONITORING_DATA_PATH;
 
         return {
             method: 'POST',
@@ -98,31 +97,10 @@ class Reporter {
         return batchedReports;
     }
 
-    getBatchedReports(): any[] {
-        const batchedReports: any[] = [];
-        const reports = this.reports.slice(0);
-        const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
-
-        for (let i = 0; i < batchCount; i++) {
-            const batch: any[] = [];
-            for (let j = 1; j < this.MAX_MONITOR_DATA_BATCH_SIZE; j++) {
-                const report = reports.shift();
-                if (!report) {
-                    break;
-                }
-                batch.push(report);
-            }
-            batchedReports.push(batch);
-        }
-
-        return batchedReports;
-    }
-
     async sendReports(): Promise<void> {
         let batchedReports = [];
-        const isComposite = this.config.enableCompositeData;
         try {
-            batchedReports = isComposite ? this.getCompositeBatchedReports() : this.getBatchedReports();
+            batchedReports = this.getCompositeBatchedReports();
         } catch (err) {
             ThundraLogger.getInstance().error(`Cannot create batch request will send no report. ${err}`);
         }
@@ -133,7 +111,7 @@ class Reporter {
         const currentMinute = Math.floor(Date.now() / 1000);
         batchedReports.forEach((batch: any) => {
             if (isAsync) {
-                reportPromises.push(this.writeBatchToCW(batch, isComposite));
+                reportPromises.push(this.writeBatchToCW(batch));
             } else {
                 if (currentMinute > this.latestReportingLimitedMinute) {
                     reportPromises.push(this.request(batch));
@@ -197,18 +175,11 @@ class Reporter {
         });
     }
 
-    writeBatchToCW(batch: any[], isComposite: boolean): Promise<any> {
+    writeBatchToCW(batch: any[]): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                if (isComposite) {
-                    const jsonStringReport = '\n' + JSON.stringify(batch).replace(/\r?\n|\r/g, '') + '\n';
-                    process.stdout.write(jsonStringReport);
-                } else {
-                    for (const report of batch) {
-                        const jsonStringReport = '\n' + JSON.stringify(report).replace(/\r?\n|\r/g, '') + '\n';
-                        process.stdout.write(jsonStringReport);
-                    }
-                }
+                const jsonStringReport = '\n' + JSON.stringify(batch).replace(/\r?\n|\r/g, '') + '\n';
+                process.stdout.write(jsonStringReport);
                 return resolve();
             } catch (error) {
                 ThundraLogger.getInstance().error('Cannot write report data to CW. ' + error);

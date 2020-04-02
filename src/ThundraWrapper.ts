@@ -457,19 +457,7 @@ class ThundraWrapper {
                     };
                 }
 
-                if (this.config.sampleTimedOutInvocations) {
-                    if (error instanceof TimeoutError) {
-                        await this.executeAfteInvocationAndReport(afterInvocationData);
-                    } else {
-                        this.plugins.map((plugin: any) => {
-                            if (plugin.destroy && typeof (plugin.destroy) === 'function') {
-                                plugin.destroy();
-                            }
-                        });
-                    }
-                } else {
-                    await this.executeAfteInvocationAndReport(afterInvocationData);
-                }
+                await this.executeAfteInvocationAndReport(afterInvocationData);
 
                 if (this.timeout) {
                     clearTimeout(this.timeout);
