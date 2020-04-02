@@ -45,7 +45,9 @@ class Utils {
     }
 
     static getConfiguration(key: string, defaultValue?: any): any {
-        return process.env[key] ? process.env[key] : defaultValue;
+        return process.env[key]
+            || process.env[key.toUpperCase()]
+            || defaultValue;
     }
 
     static getNumericConfiguration(key: string, defaultValue?: number): number {
