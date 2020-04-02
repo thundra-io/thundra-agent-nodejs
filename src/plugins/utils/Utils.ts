@@ -445,8 +445,7 @@ class Utils {
         return ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME,
             originalContext.functionName
             || Utils.getEnvVar(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
-            || 'lambda-app'
-        );
+            || 'lambda-app');
     }
 
     static getARNPart(arn: string, index: number) {

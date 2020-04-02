@@ -39,7 +39,7 @@ class ConfigNames {
     public static readonly THUNDRA_REPORT_REST_BASEURL: string =
         'thundra.agent.report.rest.baseurl';
     public static readonly THUNDRA_REPORT_REST_TRUSTALLCERTIFICATES: string =
-        'thundra.agent.report.rest.trustallcertificates'
+        'thundra.agent.report.rest.trustallcertificates';
     public static readonly THUNDRA_REPORT_CLOUDWATCH_ENABLE: string =
         'thundra.agent.report.cloudwatch.enable';
 

@@ -4,53 +4,6 @@ class ConfigProvider {
 
     private static configs: {[key: string]: any} = {};
 
-    private static generateEnvVarNames(envVarName: string): Set<string> {
-        envVarName = envVarName.replace('.', '_');
-        const envVarNames: Set<string> = new Set();
-        envVarNames.add(envVarName);
-        envVarNames.add(envVarName.toLowerCase());
-        envVarNames.add(envVarName.toUpperCase());
-        return envVarNames;
-    }
-
-    private static getAnyFromEnvVar(envVarNames: Set<string>): string {
-        for (const envVarName of envVarNames) {
-            if (process.env[envVarName]) {
-                return process.env[envVarName];
-            }
-        }
-        return null;
-    }
-
-    private static traverseConfigObject(obj: any, path: string): void {
-        Object.keys(obj).forEach((propName: string) => {
-            const propVal: any = obj[propName];
-            let propPath: string = path + '.' + propName;
-            if (propVal instanceof Object) {
-                ConfigProvider.traverseConfigObject(propVal, propPath);
-            } else {
-                if (!propPath.startsWith('thundra.agent.')) {
-                    propPath = 'thundra.agent.' + propPath;
-                }
-                propPath = propPath.toLowerCase();
-                const propType = ConfigMetadata[propPath] ? ConfigMetadata[propPath].type : 'any';
-                ConfigProvider.configs[propPath] = this.parse(propVal, propType);
-            }
-        });
-    }
-
-    private static parse(value: any, type: string): any {
-        if (value == undefined) {
-            return value;
-        }
-        switch (type) {
-            case 'string': return String(value);
-            case 'number': return Number(value);
-            case 'boolean': return Boolean(value);
-            default: return value;
-        }
-    }
-
     static init(options?: any, configFilePath?: string): void {
         // 1. Fill configs from file if it is given
         try {
@@ -61,8 +14,7 @@ class ConfigProvider {
                     ConfigProvider.traverseConfigObject(configVal, configName);
                 });
             }
-        } catch (e) {
-        }
+        } catch (e) { /* do nothing */ }
 
         // 2. Fill configs from options if it is given
         if (options) {
@@ -107,14 +59,60 @@ class ConfigProvider {
 
     static get<T>(key: string, defaultValue?: T): T {
         const value: T = ConfigProvider.configs[key];
-        if (value != undefined) {
+        // tslint:disable-next-line:triple-equals
+        if (value != undefined) { // if not null or undefined
             return value;
-        } else if (defaultValue !== undefined) {
+        } else if (defaultValue !== undefined) { // if user passes null as defaultValue, return null
             return defaultValue;
         } else if (ConfigMetadata[key]) {
             return ConfigMetadata[key].defaultValue as T;
         } else {
             return undefined;
+        }
+    }
+
+    private static generateEnvVarNames(envVarName: string): Set<string> {
+        envVarName = envVarName.replace('.', '_');
+        const envVarNames: Set<string> = new Set();
+        envVarNames.add(envVarName);
+        envVarNames.add(envVarName.toLowerCase());
+        envVarNames.add(envVarName.toUpperCase());
+        return envVarNames;
+    }
+
+    private static getAnyFromEnvVar(envVarNames: Set<string>): string {
+        for (const envVarName of envVarNames) {
+            if (process.env[envVarName]) {
+                return process.env[envVarName];
+            }
+        }
+        return null;
+    }
+
+    private static traverseConfigObject(obj: any, path: string): void {
+        Object.keys(obj).forEach((propName: string) => {
+            const propVal: any = obj[propName];
+            let propPath: string = path + '.' + propName;
+            if (propVal instanceof Object) {
+                ConfigProvider.traverseConfigObject(propVal, propPath);
+            } else {
+                if (!propPath.startsWith('thundra.agent.')) {
+                    propPath = 'thundra.agent.' + propPath;
+                }
+                propPath = propPath.toLowerCase();
+                const propType = ConfigMetadata[propPath] ? ConfigMetadata[propPath].type : 'any';
+                ConfigProvider.configs[propPath] = this.parse(propVal, propType);
+            }
+        });
+    }
+
+    private static parse(value: any, type: string): any {
+        if (!value) { return value; }
+        switch (type) {
+            case 'string': return String(value);
+            case 'number': return Number(value);
+            case 'boolean': return Boolean(value);
+            default: return value;
         }
     }
 
