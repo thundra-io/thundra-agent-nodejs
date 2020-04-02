@@ -429,11 +429,16 @@ class Utils {
         const region = Utils.getConfiguration(envVariableKeys.AWS_REGION)
             || 'local';
         const accountNo = Utils.getAccountNo(arn, pluginContext);
-        const functionName = originalContext.functionName
-            || Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
-            || 'lambda-app';
+        const functionName = Utils.getApplicationName(originalContext);
 
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
+    }
+
+    static getApplicationName(originalContext: any) {
+        return Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_NAME)
+            || originalContext.functionName
+            || Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
+            || 'lambda-app';
     }
 
     static getARNPart(arn: string, index: number) {
@@ -451,7 +456,6 @@ class Utils {
     static getIfSLSLocalDebugging() {
         return Utils.getConfiguration(envVariableKeys.SLS_LOCAL) === 'true';
     }
-
     static getXRayTraceInfo() {
         let traceID: string = '';
         let segmentID: string = '';
