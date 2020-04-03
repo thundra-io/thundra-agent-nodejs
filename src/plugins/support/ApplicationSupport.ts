@@ -8,7 +8,7 @@ class ApplicationSupport {
     static parseApplicationTags(): void {
         ApplicationSupport.applicationTags = {};
         for (const key of Object.keys(process.env)) {
-            if (key.startsWith(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX)) {
+            if (key.toLowerCase().startsWith(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX)) {
                 try {
                     const propsKey = key.substring(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX.length);
                     const propsValue = process.env[key];
