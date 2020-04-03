@@ -26,7 +26,7 @@ class ConfigProvider {
 
         // 3. Fill configs from environment variables
         Object.keys(process.env).forEach((envVarName: string) => {
-            if (envVarName.toUpperCase().startsWith('THUNDRA_AGENT_')) {
+            if (envVarName.toUpperCase().startsWith('THUNDRA_')) {
                 const envVarValue: string = process.env[envVarName];
                 envVarName = envVarName.toLowerCase().replace(/_/g, '.');
                 const envVarType = ConfigMetadata[envVarName] ? ConfigMetadata[envVarName].type : 'any';
