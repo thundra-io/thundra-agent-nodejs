@@ -2,7 +2,7 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import { URL, COMPOSITE_MONITORING_DATA_PATH } from './Constants';
+import {COMPOSITE_MONITORING_DATA_PATH, envVariableKeys, getDefaultAPIEndpoint} from './Constants';
 import Utils from './plugins/utils/Utils';
 import ThundraLogger from './ThundraLogger';
 import ThundraConfig from './plugins/config/ThundraConfig';
@@ -27,11 +27,15 @@ class Reporter {
     private requestOptions: http.RequestOptions;
     private connectionRetryCount: number;
     private latestReportingLimitedMinute: number;
+    private URL: url.UrlWithStringQuery;
 
     constructor(config: ThundraConfig, u?: url.URL) {
+        this.URL = url.parse(ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_REPORT_REST_BASEURL,
+            'https://' + getDefaultAPIEndpoint() + '/v1'));
         this.reports = [];
         this.config = config ? config : new ThundraConfig({});
-        this.useHttps = (u ? u.protocol : URL.protocol) === 'https:';
+        this.useHttps = (u ? u.protocol : this.URL.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
         this.connectionRetryCount = 0;
         this.latestReportingLimitedMinute = -1;
@@ -42,9 +46,9 @@ class Reporter {
 
         return {
             method: 'POST',
-            hostname: u ? u.hostname : URL.hostname,
-            path: (u ? u.pathname : URL.pathname) + path,
-            port: parseInt(u ? u.port : URL.port, 0),
+            hostname: u ? u.hostname : this.URL.hostname,
+            path: (u ? u.pathname : this.URL.pathname) + path,
+            port: parseInt(u ? u.port : this.URL.port, 0),
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'ApiKey ' + this.config.apiKey,

@@ -13,6 +13,7 @@ import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanList
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
 import TagInjectorSpanListener from './plugins/listeners/TagInjectorSpanListener';
 import SecurityAwareSpanListener from './plugins/listeners/SecurityAwareSpanListener';
+import Utils from './plugins/utils/Utils';
 const { version } = require('../package.json');
 
 export const envVariableKeys = {
@@ -138,15 +139,8 @@ export const HOOKS = [
     'after-invocation',
 ];
 
-export const URL: url.UrlWithStringQuery = url.parse(
-    // the comment below is for ignoring in unit tests, do not remove it
-    // istanbul ignore next
-    process.env[envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL]
-        ? process.env[envVariableKeys.THUNDRA_LAMBDA_REPORT_REST_BASEURL]
-        : 'https://' + getAPIEndpoint(process.env[envVariableKeys.AWS_REGION]) + '/v1',
-);
-
-export function getAPIEndpoint(region: string) {
+export function getDefaultAPIEndpoint() {
+    const region = Utils.getEnvVar(envVariableKeys.AWS_REGION);
     if (region) {
         if (region.startsWith('us-west-')) {
             return 'api.thundra.io';

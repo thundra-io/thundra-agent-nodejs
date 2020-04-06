@@ -39,7 +39,8 @@ const get = require('lodash.get');
 let tracer: ThundraTracer;
 
 module.exports = (options?: any) => {
-    ConfigProvider.init(options ? options.config : null);
+    ConfigProvider.init(options ? options.config : undefined,
+        options ? options.configFilePath : undefined);
 
     const config = new ThundraConfig(options);
     const plugins: any[] = [];
