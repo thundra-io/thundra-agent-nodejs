@@ -5,12 +5,24 @@ import { createMockContext, createMockReporterInstance, createMockPlugin, create
 import HttpError from '../dist/plugins/error/HttpError';
 import TimeoutError from '../dist/plugins/error/TimeoutError';
 
+import TestUtils from './utils.js';
+
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
 const pluginContext = createMockPluginContext();
 
 jest.useFakeTimers();
 
-describe('ThundraWrapper', () => {
-    process.env.thundra_agent_lambda_report_cloudwatch_enable = 'false';
+describe('thundra wrapper', () => {
+
     const originalThis = this;
     const originalEvent = { key1: 'value2', key2: 'value2' };
     const originalContext = createMockContext();
@@ -19,7 +31,7 @@ describe('ThundraWrapper', () => {
 
     describe('report', () => {
         const originalCallback = jest.fn();
-        const originalFunction = jest.fn((e, c, cb) => callback());
+        const originalFunction = jest.fn((e, c, cb) => cb());
         const monitoringDisabled = false;
         const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
         thundraWrapper.reporter = createMockReporterInstance();
@@ -106,9 +118,9 @@ describe('ThundraWrapper', () => {
         });
     });
 
-    describe('originalFunction calls callback', () => {
+    describe('original function calls callback', () => {
 
-        describe('wrappedCallback', () => {
+        describe('wrapped callback', () => {
 
             describe('with mock report function', () => {
                 const originalCallback = jest.fn();
@@ -155,7 +167,7 @@ describe('ThundraWrapper', () => {
             });
         });
 
-        describe('AWS Lambda Proxy Response', async () => {
+        describe('api gw proxy response fail with status code 500 and json message', async () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
             const monitoringDisabled = false;
@@ -175,7 +187,7 @@ describe('ThundraWrapper', () => {
 
         });
 
-        describe('AWS Lambda Proxy Response', async () => {
+        describe('api gw proxy response fail with status code 500 and raw message', async () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
             const monitoringDisabled = false;
@@ -193,7 +205,7 @@ describe('ThundraWrapper', () => {
             });   
         });
 
-        describe('AWS Lambda Proxy Response', async () => {
+        describe('api gw proxy response success with status code 200', async () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
             const monitoringDisabled = false;
@@ -227,9 +239,9 @@ describe('ThundraWrapper', () => {
 
     });
 
-    describe('originalFunction calls succeed/done/fail', () => {
+    describe('original function calls succeed/done/fail', () => {
 
-        describe('wrappedContext', () => {
+        describe('wrapped context', () => {
 
             const originalFunction = jest.fn();
             const originalCallback = null;
@@ -282,7 +294,7 @@ describe('ThundraWrapper', () => {
 
     });
 
-    describe('originalFunction returns promise', () => {
+    describe('original function returns promise', () => {
         const mockPromise = createMockPromise();
         const originalCallback = jest.fn();
         const monitoringDisabled = false;
@@ -310,64 +322,38 @@ describe('ThundraWrapper', () => {
 
         const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pc, monitoringDisabled);
 
-        beforeEach(() => {
-            ConfigProvider.clear();
-        });
-
-        afterEach(() => {
-            ConfigProvider.clear();
-        });
-
         test('when debugger disabled and no token', () => {
-            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)];
-            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)] = 'false';
-
-            ConfigProvider.init();
+            ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, false);
 
             expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
         });
         
         test('when debugger enabled and no token', () => {
-            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)];
-            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)] = 'true';
-
-            ConfigProvider.init();
+            ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, true);
 
             expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
         });
         
         test('when debugger disabled and token exists', () => {
-            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)] = 'foobar';
-            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)] = 'false';
-
-            ConfigProvider.init();
+            ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN, 'foobar');
+            ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, false);
 
             expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
         });
         
         test('when no token and no enable setting exist', () => {
-            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)];
-            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)];
-
-            ConfigProvider.init();
-
             expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
         });
         
         test('when token exists and no enable setting exists', () => {
-            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)] = 'foobar';
-            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)];
-
-            ConfigProvider.init();
+            ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN, 'foobar');
 
             expect(thundraWrapper.shouldInitDebugger()).toBeTruthy();
         });
         
         test('when token and enable setting exist', () => {
-            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)] = 'foobar';
-            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)] = 'true';
-
-            ConfigProvider.init();
+            ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN, 'foobar');
+            ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, true);
 
             expect(thundraWrapper.shouldInitDebugger()).toBeTruthy();
         });
