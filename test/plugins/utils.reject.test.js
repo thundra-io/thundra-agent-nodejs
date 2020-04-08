@@ -3,7 +3,7 @@ import Utils from '../../dist/plugins/utils/Utils';
 jest.mock('../../dist/Constants', () => ({
     PROC_STAT_PATH: 'does-not-exist',
     PROC_IO_PATH: 'does-not-exist',
-    envVariableKeys: {
+    EnvVariableKeys: {
         THUNDRA_AGENT_LAMBDA_AGENT_DEBUG_ENABLE: ''
     }    
 }));

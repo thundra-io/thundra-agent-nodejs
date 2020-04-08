@@ -13,7 +13,7 @@ import Utils from './plugins/utils/Utils';
 import LogConfig from './plugins/config/LogConfig';
 import PluginContext from './plugins/PluginContext';
 import ThundraTracer from './opentracing/Tracer';
-import { envVariableKeys } from './Constants';
+import { EnvVariableKeys } from './Constants';
 import Logger from './plugins/Logger';
 import Log from './plugins/Log';
 import InvocationSupport from './plugins/support/InvocationSupport';
@@ -86,14 +86,15 @@ module.exports = (options?: any) => {
     }
 
     if (config.trustAllCert) {
+        Utils.setEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED, '0');
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
 
     ApplicationSupport.parseApplicationTags();
 
-    const logStreamName = Utils.getEnvVar(envVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
-    const region = Utils.getEnvVar(envVariableKeys.AWS_REGION);
-    const functionVersion = Utils.getEnvVar(envVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
+    const logStreamName = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
+    const region = Utils.getEnvVar(EnvVariableKeys.AWS_REGION);
+    const functionVersion = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
     const applicationInstanceId = logStreamName ? logStreamName.split(']').pop() : Utils.generateId();
 
     const pluginContext: PluginContext = new PluginContext({

@@ -1,8 +1,17 @@
 import ThundraTracer from '../../../dist/opentracing/Tracer';
+import ConfigProvider from '../../../dist/config/ConfigProvider';
+import ConfigNames from '../../..//dist/config/ConfigNames';
 import Utils from '../../../dist/plugins/utils/Utils';
-import {envVariableKeys} from '../../../dist/Constants';
 
 describe('Thundra Tracer', () => {
+
+    beforeEach(() => {
+        ConfigProvider.clear();
+    });
+
+    afterEach(() => {
+        ConfigProvider.clear();
+    });
 
     it('Should read listener config from environment variable with multiple filters and listener', () => {
         // Arrange
@@ -38,7 +47,9 @@ describe('Thundra Tracer', () => {
             }
         };
 
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = JSON.stringify(listenerConfig);
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = JSON.stringify(listenerConfig);
+
+        ConfigProvider.init();
 
         //Act
         const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
@@ -67,7 +78,7 @@ describe('Thundra Tracer', () => {
         expect(listener.spanFilterer.spanFilters[1].className).toBe('HTTP');   
         expect(listener.spanFilterer.spanFilters[1].getTag('http.host')).toBe('foobar.com');
 
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = null;
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = null;
         tracer.destroy();
     });
 
@@ -100,7 +111,9 @@ describe('Thundra Tracer', () => {
             }
         };
 
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = JSON.stringify(listenerConfig);
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = JSON.stringify(listenerConfig);
+
+        ConfigProvider.init();
 
         //Act
         const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
@@ -127,7 +140,7 @@ describe('Thundra Tracer', () => {
         expect(listener.spanFilterer.spanFilters[0].getTag('foo')).toBe('bar');    
         
 
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = null;
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = null;
         tracer.destroy();
     });
 
@@ -136,7 +149,9 @@ describe('Thundra Tracer', () => {
         // Arrange
         const tracer = new ThundraTracer({});
 
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = 'InvalidSpanListener[]';
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = 'InvalidSpanListener[]';
+
+        ConfigProvider.init();
 
         //Act
         const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
@@ -144,7 +159,7 @@ describe('Thundra Tracer', () => {
         //Assert
         expect(listeners.length).toBe(0);
        
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = null;
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = null;
         tracer.destroy();
     });
 });   

@@ -1,7 +1,9 @@
 const thundra = require('../dist/index');
+import ConfigProvider from '../dist/config/ConfigProvider';
+import ConfigNames from '../dist/config/ConfigNames';
 import Utils from '../dist/plugins/utils/Utils';
 import { createMockContext } from './mocks/mocks';
-import { envVariableKeys, SecurityTags, ClassNames } from '../dist/Constants';
+import { SecurityTags, ClassNames } from '../dist/Constants';
 import AWSCalls from './integration/utils/aws.integration.utils';
 import HTTPCalls from './integration/utils/http.integration.utils';
 import ESCalls from './integration/utils/es.integration.utils';
@@ -212,7 +214,7 @@ describe('whitelist config', () => {
     };
 
     beforeAll(() => {
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = JSON.stringify(config);
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = JSON.stringify(config);
         thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});;
         recorder = thundra.tracer().recorder;
     });
@@ -450,7 +452,7 @@ describe('blacklist config', () => {
     }
 
     beforeAll(() => {
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = JSON.stringify(config);
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = JSON.stringify(config);
         thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});;
         recorder = thundra.tracer().recorder;
     });

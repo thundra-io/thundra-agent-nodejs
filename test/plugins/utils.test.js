@@ -1,5 +1,8 @@
 import { DATA_MODEL_VERSION } from '../../dist/Constants';
 import Utils from '../../dist/plugins/utils/Utils';
+import TestUtils from '../utils';
+import ConfigProvider from '../../dist/config/ConfigProvider';
+import ConfigNames from '../../dist/config/ConfigNames';
 
 jest.mock('os', () => ({
     cpus: () => {
@@ -20,10 +23,7 @@ jest.mock('os', () => ({
 
 jest.mock('../../dist/Constants', () => ({
     PROC_STAT_PATH: './test/mocks/mock-proc-stat',
-    PROC_IO_PATH: './test/mocks/mock-proc-io',
-    envVariableKeys: {
-        THUNDRA_MASK_ERROR_STACK_TRACE: 'thundra_agent_lambda_error_stacktrace_mask',
-    }
+    PROC_IO_PATH: './test/mocks/mock-proc-io'
 }));
 
 describe('getCpuUsage', () => {
@@ -91,6 +91,16 @@ describe('generateReport', () => {
 });
 
 describe('parseError', () => {
+    beforeEach(() => {
+        TestUtils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
+    afterEach(() => {
+        TestUtils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
     describe('Error typed error data', () => {
         const error = Error('error message');
         const parsedError = Utils.parseError(error);
@@ -138,10 +148,11 @@ describe('parseError', () => {
 
     describe('mask stack trace', () => {
         const error = new Error('I am an error');
-   
-        process.env.thundra_agent_lambda_error_stacktrace_mask = 'true';
-        
+
         it('should mask stack trace', () => {
+            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK)] = 'true';
+            ConfigProvider.init();
+
             expect(Utils.parseError(error).stack).toEqual('');
         });
     });

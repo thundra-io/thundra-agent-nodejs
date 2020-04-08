@@ -126,13 +126,13 @@ class ThundraWrapper {
 
     shouldInitDebugger(): boolean {
         const authToken = ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN);
-        const debuggerEnable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE);
+        const debuggerEnable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, null);
 
-        if (!debuggerEnable || !authToken) {
-            return false;
+        if (debuggerEnable != null) {
+            return debuggerEnable && authToken !== undefined;
+        } else {
+            return authToken !== undefined;
         }
-
-        return true;
     }
 
     invokeCallback(error: any, result: any): void {

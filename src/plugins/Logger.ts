@@ -1,6 +1,5 @@
-import {logLevels, envVariableKeys} from '../Constants';
+import { logLevels } from '../Constants';
 import * as util from 'util';
-import Utils from './utils/Utils';
 import LogManager from './LogManager';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';

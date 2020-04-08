@@ -2,7 +2,7 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import {COMPOSITE_MONITORING_DATA_PATH, envVariableKeys, getDefaultAPIEndpoint} from './Constants';
+import {COMPOSITE_MONITORING_DATA_PATH, getDefaultAPIEndpoint} from './Constants';
 import Utils from './plugins/utils/Utils';
 import ThundraLogger from './ThundraLogger';
 import ThundraConfig from './plugins/config/ThundraConfig';
@@ -79,6 +79,9 @@ class Reporter {
         const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
         const invocationReport =
             this.reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
+        if (!invocationReport) {
+            return [];
+        }
         const initialCompositeData = Utils.initCompositeMonitoringData(invocationReport.data);
 
         for (let i = 0; i < batchCount; i++) {

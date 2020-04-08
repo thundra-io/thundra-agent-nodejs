@@ -1,4 +1,3 @@
-import * as url from 'url';
 import HttpIntegration from './plugins/integrations/HttpIntegration';
 import PostgreIntegration from './plugins/integrations/PostgreIntegration';
 import MySQL2Integration from './plugins/integrations/MySQL2Integration';
@@ -13,95 +12,25 @@ import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanList
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
 import TagInjectorSpanListener from './plugins/listeners/TagInjectorSpanListener';
 import SecurityAwareSpanListener from './plugins/listeners/SecurityAwareSpanListener';
-import Utils from './plugins/utils/Utils';
 const { version } = require('../package.json');
 
-export const envVariableKeys = {
-    THUNDRA_LAMBDA_WARMUP_AWARE: 'thundra_agent_lambda_warmup_warmupAware',
-    THUNDRA_APIKEY: 'thundra_apiKey',
-    THUNDRA_DISABLE: 'thundra_agent_lambda_disable',
-    THUNDRA_APPLICATION_STAGE: 'thundra_agent_lambda_application_stage',
-    THUNDRA_APPLICATION_DOMAIN_NAME: 'thundra_agent_lambda_application_domainName',
-    THUNDRA_APPLICATION_CLASS_NAME: 'thundra_agent_lambda_application_className',
-    THUNDRA_APPLICATION_VERSION: 'thundra_agent_lambda_application_version',
-    THUNDRA_LAMBDA_TIMEOUT_MARGIN: 'thundra_agent_lambda_timeout_margin',
-    THUNDRA_LAMBDA_REPORT_REST_BASEURL: 'thundra_agent_lambda_report_rest_baseUrl',
-    THUNDRA_LAMBDA_REPORT_REST_COMPOSITE_ENABLED: 'thundra_agent_lambda_report_rest_composite_enabled',
-    THUNDRA_LAMBDA_REPORT_CLOUDWATCH_ENABLE: 'thundra_agent_lambda_report_cloudwatch_enable',
-    THUNDRA_DISABLE_TRACE: 'thundra_agent_lambda_trace_disable',
-    THUNDRA_DISABLE_METRIC: 'thundra_agent_lambda_metric_disable',
-    THUNDRA_DISABLE_LOG: 'thundra_agent_lambda_log_disable',
-    _X_AMZN_TRACE_ID: '_X_AMZN_TRACE_ID',
+export const EnvVariableKeys = {
 
-    THUNDRA_LAMBDA_TRACE_REQUEST_SKIP: 'thundra_agent_lambda_trace_request_skip',
-    THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP: 'thundra_agent_lambda_trace_response_skip',
-    THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE: 'thundra_agent_lambda_trace_instrument_disable',
-    THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG: 'thundra_agent_lambda_trace_instrument_traceableConfig',
-    THUNDRA_LAMBDA_TRACE_INSTRUMENT_FILE_PREFIX: 'thundra_agent_lambda_trace_instrument_file_prefix',
-    THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE: 'thundra_agent_lambda_trace_instrument_integrations_disable',
-    THUNDRA_LAMBDA_LOG_CONSOLE_DISABLE: 'thundra_agent_lambda_log_console_disable',
-    THUNDRA_LAMBDA_LOG_LOGLEVEL: 'thundra_agent_lambda_log_loglevel',
-    THUNDRA_AGENT_LAMBDA_AGENT_DEBUG_ENABLE: 'thundra_agent_lambda_debug_enable',
-    THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH: 'thundra_agent_lambda_trace_integrations_http_url_depth',
-    THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_ELASTICSEARCH_URL_DEPTH:
-        'thundra_agent_lambda_trace_integrations_elasticsearch_path_depth',
+    LAMBDA_TASK_ROOT: 'LAMBDA_TASK_ROOT',
 
-    DISABLE_SPAN_CONTEXT_INJECTION: 'thundra_agent_trace_instrument_integrations_spanContext_disable',
-    THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID: 'thundra_agent_lambda_trace_use_propagated_transaction_id',
-
-    SLS_LOCAL: 'IS_LOCAL',
-
-    AWS_SAM_LOCAL: 'AWS_SAM_LOCAL',
-    AWS_LAMBDA_APPLICATION_ID: 'AWS_LAMBDA_APPLICATION_ID',
     AWS_LAMBDA_LOG_STREAM_NAME: 'AWS_LAMBDA_LOG_STREAM_NAME',
     AWS_LAMBDA_FUNCTION_VERSION: 'AWS_LAMBDA_FUNCTION_VERSION',
     AWS_REGION: 'AWS_REGION',
     AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',
     AWS_LAMBDA_FUNCTION_NAME: 'AWS_LAMBDA_FUNCTION_NAME',
 
-    THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX: 'thundra_agent_lambda_application_tag_',
-    THUNDRA_APPLICATION_ID: 'thundra_agent_lambda_application_id',
-    THUNDRA_APPLICATION_NAME: 'thundra_agent_lambda_application_name',
-    THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF : 'thundra_agent_lambda_trace_span_listenerConfig',
+    _X_AMZN_TRACE_ID: '_X_AMZN_TRACE_ID',
 
-    THUNDRA_AGENT_LAMBDA_SAMPLE_TIMED_OUT_INVOCATIONS: 'thundra_agent_lambda_sample_timed_out_invocations',
-    THUNDRA_MASK_REDIS_STATEMENT: 'thundra_agent_lambda_trace_integrations_redis_command_mask',
-    THUNDRA_MASK_RDB_STATEMENT: 'thundra_agent_lambda_trace_integrations_rdb_statement_mask',
-    THUNDRA_MASK_DYNAMODB_STATEMENT: 'thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask',
-    THUNDRA_MASK_ELASTIC_STATEMENT: 'thundra_agent_lambda_trace_integrations_elastic_statement_mask',
-    THUNDRA_MASK_MONGODB_COMMAND: 'thundra_agent_lambda_trace_integrations_mongodb_command_mask',
-    THUNDRA_MASK_ATHENA_STATEMENT: 'thundra_agent_lambda_trace_integrations_aws_athena_statement_mask',
+    SLS_LOCAL: 'IS_LOCAL',
+    AWS_SAM_LOCAL: 'AWS_SAM_LOCAL',
 
-    ENABLE_DYNAMODB_TRACE_INJECTION: 'thundra_agent_trace_integrations_dynamodb_trace_injection_enable',
+    NODE_TLS_REJECT_UNAUTHORIZED: 'NODE_TLS_REJECT_UNAUTHORIZED',
 
-    THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE: 'thundra_agent_lambda_trace_kinesis_request_enable',
-    THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE: 'thundra_agent_lambda_trace_firehose_request_enable',
-    THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE: 'thundra_agent_lambda_trace_cloudwatchlog_request_enable',
-
-    THUNDRA_MASK_SNS_MESSAGE: 'thundra_agent_lambda_trace_integrations_aws_sns_message_mask',
-    THUNDRA_MASK_SQS_MESSAGE: 'thundra_agent_lambda_trace_integrations_aws_sqs_message_mask',
-    THUNDRA_MASK_LAMBDA_PAYLOAD: 'thundra_agent_lambda_trace_integrations_aws_lambda_payload_mask',
-    THUNDRA_MASK_HTTP_BODY: 'thundra_agent_lambda_trace_integrations_http_body_mask',
-    THUNDRA_MASK_ERROR_STACK_TRACE: 'thundra_agent_lambda_error_stacktrace_mask',
-
-    THUNDRA_AGENT_TIME_AWARE_SAMPLER_TIME_FREQ: 'thundra_agent_lambda_sampler_timeAware_timeFreq',
-    THUNDRA_AGENT_COUNT_AWARE_SAMPLER_COUNT_FREQ: 'thundra_agent_lambda_sampler_countAware_countFreq',
-
-    THUNDRA_AWS_INSTRUMENT_ON_LOAD: 'thundra_agent_lambda_trace_integrations_aws_instrument_onLoad',
-
-    THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_4XX:
-        'thundra_agent_trace_integrations_http_set_error_on_4xx_response_code_disable',
-    THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_5XX:
-        'thundra_agent_trace_integrations_http_set_error_on_5xx_response_code_disable',
-
-    THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE: 'thundra_agent_lambda_debugger_enable',
-    THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT: 'thundra_agent_lambda_debugger_port',
-    THUNDRA_AGENT_LAMBDA_DEBUGGER_LOGS_ENABLE: 'thundra_agent_lambda_debugger_logs_enable',
-    THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX: 'thundra_agent_lambda_debugger_wait_max',
-    THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT: 'thundra_agent_lambda_debugger_broker_port',
-    THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST: 'thundra_agent_lambda_debugger_broker_host',
-    THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME: 'thundra_agent_lambda_debugger_session_name',
-    THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN: 'thundra_agent_lambda_debugger_auth_token',
 };
 
 export function getTimeoutMargin(region: string) {
@@ -129,7 +58,8 @@ export function getTimeoutMargin(region: string) {
 
 export const AGENT_VERSION: string = version;
 export const DATA_MODEL_VERSION: string = '2.0';
-export const TIMEOUT_MARGIN: number = getTimeoutMargin(process.env[envVariableKeys.AWS_REGION]);
+export const TIMEOUT_MARGIN: number = getTimeoutMargin(process.env[EnvVariableKeys.AWS_REGION]);
+
 export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
 export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
 export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
@@ -140,7 +70,7 @@ export const HOOKS = [
 ];
 
 export function getDefaultAPIEndpoint() {
-    const region = Utils.getEnvVar(envVariableKeys.AWS_REGION);
+    const region = process.env[EnvVariableKeys.AWS_REGION];
     if (region) {
         if (region.startsWith('us-west-')) {
             return 'api.thundra.io';

@@ -4,7 +4,7 @@ import LogData from './data/log/LogData';
 import PluginContext from './PluginContext';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraTracer from '../opentracing/Tracer';
-import { ConsoleShimmedMethods, logLevels, StdOutLogContext, envVariableKeys, StdErrorLogContext } from '../Constants';
+import { ConsoleShimmedMethods, logLevels, StdOutLogContext, StdErrorLogContext } from '../Constants';
 import * as util from 'util';
 import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';

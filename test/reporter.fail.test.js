@@ -56,8 +56,8 @@ describe('Reporter', () => {
         // noinspection JSAnnotator
         const url = new URL('http://api.thundra.io/api');
         const reporter = new Reporter({apiKey: 'apiKey'}, url);
-        const mockReport1 = {data: 'data1'};
-        const mockReport2 = {data: 'data2'};
+        const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
+        const mockReport2 = {data: {type: 'Span', data: 'data2'}};
 
         const reports = [];
         reports.push(mockReport1);
@@ -75,7 +75,9 @@ describe('Reporter', () => {
         });
 
         test('should JSON.stringify reports on https.request', () => {
-            expect(httpSentData).toEqual(JSON.stringify(reports));
+            const httpSentDataObj = JSON.parse(httpSentData);
+            const allHttpSentDataObj = httpSentDataObj.data.allMonitoringData;
+            expect(JSON.stringify(allHttpSentDataObj)).toEqual(JSON.stringify(reports.map(r => r.data)));
         });
     });
 
@@ -84,8 +86,8 @@ describe('Reporter', () => {
         let consoleOutput;
 
         const reporter = new Reporter({apiKey: 'apiKey'});
-        const mockReport1 = {data: 'data1'};
-        const mockReport2 = {data: 'data2'};
+        const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
+        const mockReport2 = {data: {type: 'Span', data: 'data2'}};
 
         const reports = [];
         reports.push(mockReport1);

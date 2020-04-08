@@ -94,7 +94,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
-    [ConfigNames.THUNDRA_TRACE_INSTRUMENT_CONFIG]: {
+    [ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG]: {
         type: 'string',
     },
     [ConfigNames.THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX]: {

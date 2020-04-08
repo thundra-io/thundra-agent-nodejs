@@ -21,7 +21,7 @@ import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
 import {
-    DomainNames, ClassNames, envVariableKeys,
+    DomainNames, ClassNames,
     TriggerHeaderTags, INTEGRATIONS,
 } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';

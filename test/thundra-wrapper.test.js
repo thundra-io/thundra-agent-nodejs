@@ -1,8 +1,9 @@
 import ThundraWrapper from '../dist/ThundraWrapper';
+import ConfigProvider from '../dist/config/ConfigProvider';
+import ConfigNames from '../dist/config/ConfigNames';
 import { createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext, createMockPromise } from './mocks/mocks';
 import HttpError from '../dist/plugins/error/HttpError';
 import TimeoutError from '../dist/plugins/error/TimeoutError';
-import { envVariableKeys } from '../dist/Constants';
 
 const pluginContext = createMockPluginContext();
 
@@ -93,12 +94,12 @@ describe('ThundraWrapper', () => {
         const originalCallback = jest.fn();
         const originalFunction = jest.fn((event, context, callback) => {callback(null, 'hey')});
         const monitoringDisabled = false;
-        originalContext.getRemainingTimeInMillis = () => 5000;
+        const mockContext = createMockContext();
+        mockContext.getRemainingTimeInMillis = () => 5000;
         pluginContext.timeoutMargin = 200;
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, mockContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
         thundraWrapper.report = jest.fn();
         jest.runAllTimers();
-        originalContext.getRemainingTimeInMillis = null;
         pluginContext.timeoutMargin = null;
         it('setupTimeoutHandler calls set timeout.', () => {
             expect(thundraWrapper.report).toBeCalledWith(new TimeoutError('Lambda is timed out.'), null, null);
@@ -301,52 +302,6 @@ describe('ThundraWrapper', () => {
         });
     });
 
-    describe('timeout sampling configured and TimeutError occurs', () => {
-        const originalCallback = jest.fn();
-        const originalFunction = jest.fn();
-        const monitoringDisabled = false;
-        const pc = createMockPluginContext();
-        originalContext.getRemainingTimeInMillis = () => 5000;
-        pc.timeoutMargin = 200;
-        pc.config = {
-            sampleTimedOutInvocations: true
-        };
-
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pc, monitoringDisabled);
-        thundraWrapper.executeAfteInvocationAndReport = jest.fn();
-        jest.runAllTimers();
-        originalContext.getRemainingTimeInMillis = null;
-        pc.timeoutMargin = null;
-        let afterInvocationData = {
-            error: new TimeoutError('Lambda is timed out.'),
-            originalEvent,
-            response: null,
-        };
-
-        it('should call report when it is enabled and timeout occurs.', () => {
-            expect(thundraWrapper.executeAfteInvocationAndReport).toBeCalledWith(afterInvocationData);
-        });
-    });
-
-    describe('timeout sampling configured and TimeoutError does not occur', () => {
-        const originalCallback = jest.fn();
-        const originalFunction = jest.fn((e, c, cb) => cb());
-        const monitoringDisabled = false;
-        const pc = createMockPluginContext();
-        pc.config = {
-            sampleTimedOutInvocations: true
-        };
-        originalContext.getRemainingTimeInMillis = () => 0;
-
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pc, monitoringDisabled);
-        thundraWrapper.executeAfteInvocationAndReport = jest.fn();
-        thundraWrapper.report(null, {result: 'result'}, thundraWrapper.originalCallback);
-
-        test('should not send reports', () => {
-            expect(thundraWrapper.executeAfteInvocationAndReport).not.toBeCalled();
-        });
-    });
-    
     describe('should correctly decide to init debugger', () => {
         const originalCallback = jest.fn();
         const originalFunction = jest.fn((e, c, cb) => cb());
@@ -355,44 +310,64 @@ describe('ThundraWrapper', () => {
 
         const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pc, monitoringDisabled);
 
+        beforeEach(() => {
+            ConfigProvider.clear();
+        });
+
+        afterEach(() => {
+            ConfigProvider.clear();
+        });
+
         test('when debugger disabled and no token', () => {
-            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN];
-            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE] = 'false';
+            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)];
+            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)] = 'false';
+
+            ConfigProvider.init();
 
             expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
         });
         
         test('when debugger enabled and no token', () => {
-            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN];
-            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE] = 'true';
+            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)];
+            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)] = 'true';
+
+            ConfigProvider.init();
 
             expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
         });
         
         test('when debugger disabled and token exists', () => {
-            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN] = 'foobar';
-            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE] = 'false';
+            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)] = 'foobar';
+            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)] = 'false';
+
+            ConfigProvider.init();
 
             expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
         });
         
         test('when no token and no enable setting exist', () => {
-            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN];
-            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE];
+            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)];
+            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)];
+
+            ConfigProvider.init();
 
             expect(thundraWrapper.shouldInitDebugger()).toBeFalsy();
         });
         
         test('when token exists and no enable setting exists', () => {
-            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN] = 'foobar';
-            delete process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE];
+            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)] = 'foobar';
+            delete process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)];
+
+            ConfigProvider.init();
 
             expect(thundraWrapper.shouldInitDebugger()).toBeTruthy();
         });
         
         test('when token and enable setting exist', () => {
-            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN] = 'foobar';
-            process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE] = 'true';
+            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN)] = 'foobar';
+            process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE)] = 'true';
+
+            ConfigProvider.init();
 
             expect(thundraWrapper.shouldInitDebugger()).toBeTruthy();
         });

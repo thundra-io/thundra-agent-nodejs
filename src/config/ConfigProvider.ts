@@ -4,7 +4,17 @@ class ConfigProvider {
 
     private static configs: {[key: string]: any} = {};
 
+    static configNameToEnvVar(configName: string): string {
+        return configName.toUpperCase().replace(/\./g, '_');
+    }
+
+    static envVarToConfigName(envVarName: string): string {
+        return envVarName.toLowerCase().replace(/_/g, '.');
+    }
+
     static init(options?: any, configFilePath?: string): void {
+        ConfigProvider.clear();
+
         // 1. Fill configs from file if it is given
         try {
             if (configFilePath) {
@@ -28,7 +38,7 @@ class ConfigProvider {
         Object.keys(process.env).forEach((envVarName: string) => {
             if (envVarName.toUpperCase().startsWith('THUNDRA_')) {
                 const envVarValue: string = process.env[envVarName];
-                envVarName = envVarName.toLowerCase().replace(/_/g, '.');
+                envVarName = ConfigProvider.envVarToConfigName(envVarName);
                 const envVarType = ConfigMetadata[envVarName] ? ConfigMetadata[envVarName].type : 'any';
                 ConfigProvider.configs[envVarName] = this.parse(envVarValue, envVarType);
             }
@@ -111,7 +121,9 @@ class ConfigProvider {
         switch (type) {
             case 'string': return String(value);
             case 'number': return Number(value);
-            case 'boolean': return Boolean(value);
+            case 'boolean': return (typeof value === 'string'
+                ? (value.toLowerCase() === 'true' ? true : false)
+                : Boolean(value));
             default: return value;
         }
     }

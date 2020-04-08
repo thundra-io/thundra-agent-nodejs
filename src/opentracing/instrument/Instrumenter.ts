@@ -6,7 +6,7 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraTracer from '../Tracer';
 import ThundraSpan from '../Span';
 import { ThundraSourceCodeInstrumenter } from '@thundra/instrumenter';
-import { envVariableKeys, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Constants';
+import { ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Constants';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 

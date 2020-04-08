@@ -127,7 +127,7 @@ class TraceConfig extends BasePluginConfig {
         this.sampler = options.sampler;
 
         for (const configName of ConfigProvider.names()) {
-            if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_CONFIG)) {
+            if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG)) {
                 try {
                     this.traceableConfigs.push(TraceableConfig.fromString(ConfigProvider.get<string>(configName)));
                 } catch (ex) {

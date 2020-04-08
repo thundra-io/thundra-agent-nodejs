@@ -69,7 +69,7 @@ class ConfigNames {
 
     public static readonly THUNDRA_TRACE_INSTRUMENT_DISABLE: string =
         'thundra.agent.trace.instrument.disable';
-    public static readonly THUNDRA_TRACE_INSTRUMENT_CONFIG: string =
+    public static readonly THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG: string =
         'thundra.agent.trace.instrument.traceableconfig';
     public static readonly THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX: string =
         'thundra.agent.trace.instrument.file.prefix';

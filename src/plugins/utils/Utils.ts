@@ -2,7 +2,7 @@ import { readFile } from 'fs';
 import * as os from 'os';
 import {
     DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys,
+    EnvVariableKeys,
     LISTENERS, AGENT_VERSION,
 } from '../../Constants';
 import ConfigProvider from '../../config/ConfigProvider';
@@ -53,6 +53,14 @@ class Utils {
 
     static getNumericEnvVar(key: string, defaultValue?: number): number {
         return parseInt(Utils.getEnvVar(key, defaultValue), 10);
+    }
+
+    static setEnvVar(key: string, value: any): void {
+        process.env[key] = value;
+    }
+
+    static deleteEnvVar(key: string): void {
+        delete process.env[key];
     }
 
     static getCpuUsage() {
@@ -115,8 +123,8 @@ class Utils {
             error.errorMessage = JSON.stringify(error.errorMessage);
         }
 
-        error.stack = ConfigProvider.get<boolean>(
-            ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK) ?  '' :  error.stack;
+        const maskErrorStackTrace = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK);
+        error.stack = maskErrorStackTrace ? '' :  error.stack;
 
         return error;
     }
@@ -433,7 +441,7 @@ class Utils {
 
     static getApplicationId(originalContext: any, pluginContext: any) {
         const arn = originalContext.invokedFunctionArn;
-        const region = Utils.getEnvVar(envVariableKeys.AWS_REGION)
+        const region = Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
             || 'local';
         const accountNo = Utils.getAccountNo(arn, pluginContext);
         const functionName = Utils.getApplicationName(originalContext);
@@ -444,7 +452,7 @@ class Utils {
     static getApplicationName(originalContext: any) {
         return ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME,
             originalContext.functionName
-            || Utils.getEnvVar(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
+            || Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
             || 'lambda-app');
     }
 
@@ -457,16 +465,16 @@ class Utils {
     }
 
     static getIfSAMLocalDebugging() {
-        return Utils.getEnvVar(envVariableKeys.AWS_SAM_LOCAL) === 'true';
+        return Utils.getEnvVar(EnvVariableKeys.AWS_SAM_LOCAL) === 'true';
     }
 
     static getIfSLSLocalDebugging() {
-        return Utils.getEnvVar(envVariableKeys.SLS_LOCAL) === 'true';
+        return Utils.getEnvVar(EnvVariableKeys.SLS_LOCAL) === 'true';
     }
     static getXRayTraceInfo() {
         let traceID: string = '';
         let segmentID: string = '';
-        const xrayTraceHeader: string = Utils.getEnvVar(envVariableKeys._X_AMZN_TRACE_ID);
+        const xrayTraceHeader: string = Utils.getEnvVar(EnvVariableKeys._X_AMZN_TRACE_ID);
         if (xrayTraceHeader) {
             for (const traceHeaderPart of xrayTraceHeader.split(';')) {
                 const traceInfo = traceHeaderPart.split('=');

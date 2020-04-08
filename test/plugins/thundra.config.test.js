@@ -1,6 +1,20 @@
 import ThundraConfig from '../../dist/plugins/config/ThundraConfig';
+import Utils from '../utils';
+import ConfigProvider from '../../dist/config/ConfigProvider';
+import ConfigNames from '../../dist/config/ConfigNames';
+import TraceConfig  from '../../dist/plugins/config/TraceConfig';
 
 describe('Trace Config Test', () => {
+    beforeEach(() => {
+        Utils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
+    afterEach(() => {
+        Utils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
     test('with programmatic config',() => {
         const config = new ThundraConfig({
             warmupAware: true,
@@ -18,10 +32,11 @@ describe('Trace Config Test', () => {
     });
 
     test('with environment variable overrides programmatic with false value',() => {
-        process.env.thundra_agent_lambda_trace_request_skip = 'false';
-        process.env.thundra_agent_lambda_trace_response_skip = 'false';
-        process.env.thundra_agent_lambda_trace_instrument_disable = 'false';
-        process.env.thundra_agent_lambda_warmup_warmupAware = 'false';
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP)] = 'false';
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP)] = 'false';
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE)] = 'false';
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE)] = 'false';
+        ConfigProvider.init();
 
         const config = new ThundraConfig({
             warmupAware: true,
@@ -35,18 +50,14 @@ describe('Trace Config Test', () => {
         expect(config.traceConfig.disableRequest).toEqual(false);
         expect(config.traceConfig.disableResponse).toEqual(false);
         expect(config.traceConfig.disableInstrumentation).toEqual(false);
-
-        process.env.thundra_agent_lambda_trace_request_skip = undefined;
-        process.env.thundra_agent_lambda_trace_response_skip = undefined;
-        process.env.thundra_agent_lambda_trace_instrument_disable = undefined;
-        process.env.thundra_agent_lambda_warmup_warmupAware = undefined;
     });
 
     test('with environment variable overrides programmatic with true value',() => {
-        process.env.thundra_agent_lambda_trace_request_skip = 'true';
-        process.env.thundra_agent_lambda_trace_response_skip = 'true';
-        process.env.thundra_agent_lambda_trace_instrument_disable = 'true';
-        process.env.thundra_agent_lambda_warmup_warmupAware = 'true';
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP)] = 'true';
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP)] = 'true';
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE)] = 'true';
+        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE)] = 'true';
+        ConfigProvider.init();
 
         const config = new ThundraConfig({
             warmupAware: false,
@@ -61,11 +72,6 @@ describe('Trace Config Test', () => {
         expect(config.traceConfig.disableRequest).toEqual(true);
         expect(config.traceConfig.disableResponse).toEqual(true);
         expect(config.traceConfig.disableInstrumentation).toEqual(true);
-
-        process.env.thundra_agent_lambda_trace_request_skip = undefined;
-        process.env.thundra_agent_lambda_trace_response_skip = undefined;
-        process.env.thundra_agent_lambda_trace_instrument_disable = undefined;
-        process.env.thundra_agent_lambda_warmup_warmupAware = undefined;
     });
 
     describe('TraceConfig', () => {    
