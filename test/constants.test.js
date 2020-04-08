@@ -1,4 +1,19 @@
-import {HOOKS, PROC_STAT_PATH, PROC_IO_PATH, DATA_MODEL_VERSION, getTimeoutMargin, getDefaultAPIEndpoint} from '../dist/Constants';
+import Utils from './utils';
+import {
+    HOOKS,
+    PROC_STAT_PATH,
+    PROC_IO_PATH,
+    DATA_MODEL_VERSION,
+    getTimeoutMargin,
+    getDefaultAPIEndpoint} from '../dist/Constants';
+
+beforeEach(() => {
+    Utils.clearEnvironmentVariables();
+});
+
+afterEach(() => {
+    Utils.clearEnvironmentVariables();
+});
 
 test('DATA_MODEL_VERSION did not change', () => {
     expect(DATA_MODEL_VERSION).toEqual('2.0');

@@ -4,14 +4,6 @@ class ConfigProvider {
 
     private static configs: {[key: string]: any} = {};
 
-    static configNameToEnvVar(configName: string): string {
-        return configName.toUpperCase().replace(/\./g, '_');
-    }
-
-    static envVarToConfigName(envVarName: string): string {
-        return envVarName.toLowerCase().replace(/_/g, '.');
-    }
-
     static init(options?: any, configFilePath?: string): void {
         ConfigProvider.clear();
 
@@ -81,22 +73,22 @@ class ConfigProvider {
         }
     }
 
-    private static generateEnvVarNames(envVarName: string): Set<string> {
-        envVarName = envVarName.replace('.', '_');
-        const envVarNames: Set<string> = new Set();
-        envVarNames.add(envVarName);
-        envVarNames.add(envVarName.toLowerCase());
-        envVarNames.add(envVarName.toUpperCase());
-        return envVarNames;
+    static set(key: string, value: any): void {
+        const type = ConfigMetadata[key] ? ConfigMetadata[key].type : 'any';
+        ConfigProvider.configs[key] = this.parse(value, type);
     }
 
-    private static getAnyFromEnvVar(envVarNames: Set<string>): string {
-        for (const envVarName of envVarNames) {
-            if (process.env[envVarName]) {
-                return process.env[envVarName];
-            }
-        }
-        return null;
+    static configNameToEnvVar(configName: string): string {
+        return configName.toUpperCase().replace(/\./g, '_');
+    }
+
+    static envVarToConfigName(envVarName: string): string {
+        return envVarName.toLowerCase().replace(/_/g, '.');
+    }
+
+    static setAsEnvVar(configName: string, configValue: any): void {
+        const envVarKey = ConfigProvider.configNameToEnvVar(configName);
+        process.env[envVarKey] = configValue;
     }
 
     private static traverseConfigObject(obj: any, path: string): void {
