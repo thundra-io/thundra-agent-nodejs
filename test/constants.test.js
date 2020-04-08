@@ -1,4 +1,4 @@
-import Utils from './utils';
+import TestUtils from './utils';
 import {
     HOOKS,
     PROC_STAT_PATH,
@@ -8,11 +8,11 @@ import {
     getDefaultAPIEndpoint} from '../dist/Constants';
 
 beforeEach(() => {
-    Utils.clearEnvironmentVariables();
+    TestUtils.clearEnvironmentVariables();
 });
 
 afterEach(() => {
-    Utils.clearEnvironmentVariables();
+    TestUtils.clearEnvironmentVariables();
 });
 
 test('DATA_MODEL_VERSION did not change', () => {

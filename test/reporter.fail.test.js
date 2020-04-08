@@ -1,5 +1,5 @@
-import Reporter from '../dist/Reporter.js';
 const URL = require('url').Url;
+import Reporter from '../dist/Reporter.js';
 
 let httpRequestCalled = false;
 let httpsRequestCalled = false;
@@ -50,7 +50,7 @@ jest.mock('https', () => ({
     }
 }));
 
-describe('Reporter', () => {
+describe('reporter', () => {
 
     describe('http', () => {
         // noinspection JSAnnotator
@@ -81,8 +81,7 @@ describe('Reporter', () => {
         });
     });
 
-    describe('sendReports failure', () => {
-        process.env.thundra_agent_lambda_debug_enable = 'true';
+    describe('send reports failure', () => {
         let consoleOutput;
 
         const reporter = new Reporter({apiKey: 'apiKey'});
@@ -101,4 +100,5 @@ describe('Reporter', () => {
             expect(consoleOutput).toEqual(JSON.stringify(reports));
         });
     });
+
 });
