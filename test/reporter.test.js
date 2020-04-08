@@ -1,4 +1,8 @@
+import ConfigProvider from '../dist/config/ConfigProvider';
+import ConfigNames from '../dist/config/ConfigNames';
 import Reporter from '../dist/Reporter.js';
+
+import TestUtils from './utils.js';
 
 let httpsRequestCalled = false;
 let httpsRequestOnCalled = false;
@@ -6,6 +10,16 @@ let httpsRequestWriteCalled = false;
 let httpsRequestEndCalled = false;
 
 let httpsSentData;
+
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
 
 jest.mock('http', () => ({
     request: (options, response) => {
@@ -50,7 +64,7 @@ describe('constructor', () => {
     });
 });
 
-describe('Reporter', () => {
+describe('reporter', () => {
 
     describe('constructor', () => {
         const reporter = new Reporter({apiKey: 'apiKey'});
@@ -64,7 +78,7 @@ describe('Reporter', () => {
         });
     });
 
-    describe('addReports', () => {
+    describe('add reports', () => {
         const reporter = new Reporter({apiKey: 'apiKey'});
         const mockReport = {data: {type: 'Invocation', data: 'data1'}};
 
@@ -76,22 +90,22 @@ describe('Reporter', () => {
     });
 
     describe('request', () => {
-        describe('https', async () => {
-            const reporter = new Reporter({apiKey: 'apiKey'});
-            const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
-            const mockReport2 = {data: {type: 'Span', data: 'data2'}};
+        const reporter = new Reporter({apiKey: 'apiKey'});
+        const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
+        const mockReport2 = {data: {type: 'Span', data: 'data2'}};
 
-            const reports = [];
-            reports.push(mockReport1);
-            reports.push(mockReport2);
+        const reports = [];
+        reports.push(mockReport1);
+        reports.push(mockReport2);
 
-            reporter.addReport(mockReport1);
-            reporter.addReport(mockReport2);
+        reporter.addReport(mockReport1);
+        reporter.addReport(mockReport2);
 
-            await reporter.sendReports();
+        reporter.sendReports();
 
-            const sentData = httpsSentData;
+        const sentData = httpsSentData;
 
+        describe('https', () => {
             it('should make https request', () => {
                 expect(httpsRequestCalled).toEqual(true);
                 expect(httpsRequestOnCalled).toEqual(true);
@@ -107,7 +121,7 @@ describe('Reporter', () => {
         });
     });
 
-    describe('sendReports success', async () => {
+    describe('send reports success', () => {
         const reporter = new Reporter({apiKey: 'apiKey'});
         const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
         const mockReport2 = {data: {type: 'Span', data: 'data2'}};
@@ -119,16 +133,16 @@ describe('Reporter', () => {
         reporter.addReport(mockReport1);
         reporter.addReport(mockReport2);
 
-        await reporter.sendReports();
+        reporter.sendReports();
 
         it('should make a single https request', () => {
             expect(reporter.request.mock.calls.length).toBe(1);
         });
     });
 
-    describe('addReports async', async () => {
+    describe('add reports async', () => {
         let stdout = null;
-        process.env.thundra_agent_lambda_report_cloudwatch_enable = true;
+        ConfigProvider.set(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE, true);
         process.stdout.write = jest.fn(input => stdout = input);
 
         const reporter = new Reporter({apiKey: 'apiKey'});
@@ -136,7 +150,7 @@ describe('Reporter', () => {
 
         reporter.addReport(mockReport);
 
-        await reporter.sendReports();
+        reporter.sendReports();
 
         it('should add report to reports array', () => {
             expect(reporter.reports.length).toBe(1);
