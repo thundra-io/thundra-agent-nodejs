@@ -14,149 +14,161 @@ import ThundraWrapper from '../dist/ThundraWrapper';
 import Recorder from '../dist/opentracing/Recorder';
 import AWSIntegration from '../dist/plugins/integrations/AWSIntegration';
 
+import TestUtils from './utils.js';
+
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
 const operationList = [
     {
         className: ClassNames.DYNAMODB,
         tags: {
-            "aws.dynamodb.table.name": [
-                "test-table"
+            'aws.dynamodb.table.name': [
+                'test-table'
             ],
-            "operation.type": [
-                "WRITE"
+            'operation.type': [
+                'WRITE'
             ]
         }
     },
     {
         className: ClassNames.LAMBDA,
         tags: {
-            "aws.lambda.name": [
-                "Test"
+            'aws.lambda.name': [
+                'Test'
             ],
-            "operation.type": [
-                "WRITE"
+            'operation.type': [
+                'WRITE'
             ]
         }
     },
     {
         className: ClassNames.SQS,
         tags: {
-            "aws.sqs.queue.name": [
-                "MyQueue"
+            'aws.sqs.queue.name': [
+                'MyQueue'
             ],
-            "operation.type": [
-                "WRITE"
+            'operation.type': [
+                'WRITE'
             ]
         }
     },
     {
         className: ClassNames.S3,
         tags: {
-            "aws.s3.bucket.name": [
-                "test"
+            'aws.s3.bucket.name': [
+                'test'
             ],
-            "operation.type": [
-                "READ"
+            'operation.type': [
+                'READ'
             ]
         }
     },
     {
         className: ClassNames.SNS,
         tags: {
-            "aws.sns.topic.name": [
-                "TEST_TOPIC"
+            'aws.sns.topic.name': [
+                'TEST_TOPIC'
             ],
-            "operation.type": [
-                "WRITE"
+            'operation.type': [
+                'WRITE'
             ]
         }
     },
     {
         className: ClassNames.KINESIS,
         tags: {
-            "aws.kinesis.stream.name": [
-                "STRING_VALUE"
+            'aws.kinesis.stream.name': [
+                'STRING_VALUE'
             ],
-            "operation.type": [
-                "WRITE"
+            'operation.type': [
+                'WRITE'
             ]
         }
     },
     {
         className: ClassNames.FIREHOSE,
         tags: {
-            "aws.firehose.stream.name": [
-                "STRING_VALUE"
+            'aws.firehose.stream.name': [
+                'STRING_VALUE'
             ],
-            "operation.type": [
-                "WRITE"
+            'operation.type': [
+                'WRITE'
             ]
         }
     },
     {
         className: ClassNames.ATHENA,
         tags: {
-            "db.instance": [
-                "sample-db"
+            'db.instance': [
+                'sample-db'
             ],
-            "operation.type": [
-                "WRITE"
+            'operation.type': [
+                'WRITE'
             ]
         }
     },
     {
         className: ClassNames.HTTP,
         tags: {
-            "http.host": [
-                "jsonplaceholder.typicode.com",
-                "34zsqapxkj.execute-api.eu-west-1.amazonaws.com"
+            'http.host': [
+                'jsonplaceholder.typicode.com',
+                '34zsqapxkj.execute-api.eu-west-1.amazonaws.com'
             ],
-            "operation.type": [
-                "GET"
+            'operation.type': [
+                'GET'
             ]
         }
     },
     {
         className: ClassNames.ELASTICSEARCH,
         tags: {
-            "elasticsearch.normalized_uri": [
-                "/twitter"
+            'elasticsearch.normalized_uri': [
+                '/twitter'
             ],
-            "operation.type": [
-                "POST"
+            'operation.type': [
+                'POST'
             ]
         }
     },
     {
         className: ClassNames.REDIS,
         tags: {
-            "redis.host": [
-                "127.0.0.1",
-                "localhost"
+            'redis.host': [
+                '127.0.0.1',
+                'localhost'
             ],
-            "operation.type": [
-                "WRITE"
+            'operation.type': [
+                'WRITE'
             ]
         }
     },
     {
         className: ClassNames.MYSQL,
         tags: {
-            "db.instance": [
-                "db"
+            'db.instance': [
+                'db'
             ],
-            "operation.type": [
-                "READ"
+            'operation.type': [
+                'READ'
             ]
         }
     },
     {
         className: ClassNames.MONGODB,
         tags: {
-            "db.instance": [
-                "testDB"
+            'db.instance': [
+                'testDB'
             ],
-            "operation.type": [
-                "DELETE"
+            'operation.type': [
+                'DELETE'
             ]
         }
     },
@@ -180,7 +192,7 @@ beforeAll(() => {
     AWSIntegration.prototype.getOriginalFuntion = jest.fn(() => {
         return (cb) => {
             cb(Error('foo error'), null);
-        }
+        };
     });
     ThundraWrapper.prototype.executeAfteInvocationAndReport = jest.fn();
     Recorder.prototype.destroy = jest.fn();
@@ -188,7 +200,7 @@ beforeAll(() => {
 
 describe('whitelist config', () => {
     const config = {
-        type: "SecurityAwareSpanListener",
+        type: 'SecurityAwareSpanListener',
         config: {
             block: false,
             whitelist: operationList,
@@ -197,7 +209,7 @@ describe('whitelist config', () => {
     
     let thundraWrapper;
     let recorder;
-    const originalEvent = { key: 'value' }
+    const originalEvent = { key: 'value' };
     const originalContext = createMockContext();
     
     const clearRecorder = (recorder) => {
@@ -214,8 +226,8 @@ describe('whitelist config', () => {
     };
 
     beforeAll(() => {
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = JSON.stringify(config);
-        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});;
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
+        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
         recorder = thundra.tracer().recorder;
     });
 
@@ -343,8 +355,8 @@ describe('whitelist config', () => {
             return wrappedFunc(originalEvent, originalContext).then(() => {
                 const span = recorder.spanList[1];
                 checkIfWhitelisted(span);
-            });;
-        })
+            });
+        });
     });
 
     describe('using redis integration', () => {
@@ -418,13 +430,14 @@ describe('whitelist config', () => {
             });
         });
     });
+
 });
 
 describe('blacklist config', () => {
     let thundraWrapper;
     let recorder;
     const config = {
-        type: "SecurityAwareSpanListener",
+        type: 'SecurityAwareSpanListener',
         config: {
             block: true,
             blacklist: operationList,
@@ -432,7 +445,7 @@ describe('blacklist config', () => {
     };
     const securityErrorType = 'SecurityError';
     const securityErrorMessage = 'Operation was blocked due to security configuration';
-    const originalEvent = { key: 'value' }
+    const originalEvent = { key: 'value' };
     const originalContext = createMockContext();
     
     const clearRecorder = (recorder) => {
@@ -449,11 +462,11 @@ describe('blacklist config', () => {
         expect(span.getTag('error.message')).toEqual(securityErrorMessage);
         expect(span.getTag(SecurityTags.BLOCKED)).toBeTruthy();
         expect(span.getTag(SecurityTags.VIOLATED)).toBeTruthy();
-    }
+    };
 
     beforeAll(() => {
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)] = JSON.stringify(config);
-        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});;
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
+        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
         recorder = thundra.tracer().recorder;
     });
 
@@ -581,8 +594,8 @@ describe('blacklist config', () => {
             return wrappedFunc(originalEvent, originalContext).catch(() => {
                 const span = recorder.spanList[1];
                 checkIfBlacklisted(span);
-            });;
-        })
+            });
+        });
     });
 
     describe.skip('using redis integration', () => {
@@ -656,4 +669,5 @@ describe('blacklist config', () => {
             });
         });
     });
+
 });
