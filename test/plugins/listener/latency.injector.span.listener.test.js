@@ -1,9 +1,8 @@
 import LatencyInjectorSpanListener from '../../../dist/plugins/listeners/LatencyInjectorSpanListener';
 import ThundraSpan from '../../../dist/opentracing/Span';
 
-describe('LatencyInjectorSpanListener', () => {
-
-    it('Should init default configurations if empty opt provided', () => {
+describe('latency injector span listener', () => {
+    it('should init default configurations if empty opt provided', () => {
         // Arrange
         const opt = {};
         
@@ -16,8 +15,7 @@ describe('LatencyInjectorSpanListener', () => {
         expect(listener.randomizeDelay).toBe(false);
     });
 
-
-    it('Should init with valid options', () => {
+    it('should init with valid options', () => {
         // Arrange
         const opt = {
             injectOnFinish: true,
@@ -34,7 +32,7 @@ describe('LatencyInjectorSpanListener', () => {
         expect(listener.randomizeDelay).toBe(true);
     });
 
-    it('Should not call function callback before delay', (done) => {
+    it('should not call function callback before delay', (done) => {
         // Arrange
         const opt = {
             delay: 200
@@ -53,7 +51,7 @@ describe('LatencyInjectorSpanListener', () => {
         }, 100);
     });
 
-    it('Should call function callback after delay', (done) => {
+    it('should call function callback after delay', (done) => {
         // Arrange
         const opt = {
             delay: 200

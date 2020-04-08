@@ -1,14 +1,16 @@
 import Invocation from '../../dist/plugins/Invocation';
-import {createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
-import {DATA_MODEL_VERSION, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_FUNCTION_PLATFORM} from '../../dist/Constants';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import {
+    DATA_MODEL_VERSION, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_FUNCTION_PLATFORM
+} from '../../dist/Constants';
+
+import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
 
 const pluginContext = createMockPluginContext();
 
-describe('Invocation', () => {
-
-    describe('Export', () => {
+describe('invocation', () => {
+    describe('export', () => {
         const options = {opt1: 'opt1', opt2: 'opt2'};
         const invocation = Invocation(options);
         invocation.setPluginContext(pluginContext);
@@ -23,7 +25,7 @@ describe('Invocation', () => {
 
     describe('constructor', () => {
         const invocation = Invocation();
-        it('Should have the same HOOKS', () => {
+        it('should have the same hooks', () => {
             expect(invocation.hooks).toEqual({
                 'before-invocation': invocation.beforeInvocation,
                 'after-invocation': invocation.afterInvocation
@@ -31,17 +33,16 @@ describe('Invocation', () => {
         });
     });
 
-
-    describe('setPluginContext', () => {
+    describe('set plugin context', () => {
         const invocation = Invocation();
         invocation.setPluginContext(pluginContext);
-        it('Should set apiKey and pluginContext', () => {
+        it('should set api key and plugin context', () => {
             expect(invocation.apiKey).toEqual(pluginContext.apiKey);
             expect(invocation.pluginContext).toEqual(pluginContext);
         });
     });
 
-    describe('beforeInvocation', () => {
+    describe('before invocation', () => {
         const invocation = Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -50,9 +51,8 @@ describe('Invocation', () => {
                 heapUsed: 39845888
             };
         });
-        
 
-        it('Should set variables to their initial value', async () => {
+        it('should set variables to their initial value', async () => {
             InvocationSupport.setFunctionName(beforeInvocationData.originalContext.functionName);
             
             await invocation.beforeInvocation(beforeInvocationData);
@@ -95,7 +95,7 @@ describe('Invocation', () => {
         });
     });
 
-    describe('afterInvocation', () => {
+    describe('after invocation', () => {
         const invocation = Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -103,19 +103,19 @@ describe('Invocation', () => {
 
         const afterInvocationData = {};
         invocation.report = jest.fn();
-        it('Should call report method', async () => {
+        it('should call report method', async () => {
             await invocation.afterInvocation(afterInvocationData);
             expect(invocation.report).toHaveBeenCalledTimes(1);
         });
     });
 
-    describe('beforeInvocation + afterInvocation', () => {
+    describe('before invocation + after invocation', () => {
         const invocation = Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = {...createMockBeforeInvocationData()};
         const afterInvocationData = {};
         invocation.report = jest.fn();
-        it('Should call report method', async () => {
+        it('should call report method', async () => {
             await invocation.beforeInvocation(beforeInvocationData);
             await invocation.afterInvocation(afterInvocationData);
             expect(invocation.finishTimestamp).toBeTruthy();
@@ -125,13 +125,13 @@ describe('Invocation', () => {
         });
     });
 
-    describe('beforeInvocation + afterInvocation with error', () => {
+    describe('before invocation + after invocation with error', () => {
         const invocation = Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {error: Error('error message')};
         invocation.report = jest.fn();
-        it('Should call report method', async () => {
+        it('should call report method', async () => {
             await invocation.beforeInvocation(beforeInvocationData);
             await invocation.afterInvocation(afterInvocationData);
             expect(invocation.finishTimestamp).toBeTruthy();
@@ -143,13 +143,13 @@ describe('Invocation', () => {
         });
     });
 
-    describe('beforeInvocation + afterInvocation with timeouterror', () => {
+    describe('before invocation + after invocation with timeout error', () => {
         const invocation = Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {error: new TimeoutError('Timeout errror')};
         invocation.report = jest.fn();
-        it('Should call report method', async () => {
+        it('should call report method', async () => {
             await invocation.beforeInvocation(beforeInvocationData);
             await invocation.afterInvocation(afterInvocationData);
             expect(invocation.invocationData.timeout).toBeTruthy();
@@ -164,7 +164,7 @@ describe('Invocation', () => {
         await invocation.beforeInvocation(beforeInvocationData);
         await invocation.afterInvocation(afterInvocationData);
 
-        it('should call reporter.addReport', () => {
+        it('should add report', () => {
             expect(invocation.reporter.addReport).toBeCalledWith({
                 data: invocation.invocationData,
                 type: invocation.dataType,

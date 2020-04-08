@@ -1,7 +1,7 @@
 import ThundraRecorder from '../../dist/opentracing/Recorder';
 import ThundraSpan from '../../dist/opentracing/Span';
 
-describe('Recorder', () => {
+describe('recorder', () => {
     describe('constructor', () => {
         const recorder = new ThundraRecorder(); 
         it('should not init active span and span order should be 1', () => {

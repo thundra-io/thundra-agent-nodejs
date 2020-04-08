@@ -6,8 +6,7 @@ import CompositeSampler from '../../dist/opentracing/sampler/CompositeSampler';
 import { SamplerCompositionOperator } from '../../dist/opentracing/sampler/CompositeSampler';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
-
-describe('DurationAwareSampler with duration 500ms and longerThan true', () => {
+describe('duration aware sampler with duration 500ms and longerThan true', () => {
     const sampler = new DurationAwareSampler(500, true);
 
     test('should sample root span with duration greater than 500 ms', () => {
@@ -26,7 +25,7 @@ describe('DurationAwareSampler with duration 500ms and longerThan true', () => {
     });
 });
 
-describe('ErrorAwareSampler', () => {
+describe('error aware sampler', () => {
     const sampler = new ErrorAwareSampler();
 
     test('should sample root span with error', () => {
@@ -42,7 +41,7 @@ describe('ErrorAwareSampler', () => {
     });
 });
 
-describe('TimeAwareSampler with time frequency 2 second', () => {
+describe('time aware sampler with time frequency 2 second', () => {
     const sampler = new TimeAwareSampler(2000);
    
     test('should not sample after calling 1 second', (done) => {
@@ -63,7 +62,7 @@ describe('TimeAwareSampler with time frequency 2 second', () => {
     });
 });
 
-describe('CountAwareSampler with count frequency 5', () => {
+describe('count aware sampler with count frequency 5', () => {
     const sampler = new CountAwareSampler(5);
     let sampledCount = 0;
 
@@ -78,8 +77,7 @@ describe('CountAwareSampler with count frequency 5', () => {
     });
 });
 
-
-describe('CompositeSampler with Error and Count Aware Samplers with frequency 5 with OR operator', () => {
+describe('composite sampler with error and count aware samplers with frequency 5 with OR operator', () => {
     const sampler1 = new CountAwareSampler(5);
     const sampler2 = new ErrorAwareSampler();
 
@@ -101,7 +99,7 @@ describe('CompositeSampler with Error and Count Aware Samplers with frequency 5 
     });
 });
 
-describe('CompositeSampler with Error and Count Aware Samplers with frequency 5 with AND operator.', () => {
+describe('composite sampler with error and count aware samplers with frequency 5 with AND operator.', () => {
     const sampler1 = new CountAwareSampler(5);
     const sampler2 = new ErrorAwareSampler();
 
@@ -123,8 +121,7 @@ describe('CompositeSampler with Error and Count Aware Samplers with frequency 5 
     });
 });
 
-
-describe('CompositeSampler should pass data to underlying sampler', () => {
+describe('composite sampler should pass data to underlying sampler', () => {
     const sampler1 = new DurationAwareSampler(500, true);
 
     const samplers = [];

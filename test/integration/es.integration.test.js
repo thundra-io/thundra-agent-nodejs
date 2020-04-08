@@ -3,7 +3,7 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import ES from './utils/es.integration.utils';
 
-describe('Elastic Search Integration', () => {
+describe('ES integration', () => {
     test('should instrument ES calls with single host', () => {
         const tracer = new ThundraTracer();
         const integration = new ESIntegrations({
@@ -76,7 +76,7 @@ describe('Elastic Search Integration', () => {
         });
     });
 
-    test('should mask ES statments', () => {
+    test('should mask ES body', () => {
         const tracer = new ThundraTracer();
         const integration = new ESIntegrations({
             disableInstrumentation: true,

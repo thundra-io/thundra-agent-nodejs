@@ -8,7 +8,7 @@ afterEach(() => {
     ConfigProvider.clear();
 });
 
-test('Configuration should be able to passed through environment variables', () => {
+test('configuration should be able to passed through environment variables', () => {
     try {
         process.env['THUNDRA_AGENT_MY_KEY'] = 'my-value';
         process.env['THUNDRA_AGENT_LAMBDA_MY_KEY2'] = 'my-value2';
@@ -36,7 +36,7 @@ test('Configuration should be able to passed through environment variables', () 
 });
 
 
-test('Configuration should be able to passed through options', () => {
+test('configuration should be able to passed through options', () => {
     try {
         const options = {
             my: {
@@ -79,9 +79,8 @@ test('Configuration should be able to passed through options', () => {
     }
 });
 
-test('Configuration should be able to passed through config file', () => {
+test('configuration should be able to passed through config file', () => {
     try {
-
         ConfigProvider.init(null, __dirname + '/sample-config.json');
 
         // 'thundra.agent' prefix is added automatically
@@ -101,7 +100,7 @@ test('Configuration should be able to passed through config file', () => {
     }
 });
 
-test('Configuration should be returned in the type that given in the metadata', () => {
+test('configuration should be returned in the type that given in the metadata', () => {
     try {
         process.env['thundra_agent_lambda_debugger_port'] = '3000';
         process.env['thundra_agent_trace_integrations_aws_dynamodb_traceInjection_enable'] = 'true';
@@ -133,7 +132,7 @@ test('Configuration should be returned in the type that given in the metadata', 
     }
 });
 
-test('Configuration should return the default value if provided in the metadata or as an argument', () => {
+test('configuration should return the default value if provided in the metadata or as an argument', () => {
     try {
         try {
             ConfigProvider.init();

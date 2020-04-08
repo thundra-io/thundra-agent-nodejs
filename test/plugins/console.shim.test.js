@@ -1,7 +1,8 @@
 import LogPlugin from '../../dist/plugins/Log';
+
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
 
-describe('Log plugin shim console', () => {
+describe('log plugin shim console', () => {
     const logPlugin = new LogPlugin();
     logPlugin.enable();
     
@@ -41,7 +42,7 @@ describe('Log plugin shim console', () => {
     });       
 });
 
-describe('Log plugin unshim console', () => {
+describe('log plugin unshim console', () => {
     const logPlugin = new LogPlugin();
     logPlugin.enable();
     const pluginContext = createMockPluginContext();

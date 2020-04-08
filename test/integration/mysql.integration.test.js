@@ -1,13 +1,10 @@
-
 import MySQL2Integration from '../../dist/plugins/integrations/MySQL2Integration';
 import MySQLIntegration from '../../dist/plugins/integrations/MySQLIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import mysql from './utils/mysql.integration.utils';
-import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
-
-describe('MySQL2 Integration', () => {
+describe('MySQL2 integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should instrument MySQL calls with mysql2 client', () => {

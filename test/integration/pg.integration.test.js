@@ -1,12 +1,10 @@
-
 import PostgreIntegration from '../../dist/plugins/integrations/PostgreIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import PG from './utils/pg.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
-
-describe('PostgreSQL Integration', () => {
+describe('PostgreSQL integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should instrument PostgreSQL calls ', () => {

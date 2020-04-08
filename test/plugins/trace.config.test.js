@@ -1,23 +1,24 @@
 import ConfigProvider from '../../dist/config/ConfigProvider';
 import ConfigNames from '../../dist/config/ConfigNames';
 import TraceConfig  from '../../dist/plugins/config/TraceConfig';
-import Utils from '../utils';
 
-describe('TraceConfig', () => {
-    beforeEach(() => {
-        Utils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
+import TestUtils from '../utils';
 
-    afterEach(() => {
-        Utils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
 
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+describe('trace config', () => {
     it('should parse single envirenment variable', () => {
-        Utils.clearEnvironmentVariables();
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG)] = 'album.getAlbum[traceArgs=true,traceReturnValue=true,traceError=true]';
-        ConfigProvider.init();
+        ConfigProvider.set(
+            ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG,
+            'album.getAlbum[traceArgs=true,traceReturnValue=true,traceError=true]');
 
         const traceConfig = new TraceConfig({});
         
@@ -29,10 +30,12 @@ describe('TraceConfig', () => {
     });
 
     it('should parse multiple environment variable', () => {
-        Utils.clearEnvironmentVariables();
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG + '1')] = 'album.getAlbum[traceArgs=true,traceReturnValue=false, traceError=true]';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG + '2')] = 'user.get*[traceArgs=true,traceReturnValue=true,traceError=false]';
-        ConfigProvider.init();
+        ConfigProvider.set(
+            ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG + '1',
+            'album.getAlbum[traceArgs=true,traceReturnValue=false, traceError=true]');
+        ConfigProvider.set(
+            ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG + '2',
+            'user.get*[traceArgs=true,traceReturnValue=true,traceError=false]');
 
         const traceConfig = new TraceConfig({});
 
@@ -62,24 +65,13 @@ describe('TraceConfig', () => {
     });
 });
 
-describe('TraceConfig', () => {
-    beforeEach(() => {
-        Utils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
-
-    afterEach(() => {
-        Utils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
-    
+describe('trace config', () => {
     test('with mask integration statements configuration from environment variable',() => {
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK)] = 'true';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK)] = 'true';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK)] = 'true';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK)] = 'true';
-        ConfigProvider.init();
-    
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK, true);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK, true);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK, true);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK, true);
+
         const config = new TraceConfig({});
         
         expect(config.maskRedisStatement).toEqual(true);

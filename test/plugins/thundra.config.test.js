@@ -1,20 +1,20 @@
-import ThundraConfig from '../../dist/plugins/config/ThundraConfig';
-import Utils from '../utils';
 import ConfigProvider from '../../dist/config/ConfigProvider';
 import ConfigNames from '../../dist/config/ConfigNames';
-import TraceConfig  from '../../dist/plugins/config/TraceConfig';
+import ThundraConfig from '../../dist/plugins/config/ThundraConfig';
 
-describe('Trace Config Test', () => {
-    beforeEach(() => {
-        Utils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
+import TestUtils from '../utils';
 
-    afterEach(() => {
-        Utils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
 
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+describe('trace config', () => {
     test('with programmatic config',() => {
         const config = new ThundraConfig({
             warmupAware: true,
@@ -32,11 +32,10 @@ describe('Trace Config Test', () => {
     });
 
     test('with environment variable overrides programmatic with false value',() => {
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP)] = 'false';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP)] = 'false';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE)] = 'false';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE)] = 'false';
-        ConfigProvider.init();
+        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP, false);
+        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP, false);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE, false);
+        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE, false);
 
         const config = new ThundraConfig({
             warmupAware: true,
@@ -53,11 +52,10 @@ describe('Trace Config Test', () => {
     });
 
     test('with environment variable overrides programmatic with true value',() => {
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP)] = 'true';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP)] = 'true';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE)] = 'true';
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE)] = 'true';
-        ConfigProvider.init();
+        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP, true);
+        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP, true);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE, true);
+        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE, true);
 
         const config = new ThundraConfig({
             warmupAware: false,
@@ -74,22 +72,20 @@ describe('Trace Config Test', () => {
         expect(config.traceConfig.disableInstrumentation).toEqual(true);
     });
 
-    describe('TraceConfig', () => {    
-        test('with mask integration statements configuration programmatically',() => {
-            const config = new ThundraConfig({
-                traceConfig: {
-                    maskRedisStatement: true,
-                    maskRdbStatement: true,
-                    maskDynamoDBStatement: true,
-                    maskElasticSearchStatement: true
-                }   
-            });
-            
-            expect(config.traceConfig.maskRedisStatement).toEqual(true);
-            expect(config.traceConfig.maskRdbStatement).toEqual(true);
-            expect(config.traceConfig.maskDynamoDBStatement).toEqual(true);
-            expect(config.traceConfig.maskElasticSearchStatement).toEqual(true);
+    test('with mask integration statements configuration programmatically',() => {
+        const config = new ThundraConfig({
+            traceConfig: {
+                maskRedisStatement: true,
+                maskRdbStatement: true,
+                maskDynamoDBStatement: true,
+                maskElasticSearchStatement: true
+            }
         });
-    }); 
+
+        expect(config.traceConfig.maskRedisStatement).toEqual(true);
+        expect(config.traceConfig.maskRdbStatement).toEqual(true);
+        expect(config.traceConfig.maskDynamoDBStatement).toEqual(true);
+        expect(config.traceConfig.maskElasticSearchStatement).toEqual(true);
+    });
 });
 

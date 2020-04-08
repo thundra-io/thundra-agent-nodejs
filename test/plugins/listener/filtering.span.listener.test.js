@@ -4,9 +4,8 @@ import StandardSpanFilterer from '../../../dist/plugins/listeners/StandardSpanFi
 import StandardSpanFilter from '../../../dist/plugins/listeners/StandardSpanFilter';
 import ThundraSpan from '../../../dist/opentracing/Span';
 
-describe('FilteringSpanListener', () => {
-
-    it('Should call function callback if filter matches and not call if it does not', () => {
+describe('filtering span listener', () => {
+    it('should call function callback if filter matches and not call if it does not', () => {
         // Arrange
         const filteringListener = new FilteringSpanListener();
 

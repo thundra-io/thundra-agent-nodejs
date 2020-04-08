@@ -1,7 +1,8 @@
 import LogPlugin from '../../dist/plugins/Log';
+
 import { createMockReporter, createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
 
-describe('LogPlugin', () => {
+describe('log', () => {
     describe('constructor', () => {
         const options = { op2: 1, opt2: 2 };
         const logPlugin = new LogPlugin(options);
@@ -29,7 +30,7 @@ describe('LogPlugin', () => {
         });
     });
 
-    describe('setPluginContext', () => {
+    describe('set plugin context', () => {
         const logPlugin = new LogPlugin();
         logPlugin.enable();
         const pluginContext = createMockPluginContext();
@@ -40,7 +41,7 @@ describe('LogPlugin', () => {
         });
     });
 
-    describe('beforeInvocation', () => {
+    describe('before invocation', () => {
         const logPlugin = new LogPlugin();
         logPlugin.enable();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -52,7 +53,7 @@ describe('LogPlugin', () => {
         });
     });
 
-    describe('reportLog', () => {
+    describe('report log', () => {
         const logPlugin = new LogPlugin();
         logPlugin.enable();
         const pluginContext = createMockPluginContext();

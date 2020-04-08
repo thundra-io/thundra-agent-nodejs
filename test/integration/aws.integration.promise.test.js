@@ -3,7 +3,7 @@ import AWSIntegration from '../../dist/plugins/integrations/AWSIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
-describe('AWS Integration', () => {
+describe('AWS integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should close span when worked with promise', () => { 

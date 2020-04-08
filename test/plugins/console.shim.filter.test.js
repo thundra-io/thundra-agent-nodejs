@@ -1,21 +1,21 @@
-import Utils from '../utils';
 import ConfigProvider from '../../dist/config/ConfigProvider';
 import ConfigNames from '../../dist/config/ConfigNames';
 import LogPlugin from '../../dist/plugins/Log';
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
 
-describe('Console integration should filter logs with levels', () => {
+import TestUtils from '../utils';
 
-    beforeEach(() => {
-        Utils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
 
-    afterEach(() => {
-        Utils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
 
+describe('console integration should filter logs with levels', () => {
     it('should capture console.log statements', () => {
         const logPlugin = new LogPlugin();
         logPlugin.enable();
@@ -31,9 +31,7 @@ describe('Console integration should filter logs with levels', () => {
         logPlugin.setPluginContext(pluginContext);
         logPlugin.beforeInvocation(beforeInvocationData);
 
-        process.env[ConfigProvider.configNameToEnvVar(ConfigNames.THUNDRA_LOG_LOGLEVEL)] = 'WARN';
-
-        ConfigProvider.init();
+        ConfigProvider.set(ConfigNames.THUNDRA_LOG_LOGLEVEL, 'WARN');
 
         console.log('log');
         console.warn('warn');
@@ -52,7 +50,5 @@ describe('Console integration should filter logs with levels', () => {
         expect(logs[1].data.logLevel).toBe('ERROR');
         expect(logs[1].data.logMessage).toBe('error');
         expect(logs[1].data.logContextName).toBe('STDERR');
-
     });
-
 });
