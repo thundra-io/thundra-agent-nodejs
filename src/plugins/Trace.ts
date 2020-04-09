@@ -69,8 +69,7 @@ export class Trace {
     }
 
     initIntegrations(): void {
-        if (!(this.config.disableInstrumentation) ||
-            !ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE)) {
+        if (!(this.config.disableInstrumentation || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE))) {
             this.integrationsMap = new Map<string, Integration>();
 
             for (const key of Object.keys(INTEGRATIONS)) {
