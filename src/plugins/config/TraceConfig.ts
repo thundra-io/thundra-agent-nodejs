@@ -27,7 +27,7 @@ class TraceConfig extends BasePluginConfig {
     maskRedisStatement: boolean;
     maskRdbStatement: boolean;
     maskDynamoDBStatement: boolean;
-    maskElasticSearchStatement: boolean;
+    maskElasticSearchBody: boolean;
     maskMongoDBCommand: boolean;
     dynamoDBTraceInjectionEnabled: boolean;
     lambdaTraceInjectionDisabled: boolean;
@@ -89,9 +89,9 @@ class TraceConfig extends BasePluginConfig {
         this.maskAthenaStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_ATHENA_STATEMENT_MASK,
             options.maskAthenaStatement);
-        this.maskElasticSearchStatement = ConfigProvider.get<boolean>(
+        this.maskElasticSearchBody = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK,
-            options.maskElasticSearchStatement);
+            options.maskElasticSearchBody);
         this.maskMongoDBCommand = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_MONGODB_COMMAND_MASK,
             options.maskMongoDBCommand);
