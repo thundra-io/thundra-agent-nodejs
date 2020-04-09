@@ -111,7 +111,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'number',
         defaultValue: 100,
     },
-    [ConfigNames.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE]: {
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_DISABLE]: {
         type: 'boolean',
         defaultValue: false,
     },

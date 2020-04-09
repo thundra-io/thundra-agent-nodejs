@@ -144,7 +144,7 @@ class TraceConfig extends BasePluginConfig {
             }
         }
 
-        const disabledIntegrations = ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE);
+        const disabledIntegrations = ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_DISABLE);
         if (disabledIntegrations) {
             this.disabledIntegrations.push(... this.parseIntegrationsConfig(disabledIntegrations));
         }

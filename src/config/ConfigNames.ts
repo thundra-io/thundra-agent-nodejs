@@ -88,7 +88,7 @@ class ConfigNames {
 
     /////////////////////////////////////////////////////////////////////////////
 
-    public static readonly THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE: string =
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_DISABLE: string =
         'thundra.agent.trace.integrations.disable';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ON_LOAD: string =
