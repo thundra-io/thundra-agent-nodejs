@@ -24,7 +24,7 @@ class TraceConfig extends BasePluginConfig {
     disableHttp5xxError: boolean;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
-    maskRedisStatement: boolean;
+    maskRedisCommand: boolean;
     maskRdbStatement: boolean;
     maskDynamoDBStatement: boolean;
     maskElasticSearchBody: boolean;
@@ -68,9 +68,9 @@ class TraceConfig extends BasePluginConfig {
             ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE,
             options.disableInstrumentation);
 
-        this.maskRedisStatement = ConfigProvider.get<boolean>(
+        this.maskRedisCommand = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK,
-            options.maskRedisStatement);
+            options.maskRedisCommand);
         this.maskRdbStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK,
             options.maskRdbStatement);
