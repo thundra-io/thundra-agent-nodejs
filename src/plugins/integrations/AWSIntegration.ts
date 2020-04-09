@@ -8,8 +8,6 @@ import {
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
     AwsAthenaTags, AwsEventBridgeTags,
 } from '../../Constants';
-import ConfigProvider from '../../config/ConfigProvider';
-import ConfigNames from '../../config/ConfigNames';
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
@@ -398,9 +396,7 @@ class AWSIntegration implements Integration {
                             activeSpan.setTag(AwsSQSTags.QUEUE_NAME, queueName);
                         }
 
-                        const injectSpanContext = ConfigProvider.get<boolean>(
-                            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE);
-                        const messageAttributes = !injectSpanContext
+                        const messageAttributes = !config.sqsTraceInjectionDisabled
                             ? AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan)
                             : null;
                         if (operationName === 'sendMessage') {
@@ -482,9 +478,7 @@ class AWSIntegration implements Integration {
                         }
 
                         if (operationName === 'publish') {
-                            const injectSpanContext = ConfigProvider.get<boolean>(
-                                ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE);
-                            const messageAttributes = !injectSpanContext
+                            const messageAttributes = !config.snsTraceInjectionDisabled
                                 ? AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan)
                                 : null;
                             if (messageAttributes) {
@@ -579,9 +573,7 @@ class AWSIntegration implements Integration {
                             },
                         });
 
-                        const injectSpanContext = ConfigProvider.get<boolean>(
-                            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE);
-                        const custom = !injectSpanContext
+                        const custom = !config.lambdaTraceInjectionDisabled
                             ? AWSIntegration.injectSpanContextIntoLambdaClientContext(tracer, activeSpan)
                             : null;
 

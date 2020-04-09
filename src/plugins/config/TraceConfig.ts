@@ -24,12 +24,16 @@ class TraceConfig extends BasePluginConfig {
     disableHttp5xxError: boolean;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
-    maskRedisStatement: boolean;
+    maskRedisCommand: boolean;
     maskRdbStatement: boolean;
     maskDynamoDBStatement: boolean;
-    maskElasticSearchStatement: boolean;
+    maskElasticSearchBody: boolean;
     maskMongoDBCommand: boolean;
     dynamoDBTraceInjectionEnabled: boolean;
+    lambdaTraceInjectionDisabled: boolean;
+    sqsTraceInjectionDisabled: boolean;
+    snsTraceInjectionDisabled: boolean;
+    httpTraceInjectionDisabled: boolean;
     httpPathDepth: number;
     esPathDepth: number;
     enableCloudWatchRequest: boolean;
@@ -64,9 +68,9 @@ class TraceConfig extends BasePluginConfig {
             ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE,
             options.disableInstrumentation);
 
-        this.maskRedisStatement = ConfigProvider.get<boolean>(
+        this.maskRedisCommand = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK,
-            options.maskRedisStatement);
+            options.maskRedisCommand);
         this.maskRdbStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK,
             options.maskRdbStatement);
@@ -85,9 +89,9 @@ class TraceConfig extends BasePluginConfig {
         this.maskAthenaStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_ATHENA_STATEMENT_MASK,
             options.maskAthenaStatement);
-        this.maskElasticSearchStatement = ConfigProvider.get<boolean>(
+        this.maskElasticSearchBody = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK,
-            options.maskElasticSearchStatement);
+            options.maskElasticSearchBody);
         this.maskMongoDBCommand = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_MONGODB_COMMAND_MASK,
             options.maskMongoDBCommand);
@@ -105,6 +109,18 @@ class TraceConfig extends BasePluginConfig {
         this.dynamoDBTraceInjectionEnabled = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_TRACEINJECTION_ENABLE,
             options.dynamoDBTraceInjectionEnabled);
+        this.lambdaTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE,
+            options.lambdaTraceInjectionDisabled);
+        this.sqsTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE,
+            options.sqsTraceInjectionDisabled);
+        this.snsTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE,
+            options.snsTraceInjectionDisabled);
+        this.httpTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE,
+            options.httpTraceInjectionDisabled);
 
         this.enableCloudWatchRequest = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE,
