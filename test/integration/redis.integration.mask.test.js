@@ -16,7 +16,7 @@ describe('Redis integration', () => {
 
         const traceConfig = new TraceConfig({
             disableInstrumentation: true,
-            maskRedisStatement: true,
+            maskRedisCommand: true,
         });
 
         integration.wrap(sdk, traceConfig);

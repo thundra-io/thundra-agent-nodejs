@@ -74,9 +74,9 @@ describe('trace config', () => {
 
         const config = new TraceConfig({});
         
-        expect(config.maskRedisStatement).toEqual(true);
+        expect(config.maskRedisCommand).toEqual(true);
         expect(config.maskRdbStatement).toEqual(true);
         expect(config.maskDynamoDBStatement).toEqual(true);
-        expect(config.maskElasticSearchStatement).toEqual(true);
+        expect(config.maskElasticSearchBody).toEqual(true);
     });
 });

@@ -75,17 +75,17 @@ describe('trace config', () => {
     test('with mask integration statements configuration programmatically',() => {
         const config = new ThundraConfig({
             traceConfig: {
-                maskRedisStatement: true,
+                maskRedisCommand: true,
                 maskRdbStatement: true,
                 maskDynamoDBStatement: true,
-                maskElasticSearchStatement: true
+                maskElasticSearchBody: true
             }
         });
 
-        expect(config.traceConfig.maskRedisStatement).toEqual(true);
+        expect(config.traceConfig.maskRedisCommand).toEqual(true);
         expect(config.traceConfig.maskRdbStatement).toEqual(true);
         expect(config.traceConfig.maskDynamoDBStatement).toEqual(true);
-        expect(config.traceConfig.maskElasticSearchStatement).toEqual(true);
+        expect(config.traceConfig.maskElasticSearchBody).toEqual(true);
     });
 });
 

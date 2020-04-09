@@ -80,7 +80,7 @@ describe('ES integration', () => {
         const tracer = new ThundraTracer();
         const integration = new ESIntegrations({
             disableInstrumentation: true,
-            maskElasticSearchStatement: true,
+            maskElasticSearchBody: true,
             esPathDepth: 2,
             tracer,
         });
@@ -109,7 +109,6 @@ describe('ES integration', () => {
             expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
             expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/tweets');
             expect(span.tags['elasticsearch.method']).toEqual('POST');
-            
         });
     });
 });
