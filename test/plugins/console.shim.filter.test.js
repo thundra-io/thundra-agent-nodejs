@@ -17,6 +17,8 @@ afterEach(() => {
 
 describe('console integration should filter logs with levels', () => {
     it('should capture console.log statements', () => {
+        ConfigProvider.set(ConfigNames.THUNDRA_LOG_LOGLEVEL, 'WARN');
+
         const logPlugin = new LogPlugin();
         logPlugin.enable();
 
@@ -30,8 +32,6 @@ describe('console integration should filter logs with levels', () => {
 
         logPlugin.setPluginContext(pluginContext);
         logPlugin.beforeInvocation(beforeInvocationData);
-
-        ConfigProvider.set(ConfigNames.THUNDRA_LOG_LOGLEVEL, 'WARN');
 
         console.log('log');
         console.warn('warn');
