@@ -31,7 +31,7 @@ class ConfigProvider {
             if (envVarName.toUpperCase().startsWith('THUNDRA_')) {
                 const envVarValue: string = process.env[envVarName];
                 envVarName = ConfigProvider.envVarToConfigName(envVarName);
-                const envVarType = ConfigMetadata[envVarName] ? ConfigMetadata[envVarName].type : 'any';
+                const envVarType = ConfigProvider.getConfigType(envVarName);
                 ConfigProvider.configs[envVarName] = this.parse(envVarValue, envVarType);
             }
         });
@@ -91,6 +91,22 @@ class ConfigProvider {
         process.env[envVarKey] = configValue;
     }
 
+    private static getConfigType(configName: string): string {
+        const configMetadata = ConfigMetadata[configName];
+        if (configMetadata) {
+            return configMetadata.type;
+        } else {
+            if (configName.startsWith('thundra.agent.lambda.')) {
+                const aliasConfigName: string = 'thundra.agent.' + configName.substring('thundra.agent.lambda.'.length);
+                const aliasedConfigMetadata = ConfigMetadata[aliasConfigName];
+                if (aliasedConfigMetadata) {
+                    return aliasedConfigMetadata.type;
+                }
+            }
+        }
+        return 'any';
+    }
+
     private static traverseConfigObject(obj: any, path: string): void {
         Object.keys(obj).forEach((propName: string) => {
             const propVal: any = obj[propName];
@@ -102,7 +118,7 @@ class ConfigProvider {
                     propPath = 'thundra.agent.' + propPath;
                 }
                 propPath = propPath.toLowerCase();
-                const propType = ConfigMetadata[propPath] ? ConfigMetadata[propPath].type : 'any';
+                const propType = ConfigProvider.getConfigType(propPath);
                 ConfigProvider.configs[propPath] = this.parse(propVal, propType);
             }
         });
