@@ -33,6 +33,7 @@ class TraceConfig extends BasePluginConfig {
     lambdaTraceInjectionDisabled: boolean;
     sqsTraceInjectionDisabled: boolean;
     snsTraceInjectionDisabled: boolean;
+    httpTraceInjectionDisabled: boolean;
     httpPathDepth: number;
     esPathDepth: number;
     enableCloudWatchRequest: boolean;
@@ -117,6 +118,9 @@ class TraceConfig extends BasePluginConfig {
         this.snsTraceInjectionDisabled = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE,
             options.snsTraceInjectionDisabled);
+        this.httpTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE,
+            options.httpTraceInjectionDisabled);
 
         this.enableCloudWatchRequest = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE,
