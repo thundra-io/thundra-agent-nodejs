@@ -279,7 +279,7 @@ export class Trace {
         }
 
         let enableRequestData = true;
-        if (this.triggerClassName === ClassNames.CLOUDWATCH && !conf.enableFirehoseRequest) {
+        if (this.triggerClassName === ClassNames.CLOUDWATCH && !conf.enableCloudWatchRequest) {
             enableRequestData = false;
         }
 
