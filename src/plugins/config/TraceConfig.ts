@@ -30,6 +30,9 @@ class TraceConfig extends BasePluginConfig {
     maskElasticSearchStatement: boolean;
     maskMongoDBCommand: boolean;
     dynamoDBTraceInjectionEnabled: boolean;
+    lambdaTraceInjectionDisabled: boolean;
+    sqsTraceInjectionDisabled: boolean;
+    snsTraceInjectionDisabled: boolean;
     httpPathDepth: number;
     esPathDepth: number;
     enableCloudWatchRequest: boolean;
@@ -105,6 +108,15 @@ class TraceConfig extends BasePluginConfig {
         this.dynamoDBTraceInjectionEnabled = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_TRACEINJECTION_ENABLE,
             options.dynamoDBTraceInjectionEnabled);
+        this.lambdaTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE,
+            options.lambdaTraceInjectionDisabled);
+        this.sqsTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE,
+            options.sqsTraceInjectionDisabled);
+        this.snsTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE,
+            options.snsTraceInjectionDisabled);
 
         this.enableCloudWatchRequest = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE,
