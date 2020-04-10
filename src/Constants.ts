@@ -232,6 +232,7 @@ export const ClassNames = {
     ELASTICSEARCH: 'ELASTICSEARCH',
     MYSQL: 'MYSQL',
     EVENTBRIDGE: 'AWS-EventBridge',
+    ZEIT: 'Zeit',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';

@@ -325,6 +325,15 @@ class LambdaEventUtils {
         }
     }
 
+    static injectTriggerTagsForZeit(span: ThundraSpan, originalEvent: any): String {
+        const className = ClassNames.ZEIT;
+        const domainName = DomainNames.API;
+
+        this.injectTrigerTragsForInvocation(domainName, className, ['zeit-now']);
+
+        return className;
+    }
+
     static extractSpanContextFromSNSEvent(tracer: ThundraTracer, originalEvent: any): ThundraSpanContext {
         let spanContext: ThundraSpanContext;
 
@@ -419,4 +428,5 @@ export enum LambdaEventType {
     APIGatewayPassThrough,
     Lambda,
     EventBridge,
+    Zeit,
 }
