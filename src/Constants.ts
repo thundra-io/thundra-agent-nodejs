@@ -232,10 +232,15 @@ export const ClassNames = {
     ELASTICSEARCH: 'ELASTICSEARCH',
     MYSQL: 'MYSQL',
     EVENTBRIDGE: 'AWS-EventBridge',
-    ZEIT: 'Zeit',
+    ZEIT: 'ZEIT',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
+
+export const ZeitTags = {
+    DEPLOYMENT_URL_HEADER: 'x-now-deployment-url',
+    DEPLOYMENT_URL: 'DEPLOYMENT_URL',
+};
 
 export const AwsEventBridgeTags = {
     SERVICE_REQUEST: 'AWSEventBridgeRequest',
