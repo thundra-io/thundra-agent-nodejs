@@ -238,8 +238,11 @@ export const ClassNames = {
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
 
 export const ZeitTags = {
-    DEPLOYMENT_URL_HEADER: 'x-now-deployment-url',
     DEPLOYMENT_URL: 'DEPLOYMENT_URL',
+};
+
+export const ZeitConstants = {
+    DEPLOYMENT_URL_HEADER: 'x-now-deployment-url',
 };
 
 export const AwsEventBridgeTags = {

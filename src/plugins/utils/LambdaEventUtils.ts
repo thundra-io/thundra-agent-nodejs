@@ -1,5 +1,5 @@
 import ThundraSpan from '../../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames, ZeitTags } from '../../Constants';
+import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../../opentracing/SpanContext';
@@ -52,7 +52,7 @@ class LambdaEventUtils {
         } else if (originalEvent.Action && originalEvent.body) {
             try {
                 const { headers } = JSON.parse(originalEvent.body);
-                if (headers[ZeitTags.DEPLOYMENT_URL_HEADER]) {
+                if (headers && headers[ZeitConstants.DEPLOYMENT_URL_HEADER]) {
                     return LambdaEventType.Zeit;
                 }
             } catch (err) {
@@ -342,8 +342,8 @@ class LambdaEventUtils {
         try {
             const { headers, host } = JSON.parse(originalEvent.body);
 
-            if (headers[ZeitTags.DEPLOYMENT_URL_HEADER]) {
-                const deplomentUrl = headers[ZeitTags.DEPLOYMENT_URL_HEADER];
+            if (headers[ZeitConstants.DEPLOYMENT_URL_HEADER]) {
+                const deplomentUrl = headers[ZeitConstants.DEPLOYMENT_URL_HEADER];
                 InvocationSupport.setTag(ZeitTags.DEPLOYMENT_URL, deplomentUrl);
             }
 
