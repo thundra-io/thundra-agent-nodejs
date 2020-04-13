@@ -1,5 +1,5 @@
 import ThundraSpan from '../../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames } from '../../Constants';
+import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../../opentracing/SpanContext';
@@ -49,6 +49,15 @@ class LambdaEventUtils {
         } else if (originalEvent['detail-type'] && originalEvent.detail &&  originalEvent.version
             && Array.isArray(originalEvent.resources)) {
             return LambdaEventType.EventBridge;
+        } else if (originalEvent.Action && originalEvent.body) {
+            try {
+                const { headers } = JSON.parse(originalEvent.body);
+                if (headers && headers[ZeitConstants.DEPLOYMENT_URL_HEADER]) {
+                    return LambdaEventType.Zeit;
+                }
+            } catch (err) {
+                // Event is not a Zeit event, pass
+            }
         }
     }
 
@@ -325,6 +334,32 @@ class LambdaEventUtils {
         }
     }
 
+    static injectTriggerTagsForZeit(span: ThundraSpan, originalEvent: any): String {
+        const className = ClassNames.ZEIT;
+        const domainName = DomainNames.API;
+        let operationName = 'zeit-now';
+
+        try {
+            const { headers, host } = JSON.parse(originalEvent.body);
+
+            if (headers[ZeitConstants.DEPLOYMENT_URL_HEADER]) {
+                const deplomentUrl = headers[ZeitConstants.DEPLOYMENT_URL_HEADER];
+                InvocationSupport.setTag(ZeitTags.DEPLOYMENT_URL, deplomentUrl);
+            }
+
+            if (host) {
+                operationName = host;
+            }
+        } catch (err) {
+            // Event is not a Zeit event, pass
+        }
+
+        this.injectTrigerTragsForInvocation(domainName, className, [operationName]);
+        this.injectTrigerTragsForSpan(span, domainName, className, [operationName]);
+
+        return className;
+    }
+
     static extractSpanContextFromSNSEvent(tracer: ThundraTracer, originalEvent: any): ThundraSpanContext {
         let spanContext: ThundraSpanContext;
 
@@ -419,4 +454,5 @@ export enum LambdaEventType {
     APIGatewayPassThrough,
     Lambda,
     EventBridge,
+    Zeit,
 }
