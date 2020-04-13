@@ -356,6 +356,8 @@ export class Trace {
                 return LambdaEventUtils.injectTriggerTagsForAPIGatewayPassThrough(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.EventBridge) {
                 return LambdaEventUtils.injectTriggerTagsForEventBridge(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.Zeit) {
+                return LambdaEventUtils.injectTriggerTagsForZeit(span, originalEvent);
             }
         } catch (error) {
             ThundraLogger.getInstance().error('Cannot inject trigger tags. ' + error);
