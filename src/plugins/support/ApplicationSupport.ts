@@ -10,7 +10,8 @@ class ApplicationSupport {
         for (const key of Object.keys(process.env)) {
             if (key.toLowerCase().startsWith(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX)) {
                 try {
-                    const propsKey = key.substring(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX.length).replace(/_/g, '.');
+                    const propsKey = key.substring(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX.length)
+                        .replace(/_/g, '.');
                     const propsValue = process.env[key];
                     if (isNaN(parseFloat(propsValue))) {
                         if (propsValue === 'true' || propsValue === 'false') {
