@@ -25,7 +25,7 @@ class RedisIntegration implements Integration {
 
     constructor(config: any) {
         this.wrapped = false;
-        this.version = '^3.0';
+        this.version = '>=2.6';
         this.lib = Utils.tryRequire(moduleName);
 
         if (this.lib) {
