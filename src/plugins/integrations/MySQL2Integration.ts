@@ -25,7 +25,7 @@ class MySQL2Integration implements Integration {
     wrapped: boolean;
 
     constructor(config: any) {
-        this.version = '^1.5';
+        this.version = '>=1.5';
         this.wrapped = false;
         this.lib = Utils.tryRequire(path.join(moduleName, fileName));
 
