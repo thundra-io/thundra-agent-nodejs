@@ -484,13 +484,14 @@ class ThundraWrapper {
 
     isErrorResponse(result: any) {
         let isError = false;
-        if (Utils.isValidResponse(result) && typeof result.body === 'string') {
-            const statusCode = result.statusCode.toString();
-            if (statusCode.startsWith('4') || statusCode.startsWith('5')) {
+        if (Utils.isValidResponse(result) && result.body) {
+            if (typeof result.body === 'string') {
+                if (result.statusCode >= 400 && result.statusCode <= 599) {
+                    isError = true;
+                }
+            } else {
                 isError = true;
             }
-        } else if (Utils.isValidResponse(result)) {
-            isError = true;
         }
         return isError;
     }
