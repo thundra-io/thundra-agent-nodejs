@@ -319,7 +319,7 @@ export class Trace {
         const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
         if (lambdaEventType === LambdaEventType.Lambda) {
             return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, originalContext.clientContext.custom);
-        } else if (lambdaEventType === LambdaEventType.APIGatewayProxy) {
+        } else if (lambdaEventType === LambdaEventType.APIGatewayProxy && originalEvent.headers) {
             return this.tracer.extract(opentracing.FORMAT_HTTP_HEADERS, originalEvent.headers);
         } else if (lambdaEventType === LambdaEventType.SNS) {
             return LambdaEventUtils.extractSpanContextFromSNSEvent(this.tracer, originalEvent);
