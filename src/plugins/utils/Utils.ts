@@ -248,10 +248,10 @@ class Utils {
 
     static tryRequire(name: string, paths?: string[]): any {
         try {
-            if (paths !== undefined && paths.indexOf(process.env.LAMBDA_TASK_ROOT) === -1) {
-                paths.push(process.env.LAMBDA_TASK_ROOT);
-            } else {
+            if (paths === undefined) {
                 paths = [process.env.LAMBDA_TASK_ROOT];
+            } else if (paths.indexOf(process.env.LAMBDA_TASK_ROOT) === -1) {
+                paths.push(process.env.LAMBDA_TASK_ROOT);
             }
             const resolvedPath = customReq.resolve(name, { paths });
             return customReq(resolvedPath);
@@ -261,10 +261,10 @@ class Utils {
 
     static getModuleInfo(name: string, paths?: string[]): any {
         try {
-            if (paths !== undefined && paths.indexOf(process.env.LAMBDA_TASK_ROOT) === -1) {
-                paths.push(process.env.LAMBDA_TASK_ROOT);
-            } else {
+            if (paths === undefined) {
                 paths = [process.env.LAMBDA_TASK_ROOT];
+            } else if (paths.indexOf(process.env.LAMBDA_TASK_ROOT) === -1) {
+                paths.push(process.env.LAMBDA_TASK_ROOT);
             }
             const modulePath = customReq.resolve(name, { paths });
             return parse(modulePath);
