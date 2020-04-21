@@ -28,7 +28,6 @@ const get = require('lodash.get');
 
 const thundraWrapped = '__thundra_wrapped';
 const moduleName = 'aws-sdk';
-const resolvePaths = ['/var/task'];
 
 class AWSIntegration implements Integration {
     static AWSOperationTypes: any = undefined;
@@ -45,9 +44,9 @@ class AWSIntegration implements Integration {
         this.version = '2.x';
         this.wrappedFuncs = {};
         this.config = config;
-        this.lib = Utils.tryRequire(moduleName, resolvePaths);
+        this.lib = Utils.tryRequire(moduleName);
         if (this.lib) {
-            const { basedir } = Utils.getModuleInfo(moduleName, resolvePaths);
+            const { basedir } = Utils.getModuleInfo(moduleName);
             if (!basedir) {
                 ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
                 return;
