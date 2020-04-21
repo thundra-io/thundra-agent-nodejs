@@ -248,12 +248,8 @@ class Utils {
 
     static tryRequire(name: string, paths?: string[]): any {
         try {
-            let resolvedPath;
-            if (paths !== undefined) {
-                resolvedPath = customReq.resolve(name, { paths });
-            } else {
-                resolvedPath = customReq.resolve(name);
-            }
+            paths = this.enrichModulePath(paths);
+            const resolvedPath = customReq.resolve(name, { paths });
             return customReq(resolvedPath);
         // tslint:disable-next-line:no-empty
         } catch (err) {}
@@ -261,17 +257,23 @@ class Utils {
 
     static getModuleInfo(name: string, paths?: string[]): any {
         try {
-            let modulePath;
-            if (paths !== undefined) {
-                modulePath = customReq.resolve(name, { paths });
-            } else {
-                modulePath = customReq.resolve(name);
-            }
-
+            paths = this.enrichModulePath(paths);
+            const modulePath = customReq.resolve(name, { paths });
             return parse(modulePath);
         } catch (err) {
             return {};
         }
+    }
+
+    static enrichModulePath(paths: string[]) {
+        if (process.env.LAMBDA_TASK_ROOT) {
+            if (paths === undefined) {
+                paths = [process.env.LAMBDA_TASK_ROOT];
+            } else if (paths.indexOf(process.env.LAMBDA_TASK_ROOT) === -1) {
+                paths.push(process.env.LAMBDA_TASK_ROOT);
+            }
+        }
+        return paths || [];
     }
 
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
