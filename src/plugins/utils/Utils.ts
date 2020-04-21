@@ -248,12 +248,12 @@ class Utils {
 
     static tryRequire(name: string, paths?: string[]): any {
         try {
-            let resolvedPath;
-            if (paths !== undefined) {
-                resolvedPath = customReq.resolve(name, { paths });
+            if (paths !== undefined && paths.indexOf(process.env.LAMBDA_TASK_ROOT) === -1) {
+                paths.push(process.env.LAMBDA_TASK_ROOT);
             } else {
-                resolvedPath = customReq.resolve(name);
+                paths = [process.env.LAMBDA_TASK_ROOT];
             }
+            const resolvedPath = customReq.resolve(name, { paths });
             return customReq(resolvedPath);
         // tslint:disable-next-line:no-empty
         } catch (err) {}
@@ -261,13 +261,12 @@ class Utils {
 
     static getModuleInfo(name: string, paths?: string[]): any {
         try {
-            let modulePath;
-            if (paths !== undefined) {
-                modulePath = customReq.resolve(name, { paths });
+            if (paths !== undefined && paths.indexOf(process.env.LAMBDA_TASK_ROOT) === -1) {
+                paths.push(process.env.LAMBDA_TASK_ROOT);
             } else {
-                modulePath = customReq.resolve(name);
+                paths = [process.env.LAMBDA_TASK_ROOT];
             }
-
+            const modulePath = customReq.resolve(name, { paths });
             return parse(modulePath);
         } catch (err) {
             return {};
