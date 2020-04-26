@@ -1,6 +1,6 @@
 import Sampler from './Sampler';
-import { envVariableKeys } from '../../Constants';
-import Utils from '../../plugins/utils/Utils';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 
 const koalas = require('koalas');
 
@@ -9,8 +9,9 @@ class CountAwareSampler implements Sampler<null> {
     counter: number;
 
     constructor(countFreq?: number) {
-        this.countFreq = koalas(parseInt(Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AGENT_COUNT_AWARE_SAMPLER_COUNT_FREQ), 10), countFreq, 100);
+        this.countFreq = ConfigProvider.get<number>(
+            ConfigNames.THUNDRA_SAMPLER_COUNTAWARE_COUNTFREQ,
+            koalas(countFreq, undefined)); // if countFreq is not valid, it passes undefined to get the default value
         this.counter = 0;
     }
 

@@ -1,4 +1,19 @@
-import {HOOKS, URL, PROC_STAT_PATH, PROC_IO_PATH, DATA_MODEL_VERSION, getTimeoutMargin, getAPIEndpoint} from '../dist/Constants';
+import TestUtils from './utils';
+import {
+    HOOKS,
+    PROC_STAT_PATH,
+    PROC_IO_PATH,
+    DATA_MODEL_VERSION,
+    getTimeoutMargin,
+    getDefaultAPIEndpoint} from '../dist/Constants';
+
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+});
+
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+});
 
 test('DATA_MODEL_VERSION did not change', () => {
     expect(DATA_MODEL_VERSION).toEqual('2.0');
@@ -6,10 +21,6 @@ test('DATA_MODEL_VERSION did not change', () => {
 
 test('HOOKS did not change', () => {
     expect(HOOKS).toEqual(['before-invocation', 'after-invocation']);
-});
-
-test('URL default value did not change',() => {
-    expect(URL.href).toEqual('https://api.thundra.io/v1');
 });
 
 test('PROC_STAT_PATH did not change', () => {
@@ -49,29 +60,51 @@ test('Timeout margin should be decided based on region', () => {
 });
 
 test('API endpoint should be decided based on region', () => {
-    expect(getAPIEndpoint('us-west-2')).toEqual('api.thundra.io');
-    expect(getAPIEndpoint('us-west-1')).toEqual('api.thundra.io');
+    const region = process.env.AWS_REGION;
 
-    expect(getAPIEndpoint('us-east-2')).toEqual('api-us-east-1.thundra.io');
-    expect(getAPIEndpoint('us-east-1')).toEqual('api-us-east-1.thundra.io');
+    process.env.AWS_REGION = 'us-west-2';
+    expect(getDefaultAPIEndpoint()).toEqual('api.thundra.io');
+    process.env.AWS_REGION = 'us-west-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api.thundra.io');
 
-    expect(getAPIEndpoint('eu-central-1')).toEqual('api-eu-west-2.thundra.io');
-    expect(getAPIEndpoint('eu-west-1')).toEqual('api-eu-west-1.thundra.io');
-    expect(getAPIEndpoint('eu-west-2')).toEqual('api-eu-west-2.thundra.io');
-    expect(getAPIEndpoint('eu-west-3')).toEqual('api-eu-west-2.thundra.io');
-    expect(getAPIEndpoint('eu-north-1')).toEqual('api-eu-west-2.thundra.io');
+    process.env.AWS_REGION = 'us-east-2';
+    expect(getDefaultAPIEndpoint()).toEqual('api-us-east-1.thundra.io');
+    process.env.AWS_REGION = 'us-east-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api-us-east-1.thundra.io');
 
-    expect(getAPIEndpoint('ca-central-1')).toEqual('api-us-east-1.thundra.io');
+    process.env.AWS_REGION = 'eu-central-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api-eu-west-2.thundra.io');
+    process.env.AWS_REGION = 'eu-west-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api-eu-west-1.thundra.io');
+    process.env.AWS_REGION = 'eu-west-2';
+    expect(getDefaultAPIEndpoint()).toEqual('api-eu-west-2.thundra.io');
+    process.env.AWS_REGION = 'eu-west-3';
+    expect(getDefaultAPIEndpoint()).toEqual('api-eu-west-2.thundra.io');
+    process.env.AWS_REGION = 'eu-north-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api-eu-west-2.thundra.io');
 
-    expect(getAPIEndpoint('sa-east-1')).toEqual('api-us-east-1.thundra.io');
+    process.env.AWS_REGION = 'ca-central-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api-us-east-1.thundra.io');
 
-    expect(getAPIEndpoint('ap-south-1')).toEqual('api-ap-northeast-1.thundra.io');
-    expect(getAPIEndpoint('ap-northeast-2')).toEqual('api-ap-northeast-1.thundra.io');
-    expect(getAPIEndpoint('ap-southeast-1')).toEqual('api-ap-northeast-1.thundra.io');
-    expect(getAPIEndpoint('ap-southeast-2')).toEqual('api-ap-northeast-1.thundra.io');
-    expect(getAPIEndpoint('ap-northeast-1')).toEqual('api-ap-northeast-1.thundra.io');
+    process.env.AWS_REGION = 'sa-east-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api-us-east-1.thundra.io');
 
-    expect(getAPIEndpoint('tr-east-1')).toEqual('api.thundra.io'); // Unknown
+    process.env.AWS_REGION = 'ap-south-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api-ap-northeast-1.thundra.io');
+    process.env.AWS_REGION = 'ap-northeast-2';
+    expect(getDefaultAPIEndpoint()).toEqual('api-ap-northeast-1.thundra.io');
+    process.env.AWS_REGION = 'ap-southeast-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api-ap-northeast-1.thundra.io');
+    process.env.AWS_REGION = 'ap-southeast-2';
+    expect(getDefaultAPIEndpoint()).toEqual('api-ap-northeast-1.thundra.io');
+    process.env.AWS_REGION = 'ap-northeast-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api-ap-northeast-1.thundra.io');
 
-    expect(getAPIEndpoint()).toEqual('api.thundra.io'); // Invalid
+    process.env.AWS_REGION = 'tr-east-1';
+    expect(getDefaultAPIEndpoint()).toEqual('api.thundra.io'); // Unknown
+
+    delete process.env.AWS_REGION;
+    expect(getDefaultAPIEndpoint()).toEqual('api.thundra.io'); // Invalid
+
+    process.env.AWS_REGION = region;
 });

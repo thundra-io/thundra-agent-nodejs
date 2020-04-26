@@ -1,7 +1,6 @@
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
-describe('Invocation Support', () => {
-
+describe('invocation support', () => {
     beforeEach(() => {
         InvocationSupport.removeTags();
     });

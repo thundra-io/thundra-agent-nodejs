@@ -1,5 +1,19 @@
 import { DATA_MODEL_VERSION } from '../../dist/Constants';
 import Utils from '../../dist/plugins/utils/Utils';
+import ConfigProvider from '../../dist/config/ConfigProvider';
+import ConfigNames from '../../dist/config/ConfigNames';
+
+import TestUtils from '../utils';
+
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
 
 jest.mock('os', () => ({
     cpus: () => {
@@ -20,13 +34,10 @@ jest.mock('os', () => ({
 
 jest.mock('../../dist/Constants', () => ({
     PROC_STAT_PATH: './test/mocks/mock-proc-stat',
-    PROC_IO_PATH: './test/mocks/mock-proc-io',
-    envVariableKeys: {
-        THUNDRA_MASK_ERROR_STACK_TRACE: 'thundra_agent_lambda_error_stacktrace_mask',
-    }
+    PROC_IO_PATH: './test/mocks/mock-proc-io'
 }));
 
-describe('getCpuUsage', () => {
+describe('get cpu usage', () => {
     const result = Utils.getCpuUsage();
     it('Should calculate system cpu usage', () => {
         expect(result.sysCpuUsed).toEqual(160000);
@@ -34,7 +45,7 @@ describe('getCpuUsage', () => {
     });
 });
 
-describe('getCpuLoad', () => {
+describe('get cpu load', () => {
     const start = {
         procCpuUsed: 30000,
         sysCpuUsed: 160000,
@@ -63,22 +74,21 @@ describe('getCpuLoad', () => {
     });
 });
 
-
-describe('readProcStatPromise', () => {
+describe('read proc stat', () => {
     it('Should read proc stat file correctly', async () => {
         const procStatData = await Utils.readProcMetricPromise();
         expect(procStatData).toEqual({ threadCount: 20 });
     });
 });
 
-describe('readProcIoPromise', () => {
+describe('read proc io', () => {
     it('Should read proc io file correctly', async () => {
         const procIoData = await Utils.readProcIoPromise();
         expect(procIoData).toEqual({ readBytes: 5453, writeBytes: 323932160 });
     });
 });
 
-describe('generateReport', () => {
+describe('generate report', () => {
     const exampleReport = Utils.generateReport('data', 'apiKey');
     it('Should generate report with correct fields', () => {
         expect(exampleReport).toEqual({
@@ -90,8 +100,8 @@ describe('generateReport', () => {
     });
 });
 
-describe('parseError', () => {
-    describe('Error typed error data', () => {
+describe('parse error', () => {
+    describe('error typed error data', () => {
         const error = Error('error message');
         const parsedError = Utils.parseError(error);
         it('should set error message correctly', () => {
@@ -138,25 +148,11 @@ describe('parseError', () => {
 
     describe('mask stack trace', () => {
         const error = new Error('I am an error');
-   
-        process.env.thundra_agent_lambda_error_stacktrace_mask = 'true';
-        
+
         it('should mask stack trace', () => {
+            ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK, true);
+
             expect(Utils.parseError(error).stack).toEqual('');
         });
-    });
-});
-
-describe('getConfiguration', () => {
-    process.env['props1'] = 'envValue';
-    const result1 = Utils.getConfiguration('props1', 'defaultValue');
-    const result2 = Utils.getConfiguration('props2', 'defaultValue');
-
-    it('Should not override with default value when environment varible is set', () => {
-        expect(result1).toBe('envValue');
-    });
-
-    it('Should override with default value when environment varible is not set', () => {
-        expect(result2).toBe('defaultValue');
     });
 });

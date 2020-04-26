@@ -117,14 +117,14 @@ class ESIntegration implements Integration {
                         [ESTags.ES_URI]: params.path,
                         [ESTags.ES_NORMALIZED_URI]: normalizedPath,
                         [ESTags.ES_METHOD]: params.method,
-                        [ESTags.ES_PARAMS]: config.maskElasticSearchStatement ?
+                        [ESTags.ES_PARAMS]: config.maskElasticSearchBody ?
                             undefined : JSON.stringify(params.query),
                     });
 
                     if (JSON.stringify(params.body)) {
-                        span.setTag(ESTags.ES_BODY, config.maskElasticSearchStatement ?
+                        span.setTag(ESTags.ES_BODY, config.maskElasticSearchBody ?
                             undefined : JSON.stringify(params.body));
-                        span.setTag(DBTags.DB_STATEMENT, config.maskElasticSearchStatement ?
+                        span.setTag(DBTags.DB_STATEMENT, config.maskElasticSearchBody ?
                             undefined : JSON.stringify(params.body));
                     }
 

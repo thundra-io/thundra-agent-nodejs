@@ -10,11 +10,11 @@ beforeAll(() => {
     AWSIntegration.prototype.getOriginalFuntion = jest.fn(() => {
         return (cb) => {
             cb(Error('foo error'), null);
-        }
+        };
     });
 });
 
-describe('AWS Integration', () => {
+describe('AWS integration', () => {
     let tracer;
     let integration;
 
@@ -53,7 +53,7 @@ describe('AWS Integration', () => {
         });
     });
 
-    test('should mask AWS DynamoDB statements ', () => { 
+    test('should mask AWS DynamoDB statements ', () => {
         integration.config.disableInstrumentation = true;
         integration.config.maskDynamoDBStatement = true;
         integration.config.dynamoDBTraceInjectionEnabled = true;
@@ -81,7 +81,7 @@ describe('AWS Integration', () => {
         });
     });
 
-    test('should instrument AWS S3 GetObject call ', () => { 
+    test('should instrument AWS S3 GetObject call ', () => {
         // Replace actual send function used by AWS SDK
         // with our mockSend function
         const mockSend = jest.fn((cb) => {
@@ -799,5 +799,5 @@ describe('AWS Integration', () => {
         for (const testCase of testCases) {
             expect(AWSIntegration.getOperationType(testCase.operationName, testCase.className)).toBe(testCase.expected);
         }
-    })
+    });
 });

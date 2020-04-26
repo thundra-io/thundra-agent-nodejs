@@ -3,7 +3,7 @@ import ThundraTracer from '../../dist/opentracing/Tracer';
 import Redis from './utils/redis.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
-describe('IORedis Integration', () => {
+describe('IORedis integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
     test('should instrument IORedis calls', () => {

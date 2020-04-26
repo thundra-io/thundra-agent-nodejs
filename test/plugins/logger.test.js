@@ -1,11 +1,11 @@
 import Logger from '../../dist/plugins/Logger';
-import {logLevels} from '../../dist/Constants';
-import {createMockLogManager} from '../mocks/mocks';
+import { logLevels } from '../../dist/Constants';
 import LogManager from '../../dist/plugins/LogManager';
 import Log from '../../dist/plugins/Log';
 
-describe('Logger', () => {
-    delete process.env.thundra_agent_lambda_log_loglevel;
+import { createMockLogManager } from '../mocks/mocks';
+
+describe('logger', () => {
     describe('constructor', () => {
         const logManager = createMockLogManager();
         Logger.logManagerInstance = logManager;
@@ -96,7 +96,7 @@ describe('Logger', () => {
         });
     });
 
-    describe('reportLog', () => {
+    describe('report log', () => {
         const logManager = createMockLogManager();
         const logger = new Logger({});
         Logger.logManagerInstance = logManager;
@@ -116,8 +116,7 @@ describe('Logger', () => {
 
 });
 
-describe('Logger with env level variable', () => {
-    process.env.thundra_agent_lambda_log_loglevel = 'none';
+describe('logger with env level variable', () => {
     describe('should not report', () => {
         const logManager = new LogManager();
         const log = new Log({});
@@ -138,8 +137,7 @@ describe('Logger with env level variable', () => {
     });
 });
 
-describe('log', () => {
-    delete process.env.thundra_agent_lambda_log_loglevel;
+describe('logger', () => {
     const logManager = createMockLogManager();
     const logger = new Logger({});
     logger.levels = {
@@ -181,13 +179,13 @@ describe('log', () => {
         expect(logger.levels.fatal).toBeCalledWith('this is fatal');
     });
 
-
     const callWithoutArguments = () => logger.log();
     const callWithInvalidLevel = () => logger.log('invalid');
     const callWithLevelButNoMessage = () => logger.log('error');
     const callWithInvalidObject = () => logger.log({invalid: 'very-invalid'});
     const callWithObjectAndInvalidLevel = () => logger.log({level: 'invalid', message: 'hello'});
     const callWithNullObject = () => logger.log(null);
+
     it('should throw error', () => {
         expect(callWithoutArguments).toThrow('[ThundraLogger] no arguments provided');
         expect(callWithInvalidLevel).toThrow('[ThundraLogger] level invalid is not defined, available levels are trace,debug,info,warn,error,fatal');

@@ -2,9 +2,11 @@ import { readFile } from 'fs';
 import * as os from 'os';
 import {
     DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, envVariableKeys,
+    EnvVariableKeys,
     LISTENERS, AGENT_VERSION,
 } from '../../Constants';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
@@ -31,6 +33,7 @@ const customReq = typeof __non_webpack_require__ !== 'undefined'
                         : require;
 
 class Utils {
+
     static generateId(): string {
         return uuidv4();
     }
@@ -44,14 +47,20 @@ class Utils {
         };
     }
 
-    static getConfiguration(key: string, defaultValue?: any): any {
-        return process.env[key]
-            || process.env[key.toUpperCase()]
-            || defaultValue;
+    static getEnvVar(key: string, defaultValue?: any): any {
+        return process.env[key] ? process.env[key] : defaultValue;
     }
 
-    static getNumericConfiguration(key: string, defaultValue?: number): number {
-        return parseInt(Utils.getConfiguration(key, defaultValue), 10);
+    static getNumericEnvVar(key: string, defaultValue?: number): number {
+        return parseInt(Utils.getEnvVar(key, defaultValue), 10);
+    }
+
+    static setEnvVar(key: string, value: any): void {
+        process.env[key] = value;
+    }
+
+    static deleteEnvVar(key: string): void {
+        delete process.env[key];
     }
 
     static getCpuUsage() {
@@ -114,8 +123,8 @@ class Utils {
             error.errorMessage = JSON.stringify(error.errorMessage);
         }
 
-        error.stack = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_ERROR_STACK_TRACE) ?  '' :  error.stack;
+        const maskErrorStackTrace = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK);
+        error.stack = maskErrorStackTrace ? '' :  error.stack;
 
         return error;
     }
@@ -279,25 +288,29 @@ class Utils {
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
-        const domainName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_DOMAIN_NAME);
-        const className = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_CLASS_NAME);
-        const stage = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_STAGE);
-        const applicationId = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_ID);
-        const applicationName = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_NAME);
-        const applicationVersion = Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_VERSION);
+        const applicationId = ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_APPLICATION_ID,
+            (pluginContext ? pluginContext.applicationId : ''));
+        const applicationName = ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_APPLICATION_NAME,
+            (InvocationSupport.getFunctionName() || ''));
+        const applicationClassName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_CLASS_NAME);
+        const applicationDomainName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME);
+        const applicationStage = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_STAGE, '');
+        const applicationVersion = ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_APPLICATION_VERSION,
+            (pluginContext ? pluginContext.applicationVersion : ''));
 
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = AGENT_VERSION;
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
         monitoringData.applicationInstanceId = pluginContext ? pluginContext.applicationInstanceId : '';
-        monitoringData.applicationId = applicationId ? applicationId : (pluginContext ? pluginContext.applicationId : '');
-        monitoringData.applicationDomainName = domainName ? domainName : LAMBDA_APPLICATION_DOMAIN_NAME;
-        monitoringData.applicationClassName = className ? className : LAMBDA_APPLICATION_CLASS_NAME;
-        monitoringData.applicationName = applicationName ? applicationName :
-            (InvocationSupport.getFunctionName() ? InvocationSupport.getFunctionName() : '');
-        monitoringData.applicationVersion = applicationVersion ? applicationVersion :
-            (pluginContext ? pluginContext.applicationVersion : '');
-        monitoringData.applicationStage = stage ? stage : '';
+        monitoringData.applicationId = applicationId;
+        monitoringData.applicationName = applicationName;
+        monitoringData.applicationClassName = applicationClassName;
+        monitoringData.applicationDomainName = applicationDomainName;
+        monitoringData.applicationStage = applicationStage;
+        monitoringData.applicationVersion = applicationVersion;
         monitoringData.applicationRuntimeVersion = process.version;
 
         monitoringData.applicationTags = { ...monitoringData.applicationTags, ...ApplicationSupport.applicationTags };
@@ -357,10 +370,10 @@ class Utils {
 
     static registerSpanListenersFromConfigurations(tracer: ThundraTracer): any {
         const listeners: any[] = [];
-        for (const key of Object.keys(process.env)) {
-            if (key.startsWith(envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF)) {
+        for (const key of ConfigProvider.names()) {
+            if (key.startsWith(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)) {
                 try {
-                    let value = process.env[key];
+                    let value = ConfigProvider.get<string>(key);
 
                     if (!value.startsWith('{')) {
                         // Span listener config is given encoded
@@ -430,7 +443,7 @@ class Utils {
 
     static getApplicationId(originalContext: any, pluginContext: any) {
         const arn = originalContext.invokedFunctionArn;
-        const region = Utils.getConfiguration(envVariableKeys.AWS_REGION)
+        const region = Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
             || 'local';
         const accountNo = Utils.getAccountNo(arn, pluginContext);
         const functionName = Utils.getApplicationName(originalContext);
@@ -439,10 +452,10 @@ class Utils {
     }
 
     static getApplicationName(originalContext: any) {
-        return Utils.getConfiguration(envVariableKeys.THUNDRA_APPLICATION_NAME)
-            || originalContext.functionName
-            || Utils.getConfiguration(envVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
-            || 'lambda-app';
+        return ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME,
+            originalContext.functionName
+            || Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
+            || 'lambda-app');
     }
 
     static getARNPart(arn: string, index: number) {
@@ -454,16 +467,16 @@ class Utils {
     }
 
     static getIfSAMLocalDebugging() {
-        return Utils.getConfiguration(envVariableKeys.AWS_SAM_LOCAL) === 'true';
+        return Utils.getEnvVar(EnvVariableKeys.AWS_SAM_LOCAL) === 'true';
     }
 
     static getIfSLSLocalDebugging() {
-        return Utils.getConfiguration(envVariableKeys.SLS_LOCAL) === 'true';
+        return Utils.getEnvVar(EnvVariableKeys.SLS_LOCAL) === 'true';
     }
     static getXRayTraceInfo() {
         let traceID: string = '';
         let segmentID: string = '';
-        const xrayTraceHeader: string = Utils.getConfiguration(envVariableKeys._X_AMZN_TRACE_ID);
+        const xrayTraceHeader: string = Utils.getEnvVar(EnvVariableKeys._X_AMZN_TRACE_ID);
         if (xrayTraceHeader) {
             for (const traceHeaderPart of xrayTraceHeader.split(';')) {
                 const traceInfo = traceHeaderPart.split('=');
@@ -510,6 +523,7 @@ class Utils {
         }
         return response.statusCode && typeof response.statusCode === 'number';
     }
+
 }
 
 export default Utils;

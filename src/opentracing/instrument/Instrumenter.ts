@@ -6,7 +6,9 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraTracer from '../Tracer';
 import ThundraSpan from '../Span';
 import { ThundraSourceCodeInstrumenter } from '@thundra/instrumenter';
-import { envVariableKeys, ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Constants';
+import { ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Constants';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 
 const Module = require('module');
 const path = require('path');
@@ -25,7 +27,7 @@ class Instrumenter {
 
     constructor(traceConfig: TraceConfig) {
         const traceableConfigs = get(traceConfig, 'traceableConfigs');
-        const traceableConfigPrefix = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_FILE_PREFIX);
+        const traceableConfigPrefix = ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX);
 
         this.sourceCodeInstrumenter = new ThundraSourceCodeInstrumenter(traceableConfigs, traceableConfigPrefix);
         this.tracer = get(traceConfig, 'tracer');

@@ -1,7 +1,12 @@
 const Thundra = require('../dist/index');
-import Utils from '../dist/plugins/utils/Utils.js';
-import { createMockContext } from './mocks/mocks';
 import ThundraWrapper from '../dist/ThundraWrapper';
+import Utils from '../dist/plugins/utils/Utils.js';
+import ConfigProvider from '../dist/config/ConfigProvider';
+import ConfigNames from '../dist/config/ConfigNames';
+import { EnvVariableKeys } from '../dist/Constants';
+
+import TestUtils from './utils.js';
+import { createMockContext } from './mocks/mocks';
 
 beforeAll(() => {
     Utils.readProcIoPromise = jest.fn(() => {
@@ -19,33 +24,69 @@ beforeAll(() => {
     ThundraWrapper.prototype.executeAfteInvocationAndReport = jest.fn();
 });
 
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
 describe('thundra library', () => {
-    describe('with env apiKey', () => {
-        const originalEvent = { key: 'value' };
-        const originalContext = createMockContext();
-        const originalCallback = jest.fn();
-        const originalFunction = jest.fn((event, context, callback) => callback());
-        let thundraWrapper;
-        let wrappedFunction;
 
-        beforeAll(() => {
-            process.env.thundra_apiKey = 'apiKey';
+    describe('with api key', () => {
+        describe('by parameter', () => {
+            const originalEvent = { key: 'value' };
+            const originalContext = createMockContext();
+            const originalCallback = jest.fn();
+            const originalFunction = jest.fn((event, context, callback) => callback());
+            let thundraWrapper;
+            let wrappedFunction;
 
-            thundraWrapper = Thundra();
-            wrappedFunction = thundraWrapper(originalFunction);
-            return wrappedFunction(originalEvent, originalContext, originalCallback);
+            beforeAll(() => {
+                thundraWrapper = Thundra({ apiKey: 'apiKey' });
+                wrappedFunction = thundraWrapper(originalFunction);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
+            });
+
+            it('should invoke the function', () => {
+                expect(originalFunction).toBeCalled();
+            });
+
+            it('should invoke the callback', () => {
+                expect(originalCallback).toBeCalled();
+            });
         });
 
-        it('should invoke the function', () => {
-            expect(originalFunction).toBeCalled();
-        });
+        describe('by env variable', () => {
+            const originalEvent = { key: 'value' };
+            const originalContext = createMockContext();
+            const originalCallback = jest.fn();
+            const originalFunction = jest.fn((event, context, callback) => callback());
+            let thundraWrapper;
+            let wrappedFunction;
 
-        it('should invoke the callback', () => {
-            expect(originalCallback).toBeCalled();
+            beforeAll(() => {
+                ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_APIKEY, 'apiKey');
+
+                thundraWrapper = Thundra();
+                wrappedFunction = thundraWrapper(originalFunction);
+                return wrappedFunction(originalEvent, originalContext, originalCallback);
+            });
+
+            it('should invoke the function', () => {
+                expect(originalFunction).toBeCalled();
+            });
+
+            it('should invoke the callback', () => {
+                expect(originalCallback).toBeCalled();
+            });
         });
     });
 
-    describe('thundra disabled', () => {
+    describe('disabled', () => {
         describe('by parameter', () => {
             const originalEvent = { key: 'value' };
             const originalContext = {};
@@ -55,8 +96,6 @@ describe('thundra library', () => {
             let wrappedFunction;
             
             beforeAll(() => {
-                delete process.env.thundra_agent_lambda_disable;
-                
                 thundraWrapper = Thundra({ apiKey: 'apiKey', disableThundra: true, plugins: [] });
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
@@ -76,7 +115,7 @@ describe('thundra library', () => {
             let wrappedFunction;
 
             beforeAll(() => {
-                process.env.thundra_agent_lambda_disable = 'true';
+                ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_DISABLE, true);
                 thundraWrapper = Thundra({ apiKey: 'apiKey' });
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
@@ -89,7 +128,7 @@ describe('thundra library', () => {
     });
 
     describe('without plugins', () => {
-        describe('using parameters', () => {
+        describe('by parameters', () => {
             const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
@@ -98,11 +137,6 @@ describe('thundra library', () => {
             let wrappedFunction;
 
             beforeAll(() => {
-                delete process.env.thundra_agent_lambda_trace_disable;
-                delete process.env.thundra_agent_lambda_metric_disable;
-                delete process.env.thundra_agent_lambda_log_disable;
-                delete process.env.thundra_apiKey;
-
                 thundraWrapper = Thundra({apiKey: 'apiKey', disableTrace: true, disableMetric: true});
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
@@ -116,7 +150,7 @@ describe('thundra library', () => {
             });
         });
 
-        describe('using true env variables', () => {
+        describe('by true env variables', () => {
             const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
@@ -125,10 +159,8 @@ describe('thundra library', () => {
             let wrappedFunction;
 
             beforeAll(() => {
-                delete process.env.thundra_agent_lambda_disable;
-                delete process.env.thundra_apiKey;
-                process.env.thundra_agent_lambda_trace_disable = 'true';
-                process.env.thundra_agent_lambda_metric_disable = 'true';
+                ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_TRACE_DISABLE, true);
+                ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_METRIC_DISABLE, true);
 
                 thundraWrapper = Thundra({apiKey: 'apiKey'});
                 wrappedFunction = thundraWrapper(originalFunction);
@@ -143,7 +175,7 @@ describe('thundra library', () => {
             });
         });
 
-        describe('using false env variables', () => {
+        describe('by false env variables', () => {
             const originalEvent = {key: 'value'};
             const originalContext = {};
             const originalCallback = jest.fn();
@@ -152,10 +184,8 @@ describe('thundra library', () => {
             let wrappedFunction;
             
             beforeAll(() => {
-                delete process.env.thundra_agent_lambda_disable;
-                delete process.env.thundra_apiKey;
-                process.env.thundra_agent_lambda_trace_disable = 'false';
-                process.env.thundra_agent_lambda_metric_disable = 'ignore';
+                ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_TRACE_DISABLE, false);
+                ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_METRIC_DISABLE, 'ignore');
 
                 thundraWrapper = Thundra({apiKey: 'apiKey'});
                 wrappedFunction = thundraWrapper(originalFunction);
@@ -171,7 +201,7 @@ describe('thundra library', () => {
         });
     });
 
-    describe('when it is a warmup and thundra_agent_lambda_warmup_warmupAware is true', () => {
+    describe('when it is a warmup and warmup env variable is true', () => {
         const originalEvent = {};
         const originalContext = {};
         const originalCallback = jest.fn();
@@ -180,7 +210,8 @@ describe('thundra library', () => {
         let wrappedFunction;
 
         beforeAll(() => {
-            process.env.thundra_agent_lambda_warmup_warmupAware = 'true';
+            ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE, true);
+
             const thundraWrapper = Thundra({ apiKey: 'apiKey' });
             const wrappedFunction = thundraWrapper(originalFunction);
 
@@ -195,7 +226,7 @@ describe('thundra library', () => {
         });
     });
 
-    describe('when it is a warmup and thundra_agent_lambda_warmup_warmupAware is not set', () => {
+    describe('when it is a warmup and warmup env variable is not set', () => {
         const originalEvent = {};
         const originalContext = {};
         const originalCallback = jest.fn();
@@ -204,7 +235,6 @@ describe('thundra library', () => {
         let wrappedFunction;
         
         beforeAll(() => {
-            delete process.env.thundra_agent_lambda_warmup_warmupAware;
             thundraWrapper = Thundra({ apiKey: 'apiKey' });
             wrappedFunction = thundraWrapper(originalFunction);
             
@@ -214,11 +244,10 @@ describe('thundra library', () => {
         it('should invoke the function', () => {
             expect(originalFunction).toBeCalled();
         });
-
     });
 
-    describe('authorize All Certs', () => {
-        describe('enabled by config', () => {
+    describe('authorize all certs', () => {
+        describe('by parameter', () => {
             const originalEvent = { key: 'value' };
             const originalContext = {};
             const originalCallback = jest.fn();
@@ -227,20 +256,17 @@ describe('thundra library', () => {
             let wrappedFunction;
             
             beforeAll(() => {
-                delete process.env.thundra_agent_lambda_publish_report_rest_trustAllCertificates;
-                delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-                
                 thundraWrapper = new Thundra({ apiKey: 'apiKey', trustAllCert: true });
                 wrappedFunction = new thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
-            it('should set environment variable', () => {
-                expect(process.env.NODE_TLS_REJECT_UNAUTHORIZED).toBe('0');
+            it('should set env variable', () => {
+                expect(Utils.getEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED)).toBe('0');
             });
         });
 
-        describe('enabled by environment variable', () => {
+        describe('by env variable', () => {
             const originalEvent = { key: 'value' };
             const originalContext = {};
             const originalCallback = jest.fn();
@@ -249,18 +275,17 @@ describe('thundra library', () => {
             let wrappedFunction;
             
             beforeAll(() => {
-                delete process.env.thundra_agent_lambda_publish_report_rest_trustAllCertificates;
-                delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-                process.env.thundra_agent_lambda_publish_report_rest_trustAllCertificates = true;
+                ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_REPORT_REST_TRUSTALLCERTIFICATES, true);
 
-                thundraWrapper = new Thundra({ apiKey: 'apiKey', trustAllCert: true });
+                thundraWrapper = new Thundra({ apiKey: 'apiKey' });
                 wrappedFunction = new thundraWrapper(originalFunction); 
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
-            it('should set environment variable', () => {
-                expect(process.env.NODE_TLS_REJECT_UNAUTHORIZED).toBe('0');
+            it('should set env variable', () => {
+                expect(Utils.getEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED)).toBe('0');
             });
         });
     });
+
 });

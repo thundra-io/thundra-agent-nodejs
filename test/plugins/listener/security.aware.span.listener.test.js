@@ -2,7 +2,7 @@ import SecurityAwareSpanListener from '../../../dist/plugins/listeners/SecurityA
 import ThundraSpan from '../../../dist/opentracing/Span';
 import { SecurityTags, SpanTags } from '../../../dist/Constants';
 
-describe('SecurityAwareSpanListener', () => {
+describe('security aware span listener', () => {
     const securityErrorType = 'SecurityError';
     const securityErrorMessage = 'Operation was blocked due to security configuration';
 

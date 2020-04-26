@@ -5,7 +5,7 @@ import {
     AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
     SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
-    envVariableKeys, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
     AwsAthenaTags, AwsEventBridgeTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
@@ -84,26 +84,22 @@ class AWSIntegration implements Integration {
     }
 
     static injectSpanContextIntoMessageAttributes(tracer: ThundraTracer, span: ThundraSpan): any {
-        if (!(Utils.getConfiguration(envVariableKeys.DISABLE_SPAN_CONTEXT_INJECTION) === 'true')) {
-            const attributes: any = {};
-            tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, attributes);
-            const messageAttributes: any = {};
-            for (const key of Object.keys(attributes)) {
-                messageAttributes[key] = {
-                    DataType: 'String',
-                    StringValue: attributes[key],
-                };
-            }
-            return messageAttributes;
+        const attributes: any = {};
+        tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, attributes);
+        const messageAttributes: any = {};
+        for (const key of Object.keys(attributes)) {
+            messageAttributes[key] = {
+                DataType: 'String',
+                StringValue: attributes[key],
+            };
         }
+        return messageAttributes;
     }
 
-    static injectSpanContexIntoLambdaClientContext(tracer: ThundraTracer, span: ThundraSpan): any {
-        if (!(Utils.getConfiguration(envVariableKeys.DISABLE_SPAN_CONTEXT_INJECTION) === 'true')) {
-            const custom: any = {};
-            tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, custom);
-            return custom;
-        }
+    static injectSpanContextIntoLambdaClientContext(tracer: ThundraTracer, span: ThundraSpan): any {
+        const custom: any = {};
+        tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, custom);
+        return custom;
     }
 
     static injectDynamoDBTraceLinkOnPut(requestParams: any, span: ThundraSpan): void {
@@ -399,7 +395,9 @@ class AWSIntegration implements Integration {
                             activeSpan.setTag(AwsSQSTags.QUEUE_NAME, queueName);
                         }
 
-                        const messageAttributes = AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan);
+                        const messageAttributes = !config.sqsTraceInjectionDisabled
+                            ? AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan)
+                            : null;
                         if (operationName === 'sendMessage') {
                             if (messageAttributes) {
                                 const requestMessageAttributes = request.params.MessageAttributes || {};
@@ -479,7 +477,9 @@ class AWSIntegration implements Integration {
                         }
 
                         if (operationName === 'publish') {
-                            const messageAttributes = AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan);
+                            const messageAttributes = !config.snsTraceInjectionDisabled
+                                ? AWSIntegration.injectSpanContextIntoMessageAttributes(tracer, activeSpan)
+                                : null;
                             if (messageAttributes) {
                                 const requestMessageAttributes = request.params.MessageAttributes ?
                                     request.params.MessageAttributes : {};
@@ -572,7 +572,9 @@ class AWSIntegration implements Integration {
                             },
                         });
 
-                        const custom = AWSIntegration.injectSpanContexIntoLambdaClientContext(tracer, activeSpan);
+                        const custom = !config.lambdaTraceInjectionDisabled
+                            ? AWSIntegration.injectSpanContextIntoLambdaClientContext(tracer, activeSpan)
+                            : null;
 
                         if (operationType) {
                             custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME] = functionName;
