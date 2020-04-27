@@ -1,27 +1,33 @@
-
+import ConfigProvider from '../../dist/config/ConfigProvider';
+import ConfigNames from '../../dist/config/ConfigNames';
 import ApplicationSupport from '../../dist/plugins/support/ApplicationSupport';
 
-describe('addApplicationTags', () => {
-    const THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX = 'thundra_agent_lambda_application_tag_';
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag1'] = '5';
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag2'] = 'true';
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag3'] = 'false';
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag4'] = 'test value';
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag5'] = '3.5';
+import TestUtils from '../utils';
 
-    ApplicationSupport.parseApplicationTags();
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
 
-    it('should parse application tags from environment variables', () => {
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+describe('application support', () => {
+    it('should parse application tags from configs', () => {
+        ConfigProvider.set(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX + 'tag1', '5');
+        ConfigProvider.set(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX + 'tag2', 'true');
+        ConfigProvider.set(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX + 'tag3', 'false');
+        ConfigProvider.set(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX + 'tag4', 'test value');
+        ConfigProvider.set(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX + 'tag5', '3.5');
+
+        ApplicationSupport.parseApplicationTags();
+
         expect(ApplicationSupport.applicationTags['tag1']).toBe(5);
         expect(ApplicationSupport.applicationTags['tag2']).toBe(true);
         expect(ApplicationSupport.applicationTags['tag3']).toBe(false);
         expect(ApplicationSupport.applicationTags['tag4']).toBe('test value');
         expect(ApplicationSupport.applicationTags['tag5']).toBe(3.5);
     });
-
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag1'] = null;
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag2'] = null;
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag3'] = null;
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag4'] = null;
-    process.env[THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX + 'tag5'] = null;
 });

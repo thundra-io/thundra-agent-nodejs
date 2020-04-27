@@ -285,7 +285,6 @@ const createMockCloudFrontEvent = () => {
     };
 };
 
-
 const createMockAPIGatewayProxyEvent = () => {
     return {
         body: 'eyJ0ZXN0IjoiYm9keSJ9',
@@ -400,7 +399,6 @@ const createMockAPIGatewayPassThroughRequest = () => {
         }
     };
 };
-
 
 module.exports = {
     createMockAPIGatewayProxyEvent,

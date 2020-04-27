@@ -2,8 +2,8 @@ import { SpanTags } from '../dist/Constants';
 
 const clearEnvironmentVariables = () => {
     for (const key of Object.keys(process.env)) {
-        if (key.includes('thundra')) {
-            process.env[key] = undefined;
+        if (key.toUpperCase().startsWith('THUNDRA_')) {
+            delete process.env[key];
         }
     }
 };

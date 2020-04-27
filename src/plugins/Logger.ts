@@ -1,7 +1,8 @@
-import {logLevels, envVariableKeys} from '../Constants';
+import { logLevels } from '../Constants';
 import * as util from 'util';
-import Utils from './utils/Utils';
 import LogManager from './LogManager';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
 
 class Logger {
     static logManagerInstance: LogManager;
@@ -13,7 +14,7 @@ class Logger {
     constructor(options: { loggerName: any; }) {
         this.options = options;
         this.loggerName = options && options.loggerName ? options.loggerName : 'default';
-        const levelConfig = Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_LOG_LOGLEVEL);
+        const levelConfig = ConfigProvider.get<string>(ConfigNames.THUNDRA_LOG_LOGLEVEL);
         this.logLevel = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
         this.levels = {          // higher number = higher priority
             trace: this.trace, // 0

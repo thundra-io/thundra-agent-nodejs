@@ -1,11 +1,11 @@
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationTraceSupport from '../../dist/plugins/support/InvocationTraceSupport';
 import { SpanTags } from '../../dist/Constants';
-import Utils from '../utils';
 
-describe('Invocation Trace Support', () => {
+import TestUtils from '../utils';
 
-    test('Should only add topology vertex spans as resources', () => {
+describe('invocation trace support', () => {
+    test('should only add topology vertex spans as resources', () => {
         const tracer = new ThundraTracer();
         InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
@@ -34,7 +34,7 @@ describe('Invocation Trace Support', () => {
 
     });
 
-    test('Should merge resources if same resource id resource is created', () => {
+    test('should merge resources if same resource id resource is created', () => {
         const tracer = new ThundraTracer();
         InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
@@ -47,13 +47,13 @@ describe('Invocation Trace Support', () => {
             vertex: true,
             error: false,
         };
-        const span1 = Utils.createMockSpan(tracer, spanOptions);
+        const span1 = TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.duration = 20;
-        Utils.createMockSpan(tracer, spanOptions);
+        TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.duration = 30;
-        Utils.createMockSpan(tracer ,spanOptions);
+        TestUtils.createMockSpan(tracer ,spanOptions);
     
         const resources = InvocationTraceSupport.getResources();
         const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span1);
@@ -70,7 +70,7 @@ describe('Invocation Trace Support', () => {
         expect(resource.resourceAvgDuration).toBe(20);
     });
 
-    test('Should merge resources errors if same resource id resource is created', () => {
+    test('should merge resources errors if same resource id resource is created', () => {
         const tracer = new ThundraTracer();
         InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
@@ -85,15 +85,15 @@ describe('Invocation Trace Support', () => {
             errorKind: 'Database Error1',
         };
 
-        const span1 = Utils.createMockSpan(tracer, spanOptions);
+        const span1 = TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.errorKind = 'Database Error1';
         spanOptions.duration = 20;
-        Utils.createMockSpan(tracer, spanOptions);
+        TestUtils.createMockSpan(tracer, spanOptions);
         
         spanOptions.errorKind = 'Database Error2';
         spanOptions.duration = 30;
-        Utils.createMockSpan(tracer, spanOptions);
+        TestUtils.createMockSpan(tracer, spanOptions);
 
         const resources = InvocationTraceSupport.getResources();
         const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span1);
@@ -109,7 +109,7 @@ describe('Invocation Trace Support', () => {
         expect(resource.resourceErrors).toEqual(['Database Error1', 'Database Error2']);
     });
 
-    test('Should set resourceMaxDuration while merging resources', () => {
+    test('should set resourceMaxDuration while merging resources', () => {
         const tracer = new ThundraTracer();
         InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
@@ -122,13 +122,13 @@ describe('Invocation Trace Support', () => {
             vertex: true,
             error: false,
         };
-        const span1 = Utils.createMockSpan(tracer, spanOptions);
+        const span1 = TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.duration = 10;
-        Utils.createMockSpan(tracer, spanOptions);
+        TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.duration = 30;
-        Utils.createMockSpan(tracer ,spanOptions);
+        TestUtils.createMockSpan(tracer ,spanOptions);
 
         const resources = InvocationTraceSupport.getResources();
         const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span1);
@@ -145,7 +145,7 @@ describe('Invocation Trace Support', () => {
 
     });
 
-    test('Should set resourceAvgDuration while merging resources', () => {
+    test('should set resourceAvgDuration while merging resources', () => {
         const tracer = new ThundraTracer();
         InvocationTraceSupport.tracer = tracer;
         tracer.recorder.destroy();
@@ -158,13 +158,13 @@ describe('Invocation Trace Support', () => {
             vertex: true,
             error: false,
         };
-        const span1 = Utils.createMockSpan(tracer, spanOptions);
+        const span1 = TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.duration = 10;
-        Utils.createMockSpan(tracer, spanOptions);
+        TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.duration = 30;
-        Utils.createMockSpan(tracer ,spanOptions);
+        TestUtils.createMockSpan(tracer ,spanOptions);
 
         const resources = InvocationTraceSupport.getResources();
         const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span1);
@@ -178,6 +178,5 @@ describe('Invocation Trace Support', () => {
         expect(resource.resourceErrorCount).toBe(0);
         expect(resource.resourceMaxDuration).toBe(30);
         expect(resource.resourceAvgDuration).toBe(21.67);
-
     });
 });

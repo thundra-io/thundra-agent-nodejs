@@ -1,18 +1,30 @@
 import ThundraTracer from '../../../dist/opentracing/Tracer';
+import ConfigProvider from '../../../dist/config/ConfigProvider';
+import ConfigNames from '../../..//dist/config/ConfigNames';
 import Utils from '../../../dist/plugins/utils/Utils';
-import {envVariableKeys} from '../../../dist/Constants';
 
-describe('Thundra Tracer', () => {
+import TestUtils from '../../utils.js';
 
-    it('Should read listener config from environment variable with multiple filters and listener', () => {
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+describe('listener config', () => {
+    it('should read listener config from environment variable with multiple filters and listener', () => {
         // Arrange
         const tracer = new ThundraTracer({});
 
         const listenerConfig = {
-            type: "FilteringSpanListener",
+            type: 'FilteringSpanListener',
             config: {
                 listener: {
-                    type: "LatencyInjectorSpanListener",
+                    type: 'LatencyInjectorSpanListener',
                     config: {
                         delay: 370,
                         injectOnFinish: true,
@@ -21,24 +33,26 @@ describe('Thundra Tracer', () => {
                 },
                 filters: [
                     {
-                        className: "AWS-SQS",
-                        domainName: "Messaging",
+                        className: 'AWS-SQS',
+                        domainName: 'Messaging',
                         tags: {
-                            "foo": "bar"
+                            'foo': 'bar'
                         }
                     },
                     {
-                        className: "HTTP",
-                        operationName: "http_request",
+                        className: 'HTTP',
+                        operationName: 'http_request',
                         tags: {
-                            "http.host": "foobar.com",
+                            'http.host': 'foobar.com',
                         }
                     }
                 ]
             }
         };
 
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = JSON.stringify(listenerConfig);
+        ConfigProvider.set(
+            ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG,
+            JSON.stringify(listenerConfig));
 
         //Act
         const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
@@ -67,40 +81,40 @@ describe('Thundra Tracer', () => {
         expect(listener.spanFilterer.spanFilters[1].className).toBe('HTTP');   
         expect(listener.spanFilterer.spanFilters[1].getTag('http.host')).toBe('foobar.com');
 
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = null;
         tracer.destroy();
     });
 
-    it('Should read listener config from environment variable with multiple filters and listener', () => {
-
+    it('should read listener config from environment variable with multiple filters and listener', () => {
         // Arrange
         const tracer = new ThundraTracer({});
 
         const listenerConfig = {
-            type: "FilteringSpanListener",
+            type: 'FilteringSpanListener',
             config: {
                 listener: {
-                    type: "ErrorInjectorSpanListener",
+                    type: 'ErrorInjectorSpanListener',
                     config: {
-                        errorType: "NameError",
-                        errorMessage: "foo",
+                        errorType: 'NameError',
+                        errorMessage: 'foo',
                         injectOnFinish: true,
                         injectCountFreq: 3
                     }
                 },
                 filters: [
                     {
-                        className: "AWS-SQS",
-                        domainName: "Messaging",
+                        className: 'AWS-SQS',
+                        domainName: 'Messaging',
                         tags: {
-                            "foo": "bar"
+                            'foo': 'bar'
                         }
                     }
                 ]
             }
         };
 
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = JSON.stringify(listenerConfig);
+        ConfigProvider.set(
+            ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG,
+            JSON.stringify(listenerConfig));
 
         //Act
         const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
@@ -126,17 +140,16 @@ describe('Thundra Tracer', () => {
         expect(listener.spanFilterer.spanFilters[0].className).toBe('AWS-SQS');   
         expect(listener.spanFilterer.spanFilters[0].getTag('foo')).toBe('bar');    
         
-
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = null;
         tracer.destroy();
     });
 
-    it('Should not add invalid listener', () => {
-
+    it('should not add invalid listener', () => {
         // Arrange
         const tracer = new ThundraTracer({});
 
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = 'InvalidSpanListener[]';
+        ConfigProvider.set(
+            ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG,
+            'InvalidSpanListener[]');
 
         //Act
         const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
@@ -144,7 +157,6 @@ describe('Thundra Tracer', () => {
         //Assert
         expect(listeners.length).toBe(0);
        
-        process.env[envVariableKeys.THUNDRA_AGENT_LAMBDA_SPAN_LISTENER_DEF] = null;
         tracer.destroy();
     });
 });   

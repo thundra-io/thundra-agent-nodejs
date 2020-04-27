@@ -14,7 +14,6 @@ const automatic_instrumentation_test = function () {
         tracer,
     });
 
-    
     const instrumenter = new Instrumenter(config);
     instrumenter.hookModuleCompile();
     

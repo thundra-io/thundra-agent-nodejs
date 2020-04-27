@@ -1,8 +1,8 @@
 import BasePluginConfig from './BasePluginConfig';
 import { TraceableConfig } from '@thundra/instrumenter';
-import { envVariableKeys } from '../../Constants';
 import IntegrationConfig from './IntegrationConfig';
-import Utils from '../utils/Utils';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 import ThundraLogger from '../../ThundraLogger';
 import Integration from '../integrations/Integration';
 import Instrumenter from '../../opentracing/instrument/Instrumenter';
@@ -11,6 +11,7 @@ import ThundraTracer from '../../opentracing/Tracer';
 const get = require('lodash.get');
 
 class TraceConfig extends BasePluginConfig {
+
     disableRequest: boolean;
     disableResponse: boolean;
     tracerConfig: any;
@@ -23,12 +24,16 @@ class TraceConfig extends BasePluginConfig {
     disableHttp5xxError: boolean;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
-    maskRedisStatement: boolean;
+    maskRedisCommand: boolean;
     maskRdbStatement: boolean;
     maskDynamoDBStatement: boolean;
-    maskElasticSearchStatement: boolean;
+    maskElasticSearchBody: boolean;
     maskMongoDBCommand: boolean;
     dynamoDBTraceInjectionEnabled: boolean;
+    lambdaTraceInjectionDisabled: boolean;
+    sqsTraceInjectionDisabled: boolean;
+    snsTraceInjectionDisabled: boolean;
+    httpTraceInjectionDisabled: boolean;
     httpPathDepth: number;
     esPathDepth: number;
     enableCloudWatchRequest: boolean;
@@ -47,115 +52,102 @@ class TraceConfig extends BasePluginConfig {
     constructor(options: any) {
         options = options ? options : {};
         super(get(options, 'enabled', true));
-        this.disableRequest = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP) === 'true' : options.disableRequest;
-        this.disableResponse = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP) === 'true' : options.disableResponse;
+        this.disableRequest = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP,
+            options.disableRequest);
+        this.disableResponse = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP,
+            options.disableResponse);
         this.maskRequest = options.maskRequest;
         this.maskResponse = options.maskResponse;
         this.disabledIntegrations = [];
         this.tracerConfig = get(options, 'tracerConfig', {});
         this.traceableConfigs = [];
-        this.disableInstrumentation = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_DISABLE) === 'true' : options.disableInstrumentation;
 
-        this.disableHttp4xxError = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_4XX) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_4XX) === 'true' : options.disableHttp4xxError;
+        this.disableInstrumentation = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE,
+            options.disableInstrumentation);
 
-        this.disableHttp5xxError = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_5XX) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_AGENT_TRACE_INTEGRATION_HTTP_ERROR_ON_5XX) === 'true' : options.disableHttp5xxError;
+        this.maskRedisCommand = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK,
+            options.maskRedisCommand);
+        this.maskRdbStatement = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK,
+            options.maskRdbStatement);
+        this.maskDynamoDBStatement = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK,
+            options.maskDynamoDBStatement);
+        this.maskSQSMessage = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_MESSAGE_MASK,
+            options.maskSQSMessage);
+        this.maskSNSMessage = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_MESSAGE_MASK,
+            options.maskSNSMessage);
+        this.maskLambdaPayload = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_PAYLOAD_MASK,
+            options.maskLambdaPayload);
+        this.maskAthenaStatement = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_ATHENA_STATEMENT_MASK,
+            options.maskAthenaStatement);
+        this.maskElasticSearchBody = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK,
+            options.maskElasticSearchBody);
+        this.maskMongoDBCommand = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_MONGODB_COMMAND_MASK,
+            options.maskMongoDBCommand);
+        this.maskHttpBody = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_MASK,
+            options.maskHttpBody);
 
-        this.maskRedisStatement = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_REDIS_STATEMENT) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_REDIS_STATEMENT) === 'true' : options.maskRedisStatement;
+        this.disableHttp4xxError = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_ON_4XX_DISABLE,
+            options.disableHttp4xxError);
+        this.disableHttp5xxError = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_ON_5XX_DISABLE,
+            options.disableHttp5xxError);
 
-        this.maskRdbStatement = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_RDB_STATEMENT) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_RDB_STATEMENT) === 'true' : options.maskRdbStatement;
+        this.dynamoDBTraceInjectionEnabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_TRACEINJECTION_ENABLE,
+            options.dynamoDBTraceInjectionEnabled);
+        this.lambdaTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE,
+            options.lambdaTraceInjectionDisabled);
+        this.sqsTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE,
+            options.sqsTraceInjectionDisabled);
+        this.snsTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE,
+            options.snsTraceInjectionDisabled);
+        this.httpTraceInjectionDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE,
+            options.httpTraceInjectionDisabled);
 
-        this.maskDynamoDBStatement = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_DYNAMODB_STATEMENT) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_DYNAMODB_STATEMENT) === 'true' : options.maskDynamoDBStatement;
+        this.enableCloudWatchRequest = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE,
+            options.enableCloudWatchRequest);
+        this.enableFirehoseRequest = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE,
+            options.enableFirehoseRequest);
+        this.enableKinesisRequest = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE,
+            options.enableKinesisRequest);
 
-        this.maskElasticSearchStatement = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_ELASTIC_STATEMENT) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_ELASTIC_STATEMENT) === 'true' : options.maskElasticSearchStatement;
+        this.instrumentAWSOnLoad = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ON_LOAD,
+            options.instrumentAWSOnLoad);
 
-        this.maskMongoDBCommand = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_MONGODB_COMMAND) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_MONGODB_COMMAND) === 'true' : options.maskMongoDBCommand;
-
-        this.dynamoDBTraceInjectionEnabled = Utils.getConfiguration(
-            envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) ? Utils.getConfiguration(
-                envVariableKeys.ENABLE_DYNAMODB_TRACE_INJECTION) === 'true' : options.dynamoDBTraceInjectionEnabled;
-
-        this.enableCloudWatchRequest = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE) === 'true' : options.enableCloudWatchRequest;
-
-        this.enableFirehoseRequest = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE) === 'true' : options.enableFirehoseRequest;
-
-        this.enableKinesisRequest = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE) === 'true' : options.enableKinesisRequest;
-
-        this.maskSNSMessage = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_SNS_MESSAGE) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_SNS_MESSAGE) === 'true' : options.maskSNSMessage;
-
-        this.maskSQSMessage = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_SQS_MESSAGE) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_SQS_MESSAGE) === 'true' : options.maskSQSMessage;
-
-        this.maskAthenaStatement = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_ATHENA_STATEMENT) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_ATHENA_STATEMENT) === 'true' : options.maskAthenaStatement;
-
-        this.maskLambdaPayload = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_LAMBDA_PAYLOAD) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_LAMBDA_PAYLOAD) === 'true' : options.maskLambdaPayload;
-
-        this.maskHttpBody = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_MASK_HTTP_BODY) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_MASK_HTTP_BODY) === 'true' : options.maskHttpBody;
-
-        this.instrumentAWSOnLoad = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AWS_INSTRUMENT_ON_LOAD) ? Utils.getConfiguration(
-                envVariableKeys.THUNDRA_AWS_INSTRUMENT_ON_LOAD) === 'true' : options.instrumentAWSOnLoad;
-
-        this.httpPathDepth = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH,
-        ) ? parseInt(Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH), 10)
-        : 1;
-
-        this.esPathDepth = Utils.getConfiguration(
-            envVariableKeys.THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_ELASTICSEARCH_URL_DEPTH,
-        ) ? parseInt(Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_TRACE_INTEGRATIONS_ELASTICSEARCH_URL_DEPTH), 10)
-            : 1;
+        this.httpPathDepth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
+        this.esPathDepth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_PATH_DEPTH);
 
         this.runSamplerOnEachSpan = get(options, 'runCustomSamplerOnEachSpan', false);
         this.sampler = options.sampler;
 
-        for (const key of Object.keys(process.env)) {
-            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INSTRUMENT_CONFIG)) {
+        for (const configName of ConfigProvider.names()) {
+            if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG)) {
                 try {
-                    this.traceableConfigs.push(TraceableConfig.fromString(process.env[key]));
+                    this.traceableConfigs.push(TraceableConfig.fromString(ConfigProvider.get<string>(configName)));
                 } catch (ex) {
-                    ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
-                }
-            }
-            if (key.startsWith(envVariableKeys.THUNDRA_LAMBDA_TRACE_INTEGRATIONS_DISABLE)) {
-                try {
-                    this.disabledIntegrations.push(... this.parseIntegrationsEnvVariable(process.env[key]));
-                } catch (ex) {
-                    ThundraLogger.getInstance().error(`Cannot parse trace def ${key}`);
+                    ThundraLogger.getInstance().error(`Cannot parse trace def ${configName}`);
                 }
             }
         }
@@ -168,6 +160,10 @@ class TraceConfig extends BasePluginConfig {
             }
         }
 
+        const disabledIntegrations = ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_DISABLE);
+        if (disabledIntegrations) {
+            this.disabledIntegrations.push(... this.parseIntegrationsConfig(disabledIntegrations));
+        }
         if (options.disabledIntegrations) {
             for (const intgr of options.disabledIntegrations) {
                 if (typeof intgr === 'string') {
@@ -183,11 +179,11 @@ class TraceConfig extends BasePluginConfig {
         }
     }
 
-    parseIntegrationsEnvVariable(value: string): IntegrationConfig[] {
-        const args = value.substring(value.indexOf('[') + 1, value.indexOf(']')).split(',');
+    parseIntegrationsConfig(value: string): IntegrationConfig[] {
+        const args = value.split(',');
         const configs: IntegrationConfig[] = [];
         for (const arg of args) {
-            configs.push(new IntegrationConfig(arg, {enabled: false}));
+            configs.push(new IntegrationConfig(arg.trim(), {enabled: false}));
         }
         return configs;
     }
@@ -208,6 +204,7 @@ class TraceConfig extends BasePluginConfig {
         this.runSamplerOnEachSpan = get(options, 'traceConfig.runCustomSamplerOnEachSpan', this.runSamplerOnEachSpan);
         this.sampler = get(options, 'traceConfig.sampler', this.sampler);
     }
+
 }
 
 export default TraceConfig;

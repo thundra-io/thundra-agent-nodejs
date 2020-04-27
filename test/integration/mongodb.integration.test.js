@@ -3,7 +3,7 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import MongoDB from './utils/mongodb.integration.utils';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 
-describe('MongoDB Integration', () => {
+describe('MongoDB integration', () => {
     InvocationSupport.setFunctionName('functionName');
     const sdk = require('mongodb');
     

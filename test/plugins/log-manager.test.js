@@ -1,7 +1,8 @@
 import LogManager from '../../dist/plugins/LogManager';
-import {createMockListener} from '../mocks/mocks';
 
-describe('LogManager', () => {
+import { createMockListener } from '../mocks/mocks';
+
+describe('log manager', () => {
     describe('constructor', () => {
         const logManager = new LogManager();
         it('should set variables', () => {
@@ -9,7 +10,7 @@ describe('LogManager', () => {
         });
     });
 
-    describe('addListener', () => {
+    describe('add listener', () => {
         const logManager = new LogManager();
         const listener1 = createMockListener();
         const listener2 = createMockListener();
@@ -20,7 +21,7 @@ describe('LogManager', () => {
         });
     });
 
-    describe('createLogger', () => {
+    describe('create logger', () => {
         const logManager = new LogManager();
         const logger = logManager.createLogger();
         it('should export logger with correct methods', () => {
@@ -34,7 +35,7 @@ describe('LogManager', () => {
         });
     });
 
-    describe('reportLog', () => {
+    describe('report log', () => {
         const logManager = new LogManager();
         const listener1 = createMockListener();
         const listener2 = createMockListener();
@@ -44,6 +45,5 @@ describe('LogManager', () => {
             expect(listener1.reportLog).toBeCalledWith('logReport');
             expect(listener2.reportLog).toBeCalledWith('logReport');
         });
-
     });
 });

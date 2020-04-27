@@ -1,7 +1,7 @@
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import { Reference } from 'opentracing';
 
-describe('Recorder', () => {
+describe('recorder', () => {
     describe('constructor', () => {
         const tracer = new ThundraTracer({});
         it('should not init recorder sampler and active spans', () => {
@@ -9,7 +9,7 @@ describe('Recorder', () => {
         });
     });
 
-    describe('startSpan', () => {
+    describe('start span', () => {
         const tracer = new ThundraTracer({});
         const span1 = tracer.startSpan('operation-name-1');
         const span2 = tracer.startSpan('operation-name-2');
@@ -19,14 +19,14 @@ describe('Recorder', () => {
         });
     });
 
-    describe('getActiveSpan', () => {
+    describe('get active span', () => {
         const tracer = new ThundraTracer({});
         it('should return null when no active span', () => {
             expect(tracer.getActiveSpan()).toBe(undefined);
         });
     });
 
-    describe('span.finish', () => {
+    describe('finish span', () => {
         const tracer = new ThundraTracer({});
         const span = tracer.startSpan('operation-name-1');
         span.finish();
@@ -35,7 +35,7 @@ describe('Recorder', () => {
         });
     });
 
-    describe('tracer finishSpan()', () => {
+    describe('tracer finish span', () => {
         const tracer = new ThundraTracer({});
         const span = tracer.startSpan('operation-name-1');
         tracer.finishSpan();
@@ -44,7 +44,7 @@ describe('Recorder', () => {
         });
     });
 
-    describe('Span parent child relation with child of reference', () => {
+    describe('span parent child relation with child of reference', () => {
         const tracer = new ThundraTracer({});
 
         const parentSpan = tracer.startSpan('parent');
@@ -63,10 +63,9 @@ describe('Recorder', () => {
             expect(tracer.recorder.getSpanList().length).toEqual(2);
             expect(tracer.recorder.getSpanList()[1].getOperationName()).toEqual('child');
         });
-
     });
 
-    describe('Span parent child relation with follows from reference', () => {
+    describe('span parent child relation with follows from reference', () => {
         const tracer = new ThundraTracer({});
 
         const parentSpan = tracer.startSpan('parent');
@@ -82,10 +81,9 @@ describe('Recorder', () => {
             expect(tracer.recorder.getSpanList().length).toEqual(2);
             expect(tracer.recorder.getSpanList()[1].getOperationName()).toEqual('child');
         });
-
     });
 
-    describe('Span setErrorTag', () => {
+    describe('span set error tag', () => {
         const tracer = new ThundraTracer({});
 
         const span = tracer.startSpan('span');
@@ -98,10 +96,9 @@ describe('Recorder', () => {
             expect(tracer.recorder.getSpanList()[0].getTag('error.kind')).toEqual('Error');
             expect(tracer.recorder.getSpanList()[0].getTag('error.message')).toEqual('Some thing failed.');
         });
-
     });
 
-    describe('Tracer wrapper function', () => {
+    describe('tracer wrapper function', () => {
         const tracer = new ThundraTracer({});
 
         const userFunction = () => { };
@@ -113,10 +110,9 @@ describe('Recorder', () => {
             expect(tracer.recorder.getSpanList()[0].getOperationName()).toEqual('userFunction');
             expect(tracer.recorder.getSpanList().length).toEqual(1);
         });
-
     });
 
-    describe('Tracer set/get baggage item', () => {
+    describe('tracer set/get baggage item', () => {
         const tracer = new ThundraTracer({});
         const span = tracer.startSpan('f1');
         span.setBaggageItem('test', 'value');
@@ -124,6 +120,5 @@ describe('Recorder', () => {
         it('should store values', () => {
             expect(span.getBaggageItem('test')).toEqual('value');
         });
-
     });
 });

@@ -1,17 +1,17 @@
-import { envVariableKeys } from '../../Constants';
-
 import ThundraLogger from '../../ThundraLogger';
+import ConfigNames from '../../config/ConfigNames';
+import ConfigProvider from '../../config/ConfigProvider';
 
 class ApplicationSupport {
     static applicationTags: any = {};
 
     static parseApplicationTags(): void {
         ApplicationSupport.applicationTags = {};
-        for (const key of Object.keys(process.env)) {
-            if (key.toLowerCase().startsWith(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX)) {
+        for (const key of ConfigProvider.names()) {
+            if (key.startsWith(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX)) {
                 try {
-                    const propsKey = key.substring(envVariableKeys.THUNDRA_APPLICATION_TAG_PROP_NAME_PREFIX.length);
-                    const propsValue = process.env[key];
+                    const propsKey = key.substring(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX.length);
+                    const propsValue = ConfigProvider.get<any>(key);
                     if (isNaN(parseFloat(propsValue))) {
                         if (propsValue === 'true' || propsValue === 'false') {
                             ApplicationSupport.applicationTags[propsKey] = propsValue === 'true' ? true : false;

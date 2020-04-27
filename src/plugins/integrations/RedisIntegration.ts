@@ -25,7 +25,7 @@ class RedisIntegration implements Integration {
 
     constructor(config: any) {
         this.wrapped = false;
-        this.version = '^2.6';
+        this.version = '>=2.6';
         this.lib = Utils.tryRequire(moduleName);
 
         if (this.lib) {
@@ -93,8 +93,8 @@ class RedisIntegration implements Integration {
                             [DBTags.DB_STATEMENT_TYPE]: operationType,
                             [RedisTags.REDIS_HOST]: host,
                             [RedisTags.REDIS_PORT]: port,
-                            [RedisTags.REDIS_COMMAND]: config.maskRedisStatement ? undefined : command,
-                            [RedisTags.REDIS_COMMAND_ARGS]: config.maskRedisStatement ? undefined : options.args.join(','),
+                            [RedisTags.REDIS_COMMAND]: config.maskRedisCommand ? undefined : command,
+                            [RedisTags.REDIS_COMMAND_ARGS]: config.maskRedisCommand ? undefined : options.args.join(','),
                             [RedisTags.REDIS_COMMAND_TYPE]: operationType,
                             [SpanTags.OPERATION_TYPE]: operationType,
                             [SpanTags.TOPOLOGY_VERTEX]: true,

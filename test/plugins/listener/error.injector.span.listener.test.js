@@ -1,10 +1,10 @@
 import ErrorInjectorSpanListener from '../../../dist/plugins/listeners/ErrorInjectorSpanListener';
 import ThundraTracer from '../../../dist/opentracing/Tracer';
 
-describe('ErrorInjectorSpanListener', () => {
+describe('error injector span listener', () => {
     const tracer = new ThundraTracer({});
 
-    it('Should init default configurations if empty opt provided', () => {
+    it('should init default configurations if empty opt provided', () => {
         // Arrange
         const opt = {};
         
@@ -19,7 +19,7 @@ describe('ErrorInjectorSpanListener', () => {
         expect(listener.injectOnFinish).toBe(listener.DEFAULT_INJECT_ON_FINISH);
     });
 
-    it('Should inject error according to the error frequency', () => {
+    it('should inject error according to the error frequency', () => {
         // Arrange
         const opt = {
             injectCountFreq: 5,
@@ -41,7 +41,7 @@ describe('ErrorInjectorSpanListener', () => {
         expect(injectedErrorCount).toBe(10);
     });
 
-    it('Should inject error with message and type', () => {
+    it('should inject error with message and type', () => {
         // Arrange
         const opt = {
             injectCountFreq: 1000,
@@ -68,7 +68,7 @@ describe('ErrorInjectorSpanListener', () => {
         expect(span.getTag('error.stack')).toBeTruthy();
     });
 
-    it('Should inject error on span finish', () => {
+    it('should inject error on span finish', () => {
         // Arrange
         const opt = {
             injectOnFinish: true
@@ -90,7 +90,7 @@ describe('ErrorInjectorSpanListener', () => {
         expect(span.getTag('error')).toBeTruthy();
     });
 
-    it('Should invoke call back when callback is passed', () => {
+    it('should invoke call back when callback is passed', () => {
         // Arrange
         const opt = {};
 

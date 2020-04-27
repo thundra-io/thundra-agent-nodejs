@@ -238,7 +238,6 @@ module.exports.firehose = (AWS) => {
     });
 };
 
-
 module.exports.kms = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({region: 'us-west-2'});

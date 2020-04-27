@@ -21,7 +21,7 @@ import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
 import {
-    DomainNames, ClassNames, envVariableKeys,
+    DomainNames, ClassNames,
     TriggerHeaderTags, INTEGRATIONS,
 } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
@@ -30,6 +30,8 @@ import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';
 import Integration from './integrations/Integration';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
 
 const get = require('lodash.get');
 
@@ -67,8 +69,7 @@ export class Trace {
     }
 
     initIntegrations(): void {
-        if (!(this.config.disableInstrumentation) ||
-            !(Utils.getConfiguration(envVariableKeys.THUNDRA_DISABLE_TRACE) === 'true')) {
+        if (!(this.config.disableInstrumentation || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE))) {
             this.integrationsMap = new Map<string, Integration>();
 
             for (const key of Object.keys(INTEGRATIONS)) {
@@ -112,10 +113,7 @@ export class Trace {
 
         if (propagatedSpanContext) {
             this.pluginContext.traceId = propagatedSpanContext.traceId;
-            this.pluginContext.transactionId =
-                Utils.getConfiguration(envVariableKeys.THUNDRA_LAMBDA_TRACE_USE_PROPAGATED_TRANSACTION_ID) === 'true'
-                    ? propagatedSpanContext.transactionId
-                    : Utils.generateId();
+            this.pluginContext.transactionId = Utils.generateId();
             this.tracer.transactionId = this.pluginContext.transactionId;
 
             this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
@@ -281,7 +279,7 @@ export class Trace {
         }
 
         let enableRequestData = true;
-        if (this.triggerClassName === ClassNames.CLOUDWATCH && !conf.enableFirehoseRequest) {
+        if (this.triggerClassName === ClassNames.CLOUDWATCH && !conf.enableCloudWatchRequest) {
             enableRequestData = false;
         }
 
@@ -319,7 +317,7 @@ export class Trace {
         const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
         if (lambdaEventType === LambdaEventType.Lambda) {
             return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, originalContext.clientContext.custom);
-        } else if (lambdaEventType === LambdaEventType.APIGatewayProxy) {
+        } else if (lambdaEventType === LambdaEventType.APIGatewayProxy && originalEvent.headers) {
             return this.tracer.extract(opentracing.FORMAT_HTTP_HEADERS, originalEvent.headers);
         } else if (lambdaEventType === LambdaEventType.SNS) {
             return LambdaEventUtils.extractSpanContextFromSNSEvent(this.tracer, originalEvent);
@@ -358,6 +356,8 @@ export class Trace {
                 return LambdaEventUtils.injectTriggerTagsForAPIGatewayPassThrough(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.EventBridge) {
                 return LambdaEventUtils.injectTriggerTagsForEventBridge(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.Zeit) {
+                return LambdaEventUtils.injectTriggerTagsForZeit(span, originalEvent);
             }
         } catch (error) {
             ThundraLogger.getInstance().error('Cannot inject trigger tags. ' + error);

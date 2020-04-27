@@ -4,10 +4,10 @@ import Redis from './utils/redis.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
-describe('Redis Integration', () => {
+describe('Redis integration', () => {
     InvocationSupport.setFunctionName('functionName');
 
-    test('should mask Redis statments ', () => {
+    test('should mask Redis commands ', () => {
         const tracer = new ThundraTracer();
         const integration = new RedisIntegration({
             tracer,
@@ -16,7 +16,7 @@ describe('Redis Integration', () => {
 
         const traceConfig = new TraceConfig({
             disableInstrumentation: true,
-            maskRedisStatement: true,
+            maskRedisCommand: true,
         });
 
         integration.wrap(sdk, traceConfig);

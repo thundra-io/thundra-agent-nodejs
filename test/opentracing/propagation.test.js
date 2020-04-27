@@ -1,7 +1,7 @@
 import TextMapPropagator from '../../dist/opentracing/propagation/TextMap';
 import SpanContext from '../../dist/opentracing/SpanContext';
 
-describe('TextMapPropagator', () => {
+describe('text map propagator', () => {
     describe('inject', () => {
         const textMapPropagator = new TextMapPropagator();
         const carrier = {};

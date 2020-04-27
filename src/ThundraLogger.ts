@@ -1,12 +1,12 @@
-import Utils from './plugins/utils/Utils';
-import { envVariableKeys } from './Constants';
+import ConfigProvider from './config/ConfigProvider';
+import ConfigNames from './config/ConfigNames';
 
 class ThundraLogger {
     static instance: ThundraLogger;
     enabled: boolean;
 
     constructor() {
-        this.enabled = Utils.getConfiguration(envVariableKeys.THUNDRA_AGENT_LAMBDA_AGENT_DEBUG_ENABLE) === 'true';
+        this.enabled = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_DEBUG_ENABLE);
         ThundraLogger.instance = this;
     }
 

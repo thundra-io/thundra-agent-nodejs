@@ -1,7 +1,7 @@
 import Integration from './Integration';
 import * as opentracing from 'opentracing';
 import {
-    HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, envVariableKeys,
+    HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, TriggerHeaderTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
@@ -101,7 +101,7 @@ class HttpIntegration implements Integration {
                         disableActiveStart: true,
                     });
 
-                    if (!(Utils.getConfiguration(envVariableKeys.DISABLE_SPAN_CONTEXT_INJECTION) === 'true')) {
+                    if (!config.httpTraceInjectionDisabled) {
                         const headers = options.headers ? options.headers : {};
                         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
                         options.headers = headers;

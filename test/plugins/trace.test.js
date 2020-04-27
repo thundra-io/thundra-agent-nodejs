@@ -1,19 +1,23 @@
 import Trace from '../../dist/plugins/Trace';
-import { createMockPluginContext, createMockBeforeInvocationData, createMockApiGatewayProxy,
-    createMockSNSEvent, createMockSQSEvent, createMockClientContext,createBatchMockSQSEventDifferentIds,
-    createBatchMockSQSEventSameIds, createBatchMockSNSEventWithDifferentIds, createBatchMockSNSEventWithSameIds } from '../mocks/mocks';
-import * as mockAWSEvents from '../mocks/aws.events.mocks';    
-import { DATA_MODEL_VERSION } from '../../dist/Constants';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../../dist/plugins/support/InvocationTraceSupport';
 import TraceConfig from '../../dist/plugins/config/TraceConfig';
+import { DATA_MODEL_VERSION } from '../../dist/Constants';
+
+import {
+    createMockPluginContext, createMockBeforeInvocationData, createMockApiGatewayProxy,
+    createMockSNSEvent, createMockSQSEvent, createMockClientContext,createBatchMockSQSEventDifferentIds,
+    createBatchMockSQSEventSameIds, createBatchMockSNSEventWithDifferentIds, createBatchMockSNSEventWithSameIds
+} from '../mocks/mocks';
+import * as mockAWSEvents from '../mocks/aws.events.mocks';
 
 const md5 = require('md5');
 const flatten = require('lodash.flatten');
 
 const pluginContext = createMockPluginContext();
-describe('Trace', () => {
+
+describe('trace', () => {
 
     it('should export a function', () => {
         expect(typeof Trace).toEqual('function');
@@ -59,7 +63,7 @@ describe('Trace', () => {
         });
 
         const tracePluginWithOptions = Trace(configs);
-        it('Should set tracer config correctly', () => {
+        it('should set tracer config correctly', () => {
             expect(tracePluginWithOptions.config.traceableConfigs).toBeTruthy();
             expect(tracePluginWithOptions.config.traceableConfigs.length).toBe(2);
             expect(tracePluginWithOptions.config.traceableConfigs[0].pattern).toEqual(configs.traceableConfigs[0].pattern);
@@ -69,7 +73,7 @@ describe('Trace', () => {
 
     });
 
-    describe('setPluginContext', () => {
+    describe('set plugin context', () => {
         const trace = Trace(new TraceConfig());
         beforeAll(() => {
             trace.setPluginContext(pluginContext);
@@ -137,7 +141,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation', () => {
+    describe('before invocation', () => {
         const tracer = Trace(new TraceConfig());
         const beforeInvocationData = createMockBeforeInvocationData();
 
@@ -159,7 +163,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with SQS event', () => {
+    describe('before invocation with SQS event', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -177,7 +181,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with batch SQS event from multiple triggers', () => {
+    describe('before invocation with batch SQS event from multiple triggers', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -195,7 +199,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with batch SQS event from same trigger', () => {
+    describe('before invocation with batch SQS event from same trigger', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -213,7 +217,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with SNS event', () => {
+    describe('before invocation with SNS event', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -232,7 +236,7 @@ describe('Trace', () => {
     });
 
 
-    describe('beforeInvocation with batch SNS event from multiple triggers', () => {
+    describe('before invocation with batch SNS event from multiple triggers', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -250,7 +254,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with batch SNS event from same trigger', () => {
+    describe('before invocation with batch SNS event from same trigger', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -268,7 +272,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with ApiGateway event', () => {
+    describe('before invocation with ApiGateway event', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -286,7 +290,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with Lambda trigger', () => {
+    describe('before invocation with Lambda trigger', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -304,7 +308,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with Kinesis event ', () => {
+    describe('before invocation with Kinesis event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -330,7 +334,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with FireHose event ', () => {
+    describe('before invocation with Firehose event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -360,7 +364,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with DynamoDB event ', () => {
+    describe('before invocation with DynamoDB event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -400,7 +404,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with SNS event ', () => {
+    describe('before invocation with SNS event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -426,7 +430,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with SQS event ', () => {
+    describe('before invocation with SQS event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -452,7 +456,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with S3 event ', () => {
+    describe('before invocation with S3 event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -479,7 +483,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with CloudWatchSchedule event ', () => {
+    describe('before invocation with CloudWatchSchedule event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -500,7 +504,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with CloudWatchLog event ', () => {
+    describe('before invocation with CloudWatchLog event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -521,7 +525,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with CloudFront event ', () => {
+    describe('before invocation with CloudFront event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -542,7 +546,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with APIGatewayProxy event ', () => {
+    describe('before invocation with APIGatewayProxy event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -568,7 +572,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('beforeInvocation with APIGatewayPassThrough event ', () => {
+    describe('before invocation with APIGatewayPassThrough event ', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -590,7 +594,7 @@ describe('Trace', () => {
     });
 
 
-    describe('beforeInvocation with Lambda event', () => {
+    describe('before invocation with Lambda event', () => {
         const tracer = Trace(new TraceConfig());
         const pluginContext = createMockPluginContext();
         const beforeInvocationData = createMockBeforeInvocationData();
@@ -616,7 +620,7 @@ describe('Trace', () => {
         });
     });
 
-    describe('afterInvocation without error data', () => {
+    describe('after invocation without error data', () => {
         const tracer = Trace(new TraceConfig());
         tracer.generateAuditInfoFromTraces = jest.fn();
         tracer.setPluginContext(pluginContext);
@@ -645,7 +649,7 @@ describe('Trace', () => {
  
     });
  
-    describe('afterInvocation with error data', () => {
+    describe('after invocation with error data', () => {
         const tracer = Trace(new TraceConfig());
         tracer.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
