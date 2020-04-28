@@ -22,15 +22,18 @@ import ApplicationSupport from '../support/ApplicationSupport';
 import ThundraTracer from '../../opentracing/Tracer';
 import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
 import InvocationSupport from '../support/InvocationSupport';
+import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
 const zlib = require('zlib');
+const Hook = require('require-in-the-middle');
 
 declare var __non_webpack_require__: any;
 const customReq = typeof __non_webpack_require__ !== 'undefined'
-                        ?  __non_webpack_require__
-                        : require;
+    ?  __non_webpack_require__
+    : require;
+const thundraWrapped = '__thundra_wrapped';
 
 class Utils {
 
@@ -257,32 +260,77 @@ class Utils {
 
     static tryRequire(name: string, paths?: string[]): any {
         try {
-            paths = this.enrichModulePath(paths);
-            const resolvedPath = customReq.resolve(name, { paths });
+            let resolvedPath;
+            if (paths !== undefined) {
+                resolvedPath = customReq.resolve(name, { paths });
+            } else {
+                resolvedPath = customReq.resolve(name);
+            }
             return customReq(resolvedPath);
-        // tslint:disable-next-line:no-empty
+            // tslint:disable-next-line:no-empty
         } catch (err) {}
     }
 
     static getModuleInfo(name: string, paths?: string[]): any {
         try {
-            paths = this.enrichModulePath(paths);
-            const modulePath = customReq.resolve(name, { paths });
+            let modulePath;
+            if (paths !== undefined) {
+                modulePath = customReq.resolve(name, { paths });
+            } else {
+                modulePath = customReq.resolve(name);
+            }
+
             return parse(modulePath);
         } catch (err) {
             return {};
         }
     }
 
-    static enrichModulePath(paths: string[]) {
-        if (process.env.LAMBDA_TASK_ROOT) {
-            if (paths === undefined) {
-                paths = [process.env.LAMBDA_TASK_ROOT];
-            } else if (paths.indexOf(process.env.LAMBDA_TASK_ROOT) === -1) {
-                paths.push(process.env.LAMBDA_TASK_ROOT);
+    static doInstrument(lib: any, libs: any[], basedir: string, moduleName: string,
+                        version: string, wrapper: any, config?: any): any {
+        const moduleValidator = new ModuleVersionValidator();
+        const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
+        if (!isValidVersion) {
+            ThundraLogger.getInstance().error(
+                `Invalid module version for ${moduleName} integration. Supported version is ${version}`);
+        } else {
+            if (!lib[thundraWrapped]) {
+                wrapper(lib, config);
+                lib[thundraWrapped] = true;
+                libs.push(lib);
             }
         }
-        return paths || [];
+    }
+
+    static instrument(moduleName: string, version: string, wrapper: any,
+                      unwrapper?: any, config?: any, paths?: string[]): any {
+        const libs: any[] = [];
+        const requiredLib = Utils.tryRequire(moduleName, paths);
+        if (requiredLib) {
+            const { basedir } = Utils.getModuleInfo(moduleName);
+            if (!basedir) {
+                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
+                return;
+            }
+            Utils.doInstrument(requiredLib, libs, basedir, moduleName, version, wrapper, config);
+        }
+        const hook = Hook(moduleName, { internals: true }, (lib: any, name: string, basedir: string) => {
+            if (name === moduleName) {
+                Utils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
+            }
+            return lib;
+        });
+        return {
+            uninstrument: () => {
+                for (const lib of libs) {
+                    if (unwrapper) {
+                        unwrapper(lib, config);
+                    }
+                    delete lib[thundraWrapped];
+                }
+                hook.unhook();
+            },
+        };
     }
 
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
@@ -444,7 +492,7 @@ class Utils {
     static getApplicationId(originalContext: any, pluginContext: any) {
         const arn = originalContext.invokedFunctionArn;
         const region = Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
-            || 'local';
+            || 'local';
         const accountNo = Utils.getAccountNo(arn, pluginContext);
         const functionName = Utils.getApplicationName(originalContext);
 

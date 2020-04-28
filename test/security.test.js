@@ -180,16 +180,16 @@ beforeAll(() => {
             return resolve({ readBytes: 1024, writeBytes: 4096 });
         });
     });
-    
+
     Utils.readProcMetricPromise = jest.fn(() => {
         return new Promise((resolve, reject) => {
             return resolve({ threadCount: 10 });
         });
     });
 
-    
+
     // Mock reporting and destroying methods
-    AWSIntegration.prototype.getOriginalFuntion = jest.fn(() => {
+    AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
         return (cb) => {
             cb(Error('foo error'), null);
         };
@@ -206,12 +206,12 @@ describe('whitelist config', () => {
             whitelist: operationList,
         }
     };
-    
+
     let thundraWrapper;
     let recorder;
     const originalEvent = { key: 'value' };
     const originalContext = createMockContext();
-    
+
     const clearRecorder = (recorder) => {
         recorder.activeSpanStack.clear();
         recorder.spanList = [];
@@ -248,7 +248,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-        
+
         test('should whitelist lambda operation', () => {
             const originalFunction = () => AWSCalls.lambda(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -258,7 +258,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-        
+
         test('should whitelist sqs operation', () => {
             const originalFunction = () => AWSCalls.sqs(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -268,7 +268,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-        
+
         test('should whitelist s3 operation', () => {
             const originalFunction = () => AWSCalls.s3GetObject(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -278,7 +278,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-        
+
         test('should whitelist sns operation', () => {
             const originalFunction = () => AWSCalls.sns_topic(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -288,7 +288,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-        
+
         test('should whitelist kinesis operation', () => {
             const originalFunction = () => AWSCalls.kinesis(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -298,7 +298,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-        
+
         test('should whitelist firehose operation', () => {
             const originalFunction = () => AWSCalls.kinesis(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -308,7 +308,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-        
+
         test('should whitelist athena operation', () => {
             const originalFunction = () => AWSCalls.athenaStartQueryExec(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -333,7 +333,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-        
+
         test('should whitelist api-gateway get operation', () => {
             const originalFunction = () => HTTPCalls.getAPIGW(https);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -376,7 +376,7 @@ describe('whitelist config', () => {
                 }
             });
         });
-        
+
         test('should whitelist ioredis query operation', () => {
             const originalFunction = () => RedisCalls.set(ioredis);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -405,7 +405,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-        
+
         test('should whitelist mysql2 operation', () => {
             const originalFunction = () => MySQLCalls.selectMySql2(mysql2);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -447,7 +447,7 @@ describe('blacklist config', () => {
     const securityErrorMessage = 'Operation was blocked due to security configuration';
     const originalEvent = { key: 'value' };
     const originalContext = createMockContext();
-    
+
     const clearRecorder = (recorder) => {
         recorder.activeSpanStack.clear();
         recorder.spanList = [];
@@ -487,7 +487,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-        
+
         test('should blacklist lambda operation', () => {
             const originalFunction = () => AWSCalls.lambda(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -497,7 +497,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-        
+
         test('should blacklist sqs operation', () => {
             const originalFunction = () => AWSCalls.sqs(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -507,7 +507,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-        
+
         test('should blacklist s3 operation', () => {
             const originalFunction = () => AWSCalls.s3GetObject(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -517,7 +517,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-        
+
         test('should blacklist sns operation', () => {
             const originalFunction = () => AWSCalls.sns_topic(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -527,7 +527,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-        
+
         test('should blacklist kinesis operation', () => {
             const originalFunction = () => AWSCalls.kinesis(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -537,7 +537,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-        
+
         test('should blacklist firehose operation', () => {
             const originalFunction = () => AWSCalls.kinesis(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -547,7 +547,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-        
+
         test('should blacklist athena operation', () => {
             const originalFunction = () => AWSCalls.athenaStartQueryExec(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -572,7 +572,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-        
+
         test('should blacklist api-gateway get operation', () => {
             const originalFunction = () => HTTPCalls.getAPIGW(https);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -615,7 +615,7 @@ describe('blacklist config', () => {
                 }
             });
         });
-        
+
         test('should blacklist ioredis query operation', () => {
             const originalFunction = () => RedisCalls.set(ioredis);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -644,7 +644,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-        
+
         test('should blacklist mysql2 operation', () => {
             const originalFunction = () => MySQLCalls.selectMySql2(mysql2);
             const wrappedFunc = thundraWrapper(originalFunction);
