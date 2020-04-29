@@ -13,7 +13,7 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 
 const MODULE_NAME = 'pg';
-const MODULE_VERSION = '6.x || 7.x';
+const MODULE_VERSION = '6.x || 7.x || 8.x';
 
 class PostgreIntegration implements Integration {
     config: any;
