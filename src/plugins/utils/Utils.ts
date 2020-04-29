@@ -28,6 +28,7 @@ const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
 const zlib = require('zlib');
 const Hook = require('require-in-the-middle');
+const path = require('path');
 
 declare var __non_webpack_require__: any;
 const customReq = typeof __non_webpack_require__ !== 'undefined'
@@ -261,7 +262,7 @@ class Utils {
     static tryRequire(name: string, paths?: string[]): any {
         try {
             let resolvedPath;
-            if (paths !== undefined) {
+            if (paths) {
                 resolvedPath = customReq.resolve(name, { paths });
             } else {
                 resolvedPath = customReq.resolve(name);
@@ -303,9 +304,9 @@ class Utils {
     }
 
     static instrument(moduleName: string, version: string, wrapper: any,
-                      unwrapper?: any, config?: any, paths?: string[]): any {
+                      unwrapper?: any, config?: any, paths?: string[], fileName?: string): any {
         const libs: any[] = [];
-        const requiredLib = Utils.tryRequire(moduleName, paths);
+        const requiredLib = Utils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
         if (requiredLib) {
             const { basedir } = Utils.getModuleInfo(moduleName);
             if (!basedir) {
