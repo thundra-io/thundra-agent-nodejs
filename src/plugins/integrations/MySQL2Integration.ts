@@ -3,7 +3,6 @@ import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
 } from '../../Constants';
-import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
@@ -12,41 +11,28 @@ import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
-const path = require('path');
 
-const moduleName = 'mysql2';
-const fileName = 'lib/connection';
+const MODULE_NAME = 'mysql2';
+const FILE_NAME = 'lib/connection';
+const MODULE_VERSION = '>=1.5';
 
 class MySQL2Integration implements Integration {
     config: any;
-    lib: any;
-    version: string;
-    basedir: string;
-    wrapped: boolean;
+    instrumentContext: any;
 
     constructor(config: any) {
-        this.version = '>=1.5';
-        this.wrapped = false;
-        this.lib = Utils.tryRequire(path.join(moduleName, fileName));
-
-        if (this.lib) {
-            const { basedir } = Utils.getModuleInfo(moduleName);
-            if (!basedir) {
-                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
-                return;
-            }
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-            if (!isValidVersion) {
-                ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
-                                            Supported version is ${this.version}`);
-                return;
-            } else {
-                this.config = config;
-                this.basedir = basedir;
-                this.wrap.call(this, this.lib, config);
-            }
-        }
+        this.config = config;
+        this.instrumentContext = Utils.instrument(
+            MODULE_NAME, MODULE_VERSION,
+            (lib: any, cfg: any) => {
+                this.wrap.call(this, lib, cfg);
+            },
+            (lib: any, cfg: any) => {
+                this.doUnwrap.call(this, lib);
+            },
+            config,
+            null,
+            FILE_NAME);
     }
 
     wrap(lib: any, config: any) {
@@ -136,19 +122,19 @@ class MySQL2Integration implements Integration {
             };
         }
 
-        if (this.wrapped) {
-            this.unwrap();
-        }
-
         if (has(lib, 'prototype.query')) {
             shimmer.wrap(lib.prototype, 'query', wrapper);
-            this.wrapped = true;
         }
     }
 
+    doUnwrap(lib: any) {
+        shimmer.unwrap(lib.prototype, 'query');
+    }
+
     unwrap() {
-        shimmer.unwrap(this.lib.prototype, 'query');
-        this.wrapped = false;
+        if (this.instrumentContext.uninstrument) {
+            this.instrumentContext.uninstrument();
+        }
     }
 }
 

@@ -11,7 +11,6 @@ import ThundraChaosError from '../error/ThundraChaosError';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
-const path = require('path');
 
 const MODULE_NAME = 'mysql';
 const FILE_NAME = 'lib/Connection';
