@@ -4,7 +4,6 @@ import InvocationSupport from '../support/InvocationSupport';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import Utils from '../utils/Utils';
-import ModuleVersionValidator from './ModuleVersionValidator';
 import {
     DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,
@@ -15,38 +14,24 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const get = require('lodash.get');
 
-const moduleName = 'ioredis';
+const MODULE_NAME = 'ioredis';
+const MODULE_VERSION = '>=2';
 
 class IORedisIntegration implements Integration {
-    version: string;
-    lib: any;
     config: any;
-    basedir: string;
-    wrapped: boolean;
+    instrumentContext: any;
 
     constructor(config: any) {
-        this.wrapped = false;
-        this.version = '>=2';
-        this.lib = Utils.tryRequire(moduleName);
-
-        if (this.lib) {
-            const { basedir } = Utils.getModuleInfo(moduleName);
-            if (!basedir) {
-                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
-                return;
-            }
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-            if (!isValidVersion) {
-                ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
-                                            Supported version is ${this.version}`);
-                return;
-            } else {
-                this.config = config;
-                this.basedir = basedir;
-                this.wrap.call(this, this.lib, config);
-            }
-        }
+        this.config = config;
+        this.instrumentContext = Utils.instrument(
+            MODULE_NAME, MODULE_VERSION,
+            (lib: any, cfg: any) => {
+                this.wrap.call(this, lib, cfg);
+            },
+            (lib: any, cfg: any) => {
+                this.doUnwrap.call(this, lib);
+            },
+            config);
     }
 
     wrap(lib: any, config: any) {
@@ -121,19 +106,19 @@ class IORedisIntegration implements Integration {
             };
         }
 
-        if (this.wrapped) {
-            this.unwrap();
-        }
-
         if (has(lib, 'prototype.sendCommand')) {
             shimmer.wrap(lib.prototype, 'sendCommand', wrapper);
-            this.wrapped = true;
         }
     }
 
+    doUnwrap(lib: any) {
+        shimmer.unwrap(lib.prototype, 'sendCommand');
+    }
+
     unwrap() {
-        shimmer.unwrap(this.lib.prototype, 'sendCommand');
-        this.wrapped = false;
+        if (this.instrumentContext.uninstrument) {
+            this.instrumentContext.uninstrument();
+        }
     }
 
     patchEnd(span: ThundraSpan, resultHandler?: Function): () => Promise<{}> {
