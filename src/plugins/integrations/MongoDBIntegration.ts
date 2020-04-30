@@ -21,9 +21,9 @@ class MongoDBIntegration implements Integration {
     listener: any;
     spans: any;
 
-
     constructor(config: any) {
         this.config = config;
+        this.spans = {};
         this.instrumentContext = Utils.instrument(
             MODULE_NAME, MODULE_VERSION,
             (lib: any, cfg: any) => {
