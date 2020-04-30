@@ -3,7 +3,6 @@ import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
 } from '../../Constants';
-import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
@@ -12,38 +11,25 @@ import ThundraChaosError from '../error/ThundraChaosError';
 
 const has = require('lodash.has');
 const shimmer = require('shimmer');
-const moduleName = 'elasticsearch';
+
+const MODULE_NAME = 'elasticsearch';
+const MODULE_VERSION = '>=10.5';
 
 class ESIntegration implements Integration {
     config: any;
-    lib: any;
-    version: string;
-    basedir: string;
-    wrapped: boolean;
+    instrumentContext: any;
 
     constructor(config: any) {
-        this.wrapped = false;
-        this.version = '>=10.5';
-        this.lib = Utils.tryRequire(moduleName);
-
-        if (this.lib) {
-            const { basedir } = Utils.getModuleInfo(moduleName);
-            if (!basedir) {
-                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
-                return;
-            }
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-            if (!isValidVersion) {
-                ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
-                                            Supported version is ${this.version}`);
-                return;
-            } else {
-                this.config = config;
-                this.basedir = basedir;
-                this.wrap.call(this, this.lib, config);
-            }
-        }
+        this.config = config;
+        this.instrumentContext = Utils.instrument(
+            MODULE_NAME, MODULE_VERSION,
+            (lib: any, cfg: any) => {
+                this.wrap.call(this, lib, cfg);
+            },
+            (lib: any, cfg: any) => {
+                this.doUnwrap.call(this, lib);
+            },
+            config);
     }
 
     static hostSelect(me: any): Promise<any> {
@@ -175,19 +161,19 @@ class ESIntegration implements Integration {
             };
         }
 
-        if (this.wrapped) {
-            this.unwrap();
-        }
-
         if (has(lib, 'Transport.prototype.request')) {
             shimmer.wrap(lib.Transport.prototype, 'request', wrapRequest);
-            this.wrapped = true;
         }
     }
 
+    doUnwrap(lib: any) {
+        shimmer.unwrap(lib.Transport.prototype, 'request');
+    }
+
     unwrap() {
-        shimmer.unwrap(this.lib.Transport.prototype, 'request');
-        this.wrapped = false;
+        if (this.instrumentContext.uninstrument) {
+            this.instrumentContext.uninstrument();
+        }
     }
 }
 

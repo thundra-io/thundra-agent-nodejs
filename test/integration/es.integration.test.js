@@ -4,12 +4,24 @@ import ThundraTracer from '../../dist/opentracing/Tracer';
 import ES from './utils/es.integration.utils';
 
 describe('ES integration', () => {
-    test('should instrument ES calls with single host', () => {
-        const tracer = new ThundraTracer();
-        const integration = new ESIntegrations({
+    let tracer;
+    let integration;
+
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new ESIntegrations({
             tracer,
-            esPathDepth: 2,
         });
+    });
+
+    afterEach(() => {
+        tracer.destroy();
+    });
+
+    test('should instrument ES calls with single host', () => {
+        integration.config.esPathDepth = 2;
+
         const sdk = require('elasticsearch');
 
         InvocationSupport.setFunctionName('functionName');
@@ -40,11 +52,7 @@ describe('ES integration', () => {
     });
 
     test('should instrument ES calls with single host', () => {
-        const tracer = new ThundraTracer();
-        const integration = new ESIntegrations({
-            tracer,
-            esPathDepth: 1
-        });
+        integration.config.esPathDepth = 1;
         const sdk = require('elasticsearch');
 
         InvocationSupport.setFunctionName('functionName');
@@ -77,13 +85,10 @@ describe('ES integration', () => {
     });
 
     test('should mask ES body', () => {
-        const tracer = new ThundraTracer();
-        const integration = new ESIntegrations({
-            disableInstrumentation: true,
-            maskElasticSearchBody: true,
-            esPathDepth: 2,
-            tracer,
-        });
+        integration.config.esPathDepth = 2;
+        integration.config.disableInstrumentation = true;
+        integration.config.maskElasticSearchBody = true;
+
         const sdk = require('elasticsearch');
 
         InvocationSupport.setFunctionName('functionName');
