@@ -4,7 +4,6 @@ import Redis from './utils/redis.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('Redis integration', () => {
-    InvocationSupport.setFunctionName('functionName');
     let tracer;
     let integration;
 

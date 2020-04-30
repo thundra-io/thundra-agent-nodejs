@@ -20,8 +20,6 @@ describe('MySQL2 integration', () => {
         tracer.destroy();
     });
 
-    InvocationSupport.setFunctionName('functionName');
-
     test('should instrument MySQL calls with mysql2 client', () => {
         const sdk = require('mysql2');
 

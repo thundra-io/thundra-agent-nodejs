@@ -2,18 +2,26 @@ import PostgreIntegration from '../../dist/plugins/integrations/PostgreIntegrati
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import PG from './utils/pg.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
-import TraceConfig from '../../dist/plugins/config/TraceConfig';
+
 
 describe('PostgreSQL integration', () => {
-    InvocationSupport.setFunctionName('functionName');
+    let tracer;
+    let integration;
 
-    test('should instrument PostgreSQL calls ', () => {
-        const tracer = new ThundraTracer();
-        const integration = new PostgreIntegration({
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new PostgreIntegration({
             tracer,
         });
+    });
+
+    afterEach(() => {
+        tracer.destroy();
+    });
+
+    test('should instrument PostgreSQL calls ', () => {
         const sdk = require('pg');
-        integration.wrap(sdk, {});
 
         return PG.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
@@ -36,18 +44,9 @@ describe('PostgreSQL integration', () => {
     });
 
     test('should mask PostgreSQL statements', () => {
-        const tracer = new ThundraTracer();
-        const integration = new PostgreIntegration({
-            tracer,
-        });
+        integration.config.disableInstrumentation = true;
+        integration.config.maskRdbStatement = true;
         const sdk = require('pg');
-
-        const traceConfig = new TraceConfig({
-            disableInstrumentation: true,
-            maskRdbStatement: true
-        });
-
-        integration.wrap(sdk, traceConfig);
     
         return PG.select(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];

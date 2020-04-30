@@ -4,13 +4,22 @@ import Redis from './utils/redis.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('IORedis integration', () => {
-    InvocationSupport.setFunctionName('functionName');
+    let tracer;
+    let integration;
 
-    test('should instrument IORedis calls', () => {
-        const tracer = new ThundraTracer();
-        const integration = new IORedisIntegration({
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new IORedisIntegration({
             tracer,
         });
+    });
+
+    afterEach(() => {
+        tracer.destroy();
+    });
+
+    test('should instrument IORedis calls', () => {
         const sdk = require('ioredis');
 
         return Redis.set(sdk).then((data) => {
