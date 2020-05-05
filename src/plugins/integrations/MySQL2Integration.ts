@@ -23,7 +23,7 @@ class MySQL2Integration implements Integration {
     constructor(config: any) {
         this.config = config;
         this.instrumentContext = Utils.instrument(
-            MODULE_NAME, MODULE_VERSION,
+            [MODULE_NAME], MODULE_VERSION,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

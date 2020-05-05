@@ -1,4 +1,4 @@
-import { readFile } from 'fs';
+import {readFile} from 'fs';
 import * as os from 'os';
 import {
     DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
@@ -32,7 +32,7 @@ const path = require('path');
 
 declare var __non_webpack_require__: any;
 const customReq = typeof __non_webpack_require__ !== 'undefined'
-    ?  __non_webpack_require__
+    ? __non_webpack_require__
     : require;
 const thundraWrapped = '__thundra_wrapped';
 
@@ -107,7 +107,7 @@ class Utils {
     }
 
     static parseError(err: any) {
-        const error: any = { errorMessage: '', errorType: 'Unknown Error', stack: null, code: 0 };
+        const error: any = {errorMessage: '', errorType: 'Unknown Error', stack: null, code: 0};
         if (err instanceof Error) {
             error.errorType = err.name;
             error.errorMessage = err.message;
@@ -128,7 +128,7 @@ class Utils {
         }
 
         const maskErrorStackTrace = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK);
-        error.stack = maskErrorStackTrace ? '' :  error.stack;
+        error.stack = maskErrorStackTrace ? '' : error.stack;
 
         return error;
     }
@@ -263,20 +263,21 @@ class Utils {
         try {
             let resolvedPath;
             if (paths) {
-                resolvedPath = customReq.resolve(name, { paths });
+                resolvedPath = customReq.resolve(name, {paths});
             } else {
                 resolvedPath = customReq.resolve(name);
             }
             return customReq(resolvedPath);
             // tslint:disable-next-line:no-empty
-        } catch (err) {}
+        } catch (err) {
+        }
     }
 
     static getModuleInfo(name: string, paths?: string[]): any {
         try {
             let modulePath;
             if (paths !== undefined) {
-                modulePath = customReq.resolve(name, { paths });
+                modulePath = customReq.resolve(name, {paths});
             } else {
                 modulePath = customReq.resolve(name);
             }
@@ -289,38 +290,54 @@ class Utils {
 
     static doInstrument(lib: any, libs: any[], basedir: string, moduleName: string,
                         version: string, wrapper: any, config?: any): any {
-        const moduleValidator = new ModuleVersionValidator();
-        const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
-        if (!isValidVersion) {
-            ThundraLogger.getInstance().error(
-                `Invalid module version for ${moduleName} integration. Supported version is ${version}`);
+        let isValid = false;
+        if (version) {
+            const moduleValidator = new ModuleVersionValidator();
+            const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
+            if (!isValidVersion) {
+                ThundraLogger.getInstance().error(
+                    `Invalid module version for ${moduleName} integration. Supported version is ${version}`);
+            } else {
+                isValid = true;
+            }
         } else {
+            isValid = true;
+        }
+        if (isValid) {
             if (!lib[thundraWrapped]) {
-                wrapper(lib, config);
+                wrapper(lib, config, moduleName);
                 lib[thundraWrapped] = true;
                 libs.push(lib);
             }
         }
     }
 
-    static instrument(moduleName: string, version: string, wrapper: any,
+    static instrument(moduleNames: string[], version: string, wrapper: any,
                       unwrapper?: any, config?: any, paths?: string[], fileName?: string): any {
         const libs: any[] = [];
-        const requiredLib = Utils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
-        if (requiredLib) {
-            const { basedir } = Utils.getModuleInfo(moduleName);
-            if (!basedir) {
-                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
-                return;
+        const hooks: any[] = [];
+        for (const moduleName of moduleNames) {
+            const requiredLib = Utils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
+            if (requiredLib) {
+                if (version) {
+                    const {basedir} = Utils.getModuleInfo(moduleName);
+                    if (!basedir) {
+                        ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
+                        return;
+                    }
+                    Utils.doInstrument(requiredLib, libs, basedir, moduleName, version, wrapper, config);
+                } else {
+                    Utils.doInstrument(requiredLib, libs, null, moduleName, null, wrapper, config);
+                }
             }
-            Utils.doInstrument(requiredLib, libs, basedir, moduleName, version, wrapper, config);
+            const hook = Hook(moduleName, {internals: true}, (lib: any, name: string, basedir: string) => {
+                if (name === moduleName) {
+                    Utils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
+                }
+                hooks.push(hook);
+                return lib;
+            });
         }
-        const hook = Hook(moduleName, { internals: true }, (lib: any, name: string, basedir: string) => {
-            if (name === moduleName) {
-                Utils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
-            }
-            return lib;
-        });
         return {
             uninstrument: () => {
                 for (const lib of libs) {
@@ -329,7 +346,9 @@ class Utils {
                     }
                     delete lib[thundraWrapped];
                 }
-                hook.unhook();
+                for (const hook of hooks) {
+                    hook.unhook();
+                }
             },
         };
     }
@@ -362,7 +381,7 @@ class Utils {
         monitoringData.applicationVersion = applicationVersion;
         monitoringData.applicationRuntimeVersion = process.version;
 
-        monitoringData.applicationTags = { ...monitoringData.applicationTags, ...ApplicationSupport.applicationTags };
+        monitoringData.applicationTags = {...monitoringData.applicationTags, ...ApplicationSupport.applicationTags};
 
         return monitoringData;
     }
@@ -522,6 +541,7 @@ class Utils {
     static getIfSLSLocalDebugging() {
         return Utils.getEnvVar(EnvVariableKeys.SLS_LOCAL) === 'true';
     }
+
     static getXRayTraceInfo() {
         let traceID: string = '';
         let segmentID: string = '';

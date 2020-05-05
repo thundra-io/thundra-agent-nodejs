@@ -18,18 +18,24 @@ const semver = require('semver');
 
 const thundraEndpointPattern = /^api[-\w]*\.thundra\.io$/;
 
+const MODULE_NAME_HTTP = 'http';
+const MODULE_NAME_HTTPS = 'https';
+
 class HttpIntegration implements Integration {
-    version: string;
-    lib: any;
     config: any;
-    basedir: string;
-    wrapped: boolean;
+    instrumentContext: any;
 
     constructor(config: any) {
-        this.wrapped = false;
-        this.lib = [Utils.tryRequire('http'), Utils.tryRequire('https')];
         this.config = config;
-        this.wrap.call(this, this.lib, config);
+        this.instrumentContext = Utils.instrument(
+            [MODULE_NAME_HTTP, MODULE_NAME_HTTPS], null,
+            (lib: any, cfg: any, moduleName: string) => {
+                this.wrap.call(this, lib, cfg, moduleName);
+            },
+            (lib: any, cfg: any, moduleName: string) => {
+                this.doUnwrap.call(this, lib, moduleName);
+            },
+            config);
     }
 
     static isValidUrl(host: string): boolean {
@@ -60,9 +66,7 @@ class HttpIntegration implements Integration {
         }
     }
 
-    wrap(lib: any, config: any): void {
-        const libHTTP = lib[0];
-        const libHTTPS = lib[1];
+    wrap(lib: any, config: any, moduleName: string): void {
         const nodeVersion = process.version;
         const plugin = this;
 
@@ -199,47 +203,47 @@ class HttpIntegration implements Integration {
             };
         }
 
-        if (this.wrapped) {
-            this.unwrap();
-        }
-
-        if (has(libHTTP, 'request')) {
-            shimmer.wrap(libHTTP, 'request', wrapper);
-            if (semver.satisfies(nodeVersion, '>=8') && has(libHTTP, 'get')) {
-                shimmer.wrap(libHTTP, 'get', wrapper);
+        if (moduleName === 'http') {
+            if (has(lib, 'request')) {
+                shimmer.wrap(lib, 'request', wrapper);
+                if (semver.satisfies(nodeVersion, '>=8') && has(lib, 'get')) {
+                    shimmer.wrap(lib, 'get', wrapper);
+                }
+            }
+        } else if (moduleName === 'https') {
+            if (semver.satisfies(nodeVersion, '>=9')) {
+                if (has(lib, 'request') && has(lib, 'get')) {
+                    shimmer.wrap(lib, 'request', wrapper);
+                    shimmer.wrap(lib, 'get', wrapper);
+                }
             }
         }
+    }
 
-        if (semver.satisfies(nodeVersion, '>=9')) {
-            if (has(libHTTPS, 'request') && has(libHTTPS, 'get')) {
-                shimmer.wrap(libHTTPS, 'request', wrapper);
-                shimmer.wrap(libHTTPS, 'get', wrapper);
+    doUnwrap(lib: any, moduleName: string) {
+        const nodeVersion = process.version;
+
+        if (moduleName === 'http') {
+            if (has(lib, 'request')) {
+                shimmer.unwrap(lib, 'request');
+                if (semver.satisfies(nodeVersion, '>=8') && has(lib, 'get')) {
+                    shimmer.unwrap(lib, 'get');
+                }
+            }
+        } else if (moduleName === 'https') {
+            if (semver.satisfies(nodeVersion, '>=9')) {
+                if (has(lib, 'request') && has(lib, 'get')) {
+                    shimmer.unwrap(lib, 'request');
+                    shimmer.unwrap(lib, 'get');
+                }
             }
         }
-
-        this.wrapped = true;
     }
 
     unwrap(): void {
-        const libHTTP = this.lib[0];
-        const libHTTPS = this.lib[1];
-        const nodeVersion = process.version;
-
-        if (has(libHTTP, 'request')) {
-            shimmer.unwrap(libHTTP, 'request');
-            if (semver.satisfies(nodeVersion, '>=8') && has(libHTTP, 'get')) {
-                shimmer.unwrap(libHTTP, 'get');
-            }
+        if (this.instrumentContext.uninstrument) {
+            this.instrumentContext.uninstrument();
         }
-
-        if (semver.satisfies(nodeVersion, '>=9')) {
-            if (has(libHTTPS, 'request') && has(libHTTPS, 'get')) {
-                shimmer.unwrap(libHTTPS, 'request');
-                shimmer.unwrap(libHTTPS, 'get');
-            }
-        }
-
-        this.wrapped = false;
     }
 }
 
