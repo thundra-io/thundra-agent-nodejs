@@ -43,6 +43,7 @@ class TraceConfig extends BasePluginConfig {
     maskSQSMessage: boolean;
     maskAthenaStatement: boolean;
     maskLambdaPayload: boolean;
+    maskEventBridgeDetail: boolean;
     maskHttpBody: boolean;
     sampler: Sampler<any>;
     runSamplerOnEachSpan: boolean;
@@ -98,6 +99,9 @@ class TraceConfig extends BasePluginConfig {
         this.maskHttpBody = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_MASK,
             options.maskHttpBody);
+        this.maskEventBridgeDetail = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_EVENTBRIDGE_DETAIL_MASK,
+            options.maskEventBridgeDetail);
 
         this.disableHttp4xxError = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_ON_4XX_DISABLE,

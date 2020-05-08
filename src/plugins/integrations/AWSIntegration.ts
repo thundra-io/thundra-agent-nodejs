@@ -711,13 +711,21 @@ class AWSIntegration implements Integration {
                         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.EVENTBRIDGE);
                         let spanName = AwsEventBridgeTags.SERVICE_REQUEST;
 
-                        const entries = get(request, 'params.Entries', []);
                         const eventBusMap: Set<string> = new Set<string>();
-                        for (const entry of entries) {
+                        const entries = [];
+                        for (const entry of get(request, 'params.Entries', [])) {
                             const eventBusName = get(entry, 'EventBusName', null);
                             if (eventBusName) {
                                 eventBusMap.add(eventBusName);
                             }
+                            entries.push({
+                                    ...(!config.maskEventBridgeDetail) && {Detail: entry.Detail},
+                                DetailType: entry.DetailType,
+                                EventBusName: entry.EventBusName,
+                                Resources: entry.Resources,
+                                Source: entry.Source,
+                                Time: entry.Time,
+                            });
                         }
                         if (eventBusMap.size === 1) {
                             spanName = eventBusMap.values().next().value;
@@ -733,6 +741,7 @@ class AWSIntegration implements Integration {
                                 [SpanTags.OPERATION_TYPE]: operationType,
                                 [AwsSDKTags.REQUEST_NAME]: operationName,
                                 [SpanTags.RESOURCE_NAMES]: entries.map((entry: any) => entry.DetailType),
+                                [AwsEventBridgeTags.ENTRIES]: entries,
                                 [AwsEventBridgeTags.EVENT_BUS_NAME]: spanName,
                             },
                         });

@@ -171,6 +171,7 @@ export const ZeitConstants = {
 export const AwsEventBridgeTags = {
     SERVICE_REQUEST: 'AWSEventBridgeRequest',
     EVENT_BUS_NAME: 'aws.eventbridge.eventbus.name',
+    ENTRIES: 'aws.eventbridge.entries',
 };
 
 export const DBTags = {
