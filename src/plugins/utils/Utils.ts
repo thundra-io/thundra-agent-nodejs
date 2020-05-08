@@ -334,9 +334,9 @@ class Utils {
                 if (name === moduleName) {
                     Utils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
                 }
-                hooks.push(hook);
                 return lib;
             });
+            hooks.push(hook);
         }
         return {
             uninstrument: () => {
