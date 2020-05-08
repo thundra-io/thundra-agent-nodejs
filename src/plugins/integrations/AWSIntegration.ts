@@ -11,7 +11,6 @@ import {
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
-import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraSpan from '../../opentracing/Span';
 import * as opentracing from 'opentracing';
 import LambdaEventUtils from '../utils/LambdaEventUtils';
@@ -20,67 +19,34 @@ import ThundraChaosError from '../error/ThundraChaosError';
 import AWSOperationTypesConfig from './AWSOperationTypes';
 
 const shimmer = require('shimmer');
-const Hook = require('require-in-the-middle');
 const md5 = require('md5');
 const has = require('lodash.has');
 const trim = require('lodash.trim');
 const get = require('lodash.get');
 
-const thundraWrapped = '__thundra_wrapped';
-const moduleName = 'aws-sdk';
+const MODULE_NAME = 'aws-sdk';
+const MODULE_VERSION = '2.x';
 
 class AWSIntegration implements Integration {
+
     static AWSOperationTypes: any = undefined;
 
-    version: string;
-    lib: any;
     config: any;
-    basedir: string;
     wrappedFuncs: any;
-    wrapped: boolean;
-    hook: any;
+    instrumentContext: any;
 
     constructor(config: any) {
-        this.version = '2.x';
         this.wrappedFuncs = {};
         this.config = config;
-        this.lib = Utils.tryRequire(moduleName);
-        if (this.lib) {
-            const { basedir } = Utils.getModuleInfo(moduleName);
-            if (!basedir) {
-                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
-                return;
-            }
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-            if (!isValidVersion) {
-                ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
-                                                    Supported version is ${this.version}`);
-                return;
-            } else {
-                this.basedir = basedir;
-                this.wrap.call(this, this.lib, config);
-            }
-        }
-
-        // If instrumentAWSOnLoad is set, enable the hook
-        if (this.config.instrumentAWSOnLoad) {
-            this.hook = Hook('aws-sdk', { internals: true }, (exp: any, name: string, basedir: string) => {
-                if (name === 'aws-sdk') {
-                    const moduleValidator = new ModuleVersionValidator();
-                    const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-                    if (!isValidVersion) {
-                        ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
-                                                          Supported version is ${this.version}`);
-                    } else {
-                        this.lib = exp;
-                        this.basedir = basedir;
-                        this.wrap.call(this, exp, config);
-                    }
-                }
-                return exp;
-            });
-        }
+        this.instrumentContext = Utils.instrument(
+            [MODULE_NAME], MODULE_VERSION,
+            (lib: any, cfg: any) => {
+                this.wrap.call(this, lib, cfg);
+            },
+            (lib: any, cfg: any) => {
+                this.doUnwrap.call(this, lib);
+            },
+            config);
     }
 
     static injectSpanContextIntoMessageAttributes(tracer: ThundraTracer, span: ThundraSpan): any {
@@ -312,7 +278,7 @@ class AWSIntegration implements Integration {
                         const data = record.Data;
                         if (data) {
                             traceLinks.push(...AWSIntegration.
-                                generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data));
+                            generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data));
                         }
                     }
                 }
@@ -658,13 +624,13 @@ class AWSIntegration implements Integration {
 
                         if (has(request, 'params.QueryExecutionIds')) {
                             queryExecIds = request.params.QueryExecutionIds;
-                        } else if (has(request, 'params.QueryExecutionId')) {
+                        } else if (has(request, 'params.QueryExecutionId')) {
                             queryExecIds = [request.params.QueryExecutionId];
                         }
 
                         if (has(request, 'params.NamedQueryIds')) {
                             namedQueryIds = request.params.NamedQueryIds;
-                        } else if (has(request, 'params.NamedQueryId')) {
+                        } else if (has(request, 'params.NamedQueryId')) {
                             namedQueryIds = [request.params.NamedQueryId];
                         }
 
@@ -766,7 +732,7 @@ class AWSIntegration implements Integration {
                             },
                         });
                     }
-                    const originalFunction = integration.getOriginalFuntion(wrappedFunctionName);
+                    const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
 
                     activeSpan._initialized();
 
@@ -821,59 +787,36 @@ class AWSIntegration implements Integration {
                         throw error;
                     } else {
                         ThundraLogger.getInstance().error(error);
-                        const originalFunction = integration.getOriginalFuntion(wrappedFunctionName);
+                        const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
                         return originalFunction.apply(this, [callback]);
                     }
                 }
             };
         }
 
-        // Double wrapping a method causes infinite loops in unit tests
-        // To prevent this we first need to return to the original method
-        if (this.isWrapped(lib)) {
-            this.unwrap();
-        }
-
         if (has(lib, 'Request.prototype.send') && has(lib, 'Request.prototype.promise')) {
             shimmer.wrap(lib.Request.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));
             shimmer.wrap(lib.Request.prototype, 'promise', (wrapped: Function) => wrapper(wrapped, 'promise'));
-            this.setWrapped(lib);
         }
     }
 
-    setWrapped(lib: any) {
-        if (this.lib) {
-            lib[thundraWrapped] = true;
-        }
-    }
-
-    getOriginalFuntion(wrappedFunctionName: string) {
+    getOriginalFunction(wrappedFunctionName: string) {
         return get(this, `wrappedFuncs.${wrappedFunctionName}`);
     }
 
-    setUnwrapped(lib: any) {
-        if (this.lib) {
-            delete lib[thundraWrapped];
-        }
-    }
-
-    isWrapped(lib: any) {
-        return get(lib, thundraWrapped, false);
-    }
-
-    unhook() {
-        if (this.config.instrumentAWSOnLoad) {
-            this.hook.unhook();
+    doUnwrap(lib: any) {
+        if (has(lib, 'Request.prototype.send') && has(lib, 'Request.prototype.promise')) {
+            shimmer.unwrap(lib.Request.prototype, 'send');
+            shimmer.unwrap(lib.Request.prototype, 'promise');
         }
     }
 
     unwrap() {
-        if (has(this.lib, 'Request.prototype.send') && has(this.lib, 'Request.prototype.promise')) {
-            shimmer.unwrap(this.lib.Request.prototype, 'send');
-            shimmer.unwrap(this.lib.Request.prototype, 'promise');
-            this.setUnwrapped(this.lib);
+        if (this.instrumentContext.uninstrument) {
+            this.instrumentContext.uninstrument();
         }
     }
+
 }
 
 export default AWSIntegration;

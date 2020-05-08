@@ -4,14 +4,23 @@ import MongoDB from './utils/mongodb.integration.utils';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 
 describe('MongoDB integration', () => {
-    InvocationSupport.setFunctionName('functionName');
-    const sdk = require('mongodb');
-    
-    test('should instrument MongoDB insert calls', () => {
-        const tracer = new ThundraTracer();
-        const integration = new MongoDBIntegration({
+    let tracer;
+    let integration;
+
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new MongoDBIntegration({
             tracer,
         });
+    });
+
+    afterEach(() => {
+        tracer.destroy();
+    });
+    
+    test('should instrument MongoDB insert calls', () => {
+        const sdk = require('mongodb');
         const doc = {
             name: 'foo',
             colors: ['gray', 'black', 'white'],
@@ -43,10 +52,7 @@ describe('MongoDB integration', () => {
     });
     
     test('should instrument MongoDB update calls', () => {
-        const tracer = new ThundraTracer();
-        const integration = new MongoDBIntegration({
-            tracer,
-        });
+        const sdk = require('mongodb');
         const doc = {
             name: 'foo',
             colors: ['gray', 'black', 'white'],
@@ -77,10 +83,7 @@ describe('MongoDB integration', () => {
     });
     
     test('should instrument a failing MongoDB call', () => {
-        const tracer = new ThundraTracer();
-        const integration = new MongoDBIntegration({
-            tracer,
-        });
+        const sdk = require('mongodb');
         const doc = {
             name: 'foo',
             colors: ['gray', 'black', 'white'],

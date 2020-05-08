@@ -4,7 +4,6 @@ import {
     ClassNames, DBTypes, DBTags, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
 } from '../../Constants';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
-import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
@@ -14,38 +13,24 @@ import ThundraChaosError from '../error/ThundraChaosError';
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 
-const moduleName = 'redis';
+const MODULE_NAME = 'redis';
+const MODULE_VERSION = '>=2.6';
 
 class RedisIntegration implements Integration {
-    version: string;
-    lib: any;
     config: any;
-    basedir: string;
-    wrapped: boolean;
+    instrumentContext: any;
 
     constructor(config: any) {
-        this.wrapped = false;
-        this.version = '>=2.6';
-        this.lib = Utils.tryRequire(moduleName);
-
-        if (this.lib) {
-            const { basedir } = Utils.getModuleInfo(moduleName);
-            if (!basedir) {
-                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
-                return;
-            }
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-            if (!isValidVersion) {
-                ThundraLogger.getInstance().error(`Invalid module version for ${moduleName} integration.
-                                            Supported version is ${this.version}`);
-                return;
-            } else {
-                this.config = config;
-                this.basedir = basedir;
-                this.wrap.call(this, this.lib, config);
-            }
-        }
+        this.config = config;
+        this.instrumentContext = Utils.instrument(
+            [MODULE_NAME], MODULE_VERSION,
+            (lib: any, cfg: any) => {
+                this.wrap.call(this, lib, cfg);
+            },
+            (lib: any, cfg: any) => {
+                this.doUnwrap.call(this, lib);
+            },
+            config);
     }
 
     wrap(lib: any, config: any) {
@@ -133,19 +118,20 @@ class RedisIntegration implements Integration {
                 }
             };
         }
-        if (this.wrapped) {
-            this.unwrap();
-        }
 
         if (has(lib, 'RedisClient.prototype.internal_send_command')) {
             shimmer.wrap(lib.RedisClient.prototype, 'internal_send_command', wrapper);
-            this.wrapped = true;
         }
     }
 
+    doUnwrap(lib: any) {
+        shimmer.unwrap(lib.RedisClient.prototype, 'internal_send_command');
+    }
+
     unwrap() {
-        shimmer.unwrap(this.lib.RedisClient.prototype, 'internal_send_command');
-        this.wrapped = false;
+        if (this.instrumentContext.uninstrument) {
+            this.instrumentContext.uninstrument();
+        }
     }
 }
 

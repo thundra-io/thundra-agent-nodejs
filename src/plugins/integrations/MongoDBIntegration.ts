@@ -12,27 +12,27 @@ import ThundraChaosError from '../error/ThundraChaosError';
 
 const get = require('lodash.get');
 
-const moduleName = 'mongodb';
+const MODULE_NAME = 'mongodb';
+const MODULE_VERSION = '>=1';
 
 class MongoDBIntegration implements Integration {
     config: any;
-    lib: any;
-    version: string;
-    basedir: string;
+    instrumentContext: any;
     listener: any;
     spans: any;
-    wrapped: boolean;
 
     constructor(config: any) {
-        this.lib = Utils.tryRequire(moduleName);
-        this.spans = {};
         this.config = config;
-        if (this.lib) {
-            this.listener = this.lib.instrument();
-            this.listener.on('started', (this.onStarted.bind(this)));
-            this.listener.on('succeeded', this.onSucceeded.bind(this));
-            this.listener.on('failed', this.onFailed.bind(this));
-        }
+        this.spans = {};
+        this.instrumentContext = Utils.instrument(
+            [MODULE_NAME], MODULE_VERSION,
+            (lib: any, cfg: any) => {
+                this.wrap.call(this, lib, cfg);
+            },
+            (lib: any, cfg: any) => {
+                this.doUnwrap.call(this, lib);
+            },
+            config);
     }
 
     onStarted(event: any) {
@@ -128,12 +128,23 @@ class MongoDBIntegration implements Integration {
         }
     }
 
-    wrap() {
+    wrap(lib: any) {
+        if (lib) {
+            this.listener = lib.instrument();
+            this.listener.on('started', (this.onStarted.bind(this)));
+            this.listener.on('succeeded', this.onSucceeded.bind(this));
+            this.listener.on('failed', this.onFailed.bind(this));
+        }
+    }
+
+    doUnwrap(lib: any) {
         return;
     }
 
     unwrap() {
-        return;
+        if (this.instrumentContext.uninstrument) {
+            this.instrumentContext.uninstrument();
+        }
     }
 }
 

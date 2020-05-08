@@ -2,24 +2,29 @@ import RedisIntegration from '../../dist/plugins/integrations/RedisIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import Redis from './utils/redis.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
-import TraceConfig from '../../dist/plugins/config/TraceConfig';
 
 describe('Redis integration', () => {
     InvocationSupport.setFunctionName('functionName');
+    let tracer;
+    let integration;
 
-    test('should mask Redis commands ', () => {
-        const tracer = new ThundraTracer();
-        const integration = new RedisIntegration({
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new RedisIntegration({
             tracer,
         });
+    });
+
+    afterEach(() => {
+        tracer.destroy();
+    });
+
+    test('should mask Redis commands ', () => {
+        integration.config.disableInstrumentation = true;
+        integration.config.maskRedisCommand = true;
         const sdk = require('redis');
 
-        const traceConfig = new TraceConfig({
-            disableInstrumentation: true,
-            maskRedisCommand: true,
-        });
-
-        integration.wrap(sdk, traceConfig);
 
         tracer.getRecorder().spanList = [];
 

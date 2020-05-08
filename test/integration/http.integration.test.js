@@ -4,15 +4,25 @@ import Http from './utils/http.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('HTTP integration', () => {
-    test('should instrument HTTP GET calls ', async () => {
-        const tracer = new ThundraTracer();
-        const integration = new HttpIntegration({
-            httpPathDepth: 2,
+    let tracer;
+    let integration;
+
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new HttpIntegration({
             tracer,
         });
-        const sdk = require('http');
+    });
 
-        InvocationSupport.setFunctionName('functionName');
+    afterEach(() => {
+        tracer.destroy();
+    });
+
+    test('should instrument HTTP GET calls ', async () => {
+        integration.config.httpPathDepth = 2;
+
+        const sdk = require('http');
 
         await Http.get(sdk);
 
@@ -37,15 +47,8 @@ describe('HTTP integration', () => {
     });
 
     test('should set 4XX 5XX errors on HTTP calls', async () => {
-        const tracer = new ThundraTracer();
-        const integration = new HttpIntegration({
-            httpPathDepth: 2,
-            tracer,
-        });
+        integration.config.httpPathDepth = 2;
         const sdk = require('http');
-
-        InvocationSupport.setFunctionName('functionName');
-
         await Http.getError(sdk);
 
         const span = tracer.getRecorder().spanList[0];
@@ -70,15 +73,8 @@ describe('HTTP integration', () => {
     });
 
     test('should disable 4XX 5XX errors on HTTP calls', async () => {
-        const tracer = new ThundraTracer();
-        const integration = new HttpIntegration({
-            httpPathDepth: 2,
-            disableHttp4xxError: true,
-            tracer,
-        });
+        integration.config.disableHttp4xxError = true;
         const sdk = require('http');
-
-        InvocationSupport.setFunctionName('functionName');
 
         await Http.getError(sdk);
         const span = tracer.getRecorder().spanList[0];
@@ -103,14 +99,8 @@ describe('HTTP integration', () => {
     });
 
     test('should instrument HTTPS POST calls', async () => {
-        const tracer = new ThundraTracer();
-        const integration = new HttpIntegration({
-            httpPathDepth: 0,
-            tracer,
-        });
+        integration.config.httpPathDepth = 0;
         const sdk = require('https');
-
-        InvocationSupport.setFunctionName('functionName');
 
         await Http.post(sdk)
         const span = tracer.getRecorder().spanList[0];
@@ -124,20 +114,14 @@ describe('HTTP integration', () => {
     });
 
     test('should mask body in post', async () => {
-        const tracer = new ThundraTracer();
-        const integration = new HttpIntegration({
-            maskHttpBody: true,
-            tracer,
-        });
+        integration.config.maskHttpBody = true;
         const sdk = require('https');
-
-        InvocationSupport.setFunctionName('functionName');
 
         await Http.post(sdk);
         
         const span = tracer.getRecorder().spanList[0];
 
-        expect(span.operationName).toBe('flaviocopes.com/todos');
+        expect(span.operationName).toBe('flaviocopes.com');
         expect(span.className).toBe('HTTP');
         expect(span.domainName).toBe('API');
 

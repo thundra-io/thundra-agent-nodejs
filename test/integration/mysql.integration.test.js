@@ -5,15 +5,23 @@ import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import mysql from './utils/mysql.integration.utils';
 
 describe('MySQL2 integration', () => {
-    InvocationSupport.setFunctionName('functionName');
+    let tracer;
+    let integration;
 
-    test('should instrument MySQL calls with mysql2 client', () => {
-        const tracer = new ThundraTracer();
-        const integration = new MySQL2Integration({
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new MySQL2Integration({
             tracer,
         });
-        const sdk = require('mysql2');
+    });
 
+    afterEach(() => {
+        tracer.destroy();
+    });
+
+    test('should instrument MySQL calls with mysql2 client', () => {
+        const sdk = require('mysql2');
 
         return mysql.selectMySql2(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
@@ -36,12 +44,8 @@ describe('MySQL2 integration', () => {
     });
 
     test('should mask MySQL statements with mysql2 client', () => {
-        const tracer = new ThundraTracer();
-        const integration = new MySQL2Integration({
-            disableInstrumentation: true,
-            maskRdbStatement: true,
-            tracer,
-        });
+        integration.config.disableInstrumentation = true;
+        integration.config.maskRdbStatement = true;
         const sdk = require('mysql2');
 
         return mysql.selectMySql2(sdk).then((data) => {
@@ -67,11 +71,22 @@ describe('MySQL2 integration', () => {
 });
 
 describe('MySQL Integration', () => {
-    test('should instrument MySQL calls with mysql client', () => {
-        const tracer = new ThundraTracer();
-        const integration = new MySQLIntegration({
+    let tracer;
+    let integration;
+
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new MySQLIntegration({
             tracer,
         });
+    });
+
+    afterEach(() => {
+        tracer.destroy();
+    });
+
+    test('should instrument MySQL calls with mysql client', () => {
         const sdk = require('mysql');
 
         return mysql.selectMySql(sdk).then((data) => {
@@ -96,12 +111,9 @@ describe('MySQL Integration', () => {
     });
 
     test('should mask MySQL statements with mysql client', () => {
-        const tracer = new ThundraTracer();
-        const integration = new MySQLIntegration({
-            disableInstrumentation: true,
-            maskRdbStatement: true,
-            tracer,
-        });
+        integration.config.disableInstrumentation = true;
+        integration.config.maskRdbStatement = true;
+
         const sdk = require('mysql');
 
         return mysql.selectMySql(sdk).then((data) => {

@@ -4,7 +4,6 @@ import {
     SQLQueryOperationTypes, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
 } from '../../Constants';
 import Utils from '../utils/Utils';
-import ModuleVersionValidator from './ModuleVersionValidator';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
@@ -13,38 +12,24 @@ import ThundraChaosError from '../error/ThundraChaosError';
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 
-const moduleName = 'pg';
+const MODULE_NAME = 'pg';
+const MODULE_VERSION = '6.x || 7.x || 8.x';
 
 class PostgreIntegration implements Integration {
     config: any;
-    lib: any;
-    version: string;
-    basedir: string;
-    wrapped: boolean;
+    instrumentContext: any;
 
     constructor(config: any) {
-        this.version = '6.x || 7.x';
-        this.wrapped = false;
-        this.lib = Utils.tryRequire(moduleName);
-
-        if (this.lib) {
-            const { basedir } = Utils.getModuleInfo(moduleName);
-            if (!basedir) {
-                ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
-                return;
-            }
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, this.version);
-            if (!isValidVersion) {
-                ThundraLogger.getInstance().error(`Invalid module version. for ${moduleName} integration.
-                                            Supported version is ${this.version}`);
-                return;
-            } else {
-                this.config = config;
-                this.basedir = basedir;
-                this.wrap.call(this, this.lib, config);
-            }
-        }
+        this.config = config;
+        this.instrumentContext = Utils.instrument(
+            [MODULE_NAME], MODULE_VERSION,
+            (lib: any, cfg: any) => {
+                this.wrap.call(this, lib, cfg);
+            },
+            (lib: any, cfg: any) => {
+                this.doUnwrap.call(this, lib);
+            },
+            config);
     }
 
     getStatement(args: any[]) {
@@ -162,19 +147,19 @@ class PostgreIntegration implements Integration {
             };
         }
 
-        if (this.wrapped) {
-            this.unwrap();
-        }
-
         if (has(lib, 'Client.prototype.query')) {
             shimmer.wrap(lib.Client.prototype, 'query', wrapper);
-            this.wrapped = true;
         }
     }
 
+    doUnwrap(lib: any) {
+        shimmer.unwrap(lib.Client.prototype, 'query');
+    }
+
     unwrap() {
-        shimmer.unwrap(this.lib.Client.prototype, 'query');
-        this.wrapped = false;
+        if (this.instrumentContext.uninstrument) {
+            this.instrumentContext.uninstrument();
+        }
     }
 }
 

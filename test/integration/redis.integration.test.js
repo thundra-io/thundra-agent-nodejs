@@ -4,13 +4,22 @@ import Redis from './utils/redis.integration.utils';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 
 describe('Redis integration', () => {
-    InvocationSupport.setFunctionName('functionName');
+    let tracer;
+    let integration;
 
-    test('should instrument Redis calls ', () => {
-        const tracer = new ThundraTracer();
-        const integration = new RedisIntegration({
+    beforeAll(() => {
+        InvocationSupport.setFunctionName('functionName');
+        tracer = new ThundraTracer();
+        integration = new RedisIntegration({
             tracer,
         });
+    });
+
+    afterEach(() => {
+        tracer.destroy();
+    });
+
+    test('should instrument Redis calls ', () => {
         const sdk = require('redis');
 
         return Redis.set(sdk).then((data) => {
