@@ -143,7 +143,7 @@ class ConfigNames {
         'thundra.agent.trace.integrations.mongodb.command.mask';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_EVENTBRIDGE_DETAIL_MASK: string =
-        'thundra.agent.lambda.trace.integrations.aws.eventbridge.detail.mask';
+        'thundra.agent.trace.integrations.aws.eventbridge.detail.mask';
 
     /////////////////////////////////////////////////////////////////////////////
 
