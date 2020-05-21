@@ -130,7 +130,12 @@ class Instrumenter {
                 if (varNames.length === varValues.length) {
                     for (let i = 0; i < varNames.length; i++) {
                         const varName = varNames[i];
-                        const varValue = varValues[i];
+                        let varValue = varValues[i];
+
+                        if (varValue instanceof Map || varValue instanceof Set) {
+                            varValue = [...varValue];
+                        }
+
                         let processedVarValue = varValue ? varValue.toString() : null;
                         try {
                             // Cycle aware stringify operation
