@@ -157,9 +157,19 @@ class Instrumenter {
                     }
                 }
 
+                let error;
+
+                if (args.error) {
+                    error = {
+                        name: args.error.name,
+                        message: args.error.message,
+                    };
+                }
+
                 const methodLineTag = {
                     line,
                     localVars,
+                    error,
                 };
 
                 let currentLines = methodSpan.getTag(LineByLineTags.LINES);
