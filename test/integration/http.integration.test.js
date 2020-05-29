@@ -28,16 +28,16 @@ describe('HTTP integration', () => {
 
         const span = tracer.getRecorder().spanList[0];
 
-        expect(span.operationName).toBe('jsonplaceholder.typicode.com/users/1');
+        expect(span.operationName).toBe('httpstat.us/200');
         expect(span.className).toBe('HTTP');
         expect(span.domainName).toBe('API');
 
         expect(span.tags['operation.type']).toBe('GET');
         expect(span.tags['http.method']).toBe('GET');
-        expect(span.tags['http.host']).toBe('jsonplaceholder.typicode.com');
-        expect(span.tags['http.path']).toBe('/users/1');
-        expect(span.tags['http.url']).toBe('jsonplaceholder.typicode.com/users/1?q=123');
-        expect(span.tags['http.query_params']).toBe('q=123');
+        expect(span.tags['http.host']).toBe('httpstat.us');
+        expect(span.tags['http.path']).toBe('/200');
+        expect(span.tags['http.url']).toBe('httpstat.us/200?userId=1');
+        expect(span.tags['http.query_params']).toBe('userId=1');
         expect(span.tags['http.status_code']).toBe(200);
         expect(span.tags['topology.vertex']).toEqual(true);
         expect(span.tags['trigger.domainName']).toEqual('API');
