@@ -274,8 +274,12 @@ export class Trace {
         }
 
         if (conf && conf.maskRequest && typeof conf.maskRequest === 'function') {
-            const eventCopy = JSON.parse(JSON.stringify(originalEvent));
-            return conf.maskRequest.call(this, eventCopy);
+            try {
+                const eventCopy = JSON.parse(JSON.stringify(originalEvent));
+                return conf.maskRequest.call(this, eventCopy);
+            } catch (error) {
+                ThundraLogger.getInstance().error('Failed to mask request: ' + error);
+            }
         }
 
         let enableRequestData = true;
@@ -306,8 +310,12 @@ export class Trace {
         }
 
         if (conf && conf.maskResponse && typeof conf.maskResponse === 'function') {
-            const responseCopy = JSON.parse(JSON.stringify(response));
-            return conf.maskResponse.call(this, responseCopy);
+            try {
+                const responseCopy = JSON.parse(JSON.stringify(response));
+                return conf.maskResponse.call(this, responseCopy);
+            } catch (error) {
+                ThundraLogger.getInstance().error('Failed to mask response: ' + error);
+            }
         }
 
         return response;
