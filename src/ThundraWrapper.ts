@@ -110,7 +110,6 @@ class ThundraWrapper {
             },
         }, this.wrappedContext);
 
-        this.timeout = this.setupTimeoutHandler(this);
         InvocationSupport.setFunctionName(this.originalContext.functionName);
 
         if (this.shouldInitDebugger()) {
@@ -359,6 +358,7 @@ class ThundraWrapper {
             this.executeHook('before-invocation', beforeInvocationData, false)
                 .then(() => {
                     this.pluginContext.requestCount += 1;
+                    this.timeout = this.setupTimeoutHandler();
                     try {
                         const result = this.originalFunction.call(
                             this.originalThis,
@@ -404,7 +404,7 @@ class ThundraWrapper {
         );
     }
 
-    async executeAfteInvocationAndReport(afterInvocationData: any) {
+    async executeAfterInvocationAndReport(afterInvocationData: any) {
         if (this.monitoringDisabled) {
             return;
         }
@@ -428,6 +428,8 @@ class ThundraWrapper {
             try {
                 this.reported = true;
 
+                this.destroyTimeoutHandler();
+
                 let afterInvocationData = {
                     error,
                     originalEvent: this.originalEvent,
@@ -442,11 +444,7 @@ class ThundraWrapper {
                     };
                 }
 
-                await this.executeAfteInvocationAndReport(afterInvocationData);
-
-                if (this.timeout) {
-                    clearTimeout(this.timeout);
-                }
+                await this.executeAfterInvocationAndReport(afterInvocationData);
 
                 if (typeof callback === 'function') {
                     callback();
@@ -471,17 +469,25 @@ class ThundraWrapper {
         return isError;
     }
 
-    setupTimeoutHandler(wrapperInstance: any): NodeJS.Timer | undefined {
-        const { originalContext, pluginContext } = wrapperInstance;
-        const { getRemainingTimeInMillis = () => 0 } = originalContext;
+    destroyTimeoutHandler() {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+    }
 
-        if (pluginContext.timeoutMargin < 1 || getRemainingTimeInMillis() < 10) {
+    setupTimeoutHandler(): NodeJS.Timer | undefined {
+        this.destroyTimeoutHandler();
+
+        const { getRemainingTimeInMillis = () => 0 } = this.originalContext;
+
+        if (this.pluginContext.timeoutMargin < 1 || getRemainingTimeInMillis() < 10) {
             return undefined;
         }
         const maxEndTime = 899900;
         const configEndTime = Math.max(
             0,
-            getRemainingTimeInMillis() - pluginContext.timeoutMargin,
+            getRemainingTimeInMillis() - this.pluginContext.timeoutMargin,
         );
 
         const endTime = Math.min(configEndTime, maxEndTime);
@@ -499,8 +505,7 @@ class ThundraWrapper {
                     this.debuggerProxy = null;
                 }
             }
-            wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
-            wrapperInstance.reported = false;
+            this.report(new TimeoutError('Lambda is timed out.'), null, null);
         }, endTime);
     }
 
