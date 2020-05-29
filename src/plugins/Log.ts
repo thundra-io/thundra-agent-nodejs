@@ -30,6 +30,8 @@ class Log {
     logLevelFilter: number = 0;
 
     constructor(options: LogConfig) {
+        Log.instance = this;
+
         this.hooks = {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
@@ -39,8 +41,8 @@ class Log {
             this.tracer = options.tracer;
         }
         this.enabled = false;
-        Log.instance = this;
         this.config = options;
+        this.logs = [];
 
         const levelConfig = ConfigProvider.get<string>(ConfigNames.THUNDRA_LOG_LOGLEVEL);
         this.logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
