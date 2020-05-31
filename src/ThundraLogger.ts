@@ -3,10 +3,10 @@ import ConfigNames from './config/ConfigNames';
 
 class ThundraLogger {
     static instance: ThundraLogger;
-    enabled: boolean;
+    debugEnabled: boolean;
 
     constructor() {
-        this.enabled = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_DEBUG_ENABLE);
+        this.debugEnabled = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_DEBUG_ENABLE);
         ThundraLogger.instance = this;
     }
 
@@ -14,8 +14,12 @@ class ThundraLogger {
         return ThundraLogger.instance ? ThundraLogger.instance : new ThundraLogger();
     }
 
+    isDebugEnabled(): boolean {
+        return this.debugEnabled;
+    }
+
     debug(message: any) {
-        if (this.enabled) {
+        if (this.debugEnabled) {
             console.log(message);
         }
     }
@@ -29,7 +33,7 @@ class ThundraLogger {
     }
 
     toggle() {
-        this.enabled = !this.enabled;
+        this.debugEnabled = !this.debugEnabled;
     }
 }
 

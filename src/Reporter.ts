@@ -159,10 +159,21 @@ class Reporter {
                         this.latestReportingLimitedMinute = Math.floor(Date.now() / 1000);
                     }
                     if (response.statusCode !== 200) {
-                        ThundraLogger.getInstance().debug(JSON.stringify(this.reports));
-                        return reject({ status: response.statusCode, data: responseData });
+                        // First, check whether or debug is enabled.
+                        // If not no need to convert reports into JSON string to pass to "debug" function
+                        // because "JSON.stringify" is not cheap operation.
+                        if (ThundraLogger.getInstance().isDebugEnabled()) {
+                            ThundraLogger.getInstance().debug(JSON.stringify(this.reports));
+                        }
+                        return reject({
+                            status: response.statusCode,
+                            data: responseData,
+                        });
                     }
-                    return resolve({ status: response.statusCode, data: responseData });
+                    return resolve({
+                        status: response.statusCode,
+                        data: responseData,
+                    });
                 });
             };
 
