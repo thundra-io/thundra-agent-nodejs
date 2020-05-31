@@ -374,7 +374,7 @@ class ThundraWrapper {
                     }
                 })
                 .catch((error) => {
-                    ThundraLogger.getInstance().debug(error);
+                    ThundraLogger.getInstance().error(error);
                     // There is an error on "before-invocation" phase
                     // So skip Thundra wrapping and call original function directly
                     const result = this.originalFunction.call(

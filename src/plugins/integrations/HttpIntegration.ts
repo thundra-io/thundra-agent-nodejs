@@ -178,7 +178,7 @@ class HttpIntegration implements Integration {
                                     }
                                     span.setTag(HttpTags.BODY, lines[lines.length - 1]);
                                 } catch (error) {
-                                    ThundraLogger.getInstance().debug(error);
+                                    ThundraLogger.getInstance().error(error);
                                 }
                             }
                         }

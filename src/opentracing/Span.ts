@@ -126,7 +126,7 @@ class ThundraSpan extends Span {
         this.tags[key] = keyValuePairs[key];
       });
     } catch (e) {
-      ThundraLogger.getInstance().debug(e);
+      ThundraLogger.getInstance().error(e);
     }
   }
 
