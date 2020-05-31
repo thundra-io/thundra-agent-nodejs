@@ -140,7 +140,7 @@ class PostgreIntegration implements Integration {
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        ThundraLogger.getInstance().error(error);
+                        ThundraLogger.error(error);
                         query.apply(this, arguments);
                     }
                 }

@@ -209,7 +209,7 @@ export class Trace {
             for (const span of spanList) {
                 if (span) {
                     if (isSamplerPresent && this.config.runSamplerOnEachSpan && this.config.sampler.isSampled(span)) {
-                        ThundraLogger.getInstance().debug(
+                        ThundraLogger.debug(
                             `Filtering span with name ${span.getOperationName()} due to custom sampling configuration`);
                         continue;
                     }
@@ -278,7 +278,7 @@ export class Trace {
                 const eventCopy = JSON.parse(JSON.stringify(originalEvent));
                 return conf.maskRequest.call(this, eventCopy);
             } catch (error) {
-                ThundraLogger.getInstance().error('Failed to mask request: ' + error);
+                ThundraLogger.error('Failed to mask request: ' + error);
             }
         }
 
@@ -314,7 +314,7 @@ export class Trace {
                 const responseCopy = JSON.parse(JSON.stringify(response));
                 return conf.maskResponse.call(this, responseCopy);
             } catch (error) {
-                ThundraLogger.getInstance().error('Failed to mask response: ' + error);
+                ThundraLogger.error('Failed to mask response: ' + error);
             }
         }
 
@@ -368,7 +368,7 @@ export class Trace {
                 return LambdaEventUtils.injectTriggerTagsForZeit(span, originalEvent);
             }
         } catch (error) {
-            ThundraLogger.getInstance().error('Cannot inject trigger tags. ' + error);
+            ThundraLogger.error('Cannot inject trigger tags. ' + error);
         }
     }
 }

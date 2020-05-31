@@ -271,7 +271,7 @@ class LambdaEventUtils {
 
             return className;
         } catch (error) {
-            ThundraLogger.getInstance().error('Cannot read CloudWatch log data. ' + error);
+            ThundraLogger.error('Cannot read CloudWatch log data. ' + error);
         }
     }
 

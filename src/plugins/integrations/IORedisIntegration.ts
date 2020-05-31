@@ -99,7 +99,7 @@ class IORedisIntegration implements Integration {
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        ThundraLogger.getInstance().error(error);
+                        ThundraLogger.error(error);
                         return original.call(this, command);
                     }
                 }

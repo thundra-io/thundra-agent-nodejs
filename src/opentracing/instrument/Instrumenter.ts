@@ -63,7 +63,7 @@ class Instrumenter {
                         content = content.substring(Module.wrapper[0].length, content.length - Module.wrapper[1].length);
                     }
                 } catch (ex) {
-                    ThundraLogger.getInstance().error(ex);
+                    ThundraLogger.error(ex);
                 }
             }
             self.origCompile.call(this, content, filename);

@@ -12,7 +12,7 @@ class InvocationSupport {
         try {
             InvocationSupport.tags[key] = value;
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
     }
 
@@ -26,7 +26,7 @@ class InvocationSupport {
                 InvocationSupport.tags[key] = keyValuePairs[key];
             });
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
     }
 
@@ -38,7 +38,7 @@ class InvocationSupport {
         try {
             InvocationSupport.userTags[key] = value;
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
     }
 
@@ -52,7 +52,7 @@ class InvocationSupport {
                 delete InvocationSupport.userTags[key];
             }
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
     }
 
@@ -62,7 +62,7 @@ class InvocationSupport {
                 InvocationSupport.userTags[key] = keyValuePairs[key];
             });
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
     }
 

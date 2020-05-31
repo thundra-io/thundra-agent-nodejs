@@ -94,7 +94,7 @@ class MongoDBIntegration implements Integration {
             if (error instanceof ThundraChaosError) {
                 throw error;
             } else {
-                ThundraLogger.getInstance().error(error);
+                ThundraLogger.error(error);
             }
         }
     }
@@ -109,7 +109,7 @@ class MongoDBIntegration implements Integration {
         try {
             span.close();
         } catch (error) {
-            ThundraLogger.getInstance().error(error);
+            ThundraLogger.error(error);
         }
     }
 
@@ -124,7 +124,7 @@ class MongoDBIntegration implements Integration {
             span.setErrorTag(event.failure);
             span.close();
         } catch (error) {
-            ThundraLogger.getInstance().error(error);
+            ThundraLogger.error(error);
         }
     }
 
