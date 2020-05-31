@@ -215,8 +215,7 @@ class ThundraWrapper {
         let prevRchar = 0;
         let prevWchar = 0;
         let initCompleted = false;
-        const logger: ThundraLogger = ThundraLogger.getInstance();
-        logger.info('Waiting for debugger to handshake ...');
+        ThundraLogger.info('Waiting for debugger to handshake ...');
 
         const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -236,15 +235,15 @@ class ThundraWrapper {
                 prevRchar = debuggerIoMetrics.rchar;
                 prevWchar = debuggerIoMetrics.wchar;
             } catch (e) {
-                logger.error(e);
+                ThundraLogger.error(e);
                 break;
             }
             await sleep(1000);
         }
         if (initCompleted) {
-            logger.info('Completed debugger handshake');
+            ThundraLogger.info('Completed debugger handshake');
         } else {
-            logger.error('Couldn\'t complete debugger handshake in ' + this.debuggerMaxWaitTime + ' milliseconds.');
+            ThundraLogger.error('Couldn\'t complete debugger handshake in ' + this.debuggerMaxWaitTime + ' milliseconds.');
         }
     }
 
@@ -291,7 +290,7 @@ class ThundraWrapper {
 
                         // If errMessage is undefined replace it with the raw incoming message
                         errMessage = errMessage || mes;
-                        ThundraLogger.getInstance().error('Thundra Debugger: ' + errMessage);
+                        ThundraLogger.error('Thundra Debugger: ' + errMessage);
 
                         return resolve(true);
                     });
@@ -307,7 +306,7 @@ class ThundraWrapper {
                 await this.waitForDebugger();
             } catch (e) {
                 this.debuggerProxy = null;
-                ThundraLogger.getInstance().error(e);
+                ThundraLogger.error(e);
             }
         }
     }
@@ -319,7 +318,7 @@ class ThundraWrapper {
                 this.inspector = null;
             }
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
         if (this.debuggerProxy) {
             try {
@@ -327,7 +326,7 @@ class ThundraWrapper {
                     this.debuggerProxy.kill();
                 }
             } catch (e) {
-                ThundraLogger.getInstance().error(e);
+                ThundraLogger.error(e);
             } finally {
                 this.debuggerProxy = null;
             }
@@ -374,7 +373,7 @@ class ThundraWrapper {
                     }
                 })
                 .catch((error) => {
-                    ThundraLogger.getInstance().error(error);
+                    ThundraLogger.error(error);
                     // There is an error on "before-invocation" phase
                     // So skip Thundra wrapping and call original function directly
                     const result = this.originalFunction.call(
@@ -500,7 +499,7 @@ class ThundraWrapper {
                         this.debuggerProxy.kill('SIGHUP');
                     }
                 } catch (e) {
-                    ThundraLogger.getInstance().error(e);
+                    ThundraLogger.error(e);
                 } finally {
                     this.debuggerProxy = null;
                 }

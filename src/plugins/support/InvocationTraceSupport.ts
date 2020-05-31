@@ -48,7 +48,7 @@ class InvocationTraceSupport {
 
             return Array.from(resourcesMap.values());
         } catch (e) {
-            ThundraLogger.getInstance().error(
+            ThundraLogger.error(
                 `Error while creating the resources data for invocation. ${e}`);
         }
     }
@@ -102,7 +102,7 @@ class InvocationTraceSupport {
             outgoingTraceLinks.push(...InvocationTraceSupport.outgoingTraceLinks);
             return [...new Set(outgoingTraceLinks)];
         } catch (e) {
-            ThundraLogger.getInstance().error(
+            ThundraLogger.error(
                 `Error while getting the outgoing trace links for invocation. ${e}`);
         }
     }

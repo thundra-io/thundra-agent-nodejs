@@ -86,7 +86,7 @@ class Metric {
                 this.addCpuMetricReport(),
                 this.addIoMetricReport(),
             ]).catch((err: Error) => {
-                ThundraLogger.getInstance().error('Cannot obtain metric data :' + err);
+                ThundraLogger.error('Cannot obtain metric data :' + err);
             });
 
             this.reports.forEach((report) => {

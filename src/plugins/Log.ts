@@ -97,7 +97,7 @@ class Log {
                 }
             }
         } else {
-            ThundraLogger.getInstance().debug('Skipping reporting logs due to sampling.');
+            ThundraLogger.debug('Skipping reporting logs due to sampling.');
         }
 
         this.captureLog = false;

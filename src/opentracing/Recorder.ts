@@ -17,14 +17,14 @@ class ThundraRecorder {
     record(span: ThundraSpan, spanEvent: SpanEvent, options?: any): void {
         options = options ? options : {};
         if (!span) {
-            ThundraLogger.getInstance().error('Undefined span.');
+            ThundraLogger.error('Undefined span.');
             return;
         }
 
         let shouldInvokeCallback = true;
 
         if (spanEvent === SpanEvent.SPAN_START) {
-            ThundraLogger.getInstance().debug(`Span with name ${span.operationName} started.`);
+            ThundraLogger.debug(`Span with name ${span.operationName} started.`);
             if (!(options && options.disableActiveSpanHandling === true)) {
                 this.activeSpanStack.push(span);
             }
@@ -44,7 +44,7 @@ class ThundraRecorder {
                 }
             }
         } else if (spanEvent === SpanEvent.SPAN_INITIALIZE) {
-            ThundraLogger.getInstance().debug(`Span with name ${span.operationName} initialized.`);
+            ThundraLogger.debug(`Span with name ${span.operationName} initialized.`);
 
             for (const listener of this.listeners) {
                 const isCallbackCalled = listener.onSpanInitialized(span, options.me,
@@ -59,7 +59,7 @@ class ThundraRecorder {
                 }
             }
         } else if (spanEvent === SpanEvent.SPAN_FINISH) {
-            ThundraLogger.getInstance().debug(`Span with name ${span.operationName} finished.`);
+            ThundraLogger.debug(`Span with name ${span.operationName} finished.`);
             if (!(options && options.disableActiveSpanHandling === true)) {
                 this.activeSpanStack.pop();
             }
