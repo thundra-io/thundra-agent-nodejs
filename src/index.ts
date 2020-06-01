@@ -33,6 +33,7 @@ import ErrorAwareSampler from './opentracing/sampler/ErrorAwareSampler';
 import TimeAwareSampler from './opentracing/sampler/TimeAwareSampler';
 import { SamplerCompositionOperator } from './opentracing/sampler/CompositeSampler';
 import ConfigNames from './config/ConfigNames';
+import { loadHandler } from './runtime/RuntimeSupport';
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
@@ -198,3 +199,13 @@ module.exports.listeners = {
     CompositeSpanFilter,
     StandardSpanFilterer,
 };
+
+/**
+ * Must be called after "ConfigProvider" is initialized either
+ *   - by calling directly "ConfigProvider.init(...)"
+ *   - or by calling indirectly default exported function of this module
+ */
+module.exports.loadUserHandler = () => loadHandler(
+    Utils.getEnvVar(EnvVariableKeys.LAMBDA_TASK_ROOT),
+    ConfigProvider.get(ConfigNames.THUNDRA_LAMBDA_HANDLER),
+);

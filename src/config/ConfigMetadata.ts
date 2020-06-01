@@ -59,6 +59,9 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_LAMBDA_HANDLER]: {
+        type: 'string',
+    },
     [ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE]: {
         type: 'boolean',
         defaultValue: false,
