@@ -45,6 +45,9 @@ class ConfigNames {
 
     /////////////////////////////////////////////////////////////////////////////
 
+    public static readonly THUNDRA_LAMBDA_HANDLER: string =
+        'thundra.agent.lambda.handler';
+
     public static readonly THUNDRA_LAMBDA_WARMUP_WARMUPAWARE: string =
         'thundra.agent.lambda.warmup.warmupaware';
 
