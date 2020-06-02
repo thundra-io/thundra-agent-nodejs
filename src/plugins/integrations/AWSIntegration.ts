@@ -257,7 +257,6 @@ export class AWSIntegration implements Integration {
 
 }
 
-// Internal classes to manage each service
 export class AWSAthenaIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
