@@ -27,8 +27,7 @@ const get = require('lodash.get');
 const MODULE_NAME = 'aws-sdk';
 const MODULE_VERSION = '2.x';
 
-class AWSIntegration implements Integration {
-
+export class AWSIntegration implements Integration {
     static AWSOperationTypes: any = undefined;
 
     config: any;
@@ -60,86 +59,6 @@ class AWSIntegration implements Integration {
             };
         }
         return messageAttributes;
-    }
-
-    static injectSpanContextIntoLambdaClientContext(tracer: ThundraTracer, span: ThundraSpan): any {
-        const custom: any = {};
-        tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, custom);
-        return custom;
-    }
-
-    static injectDynamoDBTraceLinkOnPut(requestParams: any, span: ThundraSpan): void {
-        const spanId = span.spanContext.spanId;
-        requestParams.Item = Object.assign({},
-            { 'x-thundra-span-id': { S: spanId } },
-            requestParams.Item,
-        );
-        span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
-    }
-
-    static injectDynamoDBTraceLinkOnUpdate(requestParams: any, span: ThundraSpan): void {
-        const spanId = span.spanContext.spanId;
-        if (has(requestParams, 'AttributeUpdates')) {
-            const thundraAttr = {
-                Action: 'PUT',
-                Value: { S: spanId },
-            };
-
-            requestParams.AttributeUpdates = Object.assign({},
-                { 'x-thundra-span-id': thundraAttr },
-                requestParams.AttributeUpdates,
-            );
-
-            span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
-        } else if (has(requestParams, 'UpdateExpression')) {
-            const exp: string = requestParams.UpdateExpression;
-            const thundraAttrName = { '#xThundraSpanId': 'x-thundra-span-id' };
-            const thundraAttrVal = { ':xThundraSpanId': { S: spanId } };
-
-            requestParams.ExpressionAttributeNames = Object.assign({}, requestParams.ExpressionAttributeNames, thundraAttrName);
-            requestParams.ExpressionAttributeValues = Object.assign({}, requestParams.ExpressionAttributeValues, thundraAttrVal);
-
-            if (exp.indexOf('SET') < 0) {
-                requestParams.UpdateExpression = `SET #xThundraSpanId = :xThundraSpanId ${exp}`;
-            } else {
-                requestParams.UpdateExpression = exp.replace(/SET (.+)/, `SET #xThundraSpanId = :xThundraSpanId, $1`);
-            }
-
-            span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
-        }
-    }
-
-    static serializeAttributes(attributes: any): string {
-        return Object.keys(attributes).sort().map((attrKey) => {
-            const attrType = Object.keys(attributes[attrKey])[0];
-            const attrVal = trim(JSON.stringify(attributes[attrKey][attrType]), '"');
-            return `${attrKey}={${attrType}: ${attrVal}}`;
-        }).join(', ');
-    }
-
-    static injectDynamoDBTraceLinkOnDelete(requestParams: any): void {
-        requestParams.ReturnValues = 'ALL_OLD';
-    }
-
-    static generateDynamoTraceLinks(attributes: any, operationType: string, tableName: string, region: string,
-                                    timestamp: number): any[] {
-        if (attributes) {
-            const attrHash = md5(AWSIntegration.serializeAttributes(attributes));
-            return [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
-        }
-        return [];
-    }
-
-    static generateFirehoseTraceLinks(region: string, deliveryStreamName: string, timestamp: number, data: any) {
-        try {
-            if (data) {
-                const dataHash = md5(data);
-                return [0, 1, 2].map((i) => `${region}:${deliveryStreamName}:${timestamp + i}:${dataHash}`);
-            }
-        } catch (e) {
-            // Pass
-        }
-        return [];
     }
 
     static getOperationType(operationName: string, className: string): string {
@@ -183,122 +102,42 @@ class AWSIntegration implements Integration {
         }
     }
 
+    static serviceFactory(serviceName: string): any {
+        switch (serviceName) {
+            case 'sqs':
+                return AWSSQSIntegration;
+            case 'sns':
+                return AWSSNSIntegration;
+            case 'dynamodb':
+                return AWSDynamoDBIntegration;
+            case 's3':
+                return AWSS3Integration;
+            case 'lambda':
+                return AWSLambdaIntegration;
+            case 'kinesis':
+                return AWSKinesisIntegration;
+            case 'firehose':
+                return AWSFirehoseIntegration;
+            case 'athena':
+                return AWSAthenaIntegration;
+            case 'events':
+                return AWSEventBridgeIntegration;
+            default:
+                return AWSServiceIntegration;
+        }
+    }
+
     static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
         try {
             if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
                 return;
             }
-            const region = get(req, 'service.config.region', '');
             const serviceEndpoint = get(req, 'service.config.endpoint', '');
             const serviceName = Utils.getServiceName(serviceEndpoint as string);
-            const operationName = req.operation;
-            const response = req.response;
-            const params = Object.assign({}, req.params);
-            let traceLinks: any[] = [];
+            const service = AWSIntegration.serviceFactory(serviceName);
 
-            if (serviceName === 'dynamodb') {
-                const tableName = Utils.getDynamoDBTableName(req);
-                let timestamp: number;
-                if (has(response, 'httpResponse.headers.date')) {
-                    timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
-                } else {
-                    timestamp = Math.floor(Date.now() / 1000) - 1;
-                }
+            const traceLinks = service.createTraceLinks(span, req, config);
 
-                if (operationName === 'putItem') {
-                    traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Item, 'SAVE', tableName, region, timestamp);
-                } else if (operationName === 'updateItem') {
-                    traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'SAVE', tableName, region, timestamp);
-                } else if (operationName === 'deleteItem') {
-                    if (config.dynamoDBTraceInjectionEnabled && has(response, 'data.Attributes.x-thundra-span-id')) {
-                        const spanId = response.data.Attributes['x-thundra-span-id'];
-                        traceLinks = [`DELETE:${spanId}`];
-                    } else {
-                        traceLinks = AWSIntegration.generateDynamoTraceLinks(params.Key, 'DELETE', tableName, region, timestamp);
-                    }
-                }
-            } else if (serviceName === 'sqs') {
-                if (operationName === 'sendMessage') {
-                    const messageId = response.data.MessageId || '';
-                    traceLinks = [messageId];
-                } else if (operationName === 'sendMessageBatch') {
-                    const entries = response.data.Successful || [];
-                    entries.map((entry: any) => traceLinks.push(entry.MessageId));
-                }
-            } else if (serviceName === 'sns') {
-                const messageId = get(response, 'data.MessageId', false);
-                if (messageId) {
-                    traceLinks = [messageId];
-                }
-            } else if (serviceName === 'kinesis') {
-                const records = get(response, 'data.Records', false);
-                const streamName = params.StreamName || '';
-                if (records) {
-                    for (const record of records) {
-                        const shardId = get(record, 'ShardId', false);
-                        const seqNumber = get(record, 'SequenceNumber', false);
-                        if (shardId && seqNumber) {
-                            traceLinks.push(`${region}:${streamName}:${shardId}:${seqNumber}`);
-                        }
-                    }
-                } else {
-                    const shardId = get(response, 'data.ShardId', false);
-                    const seqNumber = get(response, 'data.SequenceNumber', false);
-                    if (shardId && seqNumber) {
-                        traceLinks = [`${region}:${streamName}:${shardId}:${seqNumber}`];
-                    }
-                }
-            } else if (serviceName === 's3') {
-                const requestId = get(response, 'httpResponse.headers.x-amz-request-id', false);
-                if (requestId) {
-                    traceLinks = [requestId];
-                }
-            } else if (serviceName === 'lambda') {
-                const requestId = get(response, 'httpResponse.headers.x-amzn-requestid', false);
-                if (requestId) {
-                    traceLinks = [requestId];
-                }
-            } else if (serviceName === 'firehose') {
-                const deliveryStreamName = params.DeliveryStreamName || '';
-                let timestamp: number;
-                if (has(response, 'httpResponse.headers.date')) {
-                    timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
-                } else {
-                    timestamp = Math.floor(Date.now() / 1000) - 1;
-                }
-
-                if (operationName === 'putRecord') {
-                    const data = get(params, 'Record.Data', false);
-                    if (data) {
-                        traceLinks = AWSIntegration.generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data);
-                    }
-                } else if (operationName === 'putRecordBatch') {
-                    const records = params.Records || [];
-                    for (const record of records) {
-                        const data = record.Data;
-                        if (data) {
-                            traceLinks.push(...AWSIntegration.
-                                generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data));
-                        }
-                    }
-                }
-            } else if (serviceName === 'athena') {
-                if (has(response, 'data.QueryExecutionIds')) {
-                    span.setTag(AwsAthenaTags.RESPONSE_QUERY_EXECUTION_IDS, response.data.QueryExecutionIds);
-                }
-                if (has(response, 'data.QueryExecutionId')) {
-                    span.setTag(AwsAthenaTags.REQUEST_QUERY_EXECUTION_IDS, [response.data.QueryExecutionId]);
-                }
-                if (has(response, 'data.NamedQueryIds')) {
-                    span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, response.data.NamedQueryIds);
-                }
-                if (has(response, 'data.NamedQueryId')) {
-                    span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, [response.data.NamedQueryId]);
-                }
-            } else if (serviceName === 'events') {
-                const eventIds = get(response, 'data.Entries', []).map((e: any) => e.EventId);
-                traceLinks = eventIds;
-            }
             if (traceLinks.length > 0) {
                 span.setTag(SpanTags.TRACE_LINKS, traceLinks);
             }
@@ -314,7 +153,6 @@ class AWSIntegration implements Integration {
         function wrapper(wrappedFunction: any, wrappedFunctionName: string) {
             integration.wrappedFuncs[wrappedFunctionName] = wrappedFunction;
             return function AWSSDKWrapper(callback: any) {
-
                 let activeSpan: ThundraSpan;
                 try {
                     const tracer = integration.config.tracer;
@@ -327,32 +165,12 @@ class AWSIntegration implements Integration {
                     const serviceEndpoint = request.service.config.endpoint;
                     const serviceName = Utils.getServiceName(serviceEndpoint as string);
                     const originalCallback = callback;
+                    const service = AWSIntegration.serviceFactory(serviceName);
+                    const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
 
                     request.params = request.params ? request.params : {};
 
-                    if (serviceName === 'sqs') {
-                        activeSpan = AWSSQSIntegration.createSpan(tracer, request, config);
-                    } else if (serviceName === 'sns') {
-                        activeSpan = AWSSNSIntegration.createSpan(tracer, request, config);
-                    } else if (serviceName === 'dynamodb') {
-                        activeSpan = AWSDynamoDBIntegration.createSpan(tracer, request, config);
-                    } else if (serviceName === 's3') {
-                        activeSpan = AWSS3Integration.createSpan(tracer, request, config);
-                    } else if (serviceName === 'lambda') {
-                        activeSpan = AWSLambdaIntegration.createSpan(tracer, request, config);
-                    } else if (serviceName === 'kinesis') {
-                        activeSpan = AWSKinesisIntegration.createSpan(tracer, request, config);
-                    } else if (serviceName === 'firehose') {
-                        activeSpan = AWSFirehoseIntegration.createSpan(tracer, request, config);
-                    } else if (serviceName === 'athena') {
-                        activeSpan = AWSAthenaIntegration.createSpan(tracer, request, config);
-                    } else if (serviceName === 'events') {
-                        activeSpan = AWSEventBridgeIntegration.createSpan(tracer, request, config);
-                    } else {
-                        activeSpan = AWSServiceIntegration.createSpan(tracer, request, config);
-                    }
-
-                    const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
+                    activeSpan = service.createSpan(tracer, request, config);
 
                     activeSpan._initialized();
 
@@ -440,7 +258,7 @@ class AWSIntegration implements Integration {
 }
 
 // Internal classes to manage each service
-class AWSAthenaIntegration {
+export class AWSAthenaIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const dbName: string = get(request, 'params.Database',
@@ -506,9 +324,28 @@ class AWSAthenaIntegration {
 
         return activeSpan;
     }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        const response = request.response;
+
+        if (has(response, 'data.QueryExecutionIds')) {
+            span.setTag(AwsAthenaTags.RESPONSE_QUERY_EXECUTION_IDS, response.data.QueryExecutionIds);
+        }
+        if (has(response, 'data.QueryExecutionId')) {
+            span.setTag(AwsAthenaTags.REQUEST_QUERY_EXECUTION_IDS, [response.data.QueryExecutionId]);
+        }
+        if (has(response, 'data.NamedQueryIds')) {
+            span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, response.data.NamedQueryIds);
+        }
+        if (has(response, 'data.NamedQueryId')) {
+            span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, [response.data.NamedQueryId]);
+        }
+
+        return [];
+    }
 }
 
-class AWSLambdaIntegration {
+export class AWSLambdaIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.LAMBDA);
@@ -535,7 +372,7 @@ class AWSLambdaIntegration {
         });
 
         const custom = !config.lambdaTraceInjectionDisabled
-            ? AWSIntegration.injectSpanContextIntoLambdaClientContext(tracer, activeSpan)
+            ? AWSLambdaIntegration.injectSpanContextIntoLambdaClientContext(tracer, activeSpan)
             : null;
 
         if (operationType) {
@@ -564,9 +401,28 @@ class AWSLambdaIntegration {
 
         return activeSpan;
     }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        const response = request.response;
+        const requestId = get(response, 'httpResponse.headers.x-amzn-requestid', false);
+
+        let traceLinks: any[] = [];
+
+        if (requestId) {
+            traceLinks = [requestId];
+        }
+
+        return traceLinks;
+    }
+
+    private static injectSpanContextIntoLambdaClientContext(tracer: ThundraTracer, span: ThundraSpan): any {
+        const custom: any = {};
+        tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, custom);
+        return custom;
+    }
 }
 
-class AWSSNSIntegration {
+export class AWSSNSIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SNS);
@@ -636,9 +492,22 @@ class AWSSNSIntegration {
 
         return activeSpan;
     }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        const response = request.response;
+        const messageId = get(response, 'data.MessageId', false);
+
+        let traceLinks: any[] = [];
+
+        if (messageId) {
+            traceLinks = [messageId];
+        }
+
+        return traceLinks;
+    }
 }
 
-class AWSSQSIntegration {
+export class AWSSQSIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SQS);
@@ -700,9 +569,26 @@ class AWSSQSIntegration {
 
         return activeSpan;
     }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        const response = request.response;
+        const operationName = request.operation;
+
+        let traceLinks: any[] = [];
+
+        if (operationName === 'sendMessage') {
+            const messageId = response.data.MessageId || '';
+            traceLinks = [messageId];
+        } else if (operationName === 'sendMessageBatch') {
+            const entries = response.data.Successful || [];
+            entries.map((entry: any) => traceLinks.push(entry.MessageId));
+        }
+
+        return traceLinks;
+    }
 }
 
-class AWSFirehoseIntegration {
+export class AWSFirehoseIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.FIREHOSE);
@@ -733,9 +619,57 @@ class AWSFirehoseIntegration {
 
         return activeSpan;
     }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        const response = request.response;
+        const operationName = request.operation;
+        const region = get(request, 'service.config.region', '');
+        const params = Object.assign({}, request.params);
+
+        const deliveryStreamName = params.DeliveryStreamName || '';
+
+        let traceLinks: any[] = [];
+        let timestamp: number;
+
+        if (has(response, 'httpResponse.headers.date')) {
+            timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
+        } else {
+            timestamp = Math.floor(Date.now() / 1000) - 1;
+        }
+
+        if (operationName === 'putRecord') {
+            const data = get(params, 'Record.Data', false);
+            if (data) {
+                traceLinks = AWSFirehoseIntegration.generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data);
+            }
+        } else if (operationName === 'putRecordBatch') {
+            const records = params.Records || [];
+            for (const record of records) {
+                const data = record.Data;
+                if (data) {
+                    traceLinks.push(...AWSFirehoseIntegration.
+                        generateFirehoseTraceLinks(region, deliveryStreamName, timestamp, data));
+                }
+            }
+        }
+
+        return traceLinks;
+    }
+
+    public static generateFirehoseTraceLinks(region: string, deliveryStreamName: string, timestamp: number, data: any) {
+        try {
+            if (data) {
+                const dataHash = md5(data);
+                return [0, 1, 2].map((i) => `${region}:${deliveryStreamName}:${timestamp + i}:${dataHash}`);
+            }
+        } catch (e) {
+            // Pass
+        }
+        return [];
+    }
 }
 
-class AWSKinesisIntegration {
+export class AWSKinesisIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.KINESIS);
@@ -766,9 +700,37 @@ class AWSKinesisIntegration {
 
         return activeSpan;
     }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        const response = request.response;
+        const region = get(request, 'service.config.region', '');
+        const params = Object.assign({}, request.params);
+
+        let traceLinks: any[] = [];
+
+        const records = get(response, 'data.Records', false);
+        const streamName = params.StreamName || '';
+        if (records) {
+            for (const record of records) {
+                const shardId = get(record, 'ShardId', false);
+                const seqNumber = get(record, 'SequenceNumber', false);
+                if (shardId && seqNumber) {
+                    traceLinks.push(`${region}:${streamName}:${shardId}:${seqNumber}`);
+                }
+            }
+        } else {
+            const shardId = get(response, 'data.ShardId', false);
+            const seqNumber = get(response, 'data.SequenceNumber', false);
+            if (shardId && seqNumber) {
+                traceLinks = [`${region}:${streamName}:${shardId}:${seqNumber}`];
+            }
+        }
+
+        return traceLinks;
+    }
 }
 
-class AWSDynamoDBIntegration {
+export class AWSDynamoDBIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const tableName = Utils.getDynamoDBTableName(request);
@@ -805,19 +767,113 @@ class AWSDynamoDBIntegration {
         // Inject outgoing trace links into spans
         if (config.dynamoDBTraceInjectionEnabled) {
             if (operationName === 'putItem') {
-                AWSIntegration.injectDynamoDBTraceLinkOnPut(request.params, activeSpan);
+                AWSDynamoDBIntegration.injectDynamoDBTraceLinkOnPut(request.params, activeSpan);
             } else if (operationName === 'updateItem') {
-                AWSIntegration.injectDynamoDBTraceLinkOnUpdate(request.params, activeSpan);
+                AWSDynamoDBIntegration.injectDynamoDBTraceLinkOnUpdate(request.params, activeSpan);
             } else if (operationName === 'deleteItem') {
-                AWSIntegration.injectDynamoDBTraceLinkOnDelete(request.params);
+                AWSDynamoDBIntegration.injectDynamoDBTraceLinkOnDelete(request.params);
             }
         }
 
         return activeSpan;
     }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        const region = get(request, 'service.config.region', '');
+        const operationName = request.operation;
+        const response = request.response;
+        const params = Object.assign({}, request.params);
+        const tableName = Utils.getDynamoDBTableName(request);
+
+        let traceLinks: any[] = [];
+        let timestamp: number;
+
+        if (has(response, 'httpResponse.headers.date')) {
+            timestamp = Date.parse(response.httpResponse.headers.date) / 1000;
+        } else {
+            timestamp = Math.floor(Date.now() / 1000) - 1;
+        }
+
+        if (operationName === 'putItem') {
+            traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(params.Item, 'SAVE', tableName, region, timestamp);
+        } else if (operationName === 'updateItem') {
+            traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(params.Key, 'SAVE', tableName, region, timestamp);
+        } else if (operationName === 'deleteItem') {
+            if (config.dynamoDBTraceInjectionEnabled && has(response, 'data.Attributes.x-thundra-span-id')) {
+                const spanId = response.data.Attributes['x-thundra-span-id'];
+                traceLinks = [`DELETE:${spanId}`];
+            } else {
+                traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(params.Key, 'DELETE', tableName, region, timestamp);
+            }
+        }
+
+        return traceLinks;
+    }
+
+    public static generateDynamoTraceLinks(attributes: any, operationType: string, tableName: string, region: string,
+                                            timestamp: number): any[] {
+        if (attributes) {
+            const attrHash = md5(AWSDynamoDBIntegration.serializeAttributes(attributes));
+            return [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
+        }
+        return [];
+    }
+
+    private static serializeAttributes(attributes: any): string {
+        return Object.keys(attributes).sort().map((attrKey) => {
+            const attrType = Object.keys(attributes[attrKey])[0];
+            const attrVal = trim(JSON.stringify(attributes[attrKey][attrType]), '"');
+            return `${attrKey}={${attrType}: ${attrVal}}`;
+        }).join(', ');
+    }
+
+    private static injectDynamoDBTraceLinkOnPut(requestParams: any, span: ThundraSpan): void {
+        const spanId = span.spanContext.spanId;
+        requestParams.Item = Object.assign({},
+            { 'x-thundra-span-id': { S: spanId } },
+            requestParams.Item,
+        );
+        span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
+    }
+
+    private static injectDynamoDBTraceLinkOnUpdate(requestParams: any, span: ThundraSpan): void {
+        const spanId = span.spanContext.spanId;
+        if (has(requestParams, 'AttributeUpdates')) {
+            const thundraAttr = {
+                Action: 'PUT',
+                Value: { S: spanId },
+            };
+
+            requestParams.AttributeUpdates = Object.assign({},
+                { 'x-thundra-span-id': thundraAttr },
+                requestParams.AttributeUpdates,
+            );
+
+            span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
+        } else if (has(requestParams, 'UpdateExpression')) {
+            const exp: string = requestParams.UpdateExpression;
+            const thundraAttrName = { '#xThundraSpanId': 'x-thundra-span-id' };
+            const thundraAttrVal = { ':xThundraSpanId': { S: spanId } };
+
+            requestParams.ExpressionAttributeNames = Object.assign({}, requestParams.ExpressionAttributeNames, thundraAttrName);
+            requestParams.ExpressionAttributeValues = Object.assign({}, requestParams.ExpressionAttributeValues, thundraAttrVal);
+
+            if (exp.indexOf('SET') < 0) {
+                requestParams.UpdateExpression = `SET #xThundraSpanId = :xThundraSpanId ${exp}`;
+            } else {
+                requestParams.UpdateExpression = exp.replace(/SET (.+)/, `SET #xThundraSpanId = :xThundraSpanId, $1`);
+            }
+
+            span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
+        }
+    }
+
+    private static injectDynamoDBTraceLinkOnDelete(requestParams: any): void {
+        requestParams.ReturnValues = 'ALL_OLD';
+    }
 }
 
-class AWSS3Integration {
+export class AWSS3Integration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.S3);
@@ -848,9 +904,22 @@ class AWSS3Integration {
 
         return activeSpan;
     }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        const response = request.response;
+        const requestId = get(response, 'httpResponse.headers.x-amz-request-id', false);
+
+        let traceLinks: any[] = [];
+
+        if (requestId) {
+            traceLinks = [requestId];
+        }
+
+        return traceLinks;
+    }
 }
 
-class AWSEventBridgeIntegration {
+export class AWSEventBridgeIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.EVENTBRIDGE);
@@ -903,9 +972,19 @@ class AWSEventBridgeIntegration {
 
         return activeSpan;
     }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        const response = request.response;
+        const requestId = get(response, 'httpResponse.headers.x-amz-request-id', false);
+        const eventIds = get(response, 'data.Entries', []).map((e: any) => e.EventId);
+
+        const traceLinks: any[] = eventIds;
+
+        return traceLinks;
+    }
 }
 
-class AWSServiceIntegration {
+export class AWSServiceIntegration {
     public static createSpan(tracer: any, request: any, config: any) {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.AWSSERVICE);
@@ -927,6 +1006,8 @@ class AWSServiceIntegration {
 
         return activeSpan;
     }
-}
 
-export default AWSIntegration;
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        return [];
+    }
+}

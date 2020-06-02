@@ -12,7 +12,7 @@ import MySQLCalls from './integration/utils/mysql.integration.utils';
 import MongoCalls from './integration/utils/mongodb.integration.utils';
 import ThundraWrapper from '../dist/ThundraWrapper';
 import Recorder from '../dist/opentracing/Recorder';
-import AWSIntegration from '../dist/plugins/integrations/AWSIntegration';
+import { AWSIntegration } from '../dist/plugins/integrations/AWSIntegration';
 
 import TestUtils from './utils.js';
 

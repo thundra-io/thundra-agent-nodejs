@@ -6,7 +6,7 @@ import ThundraSpanContext from '../../opentracing/SpanContext';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../support/InvocationSupport';
-import AWSIntegration from '../integrations/AWSIntegration';
+import { AWSIntegration, AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../integrations/AWSIntegration';
 import InvocationTraceSupport from '../support/InvocationTraceSupport';
 
 const get = require('lodash.get');
@@ -98,7 +98,7 @@ class LambdaEventUtils {
             const data = record.data;
             if (arriveTime && data) {
                 const timestamp = Math.floor(arriveTime / 1000) - 1;
-                traceLinks.push(...AWSIntegration
+                traceLinks.push(...AWSFirehoseIntegration
                     .generateFirehoseTraceLinks(region, streamName,
                         timestamp, Buffer.from(data, 'base64')));
             }
@@ -146,14 +146,14 @@ class LambdaEventUtils {
                     const Keys = get(record, 'dynamodb.Keys', {});
                     const timestamp = creationTime - 1;
                     if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
-                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                        traceLinks.push(...AWSDynamoDBIntegration.generateDynamoTraceLinks(
                             NewImage, 'SAVE', tableName, region, timestamp,
                         ));
-                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                        traceLinks.push(...AWSDynamoDBIntegration.generateDynamoTraceLinks(
                             Keys, 'SAVE', tableName, region, timestamp,
                         ));
                     } else if (record.eventName === 'REMOVE') {
-                        traceLinks.push(...AWSIntegration.generateDynamoTraceLinks(
+                        traceLinks.push(...AWSDynamoDBIntegration.generateDynamoTraceLinks(
                             Keys, 'DELETE', tableName, region, timestamp,
                         ));
                     }
