@@ -810,7 +810,7 @@ export class AWSDynamoDBIntegration {
     }
 
     public static generateDynamoTraceLinks(attributes: any, operationType: string, tableName: string, region: string,
-                                            timestamp: number): any[] {
+                                           timestamp: number): any[] {
         if (attributes) {
             const attrHash = md5(AWSDynamoDBIntegration.serializeAttributes(attributes));
             return [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
