@@ -18,7 +18,6 @@ import Logger from './plugins/Logger';
 import Log from './plugins/Log';
 import InvocationSupport from './plugins/support/InvocationSupport';
 import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
-import ApplicationSupport from './plugins/support/ApplicationSupport';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
@@ -33,6 +32,9 @@ import ErrorAwareSampler from './opentracing/sampler/ErrorAwareSampler';
 import TimeAwareSampler from './opentracing/sampler/TimeAwareSampler';
 import { SamplerCompositionOperator } from './opentracing/sampler/CompositeSampler';
 import ConfigNames from './config/ConfigNames';
+import {ApplicationManager} from './application/ApplicationManager';
+import {LambdaContextProvider} from './application/LambdaContextProvider';
+import {LambdaApplicationInfoProvider} from './application/LambdaApplicationInfoProvider';
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
@@ -90,36 +92,32 @@ module.exports = (options?: any) => {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
 
-    ApplicationSupport.parseApplicationTags();
-
-    const logStreamName = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
-    const region = Utils.getEnvVar(EnvVariableKeys.AWS_REGION);
-    const functionVersion = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
-    const applicationInstanceId = logStreamName ? logStreamName.split(']').pop() : Utils.generateId();
-
-    const pluginContext: PluginContext = new PluginContext({
-        applicationInstanceId,
-        applicationRegion: region ? region : '',
-        applicationVersion: functionVersion ? functionVersion : '',
-        requestCount: 0,
-        apiKey: config.apiKey,
-        timeoutMargin: config.timeoutMargin,
-        transactionId: null,
-        config,
-    });
-
-    const increaseRequestCount = () => pluginContext.requestCount += 1;
-
     return (originalFunc: any) => {
         // Check if already wrapped
         if (get(originalFunc, 'thundraWrapped', false)) {
             return originalFunc;
         }
 
+        ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
+        const applicationInfoProvider = ApplicationManager.getApplicationInfoProvider();
+        const applicationInfo = applicationInfoProvider.getApplicationInfo();
+        const pluginContext: PluginContext = new PluginContext({
+            applicationInstanceId: applicationInfo.applicationInstanceId,
+            applicationRegion: applicationInfo.applicationRegion,
+            applicationVersion: applicationInfo.applicationVersion,
+            requestCount: 0,
+            apiKey: config.apiKey,
+            timeoutMargin: config.timeoutMargin,
+            transactionId: null,
+            config,
+        });
+
+        const increaseRequestCount = () => pluginContext.requestCount += 1;
+
         const thundraWrappedHandler: any = async (originalEvent: any, originalContext: any, originalCallback: any) => {
+            LambdaContextProvider.setContext(originalContext);
             // Creating applicationId here, since we need the information in context
-            const applicationId = Utils.getApplicationId(originalContext, pluginContext);
-            pluginContext.applicationId = applicationId;
+            pluginContext.applicationId = ApplicationManager.getApplicationInfo().applicationId;
 
             plugins.forEach((plugin: any) => {
                 plugin.setPluginContext(pluginContext);

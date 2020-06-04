@@ -18,11 +18,11 @@ import MetricData from '../data/metric/MetricData';
 import SpanData from '../data/trace/SpanData';
 import LogData from '../data/log/LogData';
 import ThundraLogger from '../../ThundraLogger';
-import ApplicationSupport from '../support/ApplicationSupport';
 import ThundraTracer from '../../opentracing/Tracer';
 import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
 import InvocationSupport from '../support/InvocationSupport';
 import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
+import {ApplicationManager} from '../../application/ApplicationManager';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
@@ -381,7 +381,8 @@ class Utils {
         monitoringData.applicationVersion = applicationVersion;
         monitoringData.applicationRuntimeVersion = process.version;
 
-        monitoringData.applicationTags = {...monitoringData.applicationTags, ...ApplicationSupport.applicationTags};
+        monitoringData.applicationTags = {...monitoringData.applicationTags,
+            ...ApplicationManager.getApplicationInfo().applicationTags};
 
         return monitoringData;
     }
@@ -489,59 +490,6 @@ class Utils {
         return monitoringData;
     }
 
-    static getAWSAccountNo(arn: string) {
-        return Utils.getARNPart(arn, 4);
-    }
-
-    static getAWSRegion(arn: string) {
-        return Utils.getARNPart(arn, 3);
-    }
-
-    static getAccountNo(arn: string, pluginContext: any) {
-        if (Utils.getIfSAMLocalDebugging()) {
-            return 'sam_local';
-        } else if (Utils.getIfSLSLocalDebugging()) {
-            return 'sls_local';
-        } else {
-            return (Utils.getAWSAccountNo(arn)
-                || pluginContext.apiKey
-                || 'guest');
-        }
-    }
-
-    static getApplicationId(originalContext: any, pluginContext: any) {
-        const arn = originalContext.invokedFunctionArn;
-        const region = Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
-            || 'local';
-        const accountNo = Utils.getAccountNo(arn, pluginContext);
-        const functionName = Utils.getApplicationName(originalContext);
-
-        return `aws:lambda:${region}:${accountNo}:${functionName}`;
-    }
-
-    static getApplicationName(originalContext: any) {
-        return ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME,
-            originalContext.functionName
-            || Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
-            || 'lambda-app');
-    }
-
-    static getARNPart(arn: string, index: number) {
-        try {
-            return arn.split(':')[index];
-        } catch (error) {
-            return '';
-        }
-    }
-
-    static getIfSAMLocalDebugging() {
-        return Utils.getEnvVar(EnvVariableKeys.AWS_SAM_LOCAL) === 'true';
-    }
-
-    static getIfSLSLocalDebugging() {
-        return Utils.getEnvVar(EnvVariableKeys.SLS_LOCAL) === 'true';
-    }
-
     static getXRayTraceInfo() {
         let traceID: string = '';
         let segmentID: string = '';
@@ -593,6 +541,29 @@ class Utils {
         return response.statusCode && typeof response.statusCode === 'number';
     }
 
+    static getApplicationTags(): any {
+        const applicationTags: any = {};
+        for (const key of ConfigProvider.names()) {
+            if (key.startsWith(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX)) {
+                try {
+                    const propsKey = key.substring(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX.length);
+                    const propsValue = ConfigProvider.get<any>(key);
+                    if (isNaN(parseFloat(propsValue))) {
+                        if (propsValue === 'true' || propsValue === 'false') {
+                            applicationTags[propsKey] = propsValue === 'true' ? true : false;
+                        } else {
+                            applicationTags[propsKey] = propsValue;
+                        }
+                    } else {
+                        applicationTags[propsKey] = parseFloat(propsValue);
+                    }
+                } catch (ex) {
+                    ThundraLogger.getInstance().error(`Cannot parse application tag ${key}`);
+                }
+            }
+        }
+        return applicationTags;
+    }
 }
 
 export default Utils;

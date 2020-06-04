@@ -404,7 +404,7 @@ class ThundraWrapper {
         );
     }
 
-    async executeAfteInvocationAndReport(afterInvocationData: any) {
+    async executeAfterInvocationAndReport(afterInvocationData: any) {
         if (this.monitoringDisabled) {
             return;
         }
@@ -442,7 +442,7 @@ class ThundraWrapper {
                     };
                 }
 
-                await this.executeAfteInvocationAndReport(afterInvocationData);
+                await this.executeAfterInvocationAndReport(afterInvocationData);
 
                 if (this.timeout) {
                     clearTimeout(this.timeout);
