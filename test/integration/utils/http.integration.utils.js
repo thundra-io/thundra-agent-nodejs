@@ -1,6 +1,6 @@
 module.exports.get = (http) => {
     return new Promise((resolve) => {
-        const url = 'http://jsonplaceholder.typicode.com/users/1?q=123';
+        const url = 'http://httpstat.us/200?userId=1';
         http.get(url, (resp) => {
             let data = '';
             resp.on('data', (chunk) => {
@@ -18,7 +18,7 @@ module.exports.get = (http) => {
 
 module.exports.getAPIGW = (http) => {
     return new Promise((resolve) => {
-        const url = 'https://34zsqapxkj.execute-api.eu-west-1.amazonaws.com/default/apigwtest';
+        const url = 'https://qbzotxrb9a.execute-api.us-west-2.amazonaws.com/prod';
         http.get(url, (resp) => {
             let data = '';
             resp.on('data', (chunk) => {

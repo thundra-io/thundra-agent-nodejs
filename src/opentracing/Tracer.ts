@@ -172,7 +172,7 @@ class ThundraTracer extends Tracer {
         try {
             this.propagators[format].inject(spanContext, carrier);
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
 
         return this;
@@ -182,7 +182,7 @@ class ThundraTracer extends Tracer {
         try {
             return this.propagators[format].extract(carrier);
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
             return null;
         }
     }

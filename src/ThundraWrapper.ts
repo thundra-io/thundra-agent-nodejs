@@ -110,7 +110,6 @@ class ThundraWrapper {
             },
         }, this.wrappedContext);
 
-        this.timeout = this.setupTimeoutHandler(this);
         InvocationSupport.setFunctionName(this.originalContext.functionName);
 
         if (this.shouldInitDebugger()) {
@@ -216,8 +215,7 @@ class ThundraWrapper {
         let prevRchar = 0;
         let prevWchar = 0;
         let initCompleted = false;
-        const logger: ThundraLogger = ThundraLogger.getInstance();
-        logger.info('Waiting for debugger to handshake ...');
+        ThundraLogger.info('Waiting for debugger to handshake ...');
 
         const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -237,15 +235,15 @@ class ThundraWrapper {
                 prevRchar = debuggerIoMetrics.rchar;
                 prevWchar = debuggerIoMetrics.wchar;
             } catch (e) {
-                logger.error(e);
+                ThundraLogger.error(e);
                 break;
             }
             await sleep(1000);
         }
         if (initCompleted) {
-            logger.info('Completed debugger handshake');
+            ThundraLogger.info('Completed debugger handshake');
         } else {
-            logger.error('Couldn\'t complete debugger handshake in ' + this.debuggerMaxWaitTime + ' milliseconds.');
+            ThundraLogger.error('Couldn\'t complete debugger handshake in ' + this.debuggerMaxWaitTime + ' milliseconds.');
         }
     }
 
@@ -292,7 +290,7 @@ class ThundraWrapper {
 
                         // If errMessage is undefined replace it with the raw incoming message
                         errMessage = errMessage || mes;
-                        ThundraLogger.getInstance().error('Thundra Debugger: ' + errMessage);
+                        ThundraLogger.error('Thundra Debugger: ' + errMessage);
 
                         return resolve(true);
                     });
@@ -308,7 +306,7 @@ class ThundraWrapper {
                 await this.waitForDebugger();
             } catch (e) {
                 this.debuggerProxy = null;
-                ThundraLogger.getInstance().error(e);
+                ThundraLogger.error(e);
             }
         }
     }
@@ -320,7 +318,7 @@ class ThundraWrapper {
                 this.inspector = null;
             }
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
         if (this.debuggerProxy) {
             try {
@@ -328,7 +326,7 @@ class ThundraWrapper {
                     this.debuggerProxy.kill();
                 }
             } catch (e) {
-                ThundraLogger.getInstance().error(e);
+                ThundraLogger.error(e);
             } finally {
                 this.debuggerProxy = null;
             }
@@ -359,6 +357,7 @@ class ThundraWrapper {
             this.executeHook('before-invocation', beforeInvocationData, false)
                 .then(() => {
                     this.pluginContext.requestCount += 1;
+                    this.timeout = this.setupTimeoutHandler();
                     try {
                         const result = this.originalFunction.call(
                             this.originalThis,
@@ -374,7 +373,7 @@ class ThundraWrapper {
                     }
                 })
                 .catch((error) => {
-                    ThundraLogger.getInstance().debug(error);
+                    ThundraLogger.error(error);
                     // There is an error on "before-invocation" phase
                     // So skip Thundra wrapping and call original function directly
                     const result = this.originalFunction.call(
@@ -428,6 +427,8 @@ class ThundraWrapper {
             try {
                 this.reported = true;
 
+                this.destroyTimeoutHandler();
+
                 let afterInvocationData = {
                     error,
                     originalEvent: this.originalEvent,
@@ -443,10 +444,6 @@ class ThundraWrapper {
                 }
 
                 await this.executeAfterInvocationAndReport(afterInvocationData);
-
-                if (this.timeout) {
-                    clearTimeout(this.timeout);
-                }
 
                 if (typeof callback === 'function') {
                     callback();
@@ -471,17 +468,25 @@ class ThundraWrapper {
         return isError;
     }
 
-    setupTimeoutHandler(wrapperInstance: any): NodeJS.Timer | undefined {
-        const { originalContext, pluginContext } = wrapperInstance;
-        const { getRemainingTimeInMillis = () => 0 } = originalContext;
+    destroyTimeoutHandler() {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+    }
 
-        if (pluginContext.timeoutMargin < 1 || getRemainingTimeInMillis() < 10) {
+    setupTimeoutHandler(): NodeJS.Timer | undefined {
+        this.destroyTimeoutHandler();
+
+        const { getRemainingTimeInMillis = () => 0 } = this.originalContext;
+
+        if (this.pluginContext.timeoutMargin < 1 || getRemainingTimeInMillis() < 10) {
             return undefined;
         }
         const maxEndTime = 899900;
         const configEndTime = Math.max(
             0,
-            getRemainingTimeInMillis() - pluginContext.timeoutMargin,
+            getRemainingTimeInMillis() - this.pluginContext.timeoutMargin,
         );
 
         const endTime = Math.min(configEndTime, maxEndTime);
@@ -494,13 +499,12 @@ class ThundraWrapper {
                         this.debuggerProxy.kill('SIGHUP');
                     }
                 } catch (e) {
-                    ThundraLogger.getInstance().error(e);
+                    ThundraLogger.error(e);
                 } finally {
                     this.debuggerProxy = null;
                 }
             }
-            wrapperInstance.report(new TimeoutError('Lambda is timed out.'), null, null);
-            wrapperInstance.reported = false;
+            this.report(new TimeoutError('Lambda is timed out.'), null, null);
         }, endTime);
     }
 

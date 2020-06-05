@@ -33,7 +33,7 @@ class InvocationData extends BaseMonitoringData {
                 this.tags[key] = keyValuePairs[key];
             });
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
     }
 
@@ -43,7 +43,7 @@ class InvocationData extends BaseMonitoringData {
                 this.userTags[key] = keyValuePairs[key];
             });
         } catch (e) {
-            ThundraLogger.getInstance().error(e);
+            ThundraLogger.error(e);
         }
     }
 

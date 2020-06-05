@@ -109,7 +109,7 @@ class Reporter {
         try {
             batchedReports = this.getCompositeBatchedReports();
         } catch (err) {
-            ThundraLogger.getInstance().error(`Cannot create batch request will send no report. ${err}`);
+            ThundraLogger.error(`Cannot create batch request will send no report. ${err}`);
         }
 
         const isAsync = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE);
@@ -123,24 +123,21 @@ class Reporter {
                 if (currentMinute > this.latestReportingLimitedMinute) {
                     reportPromises.push(this.request(batch));
                 } else {
-                    ThundraLogger.getInstance().error(`Skipped sending monitoring data temporarily as it hits the limit`);
+                    ThundraLogger.error(`Skipped sending monitoring data temporarily as it hits the limit`);
                 }
             }
         });
 
         await Promise.all(reportPromises).catch(async (err) => {
             if (this.connectionRetryCount === 0 && err.code === 'ECONNRESET') {
-                ThundraLogger.getInstance().debug(
+                ThundraLogger.debug(
                     'Keep Alive connection reset by server. Will send monitoring data again.');
-
                 this.connectionRetryCount++;
-
                 await this.sendReports();
                 this.connectionRetryCount = 0;
                 return;
             }
-
-            ThundraLogger.getInstance().error(err);
+            ThundraLogger.error(err);
         });
 
         this.connectionRetryCount = 0;
@@ -159,10 +156,21 @@ class Reporter {
                         this.latestReportingLimitedMinute = Math.floor(Date.now() / 1000);
                     }
                     if (response.statusCode !== 200) {
-                        ThundraLogger.getInstance().debug(JSON.stringify(this.reports));
-                        return reject({ status: response.statusCode, data: responseData });
+                        // First, check whether or debug is enabled.
+                        // If not no need to convert reports into JSON string to pass to "debug" function
+                        // because "JSON.stringify" is not cheap operation.
+                        if (ThundraLogger.isDebugEnabled()) {
+                            ThundraLogger.debug(JSON.stringify(this.reports));
+                        }
+                        return reject({
+                            status: response.statusCode,
+                            data: responseData,
+                        });
                     }
-                    return resolve({ status: response.statusCode, data: responseData });
+                    return resolve({
+                        status: response.statusCode,
+                        data: responseData,
+                    });
                 });
             };
 
@@ -177,7 +185,7 @@ class Reporter {
                 request.write(JSON.stringify(batch));
                 request.end();
             } catch (error) {
-                ThundraLogger.getInstance().error('Cannot serialize report data. ' + error);
+                ThundraLogger.error('Cannot serialize report data. ' + error);
             }
         });
     }
@@ -189,7 +197,7 @@ class Reporter {
                 process.stdout.write(jsonStringReport);
                 return resolve();
             } catch (error) {
-                ThundraLogger.getInstance().error('Cannot write report data to CW. ' + error);
+                ThundraLogger.error('Cannot write report data to CW. ' + error);
                 return reject(error);
             }
         });

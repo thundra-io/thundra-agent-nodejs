@@ -303,7 +303,7 @@ class AWSIntegration implements Integration {
                 span.setTag(SpanTags.TRACE_LINKS, traceLinks);
             }
         } catch (error) {
-            ThundraLogger.getInstance().debug(`Error while injecting trace links, ${error}`);
+            ThundraLogger.error(`Error while injecting trace links, ${error}`);
         }
     }
 
@@ -559,7 +559,7 @@ class AWSIntegration implements Integration {
                                     request.params.ClientContext = Buffer.from(
                                         JSON.stringify({ custom: clientContext })).toString('base64');
                                 } catch (err) {
-                                    ThundraLogger.getInstance().debug('Cannot parse lambda client context not a valid JSON');
+                                    ThundraLogger.error('Cannot parse lambda client context not a valid JSON');
                                 }
                             } else {
                                 request.params.ClientContext = Buffer.from(JSON.stringify({ custom })).toString('base64');
@@ -769,7 +769,7 @@ class AWSIntegration implements Integration {
                                     if (error instanceof ThundraChaosError) {
                                         request.emit('error', error);
                                     } else {
-                                        ThundraLogger.getInstance().error(error);
+                                        ThundraLogger.error(error);
                                     }
                                 }
                             }
@@ -786,7 +786,7 @@ class AWSIntegration implements Integration {
                         this.response.error = error;
                         throw error;
                     } else {
-                        ThundraLogger.getInstance().error(error);
+                        ThundraLogger.error(error);
                         const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
                         return originalFunction.apply(this, [callback]);
                     }

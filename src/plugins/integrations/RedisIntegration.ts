@@ -112,7 +112,7 @@ class RedisIntegration implements Integration {
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        ThundraLogger.getInstance().error(error);
+                        ThundraLogger.error(error);
                         internalSendCommand.call(this, options);
                     }
                 }

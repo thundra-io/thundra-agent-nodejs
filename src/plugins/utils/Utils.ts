@@ -141,7 +141,7 @@ class Utils {
                 };
 
                 if (err) {
-                    ThundraLogger.getInstance().error(`Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0.`);
+                    ThundraLogger.error(`Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0.`);
                 } else {
                     const procStatArray = file.toString().split(' ');
                     procStatData.threadCount = parseInt(procStatArray[19], 0);
@@ -161,7 +161,7 @@ class Utils {
                 };
 
                 if (err) {
-                    ThundraLogger.getInstance().error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
+                    ThundraLogger.error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
                 } else {
                     const procIoArray = file.toString().split('\n');
                     procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
@@ -182,7 +182,7 @@ class Utils {
                 };
 
                 if (err) {
-                    ThundraLogger.getInstance().error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
+                    ThundraLogger.error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
                 } else {
                     const procIoArray = file.toString().split('\n');
                     procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
@@ -199,13 +199,13 @@ class Utils {
         if (references) {
             for (const ref of references) {
                 if (!(ref instanceof Reference)) {
-                    ThundraLogger.getInstance().error(`Expected ${ref} to be an instance of opentracing.Reference`);
+                    ThundraLogger.error(`Expected ${ref} to be an instance of opentracing.Reference`);
                     break;
                 }
                 const spanContext = ref.referencedContext();
 
                 if (!(spanContext instanceof ThundraSpanContext)) {
-                    ThundraLogger.getInstance().error(`Expected ${spanContext} to be an instance of SpanContext`);
+                    ThundraLogger.error(`Expected ${spanContext} to be an instance of SpanContext`);
                     break;
                 }
 
@@ -295,7 +295,7 @@ class Utils {
             const moduleValidator = new ModuleVersionValidator();
             const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
             if (!isValidVersion) {
-                ThundraLogger.getInstance().error(
+                ThundraLogger.error(
                     `Invalid module version for ${moduleName} integration. Supported version is ${version}`);
             } else {
                 isValid = true;
@@ -322,7 +322,7 @@ class Utils {
                 if (version) {
                     const {basedir} = Utils.getModuleInfo(moduleName);
                     if (!basedir) {
-                        ThundraLogger.getInstance().error(`Base directory is not found for the package ${moduleName}`);
+                        ThundraLogger.error(`Base directory is not found for the package ${moduleName}`);
                         return;
                     }
                     Utils.doInstrument(requiredLib, libs, basedir, moduleName, version, wrapper, config);
@@ -458,7 +458,7 @@ class Utils {
                     tracer.addSpanListener(listenerInstance);
                     listeners.push(listenerInstance);
                 } catch (ex) {
-                    ThundraLogger.getInstance().error(
+                    ThundraLogger.error(
                         `Cannot parse span listener def ${key} with reason: ${ex.message}`);
                 }
             }
