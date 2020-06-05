@@ -127,15 +127,20 @@ export class AWSIntegration implements Integration {
         }
     }
 
+    static getServiceFromReq(request: any): any {
+        const serviceEndpoint = get(request, 'service.config.endpoint', '');
+        const serviceName = Utils.getServiceName(serviceEndpoint as string);
+
+        return AWSIntegration.serviceFactory(serviceName);
+    }
+
     static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
         try {
             if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
                 return;
             }
-            const serviceEndpoint = get(req, 'service.config.endpoint', '');
-            const serviceName = Utils.getServiceName(serviceEndpoint as string);
-            const service = AWSIntegration.serviceFactory(serviceName);
 
+            const service = AWSIntegration.getServiceFromReq(req);
             const traceLinks = service.createTraceLinks(span, req, config);
 
             if (traceLinks.length > 0) {
@@ -144,6 +149,18 @@ export class AWSIntegration implements Integration {
         } catch (error) {
             ThundraLogger.error(`Error while injecting trace links, ${error}`);
         }
+    }
+
+    static createSpan(tracer: any, request: any, config: any): ThundraSpan {
+        const service = AWSIntegration.getServiceFromReq(request);
+
+        return service.createSpan(tracer, request, config);
+    }
+
+    static processResponse(span: ThundraSpan, request: any, config: any): void {
+        const service = AWSIntegration.getServiceFromReq(request);
+
+        service.processResponse(span, request, config);
     }
 
     wrap(lib: any, config: any) {
@@ -162,15 +179,12 @@ export class AWSIntegration implements Integration {
                     }
 
                     const request = this;
-                    const serviceEndpoint = request.service.config.endpoint;
-                    const serviceName = Utils.getServiceName(serviceEndpoint as string);
                     const originalCallback = callback;
-                    const service = AWSIntegration.serviceFactory(serviceName);
                     const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
 
                     request.params = request.params ? request.params : {};
 
-                    activeSpan = service.createSpan(tracer, request, config);
+                    activeSpan = AWSIntegration.createSpan(tracer, request, config);
 
                     activeSpan._initialized();
 
@@ -180,7 +194,12 @@ export class AWSIntegration implements Integration {
                                 activeSpan.setErrorTag(err);
                             }
                             if (data) {
-                                AWSIntegration.injectTraceLink(activeSpan, request, config);
+                                try {
+                                    AWSIntegration.processResponse(activeSpan, request, config);
+                                    AWSIntegration.injectTraceLink(activeSpan, request, config);
+                                } catch (error) {
+                                    ThundraLogger.error(error);
+                                }
                             }
                             if (activeSpan) {
                                 activeSpan.closeWithCallback(this, originalCallback, [err, data]);
@@ -198,7 +217,12 @@ export class AWSIntegration implements Integration {
                             }
                         }).on('complete', (response: any) => {
                             if (response) {
-                                AWSIntegration.injectTraceLink(activeSpan, request, config);
+                                try {
+                                    AWSIntegration.processResponse(activeSpan, request, config);
+                                    AWSIntegration.injectTraceLink(activeSpan, request, config);
+                                } catch (error) {
+                                    ThundraLogger.error(error);
+                                }
                             }
                             if (activeSpan) {
                                 try {
@@ -325,6 +349,10 @@ export class AWSAthenaIntegration {
     }
 
     public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        return [];
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
         const response = request.response;
 
         if (has(response, 'data.QueryExecutionIds')) {
@@ -339,8 +367,6 @@ export class AWSAthenaIntegration {
         if (has(response, 'data.NamedQueryId')) {
             span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, [response.data.NamedQueryId]);
         }
-
-        return [];
     }
 }
 
@@ -412,6 +438,10 @@ export class AWSLambdaIntegration {
         }
 
         return traceLinks;
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
     }
 
     private static injectSpanContextIntoLambdaClientContext(tracer: ThundraTracer, span: ThundraSpan): any {
@@ -504,6 +534,10 @@ export class AWSSNSIntegration {
 
         return traceLinks;
     }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
+    }
 }
 
 export class AWSSQSIntegration {
@@ -585,6 +619,10 @@ export class AWSSQSIntegration {
 
         return traceLinks;
     }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
+    }
 }
 
 export class AWSFirehoseIntegration {
@@ -653,6 +691,10 @@ export class AWSFirehoseIntegration {
         }
 
         return traceLinks;
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
     }
 
     public static generateFirehoseTraceLinks(region: string, deliveryStreamName: string, timestamp: number, data: any) {
@@ -726,6 +768,10 @@ export class AWSKinesisIntegration {
         }
 
         return traceLinks;
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
     }
 }
 
@@ -807,6 +853,10 @@ export class AWSDynamoDBIntegration {
         }
 
         return traceLinks;
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
     }
 
     public static generateDynamoTraceLinks(attributes: any, operationType: string, tableName: string, region: string,
@@ -916,6 +966,10 @@ export class AWSS3Integration {
 
         return traceLinks;
     }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
+    }
 }
 
 export class AWSEventBridgeIntegration {
@@ -981,6 +1035,10 @@ export class AWSEventBridgeIntegration {
 
         return traceLinks;
     }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
+    }
 }
 
 export class AWSServiceIntegration {
@@ -1008,5 +1066,9 @@ export class AWSServiceIntegration {
 
     public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
         return [];
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
     }
 }
