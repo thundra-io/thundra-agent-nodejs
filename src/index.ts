@@ -100,8 +100,7 @@ module.exports = (options?: any) => {
         }
 
         ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
-        const applicationInfoProvider = ApplicationManager.getApplicationInfoProvider();
-        const applicationInfo = applicationInfoProvider.getApplicationInfo();
+        const applicationInfo = ApplicationManager.getApplicationInfo();
         const pluginContext: PluginContext = new PluginContext({
             applicationInstanceId: applicationInfo.applicationInstanceId,
             applicationRegion: applicationInfo.applicationRegion,
