@@ -1,5 +1,4 @@
 import {ApplicationInfoProvider} from './ApplicationInfoProvider';
-import {LambdaApplicationInfoProvider} from './lambda/LambdaApplicationInfoProvider';
 import {ApplicationInfo} from './ApplicationInfo';
 import {PlatformUtils} from './PlatformUtils';
 

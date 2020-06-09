@@ -33,8 +33,8 @@ import TimeAwareSampler from './opentracing/sampler/TimeAwareSampler';
 import { SamplerCompositionOperator } from './opentracing/sampler/CompositeSampler';
 import ConfigNames from './config/ConfigNames';
 import {ApplicationManager} from './application/ApplicationManager';
-import {LambdaContextProvider} from './application/lambda/LambdaContextProvider';
-import {LambdaApplicationInfoProvider} from './application/lambda/LambdaApplicationInfoProvider';
+import {LambdaContextProvider} from './lambda/LambdaContextProvider';
+import {LambdaApplicationInfoProvider} from './lambda/LambdaApplicationInfoProvider';
 import { loadHandler } from './runtime/RuntimeSupport';
 
 const ThundraWarmup = require('@thundra/warmup');

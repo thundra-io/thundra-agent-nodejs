@@ -1,10 +1,10 @@
-import Utils from '../../plugins/utils/Utils';
-import {EnvVariableKeys} from '../../Constants';
-import {ApplicationInfoProvider} from '../ApplicationInfoProvider';
-import {ApplicationInfo} from '../ApplicationInfo';
+import Utils from '../plugins/utils/Utils';
+import {EnvVariableKeys} from '../Constants';
+import {ApplicationInfoProvider} from '../application/ApplicationInfoProvider';
+import {ApplicationInfo} from '../application/ApplicationInfo';
 import {LambdaContextProvider} from './LambdaContextProvider';
 import {LambdaPlatformUtils} from './LambdaPlatformUtils';
-import {PlatformUtils} from '../PlatformUtils';
+import {PlatformUtils} from '../application/PlatformUtils';
 
 export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
 

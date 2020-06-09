@@ -1,8 +1,8 @@
-import {EnvVariableKeys} from '../../Constants';
-import ConfigProvider from '../../config/ConfigProvider';
-import ConfigNames from '../../config/ConfigNames';
-import Utils from '../../plugins/utils/Utils';
-import {PlatformUtils} from '../PlatformUtils';
+import {EnvVariableKeys} from '../Constants';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
+import Utils from '../plugins/utils/Utils';
+import {PlatformUtils} from '../application/PlatformUtils';
 import {LambdaContextProvider} from './LambdaContextProvider';
 
 export class LambdaPlatformUtils extends PlatformUtils {
@@ -63,5 +63,26 @@ export class LambdaPlatformUtils extends PlatformUtils {
     static getTransactionId(): string {
         const context = LambdaContextProvider.getContext();
         return context ? context.awsRequestId : '';
+    }
+
+    static setInvocationTags(invocationData: any, pluginContext: any) {
+        const originalContext = LambdaContextProvider.getContext();
+
+        invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;
+        invocationData.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
+        invocationData.tags['aws.region'] = pluginContext.applicationRegion;
+        invocationData.tags['aws.lambda.invocation.timeout'] = false;
+
+        if (originalContext) {
+            invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
+            invocationData.tags['aws.account_no'] = LambdaPlatformUtils.getAWSAccountNo(originalContext.invokedFunctionArn);
+            invocationData.tags['aws.lambda.log_group_name'] = originalContext ? originalContext.logGroupName : '';
+            invocationData.tags['aws.lambda.name'] = originalContext ? originalContext.functionName : '';
+            invocationData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
+            invocationData.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
+        }
+
+        const { heapUsed } = process.memoryUsage();
+        invocationData.tags['aws.lambda.invocation.memory_usage'] = Math.floor(heapUsed / (1024 * 1024));
     }
 }

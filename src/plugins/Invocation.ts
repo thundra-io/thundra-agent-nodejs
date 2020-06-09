@@ -8,7 +8,7 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 import InvocationSupport from './support/InvocationSupport';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
-import {LambdaPlatformUtils} from '../application/lambda/LambdaPlatformUtils';
+import {LambdaPlatformUtils} from '../lambda/LambdaPlatformUtils';
 import {ApplicationManager} from '../application/ApplicationManager';
 
 class Invocation {
@@ -78,18 +78,7 @@ class Invocation {
             this.invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
         }
 
-        this.invocationData.tags['aws.lambda.memory_limit'] = this.pluginContext.maxMemory;
-        this.invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
-        this.invocationData.tags['aws.account_no'] = LambdaPlatformUtils.getAWSAccountNo(originalContext.invokedFunctionArn);
-        this.invocationData.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
-        this.invocationData.tags['aws.region'] = this.pluginContext.applicationRegion;
-        this.invocationData.tags['aws.lambda.log_group_name'] = originalContext ? originalContext.logGroupName : '';
-        this.invocationData.tags['aws.lambda.invocation.timeout'] = false;
-        this.invocationData.tags['aws.lambda.name'] = originalContext ? originalContext.functionName : '';
-        this.invocationData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
-        this.invocationData.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
-        const { heapUsed } = process.memoryUsage();
-        this.invocationData.tags['aws.lambda.invocation.memory_usage'] = Math.floor(heapUsed / (1024 * 1024));
+        ApplicationManager.getPlatformUtils().setInvocationTags(this.invocationData, this.pluginContext);
     }
 
     afterInvocation = (data: any) => {
