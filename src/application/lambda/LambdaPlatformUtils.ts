@@ -1,16 +1,18 @@
 import {EnvVariableKeys} from '../../Constants';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
-import Utils from './Utils';
+import Utils from '../../plugins/utils/Utils';
+import {PlatformUtils} from '../PlatformUtils';
+import {LambdaContextProvider} from './LambdaContextProvider';
 
-export class LambdaUtils {
+export class LambdaPlatformUtils extends PlatformUtils {
 
     static getApplicationId(originalContext: any) {
         const arn = originalContext.invokedFunctionArn;
         const region = Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
             || 'local';
-        const accountNo = LambdaUtils.getAccountNo(arn, ConfigProvider.get<string>(ConfigNames.THUNDRA_APIKEY));
-        const functionName = LambdaUtils.getApplicationName(originalContext);
+        const accountNo = LambdaPlatformUtils.getAccountNo(arn, ConfigProvider.get<string>(ConfigNames.THUNDRA_APIKEY));
+        const functionName = LambdaPlatformUtils.getApplicationName(originalContext);
 
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
     }
@@ -23,23 +25,23 @@ export class LambdaUtils {
     }
 
     static getAccountNo(arn: string, apiKey: string) {
-        if (LambdaUtils.getIfSAMLocalDebugging()) {
+        if (LambdaPlatformUtils.getIfSAMLocalDebugging()) {
             return 'sam_local';
-        } else if (LambdaUtils.getIfSLSLocalDebugging()) {
+        } else if (LambdaPlatformUtils.getIfSLSLocalDebugging()) {
             return 'sls_local';
         } else {
-            return (LambdaUtils.getAWSAccountNo(arn)
+            return (LambdaPlatformUtils.getAWSAccountNo(arn)
                 || apiKey
                 || 'guest');
         }
     }
 
     static getAWSAccountNo(arn: string) {
-        return LambdaUtils.getARNPart(arn, 4);
+        return LambdaPlatformUtils.getARNPart(arn, 4);
     }
 
     static getAWSRegion(arn: string) {
-        return LambdaUtils.getARNPart(arn, 3);
+        return LambdaPlatformUtils.getARNPart(arn, 3);
     }
 
     static getARNPart(arn: string, index: number) {
@@ -56,5 +58,10 @@ export class LambdaUtils {
 
     static getIfSLSLocalDebugging() {
         return Utils.getEnvVar(EnvVariableKeys.SLS_LOCAL) === 'true';
+    }
+
+    static getTransactionId(): string {
+        const context = LambdaContextProvider.getContext();
+        return context ? context.awsRequestId : '';
     }
 }

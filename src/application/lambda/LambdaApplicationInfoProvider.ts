@@ -1,12 +1,14 @@
-import Utils from '../plugins/utils/Utils';
-import {EnvVariableKeys} from '../Constants';
-import {ApplicationInfoProvider} from './ApplicationInfoProvider';
-import {ApplicationInfo} from './ApplicationInfo';
+import Utils from '../../plugins/utils/Utils';
+import {EnvVariableKeys} from '../../Constants';
+import {ApplicationInfoProvider} from '../ApplicationInfoProvider';
+import {ApplicationInfo} from '../ApplicationInfo';
 import {LambdaContextProvider} from './LambdaContextProvider';
-import {LambdaUtils} from '../plugins/utils/LambdaUtils';
+import {LambdaPlatformUtils} from './LambdaPlatformUtils';
+import {PlatformUtils} from '../PlatformUtils';
 
 export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
 
+    platformUtils = LambdaPlatformUtils;
     private applicationInfo: ApplicationInfo;
 
     constructor() {
@@ -25,7 +27,7 @@ export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
     getApplicationInfo(): ApplicationInfo {
         const lambdaContext = LambdaContextProvider.getContext();
         if (!this.applicationInfo.applicationId && lambdaContext) {
-            this.applicationInfo.applicationId = LambdaUtils.getApplicationId(lambdaContext);
+            this.applicationInfo.applicationId = LambdaPlatformUtils.getApplicationId(lambdaContext);
         }
         return this.applicationInfo;
     }
