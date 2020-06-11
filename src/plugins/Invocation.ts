@@ -8,7 +8,6 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 import InvocationSupport from './support/InvocationSupport';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
-import {LambdaPlatformUtils} from '../lambda/LambdaPlatformUtils';
 import {ApplicationManager} from '../application/ApplicationManager';
 
 class Invocation {
