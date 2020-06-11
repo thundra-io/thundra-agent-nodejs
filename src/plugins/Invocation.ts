@@ -8,6 +8,7 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 import InvocationSupport from './support/InvocationSupport';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
+import {LambdaUtils} from './utils/LambdaUtils';
 
 class Invocation {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
@@ -78,7 +79,7 @@ class Invocation {
 
         this.invocationData.tags['aws.lambda.memory_limit'] = this.pluginContext.maxMemory;
         this.invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
-        this.invocationData.tags['aws.account_no'] = Utils.getAWSAccountNo(originalContext.invokedFunctionArn);
+        this.invocationData.tags['aws.account_no'] = LambdaUtils.getAWSAccountNo(originalContext.invokedFunctionArn);
         this.invocationData.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.invocationData.tags['aws.region'] = this.pluginContext.applicationRegion;
         this.invocationData.tags['aws.lambda.log_group_name'] = originalContext ? originalContext.logGroupName : '';
