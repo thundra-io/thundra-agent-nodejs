@@ -5,6 +5,8 @@ jobs:
         - image: circleci/node:8.11
         
         - image: postgres:9.5-alpine
+          environment:
+            - POSTGRES_HOST_AUTH_METHOD=trust
 
         - image: mysql:5.7
           environment:
