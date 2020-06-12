@@ -1,7 +1,6 @@
 import TraceConfig from '../../plugins/config/TraceConfig';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
-import Utils from '../../plugins/utils/Utils';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraTracer from '../Tracer';
 import ThundraSpan from '../Span';

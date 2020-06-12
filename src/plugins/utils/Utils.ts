@@ -558,7 +558,7 @@ class Utils {
                         applicationTags[propsKey] = parseFloat(propsValue);
                     }
                 } catch (ex) {
-                    ThundraLogger.getInstance().error(`Cannot parse application tag ${key}`);
+                    ThundraLogger.error(`Cannot parse application tag ${key}`);
                 }
             }
         }
