@@ -1,12 +1,12 @@
 import ThundraSpan from '../../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants } from '../../Constants';
+import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../support/InvocationSupport';
-import { AWSIntegration, AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../integrations/AWSIntegration';
+import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../integrations/AWSIntegration';
 import InvocationTraceSupport from '../support/InvocationTraceSupport';
 
 const get = require('lodash.get');
@@ -58,6 +58,8 @@ class LambdaEventUtils {
             } catch (err) {
                 // Event is not a Zeit event, pass
             }
+        } else if (process.env[NetlifyConstants.NETLIFY_UNIQUE_ENV] || process.env[NetlifyConstants.NETLIFY_DEV]) {
+            return LambdaEventType.Netlify;
         }
     }
 
@@ -360,6 +362,23 @@ class LambdaEventUtils {
         return className;
     }
 
+    static injectTriggerTagsForNetlify(span: ThundraSpan, originalEvent: any): string {
+        const className = ClassNames.NETLIFY;
+        const domainName = DomainNames.API;
+        let operationName = 'netlify-site';
+
+        const siteName = process.env[NetlifyConstants.NETLIFY_SITE_NAME];
+
+        if (siteName) {
+            operationName = siteName;
+        }
+
+        this.injectTrigerTragsForInvocation(domainName, className, [operationName]);
+        this.injectTrigerTragsForSpan(span, domainName, className, [operationName]);
+
+        return className;
+    }
+
     static extractSpanContextFromSNSEvent(tracer: ThundraTracer, originalEvent: any): ThundraSpanContext {
         let spanContext: ThundraSpanContext;
 
@@ -455,4 +474,5 @@ export enum LambdaEventType {
     Lambda,
     EventBridge,
     Zeit,
+    Netlify,
 }

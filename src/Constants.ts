@@ -156,6 +156,7 @@ export const ClassNames = {
     MYSQL: 'MYSQL',
     EVENTBRIDGE: 'AWS-EventBridge',
     ZEIT: 'ZEIT',
+    NETLIFY: 'Netlify',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -166,6 +167,12 @@ export const ZeitTags = {
 
 export const ZeitConstants = {
     DEPLOYMENT_URL_HEADER: 'x-now-deployment-url',
+};
+
+export const NetlifyConstants = {
+    NETLIFY_UNIQUE_ENV: 'NETLIFY_IMAGES_CDN_DOMAIN',
+    NETLIFY_SITE_NAME: 'SITE_NAME',
+    NETLIFY_DEV: 'NETLIFY_DEV',
 };
 
 export const AwsEventBridgeTags = {

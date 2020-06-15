@@ -366,6 +366,8 @@ export class Trace {
                 return LambdaEventUtils.injectTriggerTagsForEventBridge(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.Zeit) {
                 return LambdaEventUtils.injectTriggerTagsForZeit(span, originalEvent);
+            } else if (lambdaEventType === LambdaEventType.Netlify) {
+                return LambdaEventUtils.injectTriggerTagsForNetlify(span, originalEvent);
             }
         } catch (error) {
             ThundraLogger.error('Cannot inject trigger tags. ' + error);
