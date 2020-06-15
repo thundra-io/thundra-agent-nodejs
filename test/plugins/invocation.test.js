@@ -6,6 +6,10 @@ import {
 } from '../../dist/Constants';
 
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
+import {ApplicationManager} from '../../dist/application/ApplicationManager';
+import {LambdaApplicationInfoProvider} from '../../dist/application/LambdaApplicationInfoProvider';
+
+ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 
 const pluginContext = createMockPluginContext();
 
