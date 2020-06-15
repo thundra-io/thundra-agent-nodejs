@@ -18,7 +18,7 @@ export class ApplicationManager {
         return ApplicationManager.applicationInfoProvider.getApplicationInfo();
     }
 
-    static getPlatformUtils(): PlatformUtils {
+    static getPlatformUtils(): typeof PlatformUtils {
         return ApplicationManager.applicationInfoProvider.platformUtils;
     }
 }

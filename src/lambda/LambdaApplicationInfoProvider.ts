@@ -4,12 +4,11 @@ import {ApplicationInfoProvider} from '../application/ApplicationInfoProvider';
 import {ApplicationInfo} from '../application/ApplicationInfo';
 import {LambdaContextProvider} from './LambdaContextProvider';
 import {LambdaPlatformUtils} from './LambdaPlatformUtils';
-import {PlatformUtils} from '../application/PlatformUtils';
 
 export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
 
     platformUtils = LambdaPlatformUtils;
-    private applicationInfo: ApplicationInfo;
+    private readonly applicationInfo: ApplicationInfo;
 
     constructor() {
         const logStreamName = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
