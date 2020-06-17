@@ -374,9 +374,8 @@ class LambdaEventUtils {
         const functionName = siteName + '/' + originalHandler.substring(0, originalHandler.indexOf('.'));
 
         span._setOperationName(functionName);
-        originalContext.functionName = functionName;
 
-        pluginContext.applicationId = LambdaUtils.getApplicationId(originalContext);
+        pluginContext.applicationId = LambdaUtils.getApplicationId(originalContext, { functionName });
         InvocationSupport.setFunctionName(functionName);
 
         this.injectTrigerTragsForInvocation(domainName, className, [siteName]);

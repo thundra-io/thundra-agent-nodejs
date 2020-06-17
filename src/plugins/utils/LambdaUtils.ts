@@ -5,12 +5,12 @@ import Utils from './Utils';
 
 export class LambdaUtils {
 
-    static getApplicationId(originalContext: any) {
+    static getApplicationId(originalContext: any, opts: any = {}) {
         const arn = originalContext.invokedFunctionArn;
-        const region = Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
+        const region = opts.region || Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
             || 'local';
-        const accountNo = LambdaUtils.getAccountNo(arn, ConfigProvider.get<string>(ConfigNames.THUNDRA_APIKEY));
-        const functionName = LambdaUtils.getApplicationName(originalContext);
+        const accountNo = opts.accountNo || LambdaUtils.getAccountNo(arn, ConfigProvider.get<string>(ConfigNames.THUNDRA_APIKEY));
+        const functionName = opts.functionName || LambdaUtils.getApplicationName(originalContext);
 
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
     }
