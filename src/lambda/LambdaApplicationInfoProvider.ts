@@ -6,8 +6,7 @@ import {LambdaContextProvider} from './LambdaContextProvider';
 import {LambdaPlatformUtils} from './LambdaPlatformUtils';
 
 export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
-
-    platformUtils = LambdaPlatformUtils;
+    public platformUtils = LambdaPlatformUtils;
     private readonly applicationInfo: ApplicationInfo;
 
     constructor() {

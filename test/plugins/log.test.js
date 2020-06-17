@@ -2,7 +2,7 @@ import LogPlugin from '../../dist/plugins/Log';
 
 import { createMockReporter, createMockPluginContext, createMockBeforeInvocationData} from '../mocks/mocks';
 import {ApplicationManager} from '../../dist/application/ApplicationManager';
-import {LambdaApplicationInfoProvider} from '../../dist/application/LambdaApplicationInfoProvider';
+import {LambdaApplicationInfoProvider} from '../../dist/lambda/LambdaApplicationInfoProvider';
 
 ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 

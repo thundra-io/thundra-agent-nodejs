@@ -7,12 +7,13 @@ import {LambdaContextProvider} from './LambdaContextProvider';
 
 export class LambdaPlatformUtils extends PlatformUtils {
 
-    static getApplicationId(originalContext: any) {
+    static getApplicationId(originalContext: any, opts: any = {}) {
         const arn = originalContext.invokedFunctionArn;
-        const region = Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
+        const region = opts.region || Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
             || 'local';
-        const accountNo = LambdaPlatformUtils.getAccountNo(arn, ConfigProvider.get<string>(ConfigNames.THUNDRA_APIKEY));
-        const functionName = LambdaPlatformUtils.getApplicationName(originalContext);
+        const accountNo = opts.accountNo
+            || LambdaPlatformUtils.getAccountNo(arn, ConfigProvider.get<string>(ConfigNames.THUNDRA_APIKEY));
+        const functionName = opts.functionName || LambdaPlatformUtils.getApplicationName(originalContext);
 
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
     }

@@ -1,4 +1,4 @@
-import {LambdaContextProvider} from '../../dist/application/LambdaContextProvider';
+import {LambdaContextProvider} from '../../dist/lambda/LambdaContextProvider';
 
 const createMockContext = () => {
     return {

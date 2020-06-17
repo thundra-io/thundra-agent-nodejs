@@ -12,7 +12,7 @@ import {
 } from '../mocks/mocks';
 import * as mockAWSEvents from '../mocks/aws.events.mocks';
 import {ApplicationManager} from '../../dist/application/ApplicationManager';
-import {LambdaApplicationInfoProvider} from '../../dist/application/LambdaApplicationInfoProvider';
+import {LambdaApplicationInfoProvider} from '../../dist/lambda/LambdaApplicationInfoProvider';
 
 const md5 = require('md5');
 const flatten = require('lodash.flatten');
