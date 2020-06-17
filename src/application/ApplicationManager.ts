@@ -1,6 +1,6 @@
 import {ApplicationInfoProvider} from './ApplicationInfoProvider';
-import {LambdaApplicationInfoProvider} from './LambdaApplicationInfoProvider';
 import {ApplicationInfo} from './ApplicationInfo';
+import {PlatformUtils} from './PlatformUtils';
 
 export class ApplicationManager {
 
@@ -16,5 +16,9 @@ export class ApplicationManager {
 
     static getApplicationInfo(): ApplicationInfo {
         return ApplicationManager.applicationInfoProvider.getApplicationInfo();
+    }
+
+    static getPlatformUtils(): typeof PlatformUtils {
+        return ApplicationManager.applicationInfoProvider.platformUtils;
     }
 }

@@ -10,6 +10,7 @@ import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
+import {ApplicationManager} from '../application/ApplicationManager';
 
 class Log {
     static instance: Log;
@@ -74,7 +75,7 @@ class Log {
         this.logData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.LOG) as LogData;
 
         this.logData.transactionId = this.pluginContext.transactionId ?
-            this.pluginContext.transactionId : data.originalContext.awsRequestId;
+            this.pluginContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
         this.logData.traceId = this.pluginContext.traceId;
 
         this.logData.tags = {};

@@ -11,6 +11,7 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 import ThundraTracer from '../opentracing/Tracer';
 import ThundraLogger from '../ThundraLogger';
+import {ApplicationManager} from '../application/ApplicationManager';
 
 class Metric {
     hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
@@ -70,7 +71,7 @@ class Metric {
 
             const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
             this.metricData.transactionId = this.pluginContext.transactionId ?
-                this.pluginContext.transactionId : originalContext.awsRequestId;
+                this.pluginContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
             this.metricData.spanId = activeSpan ? activeSpan.spanContext.spanId : '';
             this.metricData.traceId = activeSpan ? activeSpan.spanContext.traceId : '';
 

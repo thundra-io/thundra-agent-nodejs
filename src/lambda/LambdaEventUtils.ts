@@ -1,15 +1,15 @@
-import ThundraSpan from '../../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants, EnvVariableKeys } from '../../Constants';
-import ThundraLogger from '../../ThundraLogger';
+import ThundraSpan from '../opentracing/Span';
+import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants, EnvVariableKeys } from '../Constants';
+import ThundraLogger from '../ThundraLogger';
 import * as zlib from 'zlib';
-import ThundraSpanContext from '../../opentracing/SpanContext';
-import ThundraTracer from '../../opentracing/Tracer';
+import ThundraSpanContext from '../opentracing/SpanContext';
+import ThundraTracer from '../opentracing/Tracer';
 import * as opentracing from 'opentracing';
-import InvocationSupport from '../support/InvocationSupport';
-import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../integrations/AWSIntegration';
-import InvocationTraceSupport from '../support/InvocationTraceSupport';
-import { LambdaUtils } from './LambdaUtils';
-import Utils from './Utils';
+import InvocationSupport from '../plugins/support/InvocationSupport';
+import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../plugins/integrations/AWSIntegration';
+import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
+import Utils from '../plugins/utils/Utils';
+import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 
 const get = require('lodash.get');
 
@@ -375,7 +375,7 @@ class LambdaEventUtils {
 
         span._setOperationName(functionName);
 
-        pluginContext.applicationId = LambdaUtils.getApplicationId(originalContext, { functionName });
+        pluginContext.applicationId = LambdaPlatformUtils.getApplicationId(originalContext, { functionName });
         InvocationSupport.setFunctionName(functionName);
 
         this.injectTrigerTragsForInvocation(domainName, className, [siteName]);

@@ -1,13 +1,13 @@
 import Utils from '../plugins/utils/Utils';
 import {EnvVariableKeys} from '../Constants';
-import {ApplicationInfoProvider} from './ApplicationInfoProvider';
-import {ApplicationInfo} from './ApplicationInfo';
+import {ApplicationInfoProvider} from '../application/ApplicationInfoProvider';
+import {ApplicationInfo} from '../application/ApplicationInfo';
 import {LambdaContextProvider} from './LambdaContextProvider';
-import {LambdaUtils} from '../plugins/utils/LambdaUtils';
+import {LambdaPlatformUtils} from './LambdaPlatformUtils';
 
 export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
-
-    private applicationInfo: ApplicationInfo;
+    public platformUtils = LambdaPlatformUtils;
+    private readonly applicationInfo: ApplicationInfo;
 
     constructor() {
         const logStreamName = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
@@ -25,7 +25,7 @@ export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
     getApplicationInfo(): ApplicationInfo {
         const lambdaContext = LambdaContextProvider.getContext();
         if (!this.applicationInfo.applicationId && lambdaContext) {
-            this.applicationInfo.applicationId = LambdaUtils.getApplicationId(lambdaContext);
+            this.applicationInfo.applicationId = LambdaPlatformUtils.getApplicationId(lambdaContext);
         }
         return this.applicationInfo;
     }

@@ -25,7 +25,7 @@ import {
     TriggerHeaderTags, INTEGRATIONS,
 } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
-import LambdaEventUtils, { LambdaEventType } from './utils/LambdaEventUtils';
+import LambdaEventUtils, { LambdaEventType } from '../lambda/LambdaEventUtils';
 import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';
 import Integration from './integrations/Integration';
