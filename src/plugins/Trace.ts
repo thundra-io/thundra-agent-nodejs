@@ -141,6 +141,8 @@ export class Trace {
         this.startTimestamp = this.pluginContext.invocationStartTimestamp;
         this.rootSpan.startTime = this.pluginContext.invocationStartTimestamp;
 
+        this.triggerClassName = this.injectTriggerTags(this.rootSpan, this.pluginContext, originalEvent, originalContext);
+
         this.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
         this.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
         this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
@@ -151,8 +153,6 @@ export class Trace {
         this.rootSpan.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
         this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.rootSpan.tags['aws.lambda.invocation.request'] = this.getRequest(originalEvent);
-
-        this.triggerClassName = this.injectTriggerTags(this.rootSpan, originalEvent, originalContext);
     }
 
     afterInvocation = (data: any) => {
@@ -334,7 +334,7 @@ export class Trace {
         }
     }
 
-    private injectTriggerTags(span: ThundraSpan, originalEvent: any, originalContext: any): String {
+    private injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent: any, originalContext: any): String {
         try {
             const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
 
@@ -367,7 +367,7 @@ export class Trace {
             } else if (lambdaEventType === LambdaEventType.Zeit) {
                 return LambdaEventUtils.injectTriggerTagsForZeit(span, originalEvent);
             } else if (lambdaEventType === LambdaEventType.Netlify) {
-                return LambdaEventUtils.injectTriggerTagsForNetlify(span, originalEvent);
+                return LambdaEventUtils.injectTriggerTagsForNetlify(span, pluginContext, originalContext);
             }
         } catch (error) {
             ThundraLogger.error('Cannot inject trigger tags. ' + error);

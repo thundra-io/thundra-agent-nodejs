@@ -1,5 +1,5 @@
 import ThundraSpan from '../../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants } from '../../Constants';
+import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants, EnvVariableKeys } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../../opentracing/SpanContext';
@@ -8,6 +8,7 @@ import * as opentracing from 'opentracing';
 import InvocationSupport from '../support/InvocationSupport';
 import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../integrations/AWSIntegration';
 import InvocationTraceSupport from '../support/InvocationTraceSupport';
+import { LambdaUtils } from './LambdaUtils';
 
 const get = require('lodash.get');
 
@@ -44,6 +45,8 @@ class LambdaEventUtils {
             return LambdaEventType.APIGatewayProxy;
         } else if (originalEvent.context && originalEvent.context.stage && originalEvent.context['resource-path']) {
                 return LambdaEventType.APIGatewayPassThrough;
+        } else if (process.env[NetlifyConstants.NETLIFY_UNIQUE_ENV] || process.env[NetlifyConstants.NETLIFY_DEV]) {
+            return LambdaEventType.Netlify;
         } else if (originalContext.clientContext) {
             return LambdaEventType.Lambda;
         } else if (originalEvent['detail-type'] && originalEvent.detail &&  originalEvent.version
@@ -58,8 +61,6 @@ class LambdaEventUtils {
             } catch (err) {
                 // Event is not a Zeit event, pass
             }
-        } else if (process.env[NetlifyConstants.NETLIFY_UNIQUE_ENV] || process.env[NetlifyConstants.NETLIFY_DEV]) {
-            return LambdaEventType.Netlify;
         }
     }
 
@@ -362,7 +363,7 @@ class LambdaEventUtils {
         return className;
     }
 
-    static injectTriggerTagsForNetlify(span: ThundraSpan, originalEvent: any): string {
+    static injectTriggerTagsForNetlify(span: ThundraSpan, pluginContext: any, originalContext: any): string {
         const className = ClassNames.NETLIFY;
         const domainName = DomainNames.API;
         let operationName = 'netlify-site';
@@ -372,6 +373,15 @@ class LambdaEventUtils {
         if (siteName) {
             operationName = siteName;
         }
+
+        const originalHandler = process.env[EnvVariableKeys._HANDLER];
+        const functionName = operationName + '/' + originalHandler.substring(0, originalHandler.indexOf('.'));
+
+        span._setOperationName(functionName);
+        originalContext.functionName = functionName;
+
+        pluginContext.applicationId = LambdaUtils.getApplicationId(originalContext);
+        InvocationSupport.setFunctionName(functionName);
 
         this.injectTrigerTragsForInvocation(domainName, className, [operationName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [operationName]);

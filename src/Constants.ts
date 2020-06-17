@@ -30,7 +30,7 @@ export const EnvVariableKeys = {
     AWS_SAM_LOCAL: 'AWS_SAM_LOCAL',
 
     NODE_TLS_REJECT_UNAUTHORIZED: 'NODE_TLS_REJECT_UNAUTHORIZED',
-
+    _HANDLER: '_HANDLER',
 };
 
 export function getTimeoutMargin(region: string) {
