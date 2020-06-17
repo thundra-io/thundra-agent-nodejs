@@ -9,6 +9,7 @@ import InvocationSupport from '../support/InvocationSupport';
 import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../integrations/AWSIntegration';
 import InvocationTraceSupport from '../support/InvocationTraceSupport';
 import { LambdaUtils } from './LambdaUtils';
+import Utils from './Utils';
 
 const get = require('lodash.get');
 
@@ -366,16 +367,11 @@ class LambdaEventUtils {
     static injectTriggerTagsForNetlify(span: ThundraSpan, pluginContext: any, originalContext: any): string {
         const className = ClassNames.NETLIFY;
         const domainName = DomainNames.API;
-        let operationName = 'netlify-site';
 
-        const siteName = process.env[NetlifyConstants.NETLIFY_SITE_NAME];
+        const siteName = Utils.getEnvVar(NetlifyConstants.NETLIFY_SITE_NAME, 'netlify_site');
+        const originalHandler = Utils.getEnvVar(EnvVariableKeys._HANDLER, 'netlify_function.handler');
 
-        if (siteName) {
-            operationName = siteName;
-        }
-
-        const originalHandler = process.env[EnvVariableKeys._HANDLER];
-        const functionName = operationName + '/' + originalHandler.substring(0, originalHandler.indexOf('.'));
+        const functionName = siteName + '/' + originalHandler.substring(0, originalHandler.indexOf('.'));
 
         span._setOperationName(functionName);
         originalContext.functionName = functionName;
@@ -383,8 +379,8 @@ class LambdaEventUtils {
         pluginContext.applicationId = LambdaUtils.getApplicationId(originalContext);
         InvocationSupport.setFunctionName(functionName);
 
-        this.injectTrigerTragsForInvocation(domainName, className, [operationName]);
-        this.injectTrigerTragsForSpan(span, domainName, className, [operationName]);
+        this.injectTrigerTragsForInvocation(domainName, className, [siteName]);
+        this.injectTrigerTragsForSpan(span, domainName, className, [siteName]);
 
         return className;
     }
