@@ -1,13 +1,15 @@
 import ThundraSpan from '../../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants } from '../../Constants';
+import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants, EnvVariableKeys } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../support/InvocationSupport';
-import { AWSIntegration, AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../integrations/AWSIntegration';
+import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../integrations/AWSIntegration';
 import InvocationTraceSupport from '../support/InvocationTraceSupport';
+import { LambdaUtils } from './LambdaUtils';
+import Utils from './Utils';
 
 const get = require('lodash.get');
 
@@ -44,6 +46,8 @@ class LambdaEventUtils {
             return LambdaEventType.APIGatewayProxy;
         } else if (originalEvent.context && originalEvent.context.stage && originalEvent.context['resource-path']) {
                 return LambdaEventType.APIGatewayPassThrough;
+        } else if (process.env[NetlifyConstants.NETLIFY_UNIQUE_ENV] || process.env[NetlifyConstants.NETLIFY_DEV]) {
+            return LambdaEventType.Netlify;
         } else if (originalContext.clientContext) {
             return LambdaEventType.Lambda;
         } else if (originalEvent['detail-type'] && originalEvent.detail &&  originalEvent.version
@@ -360,6 +364,26 @@ class LambdaEventUtils {
         return className;
     }
 
+    static injectTriggerTagsForNetlify(span: ThundraSpan, pluginContext: any, originalContext: any): string {
+        const className = ClassNames.NETLIFY;
+        const domainName = DomainNames.API;
+
+        const siteName = Utils.getEnvVar(NetlifyConstants.NETLIFY_SITE_NAME, 'netlify_site');
+        const originalHandler = Utils.getEnvVar(EnvVariableKeys._HANDLER, 'netlify_function.handler');
+
+        const functionName = siteName + '/' + originalHandler.substring(0, originalHandler.indexOf('.'));
+
+        span._setOperationName(functionName);
+
+        pluginContext.applicationId = LambdaUtils.getApplicationId(originalContext, { functionName });
+        InvocationSupport.setFunctionName(functionName);
+
+        this.injectTrigerTragsForInvocation(domainName, className, [siteName]);
+        this.injectTrigerTragsForSpan(span, domainName, className, [siteName]);
+
+        return className;
+    }
+
     static extractSpanContextFromSNSEvent(tracer: ThundraTracer, originalEvent: any): ThundraSpanContext {
         let spanContext: ThundraSpanContext;
 
@@ -455,4 +479,5 @@ export enum LambdaEventType {
     Lambda,
     EventBridge,
     Zeit,
+    Netlify,
 }

@@ -11,9 +11,13 @@ import {
     createBatchMockSQSEventSameIds, createBatchMockSNSEventWithDifferentIds, createBatchMockSNSEventWithSameIds
 } from '../mocks/mocks';
 import * as mockAWSEvents from '../mocks/aws.events.mocks';
+import {ApplicationManager} from '../../dist/application/ApplicationManager';
+import {LambdaApplicationInfoProvider} from '../../dist/application/LambdaApplicationInfoProvider';
 
 const md5 = require('md5');
 const flatten = require('lodash.flatten');
+
+ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 
 const pluginContext = createMockPluginContext();
 

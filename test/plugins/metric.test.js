@@ -3,6 +3,10 @@ import Utils from '../../dist/plugins/utils/Utils';
 import { DATA_MODEL_VERSION,LAMBDA_APPLICATION_CLASS_NAME,LAMBDA_APPLICATION_DOMAIN_NAME } from '../../dist/Constants';
 
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
+import {ApplicationManager} from '../../dist/application/ApplicationManager';
+import {LambdaApplicationInfoProvider} from '../../dist/application/LambdaApplicationInfoProvider';
+
+ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 
 Utils.readProcIoPromise = jest.fn(() => {
     return new Promise((resolve, reject) => {
