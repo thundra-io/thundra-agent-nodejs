@@ -1,3 +1,5 @@
+import {LambdaContextProvider} from '../../dist/application/LambdaContextProvider';
+
 const createMockContext = () => {
     return {
         callbackWaitsForEmptyEventLoop: true,
@@ -57,6 +59,7 @@ const createMockPluginContext = () => {
 
 const createMockBeforeInvocationData = () => {
     const mockWrapperInstance = createMockWrapperInstance();
+    LambdaContextProvider.setContext(mockWrapperInstance.originalContext);
     return {
         originalContext: mockWrapperInstance.originalContext,
         originalEvent: mockWrapperInstance.originalEvent,

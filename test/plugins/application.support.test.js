@@ -1,8 +1,13 @@
 import ConfigProvider from '../../dist/config/ConfigProvider';
 import ConfigNames from '../../dist/config/ConfigNames';
-import ApplicationSupport from '../../dist/plugins/support/ApplicationSupport';
 
 import TestUtils from '../utils';
+
+import {ApplicationManager} from '../../dist/application/ApplicationManager';
+import {LambdaApplicationInfoProvider} from '../../dist/application/LambdaApplicationInfoProvider';
+import Utils from '../../dist/plugins/utils/Utils';
+
+ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();
@@ -22,12 +27,13 @@ describe('application support', () => {
         ConfigProvider.set(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX + 'tag4', 'test value');
         ConfigProvider.set(ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX + 'tag5', '3.5');
 
-        ApplicationSupport.parseApplicationTags();
+        const applicationInfo = ApplicationManager.getApplicationInfo();
+        applicationInfo.applicationTags = Utils.getApplicationTags();
 
-        expect(ApplicationSupport.applicationTags['tag1']).toBe(5);
-        expect(ApplicationSupport.applicationTags['tag2']).toBe(true);
-        expect(ApplicationSupport.applicationTags['tag3']).toBe(false);
-        expect(ApplicationSupport.applicationTags['tag4']).toBe('test value');
-        expect(ApplicationSupport.applicationTags['tag5']).toBe(3.5);
+        expect(applicationInfo.applicationTags['tag1']).toBe(5);
+        expect(applicationInfo.applicationTags['tag2']).toBe(true);
+        expect(applicationInfo.applicationTags['tag3']).toBe(false);
+        expect(applicationInfo.applicationTags['tag4']).toBe('test value');
+        expect(applicationInfo.applicationTags['tag5']).toBe(3.5);
     });
 });
