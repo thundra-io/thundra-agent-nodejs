@@ -17,5 +17,5 @@ describe('AWS integration', () => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.finishTime).toBeTruthy();
         });
-    }, 25000);
+    }, 30000);
 });
