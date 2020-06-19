@@ -57,6 +57,7 @@ class ThundraWrapper {
     private fork: any;
     private debuggerPort: number;
     private debuggerMaxWaitTime: number;
+    private debuggerIOWaitTime: number;
     private monitoringDisabled: boolean;
     private brokerHost: string;
     private sessionName: string;
@@ -168,6 +169,8 @@ class ThundraWrapper {
                 ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_SESSION_NAME);
             const debuggerMaxWaitTime =
                 ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_WAIT_MAX);
+            const debuggerIOWaitTime =
+                ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_IO_WAIT);
             const debuggerLogsEnabled =
                 ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_LOGS_ENABLE);
             let brokerProtocol = BROKER_WSS_PROTOCOL;
@@ -185,6 +188,7 @@ class ThundraWrapper {
 
             this.debuggerPort = debuggerPort;
             this.debuggerMaxWaitTime = debuggerMaxWaitTime;
+            this.debuggerIOWaitTime = debuggerIOWaitTime;
             this.brokerProtocol = brokerProtocol;
             this.brokerPort = brokerPort;
             this.brokerHost = brokerHost;
@@ -224,7 +228,7 @@ class ThundraWrapper {
             try {
                 const debuggerIoMetrics = this.getDebuggerProxyIOMetrics();
                 if (!debuggerIoMetrics) {
-                    await sleep(1000);
+                    await sleep(this.debuggerIOWaitTime);
                     break;
                 }
                 if (prevRchar !== 0 && prevWchar !== 0 &&
@@ -238,7 +242,7 @@ class ThundraWrapper {
                 ThundraLogger.error(e);
                 break;
             }
-            await sleep(1000);
+            await sleep(this.debuggerIOWaitTime);
         }
         if (initCompleted) {
             ThundraLogger.info('Completed debugger handshake');
