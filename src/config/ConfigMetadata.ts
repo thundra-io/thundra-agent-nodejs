@@ -226,6 +226,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'number',
         defaultValue: 60000,
     },
+    [ConfigNames.THUNDRA_LAMBDA_DEBUGGER_IO_WAIT]: {
+        type: 'number',
+        defaultValue: 2000,
+    },
     [ConfigNames.THUNDRA_LAMBDA_DEBUGGER_BROKER_PORT]: {
         type: 'number',
         defaultValue: 444,
