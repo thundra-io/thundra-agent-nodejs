@@ -1,8 +1,8 @@
 import Integration from './Integration';
 import {
     DBTags, SpanTags, DomainNames, DBTypes, MongoDBTags, MongoDBCommandTypes,
-        LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
-        DefaultMongoCommandSizeLimit,
+    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
+    DefaultMongoCommandSizeLimit,
 } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
@@ -43,15 +43,26 @@ class MongoDBIntegration implements Integration {
             if (!tracer) {
                 return;
             }
-
+            let hostPort: string[];
             const parentSpan = tracer.getActiveSpan();
             const functionName = InvocationSupport.getFunctionName();
             const commandName: string = get(event, 'commandName', '');
             const commandNameUpper: string = commandName.toUpperCase();
             const collectionName: string = get(event.command, commandName, '');
             const dbName: string = get(event, 'databaseName', '');
-            const connectionId: string = get(event, 'connectionId', '');
-            const hostPort: string[] = connectionId.split(':', 2);
+            const connectionId = get(event, 'connectionId', '');
+            if (typeof connectionId === 'object') {
+                hostPort = [
+                    get(connectionId, 'host', '' ),
+                    get(connectionId, 'port', '' ),
+                ];
+            } else if (typeof connectionId === 'string') {
+                hostPort = connectionId.split(':', 2);
+            } else if (typeof connectionId === 'number') {
+                const address = get(event, 'address', ':');
+                hostPort = address.split(':', 2);
+            }
+
             const host = hostPort[0];
             const port = hostPort.length === 2 ? hostPort[1] : '';
             const operationType = get(MongoDBCommandTypes, commandNameUpper, '');
