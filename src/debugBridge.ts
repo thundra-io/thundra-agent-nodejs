@@ -33,6 +33,7 @@ const brokerSocket = new WebSocket(
 
 // Setup debugger socket
 debuggerSocket.on('data', (data: Buffer) => {
+    log('from function: ', data.toString('utf8').substring(0, 50));
     brokerSocket.send(data);
 });
 debuggerSocket.on('end', () => {
@@ -64,7 +65,7 @@ brokerSocket.on('message', (data: Buffer) => {
             log('debuggerSocket: connection established with main lambda process');
         });
     }
-
+    log('from broker: ', data.toString('utf8').substring(0, 50));
     sendToDebugger(data);
 });
 brokerSocket.on('open', () => {
