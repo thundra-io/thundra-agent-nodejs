@@ -32,8 +32,7 @@ describe('thundra wrapper', () => {
     describe('report', () => {
         const originalCallback = jest.fn();
         const originalFunction = jest.fn((e, c, cb) => cb());
-        const monitoringDisabled = false;
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
         thundraWrapper.reporter = createMockReporterInstance();
 
         beforeAll((done) => {
@@ -52,8 +51,7 @@ describe('thundra wrapper', () => {
     describe('report with empty callback', () => {
         const originalCallback = jest.fn();
         const originalFunction = jest.fn((e, c, cb) => cb());
-        const monitoringDisabled = false;
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
         thundraWrapper.reporter = createMockReporterInstance();
 
         beforeAll((done) => {
@@ -67,12 +65,11 @@ describe('thundra wrapper', () => {
     describe('original function throws an error', () => {
         let gotErr = undefined;
         const thrownError = 'err';
-        const monitoringDisabled = false;
         const originalCallback = jest.fn();
         const originalFunction = jest.fn((e, c, cb) => {
             cb(thrownError, null);
         });
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
         thundraWrapper.reporter = createMockReporterInstance();
 
         beforeAll(done => {
@@ -112,10 +109,9 @@ describe('thundra wrapper', () => {
             await mockPromise;
             callback(null, 'hey');
         });
-        const monitoringDisabled = false;
         mockContext.getRemainingTimeInMillis = () => 5000;
         mockPluginContext.timeoutMargin = 200;
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, mockContext, originalCallback, originalFunction, plugins, mockPluginContext, monitoringDisabled);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, mockContext, originalCallback, originalFunction, plugins, mockPluginContext);
         thundraWrapper.report = jest.fn();
         thundraWrapper.invoke();
         it('setupTimeoutHandler calls set timeout.', () => {
@@ -130,8 +126,7 @@ describe('thundra wrapper', () => {
             describe('with mock report function', () => {
                 const originalCallback = jest.fn();
                 const originalFunction = jest.fn((e, c, cb) => compareBuild());
-                const monitoringDisabled = false;
-                const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+                const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
                 thundraWrapper.report = jest.fn();
                 thundraWrapper.wrappedCallback();
                 it('should call report', () => {
@@ -142,8 +137,7 @@ describe('thundra wrapper', () => {
             describe('with real report function', () => {
                 const originalCallback = jest.fn();
                 const originalFunction = jest.fn((e, c, cb) => cb());
-                const monitoringDisabled = false;
-                const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+                const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
                 thundraWrapper.reporter = createMockReporterInstance();
                 thundraWrapper.wrappedCallback();
                 it('should call reporter.sendReports', () => {
@@ -156,8 +150,7 @@ describe('thundra wrapper', () => {
         describe('report once', async () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
-            const monitoringDisabled = false;
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
             thundraWrapper.reported = true;
             thundraWrapper.reporter = createMockReporterInstance();
 
@@ -175,8 +168,7 @@ describe('thundra wrapper', () => {
         describe('api gw proxy response fail with status code 500 and json message', async () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
-            const monitoringDisabled = false;
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
             thundraWrapper.executeHook = jest.fn();
             const response = {statusCode: 500, body:'{\'message\':\'I have failed\'}'};
             thundraWrapper.wrappedCallback(null, response);
@@ -195,8 +187,7 @@ describe('thundra wrapper', () => {
         describe('api gw proxy response fail with status code 500 and raw message', async () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
-            const monitoringDisabled = false;
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
             thundraWrapper.executeHook = jest.fn();
             const response = {statusCode: 500, body:{ message: 'I have failed'}};
             thundraWrapper.wrappedCallback(null, response);
@@ -213,8 +204,7 @@ describe('thundra wrapper', () => {
         describe('api gw proxy response success with status code 200', async () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
-            const monitoringDisabled = false;
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
             thundraWrapper.executeHook = jest.fn();
             thundraWrapper.wrappedCallback(null, {statusCode: 200, body:'{\'message\':\'I have failed\'}'});
             it('should extract error from response with success status', () => {   
@@ -231,8 +221,7 @@ describe('thundra wrapper', () => {
         describe('invoke', () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
-            const monitoringDisabled = false;
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
             thundraWrapper.reporter = createMockReporterInstance();
             
             it('should call original function and callback once', async () => {
@@ -251,8 +240,7 @@ describe('thundra wrapper', () => {
             const originalFunction = jest.fn();
             const originalCallback = null;
             const originalContext = createMockContext();
-            const monitoringDisabled = false;
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
             thundraWrapper.reporter = createMockReporterInstance();
 
             describe('succeed', () => {
@@ -285,9 +273,8 @@ describe('thundra wrapper', () => {
         describe('invoke', () => {
             const originalContext = createMockContext();
             const originalCallback = null;
-            const monitoringDisabled = false;
             const originalFunction = jest.fn((e, c) => c.succeed());
-            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
             thundraWrapper.wrappedContext.succeed = jest.fn();
             thundraWrapper.invoke();
 
@@ -302,9 +289,8 @@ describe('thundra wrapper', () => {
     describe('original function returns promise', () => {
         const mockPromise = createMockPromise();
         const originalCallback = jest.fn();
-        const monitoringDisabled = false;
         const originalFunction = jest.fn((e, c) => mockPromise);
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext, monitoringDisabled);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
         thundraWrapper.reporter = createMockReporterInstance();
         
         beforeAll(async (done) => {
@@ -322,10 +308,9 @@ describe('thundra wrapper', () => {
     describe('should correctly decide to init debugger', () => {
         const originalCallback = jest.fn();
         const originalFunction = jest.fn((e, c, cb) => cb());
-        const monitoringDisabled = false;
         const pc = createMockPluginContext();
 
-        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pc, monitoringDisabled);
+        const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pc);
 
         test('when debugger disabled and no token', () => {
             ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, false);

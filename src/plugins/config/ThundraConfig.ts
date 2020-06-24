@@ -15,6 +15,7 @@ class ThundraConfig {
     trustAllCert: boolean;
     warmupAware: boolean;
     apiKey: string;
+    disableMonitoring: boolean;
     disableThundra: boolean;
     traceConfig: TraceConfig;
     metricConfig: MetricConfig;
@@ -41,7 +42,7 @@ class ThundraConfig {
         this.warmupAware = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE,
             options.warmupAware);
-
+        this.disableMonitoring = get(options, 'disableMonitoring', !(this.apiKey));
         this.traceConfig = new TraceConfig(options.traceConfig);
         this.metricConfig = new MetricConfig(options.metricConfig);
         this.logConfig = new LogConfig(options.logConfig);

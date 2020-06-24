@@ -58,7 +58,6 @@ class ThundraWrapper {
     private debuggerPort: number;
     private debuggerMaxWaitTime: number;
     private debuggerIOWaitTime: number;
-    private monitoringDisabled: boolean;
     private brokerHost: string;
     private sessionName: string;
     private brokerProtocol: string;
@@ -69,19 +68,18 @@ class ThundraWrapper {
     private debuggerLogsEnabled: boolean;
 
     constructor(self: any, event: any, context: any, callback: any,
-                originalFunction: any, plugins: any, pluginContext: PluginContext, monitoringDisabled: boolean) {
+                originalFunction: any, plugins: any, pluginContext: PluginContext) {
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
         this.originalCallback = callback;
         this.originalFunction = originalFunction;
-        this.config = pluginContext.config ? pluginContext.config : new ThundraConfig({});
+        this.config = pluginContext.config ? pluginContext.config : new ThundraConfig({ disableMonitoring: false });
         this.plugins = plugins;
         this.pluginContext = pluginContext;
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
         this.reported = false;
         this.reporter = new Reporter(pluginContext.config);
-        this.monitoringDisabled = monitoringDisabled;
         this.wrappedContext = {
             ...context,
             done: (error: any, result: any) => {
@@ -408,7 +406,7 @@ class ThundraWrapper {
     }
 
     async executeAfterInvocationAndReport(afterInvocationData: any) {
-        if (this.monitoringDisabled) {
+        if (this.config.disableMonitoring) {
             return;
         }
 
