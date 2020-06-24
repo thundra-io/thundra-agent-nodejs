@@ -39,7 +39,7 @@ function createLogger(options: any) {
 function loadUserHandler() {
     return loadHandler(
         Utils.getEnvVar(EnvVariableKeys.LAMBDA_TASK_ROOT),
-        ConfigProvider.get(ConfigNames.THUNDRA_LAMBDA_HANDLER)
+        ConfigProvider.get(ConfigNames.THUNDRA_LAMBDA_HANDLER),
     );
 }
 
