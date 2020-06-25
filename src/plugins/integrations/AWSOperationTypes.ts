@@ -164,6 +164,15 @@ const AWSOperationTypes: any = {
       RemovePermission: 'WRITE',
       RemoveTargets: 'WRITE',
     },
+    'AWS-SES': {
+      VerifyDomainDkim: 'READ',
+      VerifyDomainIdentity: 'READ',
+      VerifyEmailAddress: 'READ',
+      VerifyEmailIdentity: 'READ',
+      CloneReceiptRuleSet: 'WRITE',
+      ReorderReceiptRuleSet: 'WRITE',
+      TestRenderTemplate: 'WRITE',
+    },
   },
   patterns: {
     '^List.*$': 'LIST',

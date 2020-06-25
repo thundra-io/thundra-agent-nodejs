@@ -480,4 +480,5 @@ export enum LambdaEventType {
     EventBridge,
     Zeit,
     Netlify,
+    SES,
 }
