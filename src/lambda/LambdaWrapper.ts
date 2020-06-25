@@ -28,6 +28,10 @@ export let tracer: ThundraTracer;
  * @returns wrapper function
  */
 export function createWrapper(config: ThundraConfig): (f: Function) => Function {
+    if (config.disableThundra) {
+        return (originalFunc) => originalFunc;
+    }
+
     if (config.trustAllCert) {
         Utils.setEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED, '0');
     }

@@ -17,9 +17,6 @@ const get = require('lodash.get');
 function createWrapper(options?: any) {
     ConfigProvider.init(get(options, 'config'), get(options, 'configFilePath'));
     const conf = new config.ThundraConfig(options);
-    if (conf.disableThundra) {
-        return (originalFunc: any) => originalFunc;
-    }
     if (!(conf.apiKey)) {
         console.warn(`Thundra API Key is not given, monitoring is disabled.`);
     }
