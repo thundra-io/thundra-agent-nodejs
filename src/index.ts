@@ -1,5 +1,5 @@
 import ConfigProvider from './config/ConfigProvider';
-import configs from './plugins/config';
+import config from './plugins/config';
 import listeners from './plugins/listeners';
 import samplers from './opentracing/sampler';
 import Utils from './plugins/utils/Utils';
@@ -16,20 +16,20 @@ const get = require('lodash.get');
 
 function createWrapper(options?: any) {
     ConfigProvider.init(get(options, 'config'), get(options, 'configFilePath'));
-    const config = new configs.ThundraConfig(options);
-    if (config.disableThundra) {
+    const conf = new config.ThundraConfig(options);
+    if (conf.disableThundra) {
         return (originalFunc: any) => originalFunc;
     }
-    if (!(config.apiKey)) {
+    if (!(conf.apiKey)) {
         console.warn(`Thundra API Key is not given, monitoring is disabled.`);
     }
 
-    return LambdaWrapper.createWrapper(config);
+    return LambdaWrapper.createWrapper(conf);
 }
 
 function createLogger(options: any) {
     if (!Log.getInstance()) {
-        const logConfig = new configs.LogConfig({});
+        const logConfig = new config.LogConfig({});
         const logPlugin = new Log(logConfig);
         Logger.getLogManager().addListener(logPlugin);
     }
@@ -47,14 +47,25 @@ function addLogListener(listener: any) {
     Logger.getLogManager().addListener(listener);
 }
 
+function tracer() {
+    return LambdaWrapper.tracer;
+}
+
+const updateConfig = config.ThundraConfig.updateConfig;
+
+// Default export
 module.exports = createWrapper;
-module.exports.createLogger = createLogger;
-module.exports.loadUserHandler = loadUserHandler;
-module.exports.addLogListener = addLogListener;
-module.exports.updateConfig = configs.ThundraConfig.updateConfig;
-module.exports.tracer = () => LambdaWrapper.tracer;
-module.exports.config = configs;
-module.exports.samplers = samplers;
-module.exports.listeners = listeners;
-module.exports.InvocationSupport = InvocationSupport;
-module.exports.InvocationTraceSupport = InvocationTraceSupport;
+
+// Named exports
+Object.assign(module.exports, {
+    config,
+    samplers,
+    listeners,
+    updateConfig,
+    createLogger,
+    loadUserHandler,
+    addLogListener,
+    tracer,
+    InvocationSupport,
+    InvocationTraceSupport,
+});
