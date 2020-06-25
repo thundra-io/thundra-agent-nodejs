@@ -462,7 +462,7 @@ export const AwsSESTags = {
     SERVICE_REQUEST: 'AWSSESRequest',
     SUBJECT: 'aws.ses.mail.subject',
     BODY: 'aws.ses.mail.body',
-    RAW_MESSAGE: 'aws.ses.mail.message',
+    RAW_MESSAGE: 'aws.ses.mail.message.raw',
     TEMPLATE_NAME: 'aws.ses.mail.template.name',
     TEMPLATE_ARN: 'aws.ses.mail.template.arn',
     TEMPLATE_DATA: 'aws.ses.mail.template.data',
