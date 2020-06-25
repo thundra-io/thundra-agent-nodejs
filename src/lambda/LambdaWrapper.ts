@@ -28,6 +28,72 @@ export let tracer: ThundraTracer;
  * @returns wrapper function
  */
 export function createWrapper(config: ThundraConfig): (f: Function) => Function {
+    if (config.trustAllCert) {
+        Utils.setEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED, '0');
+    }
+
+    const plugins = createPlugins(config);
+
+    return createWrapperWithPlugins(config, plugins);
+}
+
+function createWrapperWithPlugins(config: ThundraConfig, plugins: any[]): (f: Function) => Function {
+    return (originalFunc: any) => {
+        // Check if already wrapped
+        if (get(originalFunc, 'thundraWrapped', false)) {
+            return originalFunc;
+        }
+
+        ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
+        const applicationInfo = ApplicationManager.getApplicationInfo();
+        const pluginContext: PluginContext = new PluginContext({
+            applicationInstanceId: applicationInfo.applicationInstanceId,
+            applicationRegion: applicationInfo.applicationRegion,
+            applicationVersion: applicationInfo.applicationVersion,
+            requestCount: 0,
+            apiKey: config.apiKey,
+            timeoutMargin: config.timeoutMargin,
+            transactionId: null,
+            config,
+        });
+
+        plugins.forEach((plugin: any) => {
+            plugin.setPluginContext(pluginContext);
+        });
+
+        const increaseRequestCount = () => pluginContext.requestCount += 1;
+
+        const thundraWrappedHandler: any = async (originalEvent: any, originalContext: any, originalCallback: any) => {
+            LambdaContextProvider.setContext(originalContext);
+            // Creating applicationId here, since we need the information in context
+            pluginContext.applicationId = ApplicationManager.getApplicationInfo().applicationId;
+
+            const originalThis = this;
+            const thundraWrapper = new ThundraWrapper(
+                originalThis,
+                originalEvent,
+                originalContext,
+                originalCallback,
+                originalFunc,
+                plugins,
+                pluginContext,
+            );
+            return await thundraWrapper.invoke();
+        };
+
+        // Set thundraWrapped to true, to not double wrap the user handler
+        thundraWrappedHandler.thundraWrapped = true;
+
+        if (config.warmupAware) {
+            const warmupWrapper = ThundraWarmup(increaseRequestCount);
+            return warmupWrapper(thundraWrappedHandler);
+        }
+
+        return thundraWrappedHandler;
+    };
+}
+
+function createPlugins(config: ThundraConfig): any[] {
     const plugins: any[] = [];
 
     if (!config.disableMonitoring) {
@@ -60,61 +126,5 @@ export function createWrapper(config: ThundraConfig): (f: Function) => Function 
         plugins.push(invocationPlugin);
     }
 
-    if (config.trustAllCert) {
-        Utils.setEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED, '0');
-        process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-    }
-
-    return (originalFunc: any) => {
-        // Check if already wrapped
-        if (get(originalFunc, 'thundraWrapped', false)) {
-            return originalFunc;
-        }
-
-        ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
-        const applicationInfo = ApplicationManager.getApplicationInfo();
-        const pluginContext: PluginContext = new PluginContext({
-            applicationInstanceId: applicationInfo.applicationInstanceId,
-            applicationRegion: applicationInfo.applicationRegion,
-            applicationVersion: applicationInfo.applicationVersion,
-            requestCount: 0,
-            apiKey: config.apiKey,
-            timeoutMargin: config.timeoutMargin,
-            transactionId: null,
-            config,
-        });
-
-        const increaseRequestCount = () => pluginContext.requestCount += 1;
-
-        const thundraWrappedHandler: any = async (originalEvent: any, originalContext: any, originalCallback: any) => {
-            LambdaContextProvider.setContext(originalContext);
-            // Creating applicationId here, since we need the information in context
-            pluginContext.applicationId = ApplicationManager.getApplicationInfo().applicationId;
-
-            plugins.forEach((plugin: any) => {
-                plugin.setPluginContext(pluginContext);
-            });
-
-            const originalThis = this;
-            const thundraWrapper = new ThundraWrapper(
-                originalThis,
-                originalEvent,
-                originalContext,
-                originalCallback,
-                originalFunc,
-                plugins,
-                pluginContext,
-            );
-            return await thundraWrapper.invoke();
-        };
-        // Set thundraWrapped to true, to not double wrap the user handler
-        thundraWrappedHandler.thundraWrapped = true;
-
-        if (config.warmupAware) {
-            const warmupWrapper = ThundraWarmup(increaseRequestCount);
-            return warmupWrapper(thundraWrappedHandler);
-        } else {
-            return thundraWrappedHandler;
-        }
-    };
+    return plugins;
 }
