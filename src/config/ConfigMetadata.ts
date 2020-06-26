@@ -202,7 +202,15 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
-    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MESSAGE_MASK]: {
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_BODY_MASK]: {
+        type: 'boolean',
+        defaultValue: true,
+    },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_SUBJECT_MASK]: {
+        type: 'boolean',
+        defaultValue: true,
+    },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_DESTINATION_MASK]: {
         type: 'boolean',
         defaultValue: false,
     },

@@ -1083,22 +1083,20 @@ export class AWSSESIntegration {
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SES);
         const functionName = InvocationSupport.getFunctionName();
 
-        const maskMessage = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MESSAGE_MASK);
+        const maskBody = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_BODY_MASK);
+        const maskSubject = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_SUBJECT_MASK);
+        const maskDestination = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_DESTINATION_MASK);
 
         const source = get(request, 'params.Source', []);
-        const destination = get(request, 'params.Destination.ToAddresses',
+        const destination = maskDestination ? undefined : get(request, 'params.Destination.ToAddresses',
             get(request, 'params.Destinations', []));
-        const subject = get(request, 'params.Message.Subject', undefined);
-        const body = maskMessage ? undefined : get(request, 'params.Message.Body', undefined);
-        const rawMessage = maskMessage ? undefined : get(request, 'params.RawMessage.Data', undefined);
+        const subject = maskSubject ? undefined : get(request, 'params.Message.Subject', undefined);
+        const body = maskBody ? undefined : get(request, 'params.Message.Body', undefined);
         const templateName = get(request, 'params.Template', undefined);
         const templateArn = get(request, 'params.TemplateArn', undefined);
         const templateData = get(request, 'params.TemplateData', undefined);
 
-        let spanName = AwsSESTags.SERVICE_REQUEST;
-        if (destination && (destination.length === 1)) {
-            spanName = destination[0];
-        }
+        const spanName = operationName;
 
         const parentSpan = tracer.getActiveSpan();
         const activeSpan = tracer._startSpan(spanName, {
@@ -1114,7 +1112,6 @@ export class AWSSESIntegration {
                 [AwsSESTags.DESTINATION]: destination,
                 [AwsSESTags.SUBJECT]: subject,
                 [AwsSESTags.BODY]: body,
-                [AwsSESTags.RAW_MESSAGE]: rawMessage,
                 [AwsSESTags.TEMPLATE_NAME]: templateName,
                 [AwsSESTags.TEMPLATE_ARN]: templateArn,
                 [AwsSESTags.TEMPLATE_DATA]: templateData,
