@@ -1094,7 +1094,7 @@ export class AWSSESIntegration {
         const body = maskBody ? undefined : get(request, 'params.Message.Body', undefined);
         const templateName = get(request, 'params.Template', undefined);
         const templateArn = get(request, 'params.TemplateArn', undefined);
-        const templateData = get(request, 'params.TemplateData', undefined);
+        const templateData = maskBody ? undefined : get(request, 'params.TemplateData', undefined);
 
         const spanName = operationName;
 
