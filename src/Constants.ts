@@ -5,7 +5,7 @@ import MySQLIntegration from './plugins/integrations/MySQLIntegration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
 import MongoDBIntegration from './plugins/integrations/MongoDBIntegration';
 import IORedisIntegration from './plugins/integrations/IORedisIntegration';
-import {AWSIntegration, AWSSESIntegration} from './plugins/integrations/AWSIntegration';
+import {AWSIntegration} from './plugins/integrations/AWSIntegration';
 import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
@@ -511,7 +511,6 @@ export const INTEGRATIONS: any = {
     aws: AWSIntegration,
     es: ESIntegration,
     mongodb: MongoDBIntegration,
-    ses: AWSSESIntegration,
 };
 
 export const LISTENERS: any = {

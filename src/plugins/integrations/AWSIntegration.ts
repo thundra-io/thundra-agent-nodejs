@@ -1083,18 +1083,17 @@ export class AWSSESIntegration {
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SES);
         const functionName = InvocationSupport.getFunctionName();
 
-        const maskBody = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_BODY_MASK);
-        const maskSubject = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_SUBJECT_MASK);
-        const maskDestination = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_DESTINATION_MASK);
+        const maskMail = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_MASK);
+        const maskDestination = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK);
 
         const source = get(request, 'params.Source', []);
         const destination = maskDestination ? undefined : get(request, 'params.Destination.ToAddresses',
             get(request, 'params.Destinations', []));
-        const subject = maskSubject ? undefined : get(request, 'params.Message.Subject', undefined);
-        const body = maskBody ? undefined : get(request, 'params.Message.Body', undefined);
+        const subject = maskMail ? undefined : get(request, 'params.Message.Subject', undefined);
+        const body = maskMail ? undefined : get(request, 'params.Message.Body', undefined);
         const templateName = get(request, 'params.Template', undefined);
         const templateArn = get(request, 'params.TemplateArn', undefined);
-        const templateData = maskBody ? undefined : get(request, 'params.TemplateData', undefined);
+        const templateData = maskMail ? undefined : get(request, 'params.TemplateData', undefined);
 
         const spanName = operationName;
 
