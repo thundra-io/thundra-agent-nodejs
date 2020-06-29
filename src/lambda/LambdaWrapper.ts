@@ -178,7 +178,9 @@ function createPlugins(config: ThundraConfig): any[] {
  * @param wrapped value to be marked
  */
 function setWrapped(func: WrappedFunction, wrapped: boolean) {
-    func.thundraWrapped = wrapped;
+    if (func) {
+        func.thundraWrapped = wrapped;
+    }
 }
 
 /**
