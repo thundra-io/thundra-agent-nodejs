@@ -9,9 +9,9 @@ import CPUMetric from './data/metric/CPUMetric';
 import MetricConfig from './config/MetricConfig';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
-import ThundraTracer from '../opentracing/Tracer';
 import ThundraLogger from '../ThundraLogger';
 import {ApplicationManager} from '../application/ApplicationManager';
+import InvocationTraceSupport from './support/InvocationTraceSupport';
 
 class Metric {
     hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
@@ -25,7 +25,6 @@ class Metric {
     initialProcMetric: any;
     initialProcIo: any;
     startCpuUsage: { procCpuUsed: number; sysCpuUsed: number; sysCpuTotal: number; };
-    tracer: ThundraTracer;
     pluginOrder: number = 2;
     sampled: boolean = true;
 
@@ -37,9 +36,6 @@ class Metric {
         this.config = config;
         this.reports = [];
         this.clockTick = parseInt(execSync('getconf CLK_TCK').toString(), 0);
-        if (config) {
-            this.tracer = config.tracer;
-        }
     }
 
     report(data: any): void {
@@ -58,8 +54,6 @@ class Metric {
         this.sampled = isSamplerPresent ? this.config.sampler.isSampled() : true;
 
         if (this.sampled) {
-            const { originalContext } = data;
-
             const [procMetric, procIo] = await Promise.all([Utils.readProcMetricPromise(), Utils.readProcIoPromise()]);
             this.initialProcMetric = procMetric;
             this.initialProcIo = procIo;
@@ -69,7 +63,7 @@ class Metric {
             this.metricData.metricTimestamp = Date.now();
             this.metricData.tags['aws.region'] = this.pluginContext.applicationRegion;
 
-            const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
+            const activeSpan = InvocationTraceSupport.getActiveSpan();
             this.metricData.transactionId = this.pluginContext.transactionId ?
                 this.pluginContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
             this.metricData.spanId = activeSpan ? activeSpan.spanContext.spanId : '';

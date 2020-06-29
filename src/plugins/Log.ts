@@ -3,7 +3,6 @@ import LogConfig from './config/LogConfig';
 import LogData from './data/log/LogData';
 import PluginContext from './PluginContext';
 import MonitoringDataType from './data/base/MonitoringDataType';
-import ThundraTracer from '../opentracing/Tracer';
 import { ConsoleShimmedMethods, logLevels, StdOutLogContext, StdErrorLogContext } from '../Constants';
 import * as util from 'util';
 import ThundraLogger from '../ThundraLogger';
@@ -11,11 +10,11 @@ import InvocationSupport from './support/InvocationSupport';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import {ApplicationManager} from '../application/ApplicationManager';
+import InvocationTraceSupport from './support/InvocationTraceSupport';
 
 class Log {
     static instance: Log;
 
-    options: LogConfig;
     reporter: any;
     enabled: boolean;
     pluginContext: PluginContext;
@@ -23,7 +22,6 @@ class Log {
     logData: LogData;
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
     logs: LogData[];
-    tracer: ThundraTracer;
     pluginOrder: number = 4;
     consoleReference: any = console;
     config: LogConfig;
@@ -37,10 +35,6 @@ class Log {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
         };
-        this.options = options;
-        if (options) {
-            this.tracer = options.tracer;
-        }
         this.enabled = false;
         this.config = options;
         this.logs = [];
@@ -109,7 +103,7 @@ class Log {
             return;
         }
         const logData = new LogData();
-        const activeSpan = this.tracer ? this.tracer.getActiveSpan() : undefined;
+        const activeSpan = InvocationTraceSupport.getActiveSpan();
         const spanId = activeSpan ? activeSpan.spanContext.spanId : '';
         logData.initWithLogDataValues(this.logData, spanId, logInfo);
         this.logs.push(logData);

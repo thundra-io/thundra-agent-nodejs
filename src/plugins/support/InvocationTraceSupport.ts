@@ -86,6 +86,16 @@ class InvocationTraceSupport {
         InvocationTraceSupport.outgoingTraceLinks.push(...traceLinks);
     }
 
+    static getActiveSpan(): ThundraSpan {
+        const tracer = InvocationTraceSupport.tracer;
+
+        if (!tracer) {
+            return undefined;
+        }
+
+        return InvocationTraceSupport.tracer.getActiveSpan();
+    }
+
     static getOutgoingTraceLinks(): any[] {
         const tracer = InvocationTraceSupport.tracer;
 

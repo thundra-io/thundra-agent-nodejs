@@ -139,35 +139,35 @@ function createPluginContext(config: ThundraConfig): PluginContext {
 function createPlugins(config: ThundraConfig): any[] {
     const plugins: any[] = [];
 
-    if (!config.disableMonitoring) {
-        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && config.traceConfig.enabled) {
-            const tracePlugin = TracePlugin(config.traceConfig);
-            plugins.push(tracePlugin);
-
-            tracer = tracePlugin.tracer;
-            config.metricConfig.tracer = tracer;
-            config.logConfig.tracer = tracer;
-            InvocationTraceSupport.tracer = tracer;
-        }
-
-        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_METRIC_DISABLE) && config.metricConfig.enabled) {
-            const metricPlugin = MetricPlugin(config.metricConfig);
-            plugins.push(metricPlugin);
-        }
-
-        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
-            if (!Log.getInstance()) {
-                const logPlugin = new Log(config.logConfig);
-                Logger.getLogManager().addListener(logPlugin);
-            }
-            const logInstance = Log.getInstance();
-            logInstance.enable();
-            plugins.push(logInstance);
-        }
-
-        const invocationPlugin = InvocationPlugin(config.invocationConfig);
-        plugins.push(invocationPlugin);
+    if (config.disableMonitoring) {
+        return plugins;
     }
+
+    if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && config.traceConfig.enabled) {
+        const tracePlugin = TracePlugin(config.traceConfig);
+        plugins.push(tracePlugin);
+
+        tracer = tracePlugin.tracer;
+        InvocationTraceSupport.tracer = tracer;
+    }
+
+    if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_METRIC_DISABLE) && config.metricConfig.enabled) {
+        const metricPlugin = MetricPlugin(config.metricConfig);
+        plugins.push(metricPlugin);
+    }
+
+    if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
+        if (!Log.getInstance()) {
+            const logPlugin = new Log(config.logConfig);
+            Logger.getLogManager().addListener(logPlugin);
+        }
+        const logInstance = Log.getInstance();
+        logInstance.enable();
+        plugins.push(logInstance);
+    }
+
+    const invocationPlugin = InvocationPlugin(config.invocationConfig);
+    plugins.push(invocationPlugin);
 
     return plugins;
 }

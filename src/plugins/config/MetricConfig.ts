@@ -3,12 +3,11 @@ import Sampler from '../../opentracing/sampler/Sampler';
 import CountAwareSampler from '../../opentracing/sampler/CountAwareSampler';
 import TimeAwareSampler from '../../opentracing/sampler/TimeAwareSampler';
 import CompositeSampler from '../../opentracing/sampler/CompositeSampler';
-import ThundraTracer from '../../opentracing/Tracer';
+
 const get = require('lodash.get');
 
 class MetricConfig extends BasePluginConfig {
     sampler: Sampler<any>;
-    tracer: ThundraTracer;
 
     constructor(options: any) {
         options = options ? options : {};

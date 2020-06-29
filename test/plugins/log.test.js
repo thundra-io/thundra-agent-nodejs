@@ -14,7 +14,7 @@ describe('log', () => {
 
         it('should set variables', () => {
             expect(logPlugin.hooks).toEqual({ 'before-invocation': logPlugin.beforeInvocation, 'after-invocation': logPlugin.afterInvocation });
-            expect(logPlugin.options).toEqual(options);
+            expect(logPlugin.config).toEqual(options);
         });
     });
 
