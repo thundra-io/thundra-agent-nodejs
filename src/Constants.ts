@@ -5,7 +5,7 @@ import MySQLIntegration from './plugins/integrations/MySQLIntegration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
 import MongoDBIntegration from './plugins/integrations/MongoDBIntegration';
 import IORedisIntegration from './plugins/integrations/IORedisIntegration';
-import { AWSIntegration } from './plugins/integrations/AWSIntegration';
+import {AWSIntegration} from './plugins/integrations/AWSIntegration';
 import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
@@ -157,6 +157,7 @@ export const ClassNames = {
     EVENTBRIDGE: 'AWS-EventBridge',
     ZEIT: 'ZEIT',
     NETLIFY: 'Netlify',
+    SES: 'AWS-SES',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -457,6 +458,17 @@ export const AwsSQSTags = {
     MESSAGES: 'aws.sqs.messages',
 };
 
+export const AwsSESTags = {
+    SERVICE_REQUEST: 'AWSSESRequest',
+    SUBJECT: 'aws.ses.mail.subject',
+    BODY: 'aws.ses.mail.body',
+    TEMPLATE_NAME: 'aws.ses.mail.template.name',
+    TEMPLATE_ARN: 'aws.ses.mail.template.arn',
+    TEMPLATE_DATA: 'aws.ses.mail.template.data',
+    SOURCE: 'aws.ses.mail.source',
+    DESTINATION: 'aws.ses.mail.destination',
+};
+
 export const SpanTags = {
     SPAN_TYPE: 'span.type',
     OPERATION_TYPE: 'operation.type',
@@ -486,6 +498,7 @@ export const SpanTypes = {
     AWS_LAMBDA: 'AWS-Lambda',
     AWS_ATHENA: 'AWS-Athena',
     AWS_EVENTBRIDGE: 'AWS-EventBridge',
+    AWS_SES: 'AWS-SES',
 };
 
 export const INTEGRATIONS: any = {
