@@ -1,4 +1,3 @@
-const thundra = require('../dist/index');
 import ConfigProvider from '../dist/config/ConfigProvider';
 import ConfigNames from '../dist/config/ConfigNames';
 import Utils from '../dist/plugins/utils/Utils';
@@ -15,6 +14,8 @@ import Recorder from '../dist/opentracing/Recorder';
 import { AWSIntegration } from '../dist/plugins/integrations/AWSIntegration';
 
 import TestUtils from './utils.js';
+
+const thundra = require('../dist/index');
 
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();

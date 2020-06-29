@@ -6,7 +6,6 @@ import {PlatformUtils} from '../application/PlatformUtils';
 import {LambdaContextProvider} from './LambdaContextProvider';
 
 export class LambdaPlatformUtils extends PlatformUtils {
-
     static getApplicationId(originalContext: any, opts: any = {}) {
         const arn = originalContext.invokedFunctionArn;
         const region = opts.region || Utils.getEnvVar(EnvVariableKeys.AWS_REGION)

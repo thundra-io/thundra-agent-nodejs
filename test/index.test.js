@@ -257,7 +257,7 @@ describe('thundra library', () => {
             
             beforeAll(() => {
                 thundraWrapper = new Thundra({ apiKey: 'apiKey', trustAllCert: true });
-                wrappedFunction = new thundraWrapper(originalFunction);
+                wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
@@ -278,7 +278,7 @@ describe('thundra library', () => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_REPORT_REST_TRUSTALLCERTIFICATES, true);
 
                 thundraWrapper = new Thundra({ apiKey: 'apiKey' });
-                wrappedFunction = new thundraWrapper(originalFunction); 
+                wrappedFunction = thundraWrapper(originalFunction); 
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 

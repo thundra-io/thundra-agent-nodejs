@@ -21,8 +21,12 @@ const get = require('lodash.get');
 
 export let tracer: ThundraTracer;
 
+interface WrappedFunction extends Function {
+    thundraWrapped?: boolean;
+}
+
 /**
- * Returns a function that wraps the original
+ * Creates a function that wraps the original
  * AWS Lambda handler with Thundra's wrapper
  * @param config options
  * @returns wrapper function
@@ -31,72 +35,107 @@ export function createWrapper(config: ThundraConfig): (f: Function) => Function 
     if (config.disableThundra) {
         return (originalFunc) => originalFunc;
     }
-
+    if (!(config.apiKey)) {
+        console.warn(`Thundra API Key is not given, monitoring is disabled.`);
+    }
     if (config.trustAllCert) {
         Utils.setEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED, '0');
     }
 
-    const plugins = createPlugins(config);
+    ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 
-    return createWrapperWithPlugins(config, plugins);
+    return createWrapperWithPlugins(config, createPlugins(config));
 }
 
+/**
+ * Creates a function that wraps the original
+ * AWS Lambda handler with Thundra's wrapper
+ * @param config options
+ * @param plugins plugins to be attached to the wrapped function
+ * @returns wrapper function
+ */
 function createWrapperWithPlugins(config: ThundraConfig, plugins: any[]): (f: Function) => Function {
     return (originalFunc: any) => {
-        // Check if already wrapped
-        if (get(originalFunc, 'thundraWrapped', false)) {
+        if (isWrapped(originalFunc)) {
             return originalFunc;
         }
 
-        ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
-        const applicationInfo = ApplicationManager.getApplicationInfo();
-        const pluginContext: PluginContext = new PluginContext({
-            applicationInstanceId: applicationInfo.applicationInstanceId,
-            applicationRegion: applicationInfo.applicationRegion,
-            applicationVersion: applicationInfo.applicationVersion,
-            requestCount: 0,
-            apiKey: config.apiKey,
-            timeoutMargin: config.timeoutMargin,
-            transactionId: null,
-            config,
-        });
+        const pluginContext = createPluginContext(config);
 
         plugins.forEach((plugin: any) => {
             plugin.setPluginContext(pluginContext);
         });
 
-        const increaseRequestCount = () => pluginContext.requestCount += 1;
-
-        const thundraWrappedHandler: any = async (originalEvent: any, originalContext: any, originalCallback: any) => {
-            LambdaContextProvider.setContext(originalContext);
-            // Creating applicationId here, since we need the information in context
-            pluginContext.applicationId = ApplicationManager.getApplicationInfo().applicationId;
-
-            const originalThis = this;
-            const thundraWrapper = new ThundraWrapper(
-                originalThis,
-                originalEvent,
-                originalContext,
-                originalCallback,
-                originalFunc,
-                plugins,
-                pluginContext,
-            );
-            return await thundraWrapper.invoke();
-        };
-
-        // Set thundraWrapped to true, to not double wrap the user handler
-        thundraWrappedHandler.thundraWrapped = true;
+        const wrappedHandler = createWrappedHandler(pluginContext, originalFunc, plugins, config);
 
         if (config.warmupAware) {
+            const increaseRequestCount = () => pluginContext.requestCount++;
             const warmupWrapper = ThundraWarmup(increaseRequestCount);
-            return warmupWrapper(thundraWrappedHandler);
+            return warmupWrapper(wrappedHandler);
         }
 
-        return thundraWrappedHandler;
+        return wrappedHandler;
     };
 }
 
+/**
+ * Creates a wrapped handler function given the original handler
+ * @param pluginContext plugin context object that contains the information might be needed by the plugins
+ * @param originalFunc original AWS Lambda handler
+ * @param plugins plugins to be attached to the wrapped function
+ * @param config Thundra configuration
+ * @returns new AWS Lambda handler wrapped with Thundra
+ */
+function createWrappedHandler(pluginContext: PluginContext, originalFunc: Function,
+                              plugins: any[], config: ThundraConfig): WrappedFunction {
+    const wrappedFunction = async (originalEvent: any, originalContext: any, originalCallback: any) => {
+        LambdaContextProvider.setContext(originalContext);
+        // Creating applicationId here, since we need the information in context
+        pluginContext.applicationId = ApplicationManager.getApplicationInfo().applicationId;
+
+        const thundraWrapper = new ThundraWrapper(
+            this,
+            originalEvent,
+            originalContext,
+            originalCallback,
+            originalFunc,
+            plugins,
+            pluginContext,
+            config,
+        );
+        return await thundraWrapper.invoke();
+    };
+
+    setWrapped(wrappedFunction, true);
+
+    return wrappedFunction;
+}
+
+/**
+ * Creates a new plugin context
+ * @param config Thundra configuration
+ * @returns new PluginContext object
+ */
+function createPluginContext(config: ThundraConfig): PluginContext {
+    const applicationInfo = ApplicationManager.getApplicationInfo();
+    const pluginContext: PluginContext = new PluginContext({
+        applicationInstanceId: applicationInfo.applicationInstanceId,
+        applicationRegion: applicationInfo.applicationRegion,
+        applicationVersion: applicationInfo.applicationVersion,
+        requestCount: 0,
+        apiKey: config.apiKey,
+        timeoutMargin: config.timeoutMargin,
+        transactionId: null,
+    });
+
+    return pluginContext;
+}
+
+/**
+ * Creates plugins given a configuration
+ * @param config Thundra configuration
+ * @returns list of plugins
+ */
 function createPlugins(config: ThundraConfig): any[] {
     const plugins: any[] = [];
 
@@ -131,4 +170,22 @@ function createPlugins(config: ThundraConfig): any[] {
     }
 
     return plugins;
+}
+
+/**
+ * Marks given function as wrapped by thundra
+ * @param func Function to be marked
+ * @param wrapped value to be marked
+ */
+function setWrapped(func: WrappedFunction, wrapped: boolean) {
+    func.thundraWrapped = wrapped;
+}
+
+/**
+ * Returns if the given function is wrapped by Thundra
+ * @param func Function to be checked
+ * @return true if wrapped by Thundra, false otherwise
+ */
+function isWrapped(func: WrappedFunction) {
+    return get(func, 'thundraWrapped', false);
 }

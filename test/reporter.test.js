@@ -53,10 +53,10 @@ jest.mock('https', () => ({
 }));
 
 describe('constructor', () => {
-    const reporter = new Reporter({apiKey: 'apiKey'});
+    const reporter = new Reporter('apiKey');
 
     it('should set api key', () => {
-        expect(reporter.config.apiKey).toEqual('apiKey');
+        expect(reporter.apiKey).toEqual('apiKey');
     });
 
     it('should set reports to empty array', () => {
@@ -67,10 +67,10 @@ describe('constructor', () => {
 describe('reporter', () => {
 
     describe('constructor', () => {
-        const reporter = new Reporter({apiKey: 'apiKey'});
+        const reporter = new Reporter('apiKey');
 
         it('should set api key', () => {
-            expect(reporter.config.apiKey).toEqual('apiKey');
+            expect(reporter.apiKey).toEqual('apiKey');
         });
 
         it('should set reports to empty array', () => {
@@ -79,7 +79,7 @@ describe('reporter', () => {
     });
 
     describe('add reports', () => {
-        const reporter = new Reporter({apiKey: 'apiKey'});
+        const reporter = new Reporter('apiKey');
         const mockReport = {data: {type: 'Invocation', data: 'data1'}};
 
         reporter.addReport(mockReport);
@@ -90,7 +90,7 @@ describe('reporter', () => {
     });
 
     describe('request', () => {
-        const reporter = new Reporter({apiKey: 'apiKey'});
+        const reporter = new Reporter('apiKey');
         const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
         const mockReport2 = {data: {type: 'Span', data: 'data2'}};
 
@@ -122,7 +122,7 @@ describe('reporter', () => {
     });
 
     describe('send reports success', () => {
-        const reporter = new Reporter({apiKey: 'apiKey'});
+        const reporter = new Reporter('apiKey');
         const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
         const mockReport2 = {data: {type: 'Span', data: 'data2'}};
 
@@ -145,7 +145,7 @@ describe('reporter', () => {
         ConfigProvider.set(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE, true);
         process.stdout.write = jest.fn(input => stdout = input);
 
-        const reporter = new Reporter({apiKey: 'apiKey'});
+        const reporter = new Reporter('apiKey');
         const mockReport = {data: {type: 'Invocation', data: 'data1'}};
 
         reporter.addReport(mockReport);

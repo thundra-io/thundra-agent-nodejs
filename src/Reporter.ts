@@ -5,7 +5,6 @@ import * as url from 'url';
 import {COMPOSITE_MONITORING_DATA_PATH, getDefaultAPIEndpoint} from './Constants';
 import Utils from './plugins/utils/Utils';
 import ThundraLogger from './ThundraLogger';
-import ThundraConfig from './plugins/config/ThundraConfig';
 import BaseMonitoringData from './plugins/data/base/BaseMonitoringData';
 import MonitoringDataType from './plugins/data/base/MonitoringDataType';
 import ConfigNames from './config/ConfigNames';
@@ -22,19 +21,19 @@ const httpsAgent = new https.Agent({
 class Reporter {
     private readonly MAX_MONITOR_DATA_BATCH_SIZE: number = 100;
     private reports: any[];
-    private config: ThundraConfig;
     private useHttps: boolean;
     private requestOptions: http.RequestOptions;
     private connectionRetryCount: number;
     private latestReportingLimitedMinute: number;
     private URL: url.UrlWithStringQuery;
+    private apiKey: string;
 
-    constructor(config: ThundraConfig, u?: url.URL) {
+    constructor(apiKey: string, u?: url.URL) {
         this.URL = url.parse(ConfigProvider.get<string>(
             ConfigNames.THUNDRA_REPORT_REST_BASEURL,
             'https://' + getDefaultAPIEndpoint() + '/v1'));
         this.reports = [];
-        this.config = config ? config : new ThundraConfig({});
+        this.apiKey = apiKey;
         this.useHttps = (u ? u.protocol : this.URL.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
         this.connectionRetryCount = 0;
@@ -51,7 +50,7 @@ class Reporter {
             port: parseInt(u ? u.port : this.URL.port, 0),
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'ApiKey ' + this.config.apiKey,
+                'Authorization': 'ApiKey ' + this.apiKey,
             },
             agent: this.useHttps ? httpsAgent : httpAgent,
             createConnection: (options: http.ClientRequestArgs, oncreate: (err: Error, socket: net.Socket) => void) => {
@@ -97,7 +96,7 @@ class Reporter {
             }
 
             compositeData.allMonitoringData = batch;
-            const compositeDataReport = Utils.generateReport(compositeData, this.config.apiKey);
+            const compositeDataReport = Utils.generateReport(compositeData, this.apiKey);
             batchedReports.push(compositeDataReport);
         }
 

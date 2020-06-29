@@ -1,4 +1,3 @@
-import ThundraConfig from './config/ThundraConfig';
 
 class PluginContext {
     applicationId: string;
@@ -8,7 +7,6 @@ class PluginContext {
     requestCount: number;
     apiKey: string;
     timeoutMargin: number;
-    config: ThundraConfig;
     reporter?: any;
     spanId?: string;
     traceId?: string;
@@ -28,7 +26,6 @@ class PluginContext {
         this.apiKey = opt.apiKey;
         this.timeoutMargin = opt.timeoutMargin;
         this.transactionId = opt.transactionId;
-        this.config = opt.config;
     }
 
     get invocationStartTimestamp(): number {

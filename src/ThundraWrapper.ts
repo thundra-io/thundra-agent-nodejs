@@ -67,19 +67,19 @@ class ThundraWrapper {
     private debuggerProxy: any;
     private debuggerLogsEnabled: boolean;
 
-    constructor(self: any, event: any, context: any, callback: any,
-                originalFunction: any, plugins: any, pluginContext: PluginContext) {
+    constructor(self: any, event: any, context: any, callback: any, originalFunction: any,
+                plugins: any, pluginContext: PluginContext, config: ThundraConfig) {
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
         this.originalCallback = callback;
         this.originalFunction = originalFunction;
-        this.config = pluginContext.config ? pluginContext.config : new ThundraConfig({ disableMonitoring: false });
+        this.config = config || new ThundraConfig({ disableMonitoring: false });
         this.plugins = plugins;
         this.pluginContext = pluginContext;
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
         this.reported = false;
-        this.reporter = new Reporter(pluginContext.config);
+        this.reporter = new Reporter(this.config.apiKey);
         this.wrappedContext = {
             ...context,
             done: (error: any, result: any) => {
