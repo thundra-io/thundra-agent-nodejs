@@ -469,3 +469,55 @@ module.exports.eventBridgeListEventBuses = (AWS) => {
         });
     });
 };
+
+module.exports.sesSendEmail = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({region: 'us-west-2'});
+        const ses = new AWS.SES();
+        ses.sendEmail({
+            Source: 'demo@thundra.io',
+            Destination: { ToAddresses: ['test@thundra.io'], },
+            Message: {
+                Subject: { Data: 'Test Subject', Charset: 'UTF-8' },
+                Body: {
+                    Text: { Data: 'Test Body', Charset: 'UTF-8' },
+                    Html: { Data: '<html><body>test</body></html>', Charset: 'UTF-8' }
+                }
+            }
+        }, (err, data) => {
+            resolve(err || data);
+        });
+    });
+};
+
+module.exports.sesSendRawEmail = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({region: 'us-west-2'});
+        const ses = new AWS.SES();
+        ses.sendRawEmail({
+            Source: 'demo@thundra.io',
+            Destinations: ['test@thundra.io'],
+            RawMessage: {
+                Data: 'Test', Charset: 'UTF-8',
+            }
+        }, (err, data) => {
+            resolve(err || data);
+        });
+    });
+};
+
+module.exports.sesSendTemplatedEmail = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({region: 'us-west-2'});
+        const ses = new AWS.SES();
+        ses.sendTemplatedEmail({
+            Source: 'demo@thundra.io',
+            Destination: { ToAddresses: ['test@thundra.io'], },
+            Template: 'TestTemplate',
+            TemplateData: '{"testkey": "testvalue"}',
+            TemplateArn: 'test'
+        }, (err, data) => {
+            resolve(err || data);
+        });
+    });
+};
