@@ -42,12 +42,12 @@ function addLogListener(listener: any) {
 }
 
 function tracer() {
-    return LambdaWrapper.tracer;
+    return InvocationTraceSupport.tracer;
 }
 
 const updateConfig = config.ThundraConfig.updateConfig;
 
-// Default export
+// Expose createWrapper
 module.exports = createWrapper;
 
 // Named exports

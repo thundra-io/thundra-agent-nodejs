@@ -15,11 +15,10 @@ import { LambdaContextProvider } from '../lambda/LambdaContextProvider';
 import { LambdaApplicationInfoProvider } from '../lambda/LambdaApplicationInfoProvider';
 import ThundraTracer from '../opentracing/Tracer';
 import ThundraConfig from '../plugins/config/ThundraConfig';
+import { ApplicationInfo } from '../application/ApplicationInfo';
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
-
-export let tracer: ThundraTracer;
 
 interface WrappedFunction extends Function {
     thundraWrapped?: boolean;
@@ -43,8 +42,12 @@ export function createWrapper(config: ThundraConfig): (f: Function) => WrappedFu
     }
 
     ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
+    const applicationInfo = ApplicationManager.getApplicationInfo();
 
-    return createWrapperWithPlugins(config, createPlugins(config));
+    const pluginContext = createPluginContext(config, applicationInfo);
+    const plugins = createPlugins(config, pluginContext);
+
+    return createWrapperWithPlugins(config, plugins, pluginContext);
 }
 
 /**
@@ -54,23 +57,18 @@ export function createWrapper(config: ThundraConfig): (f: Function) => WrappedFu
  * @param plugins plugins to be attached to the wrapped function
  * @returns wrapper function
  */
-function createWrapperWithPlugins(config: ThundraConfig, plugins: any[]): (f: Function) => WrappedFunction {
+function createWrapperWithPlugins(config: ThundraConfig,
+                                  plugins: any[],
+                                  pluginContext: PluginContext): (f: Function) => WrappedFunction {
     return (originalFunc: any) => {
         if (isWrapped(originalFunc)) {
             return originalFunc;
         }
 
-        const pluginContext = createPluginContext(config);
-
-        plugins.forEach((plugin: any) => {
-            plugin.setPluginContext(pluginContext);
-        });
-
         const wrappedHandler = createWrappedHandler(pluginContext, originalFunc, plugins, config);
 
         if (config.warmupAware) {
-            const increaseRequestCount = () => pluginContext.requestCount++;
-            const warmupWrapper = ThundraWarmup(increaseRequestCount);
+            const warmupWrapper = ThundraWarmup(() => pluginContext.requestCount++);
             return warmupWrapper(wrappedHandler);
         }
 
@@ -80,7 +78,8 @@ function createWrapperWithPlugins(config: ThundraConfig, plugins: any[]): (f: Fu
 
 /**
  * Creates a wrapped handler function given the original handler
- * @param pluginContext plugin context object that contains the information might be needed by the plugins
+ * @param pluginContext PluginContext object that contains the
+ * information might be needed by the plugins
  * @param originalFunc original AWS Lambda handler
  * @param plugins plugins to be attached to the wrapped function
  * @param config Thundra configuration
@@ -116,8 +115,7 @@ function createWrappedHandler(pluginContext: PluginContext, originalFunc: Functi
  * @param config Thundra configuration
  * @returns new PluginContext object
  */
-function createPluginContext(config: ThundraConfig): PluginContext {
-    const applicationInfo = ApplicationManager.getApplicationInfo();
+function createPluginContext(config: ThundraConfig, applicationInfo: ApplicationInfo): PluginContext {
     const pluginContext: PluginContext = new PluginContext({
         applicationInstanceId: applicationInfo.applicationInstanceId,
         applicationRegion: applicationInfo.applicationRegion,
@@ -136,7 +134,7 @@ function createPluginContext(config: ThundraConfig): PluginContext {
  * @param config Thundra configuration
  * @returns list of plugins
  */
-function createPlugins(config: ThundraConfig): any[] {
+function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
     const plugins: any[] = [];
 
     if (config.disableMonitoring) {
@@ -145,10 +143,8 @@ function createPlugins(config: ThundraConfig): any[] {
 
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && config.traceConfig.enabled) {
         const tracePlugin = TracePlugin(config.traceConfig);
+        InvocationTraceSupport.tracer = tracePlugin.tracer;
         plugins.push(tracePlugin);
-
-        tracer = tracePlugin.tracer;
-        InvocationTraceSupport.tracer = tracer;
     }
 
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_METRIC_DISABLE) && config.metricConfig.enabled) {
@@ -168,6 +164,11 @@ function createPlugins(config: ThundraConfig): any[] {
 
     const invocationPlugin = InvocationPlugin(config.invocationConfig);
     plugins.push(invocationPlugin);
+
+    // Set plugin context for plugins
+    plugins.forEach((plugin: any) => {
+        plugin.setPluginContext(pluginContext);
+    });
 
     return plugins;
 }
