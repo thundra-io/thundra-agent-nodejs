@@ -31,7 +31,7 @@ interface WrappedFunction extends Function {
  * @param config options
  * @returns wrapper function
  */
-export function createWrapper(config: ThundraConfig): (f: Function) => Function {
+export function createWrapper(config: ThundraConfig): (f: Function) => WrappedFunction {
     if (config.disableThundra) {
         return (originalFunc) => originalFunc;
     }
@@ -54,7 +54,7 @@ export function createWrapper(config: ThundraConfig): (f: Function) => Function 
  * @param plugins plugins to be attached to the wrapped function
  * @returns wrapper function
  */
-function createWrapperWithPlugins(config: ThundraConfig, plugins: any[]): (f: Function) => Function {
+function createWrapperWithPlugins(config: ThundraConfig, plugins: any[]): (f: Function) => WrappedFunction {
     return (originalFunc: any) => {
         if (isWrapped(originalFunc)) {
             return originalFunc;
