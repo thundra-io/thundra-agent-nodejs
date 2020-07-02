@@ -13,7 +13,7 @@ import ThundraLogger from '../ThundraLogger';
 import {ApplicationManager} from '../application/ApplicationManager';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
 
-class Metric {
+export default class Metric {
     hooks: { 'before-invocation': (data: any) => Promise<void>; 'after-invocation': () => Promise<void>; };
     config: MetricConfig;
     metricData: MetricData;
@@ -165,8 +165,4 @@ class Metric {
         const ioMetricReport = Utils.generateReport(ioMetric, this.apiKey);
         this.reports = [...this.reports, ioMetricReport];
     }
-}
-
-export default function instantiateMetricPlugin(config: MetricConfig) {
-    return new Metric(config);
 }

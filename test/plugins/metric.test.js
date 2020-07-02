@@ -25,12 +25,8 @@ const pluginContext = createMockPluginContext();
 describe('metrics', () => {
     describe('export function', () => {
         const config = {opt1: 'opt1', opt2: 'opt2'};
-        const metric = Metric(config);
+        const metric = new Metric(config);
         metric.setPluginContext(pluginContext);
-        it('should export a function which returns an object', () => {
-            expect(typeof Metric).toEqual('function');
-            expect(typeof metric).toEqual('object');
-        });
         it('should be able to pass options', () => {
             expect(metric.config).toEqual(config);
         });
@@ -38,8 +34,8 @@ describe('metrics', () => {
 
     describe('constructor', () => {
         const config = {op1t: 'opt1', opt2: 'opt2'};
-        const metric = Metric();
-        const metricWithOptions = Metric(config);
+        const metric = new Metric();
+        const metricWithOptions = new Metric(config);
         
         it('should have the same hooks', () => {
             expect(metric.hooks).toEqual({
@@ -64,7 +60,7 @@ describe('metrics', () => {
     });
 
     describe('set plugin context', () => {
-        const metric = Metric();
+        const metric = new Metric();
         metric.setPluginContext(pluginContext);
         it('should set api key and plugin context',() => {
             expect(metric.apiKey).toEqual(pluginContext.apiKey);
@@ -73,7 +69,7 @@ describe('metrics', () => {
     });
 
     describe('before invocation', () => {
-        const metric = Metric();
+        const metric = new Metric();
         metric.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
 
@@ -100,7 +96,7 @@ describe('metrics', () => {
     });
 
     describe('after invocation', () => {
-        const metric = Metric();
+        const metric = new Metric();
         metric.setPluginContext(pluginContext);
         metric.addCpuMetricReport = jest.fn(async () => null);
         metric.addMemoryMetricReport = jest.fn(async () => null);
@@ -120,7 +116,7 @@ describe('metrics', () => {
     });
 
     describe('before invocation + after invocation', () => {
-        const metric = Metric();
+        const metric = new Metric();
         metric.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
 
@@ -134,7 +130,7 @@ describe('metrics', () => {
     });
 
     describe('add thread metric report', () => {
-        const metric = Metric();
+        const metric = new Metric();
         metric.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
 
@@ -151,7 +147,7 @@ describe('metrics', () => {
     });
 
     describe('add memory metric report', () => {
-        const metric = Metric();
+        const metric = new Metric();
         metric.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
 
@@ -175,7 +171,7 @@ describe('metrics', () => {
     });
 
     describe('add cpu metric report', () => {
-        const metric = Metric();
+        const metric = new Metric();
         metric.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
 
@@ -193,7 +189,7 @@ describe('metrics', () => {
     });
 
     describe('add io metric report', () => {
-        const metric = Metric();
+        const metric = new Metric();
         metric.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
 

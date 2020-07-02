@@ -1,4 +1,5 @@
 import Invocation from '../../dist/plugins/Invocation';
+import MonitoringDataType from '../../dist/plugins/data/base/MonitoringDataType';
 import TimeoutError from '../../dist/plugins/error/TimeoutError';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import {
@@ -16,19 +17,15 @@ const pluginContext = createMockPluginContext();
 describe('invocation', () => {
     describe('export', () => {
         const options = {opt1: 'opt1', opt2: 'opt2'};
-        const invocation = Invocation(options);
+        const invocation = new Invocation(options);
         invocation.setPluginContext(pluginContext);
-        it('should export a function which returns an object', () => {
-            expect(typeof Invocation).toEqual('function');
-            expect(typeof invocation).toEqual('object');
-        });
         it('should be able to pass options', () => {
             expect(invocation.options).toEqual(options);
         });
     });
 
     describe('constructor', () => {
-        const invocation = Invocation();
+        const invocation = new Invocation();
         it('should have the same hooks', () => {
             expect(invocation.hooks).toEqual({
                 'before-invocation': invocation.beforeInvocation,
@@ -38,7 +35,7 @@ describe('invocation', () => {
     });
 
     describe('set plugin context', () => {
-        const invocation = Invocation();
+        const invocation = new Invocation();
         invocation.setPluginContext(pluginContext);
         it('should set api key and plugin context', () => {
             expect(invocation.apiKey).toEqual(pluginContext.apiKey);
@@ -47,7 +44,7 @@ describe('invocation', () => {
     });
 
     describe('before invocation', () => {
-        const invocation = Invocation();
+        const invocation = new Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         process.memoryUsage = jest.fn(() => {
@@ -59,7 +56,7 @@ describe('invocation', () => {
         it('should set variables to their initial value', async () => {
             InvocationSupport.setFunctionName(beforeInvocationData.originalContext.functionName);
             
-            await invocation.beforeInvocation(beforeInvocationData);
+            invocation.beforeInvocation(beforeInvocationData);
             expect(invocation.reporter).toBe(beforeInvocationData.reporter);
             expect(invocation.apiKey).toBe(pluginContext.apiKey);
             expect(invocation.invocationData.id).toBeTruthy();
@@ -100,7 +97,7 @@ describe('invocation', () => {
     });
 
     describe('after invocation', () => {
-        const invocation = Invocation();
+        const invocation = new Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         invocation.beforeInvocation(beforeInvocationData);
@@ -108,20 +105,20 @@ describe('invocation', () => {
         const afterInvocationData = {};
         invocation.report = jest.fn();
         it('should call report method', async () => {
-            await invocation.afterInvocation(afterInvocationData);
+            invocation.afterInvocation(afterInvocationData);
             expect(invocation.report).toHaveBeenCalledTimes(1);
         });
     });
 
     describe('before invocation + after invocation', () => {
-        const invocation = Invocation();
+        const invocation = new Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = {...createMockBeforeInvocationData()};
         const afterInvocationData = {};
         invocation.report = jest.fn();
         it('should call report method', async () => {
-            await invocation.beforeInvocation(beforeInvocationData);
-            await invocation.afterInvocation(afterInvocationData);
+            invocation.beforeInvocation(beforeInvocationData);
+            invocation.afterInvocation(afterInvocationData);
             expect(invocation.finishTimestamp).toBeTruthy();
             expect(invocation.invocationData.duration).toEqual(invocation.finishTimestamp - invocation.startTimestamp);
             expect(invocation.invocationData.erroneous).toEqual(false);
@@ -130,14 +127,14 @@ describe('invocation', () => {
     });
 
     describe('before invocation + after invocation with error', () => {
-        const invocation = Invocation();
+        const invocation = new Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {error: Error('error message')};
         invocation.report = jest.fn();
         it('should call report method', async () => {
-            await invocation.beforeInvocation(beforeInvocationData);
-            await invocation.afterInvocation(afterInvocationData);
+            invocation.beforeInvocation(beforeInvocationData);
+            invocation.afterInvocation(afterInvocationData);
             expect(invocation.finishTimestamp).toBeTruthy();
             expect(invocation.invocationData.erroneous).toEqual(true);
             expect(invocation.invocationData.errorType).toEqual('Error');
@@ -148,32 +145,32 @@ describe('invocation', () => {
     });
 
     describe('before invocation + after invocation with timeout error', () => {
-        const invocation = Invocation();
+        const invocation = new Invocation();
         invocation.setPluginContext(pluginContext);
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {error: new TimeoutError('Timeout errror')};
         invocation.report = jest.fn();
         it('should call report method', async () => {
-            await invocation.beforeInvocation(beforeInvocationData);
-            await invocation.afterInvocation(afterInvocationData);
+            invocation.beforeInvocation(beforeInvocationData);
+            invocation.afterInvocation(afterInvocationData);
             expect(invocation.invocationData.timeout).toBeTruthy();
         });
     });
 
     describe('report', async () => {
-        const invocation = Invocation();
+        const invocation = new Invocation();
         invocation.setPluginContext({...pluginContext, requestCount: 5});
         const beforeInvocationData = createMockBeforeInvocationData();
         const afterInvocationData = {};
-        await invocation.beforeInvocation(beforeInvocationData);
-        await invocation.afterInvocation(afterInvocationData);
+        invocation.beforeInvocation(beforeInvocationData);
+        invocation.afterInvocation(afterInvocationData);
 
         it('should add report', () => {
             expect(invocation.reporter.addReport).toBeCalledWith({
                 data: invocation.invocationData,
-                type: invocation.dataType,
+                type: MonitoringDataType.INVOCATION,
                 apiKey: invocation.apiKey,
-                dataFormatVersion: DATA_MODEL_VERSION
+                dataModelVersion: DATA_MODEL_VERSION
             });
         });
     });

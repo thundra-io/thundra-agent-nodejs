@@ -10,7 +10,10 @@ import InvocationSupport from './plugins/support/InvocationSupport';
 import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
 import ConfigNames from './config/ConfigNames';
 import { loadHandler } from './runtime/RuntimeSupport';
+import { expressMW } from './express/express';
 import * as LambdaWrapper from './lambda/LambdaWrapper';
+import { ApplicationManager } from './application/ApplicationManager';
+import LogManager from './plugins/LogManager';
 
 const get = require('lodash.get');
 
@@ -22,12 +25,7 @@ function createWrapper(options?: any) {
 }
 
 function createLogger(options: any) {
-    if (!Log.getInstance()) {
-        const logConfig = new config.LogConfig({});
-        const logPlugin = new Log(logConfig);
-        Logger.getLogManager().addListener(logPlugin);
-    }
-    return Logger.getLogManager().createLogger(options);
+    return LogManager.createLogger(options);
 }
 
 function loadUserHandler() {
@@ -38,7 +36,7 @@ function loadUserHandler() {
 }
 
 function addLogListener(listener: any) {
-    Logger.getLogManager().addListener(listener);
+    LogManager.addListener(listener);
 }
 
 function tracer() {
@@ -59,6 +57,7 @@ Object.assign(module.exports, {
     createLogger,
     loadUserHandler,
     addLogListener,
+    expressMW,
     tracer,
     InvocationSupport,
     InvocationTraceSupport,

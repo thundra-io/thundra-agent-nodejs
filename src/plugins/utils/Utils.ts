@@ -381,8 +381,10 @@ class Utils {
         monitoringData.applicationVersion = applicationVersion;
         monitoringData.applicationRuntimeVersion = process.version;
 
-        monitoringData.applicationTags = {...monitoringData.applicationTags,
-            ...ApplicationManager.getApplicationInfo().applicationTags};
+        monitoringData.applicationTags = {
+            ...monitoringData.applicationTags,
+            ...pluginContext.applicationTags,
+        };
 
         return monitoringData;
     }

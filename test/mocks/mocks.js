@@ -53,7 +53,8 @@ const createMockPluginContext = () => {
         apiKey: 'apiKey',
         maxMemory: 512,
         invocationStartTimestamp: Date.now(),
-        invocationFinishTimestamp: Date.now()
+        invocationFinishTimestamp: Date.now(),
+        resetTimestamps: () => undefined,
     };
 };
 

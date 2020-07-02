@@ -11,10 +11,12 @@ import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import {ApplicationManager} from '../application/ApplicationManager';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
+import Logger from './Logger';
+import LogManager from './LogManager';
+
+const get = require('lodash.get');
 
 class Log {
-    static instance: Log;
-
     reporter: any;
     enabled: boolean;
     pluginContext: PluginContext;
@@ -28,14 +30,14 @@ class Log {
     captureLog = false;
     logLevelFilter: number = 0;
 
-    constructor(options: LogConfig) {
-        Log.instance = this;
+    constructor(options?: LogConfig) {
+        LogManager.addListener(this);
 
         this.hooks = {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
         };
-        this.enabled = false;
+        this.enabled = get(options, 'enabled', true);
         this.config = options;
         this.logs = [];
 
@@ -45,10 +47,6 @@ class Log {
         if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_CONSOLE_DISABLE)) {
             this.shimConsole();
         }
-    }
-
-    static getInstance(): Log {
-        return Log.instance;
     }
 
     report(logReport: any): void {
@@ -76,8 +74,8 @@ class Log {
     }
 
     afterInvocation = (data: any) => {
-        const isSamplerPresent = this.config && this.config.sampler && typeof (this.config.sampler.isSampled) === 'function';
-        const sampled = isSamplerPresent ? this.config.sampler.isSampled() : true;
+        const sampler = get(this.config, 'sampler', { isSampled: () => true });
+        const sampled = sampler.isSampled();
         if (sampled) {
             for (const log of this.logs) {
                 const logReportData = Utils.generateReport(log, this.apiKey);

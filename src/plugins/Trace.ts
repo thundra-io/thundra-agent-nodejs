@@ -35,7 +35,7 @@ import ConfigNames from '../config/ConfigNames';
 
 const get = require('lodash.get');
 
-export class Trace {
+export default class Trace {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
     config: TraceConfig;
     reporter: Reporter;
@@ -373,8 +373,4 @@ export class Trace {
             ThundraLogger.error('Cannot inject trigger tags. ' + error);
         }
     }
-}
-
-export default function instantiateTracePlugin(config: TraceConfig) {
-    return new Trace(config);
 }

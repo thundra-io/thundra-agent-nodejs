@@ -420,8 +420,7 @@ class ThundraWrapper {
     }
 
     resetTime() {
-        this.pluginContext.invocationStartTimestamp = undefined;
-        this.pluginContext.invocationFinishTimestamp = undefined;
+        this.pluginContext.resetTimestamps();
     }
 
     async report(error: any, result: any, callback: any) {
@@ -437,7 +436,7 @@ class ThundraWrapper {
                     response: result,
                 };
 
-                if (this.isErrorResponse(result)) {
+                if (this.isHTTPErrorResponse(result)) {
                     afterInvocationData = {
                         error: new HttpError('Lambda returned with error response.'),
                         originalEvent: this.originalEvent,
@@ -456,7 +455,7 @@ class ThundraWrapper {
         }
     }
 
-    isErrorResponse(result: any) {
+    isHTTPErrorResponse(result: any) {
         let isError = false;
         if (Utils.isValidResponse(result) && result.body) {
             if (typeof result.body === 'string') {

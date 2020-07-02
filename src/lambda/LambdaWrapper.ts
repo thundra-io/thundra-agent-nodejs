@@ -6,16 +6,14 @@ import ConfigProvider from '../config/ConfigProvider';
 import Utils from '../plugins/utils/Utils';
 import PluginContext from '../plugins/PluginContext';
 import { EnvVariableKeys } from '../Constants';
-import Logger from '../plugins/Logger';
-import Log from '../plugins/Log';
+import LogPlugin from '../plugins/Log';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import ConfigNames from '../config/ConfigNames';
 import { ApplicationManager } from '../application/ApplicationManager';
-import { LambdaContextProvider } from '../lambda/LambdaContextProvider';
 import { LambdaApplicationInfoProvider } from '../lambda/LambdaApplicationInfoProvider';
-import ThundraTracer from '../opentracing/Tracer';
 import ThundraConfig from '../plugins/config/ThundraConfig';
 import { ApplicationInfo } from '../application/ApplicationInfo';
+import { LambdaContextProvider } from './LambdaContextProvider';
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
@@ -142,27 +140,20 @@ function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any
     }
 
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && config.traceConfig.enabled) {
-        const tracePlugin = TracePlugin(config.traceConfig);
+        const tracePlugin = new TracePlugin(config.traceConfig);
         InvocationTraceSupport.tracer = tracePlugin.tracer;
         plugins.push(tracePlugin);
     }
 
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_METRIC_DISABLE) && config.metricConfig.enabled) {
-        const metricPlugin = MetricPlugin(config.metricConfig);
-        plugins.push(metricPlugin);
+        plugins.push(new MetricPlugin(config.metricConfig));
     }
 
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
-        if (!Log.getInstance()) {
-            const logPlugin = new Log(config.logConfig);
-            Logger.getLogManager().addListener(logPlugin);
-        }
-        const logInstance = Log.getInstance();
-        logInstance.enable();
-        plugins.push(logInstance);
+        plugins.push(new LogPlugin(config.logConfig));
     }
 
-    const invocationPlugin = InvocationPlugin(config.invocationConfig);
+    const invocationPlugin = new InvocationPlugin(config.invocationConfig);
     plugins.push(invocationPlugin);
 
     // Set plugin context for plugins

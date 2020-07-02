@@ -49,6 +49,11 @@ class PluginContext {
     set invocationFinishTimestamp(invocationFinishTimestamp: number) {
          this.$invocationFinishTimestamp = invocationFinishTimestamp;
     }
+
+    resetTimestamps(): void {
+        this.$invocationStartTimestamp = undefined;
+        this.$invocationFinishTimestamp = undefined;
+    }
 }
 
 export default PluginContext;

@@ -10,7 +10,9 @@ import InvocationSupport from './support/InvocationSupport';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
 import {ApplicationManager} from '../application/ApplicationManager';
 
-class Invocation {
+const get = require('lodash.get');
+
+export default class Invocation {
     hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
     options: InvocationConfig;
     invocationData: InvocationData;
@@ -21,7 +23,7 @@ class Invocation {
     startTimestamp: number;
     pluginOrder: number = 2;
 
-    constructor(options: any) {
+    constructor(options?: any) {
         this.hooks = {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
@@ -38,9 +40,8 @@ class Invocation {
         this.apiKey = pluginContext.apiKey;
     }
 
-    beforeInvocation = (data: any) => {
-        const { originalContext, reporter } = data;
-        this.reporter = reporter;
+    beforeInvocation = (data?: any) => {
+        this.reporter = data.reporter;
         this.finishTimestamp = null;
         this.startTimestamp = this.pluginContext.invocationStartTimestamp;
 
@@ -80,12 +81,12 @@ class Invocation {
         ApplicationManager.getPlatformUtils().setInvocationTags(this.invocationData, this.pluginContext);
     }
 
-    afterInvocation = (data: any) => {
+    afterInvocation = (data?: any) => {
         if (InvocationSupport.hasError()) {
             this.invocationData.setError(InvocationSupport.error);
         }
 
-        if (data.error) {
+        if (get(data, 'error')) {
             const error = Utils.parseError(data.error);
             this.invocationData.setError(error);
             if (data.error instanceof TimeoutError) {
@@ -114,7 +115,7 @@ class Invocation {
         this.invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
         this.invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
 
-        if (Utils.isValidResponse(data.response)) {
+        if (Utils.isValidResponse(get(data, 'response'))) {
             this.invocationData.setUserTags({[HttpTags.HTTP_STATUS]: data.response.statusCode});
         }
 
@@ -129,8 +130,4 @@ class Invocation {
         InvocationSupport.removeAgentTags();
         InvocationTraceSupport.clear();
     }
-}
-
-export default function instantiateInvocationPlugin(config: InvocationConfig) {
-    return new Invocation(config);
 }
