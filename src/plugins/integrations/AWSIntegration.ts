@@ -1087,7 +1087,7 @@ export class AWSSESIntegration {
         const maskDestination = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK);
 
         const source = get(request, 'params.Source', []);
-        const destination = maskDestination ? undefined : get(request, 'params.Destination.ToAddresses',
+        const destination = maskDestination ? undefined : get(request, 'params.Destination',
             get(request, 'params.Destinations', []));
         const subject = maskMail ? undefined : get(request, 'params.Message.Subject', undefined);
         const body = maskMail ? undefined : get(request, 'params.Message.Body', undefined);

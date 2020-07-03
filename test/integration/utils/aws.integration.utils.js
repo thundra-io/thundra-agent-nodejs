@@ -476,7 +476,7 @@ module.exports.sesSendEmail = (AWS) => {
         const ses = new AWS.SES();
         ses.sendEmail({
             Source: 'demo@thundra.io',
-            Destination: { ToAddresses: ['test@thundra.io'], },
+            Destination: { ToAddresses: ['test@thundra.io'], CcAddresses: ['test-cc@thundra.io'], },
             Message: {
                 Subject: { Data: 'Test Subject', Charset: 'UTF-8' },
                 Body: {
