@@ -759,7 +759,8 @@ describe('AWS integration', () => {
             expect(span.domainName).toBe('Messaging');
 
             expect(span.tags['aws.ses.mail.source']).toBe('demo@thundra.io');
-            expect(span.tags['aws.ses.mail.destination']).toContain('test@thundra.io');
+            expect(span.tags['aws.ses.mail.destination'].ToAddresses).toContain('test@thundra.io');
+            expect(span.tags['aws.ses.mail.destination'].CcAddresses).toContain('test-cc@thundra.io');
 
             expect(span.tags['aws.ses.mail.subject']).not.toBeTruthy();
             expect(span.tags['aws.ses.mail.body']).not.toBeTruthy();
@@ -798,7 +799,7 @@ describe('AWS integration', () => {
             expect(span.domainName).toBe('Messaging');
 
             expect(span.tags['aws.ses.mail.source']).toBe('demo@thundra.io');
-            expect(span.tags['aws.ses.mail.destination']).toContain('test@thundra.io');
+            expect(span.tags['aws.ses.mail.destination'].ToAddresses).toContain('test@thundra.io');
             expect(span.tags['aws.ses.mail.template.name']).toBe('TestTemplate');
             expect(span.tags['aws.ses.mail.template.arn']).toBe('test');
             expect(span.tags['aws.ses.mail.template.data']).not.toBeTruthy();
