@@ -17,10 +17,9 @@ import GlobalApplcationInfoProvider from './application/GlobalApplicationInfoPro
 const get = require('lodash.get');
 
 function createWrapper(options?: any) {
-    ConfigProvider.init(get(options, 'config'), get(options, 'configFilePath'));
-    const conf = new config.ThundraConfig(options);
+    ConfigProvider.init(options);
 
-    return LambdaWrapper.createWrapper(conf);
+    return LambdaWrapper.createWrapper();
 }
 
 function init(options?: any) {

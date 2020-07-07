@@ -5,23 +5,24 @@ import Utils from '../plugins/utils/Utils';
 import Reporter from '../Reporter';
 import { ApplicationManager } from '../application/ApplicationManager';
 import { ApplicationInfo } from '../application/ApplicationInfo';
-
-const apiKey = '3e9be473-38ba-4d3c-b59f-9a7ce43e412d';
+import ConfigProvider from '../config/ConfigProvider';
 
 export function expressMW() {
     const applicationInfo = ApplicationManager.getApplicationInfo();
 
+    const apiKey = ConfigProvider.thundraConfig.apiKey;
+    const reporter = new Reporter(apiKey);
+
+    const pluginContext = createPluginContext(applicationInfo, reporter, apiKey);
+    const plugins = createPlugins(pluginContext);
+
     return async (req: any, res: any, next: any) => {
         try {
-            const pluginContext = createPluginContext(applicationInfo);
-            const plugins = createPlugins(pluginContext);
-            const reporter = new Reporter(apiKey);
-
-            beforeRequest(plugins, reporter);
+            beforeRequest(plugins, pluginContext);
 
             res.once('finish', async () => {
-                afterRequest(plugins);
-                await reporter.sendReports();
+                afterRequest(plugins, pluginContext);
+                // await reporter.sendReports();
             });
         } catch (err) {
             console.error(err);
@@ -31,10 +32,12 @@ export function expressMW() {
     };
 }
 
-function createPluginContext(applicationInfo: ApplicationInfo): PluginContext {
+function createPluginContext(applicationInfo: ApplicationInfo, reporter: Reporter, apiKey: string): PluginContext {
     return new PluginContext({
         ...applicationInfo,
         transactionId: Utils.generateId(),
+        reporter,
+        apiKey,
     });
 }
 
@@ -49,14 +52,14 @@ function createPlugins(pluginContext: PluginContext): any[] {
     return plugins;
 }
 
-function beforeRequest(plugins: any[], reporter: Reporter) {
+function beforeRequest(plugins: any[], pluginContext: PluginContext) {
     for (const plugin of plugins) {
-        plugin.beforeInvocation({ reporter });
+        plugin.beforeInvocation({ pluginContext });
     }
 }
 
-function afterRequest(plugins: any[]) {
+function afterRequest(plugins: any[], pluginContext: PluginContext) {
     for (const plugin of plugins) {
-        plugin.afterInvocation();
+        plugin.afterInvocation({ pluginContext });
     }
 }

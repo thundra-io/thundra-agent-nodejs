@@ -36,16 +36,15 @@ import ConfigNames from '../config/ConfigNames';
 const get = require('lodash.get');
 
 export default class Trace {
-    hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
+    hooks: { 'before-invocation': (pluginContext: PluginContext) => void;
+            'after-invocation': (pluginContext: PluginContext) => void; };
     config: TraceConfig;
-    reporter: Reporter;
-    pluginContext: PluginContext;
-    apiKey: string;
     finishTimestamp: number;
     startTimestamp: number;
     tracer: ThundraTracer;
     rootSpan: ThundraSpan;
     pluginOrder: number = 1;
+    pluginContext: PluginContext;
     triggerClassName: String;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
@@ -56,10 +55,10 @@ export default class Trace {
             'after-invocation': this.afterInvocation,
         };
 
-        const tracerConfig = config ? config.tracerConfig : {};
         this.config = config;
+        const tracerConfig = get(config, 'tracerConfig', '');
 
-        this.tracer = new ThundraTracer(tracerConfig);
+        this.tracer = config.tracer || new ThundraTracer(tracerConfig);
 
         this.config.tracer = this.tracer;
         this.initIntegrations();
@@ -89,25 +88,29 @@ export default class Trace {
         }
     }
 
-    report(data: any): void {
-        this.reporter.addReport(data);
-    }
-
     setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
-        this.apiKey = pluginContext.apiKey;
     }
 
-    beforeInvocation = (data: any) => {
+    report(data: any, reporter: Reporter): void {
+        if (reporter) {
+            reporter.addReport(data);
+        }
+    }
+
+    beforeInvocation = (pluginContext: PluginContext) => {
         this.destroy();
 
-        const { originalContext, originalEvent, reporter } = data;
+        const { reporter } = pluginContext;
 
+        /*
         // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.
         if (!originalContext.awsRequestId || originalContext.awsRequestId === 'id') {
             originalContext.awsRequestId = Utils.generateId();
         }
+        */
 
+        /*
         const propagatedSpanContext: ThundraSpanContext =
             this.extractSpanContext(originalEvent, originalContext) as ThundraSpanContext;
 
@@ -136,11 +139,14 @@ export default class Trace {
         }
 
         this.pluginContext.spanId = this.rootSpan.spanContext.spanId;
+        */
 
-        this.reporter = reporter;
-        this.startTimestamp = this.pluginContext.invocationStartTimestamp;
-        this.rootSpan.startTime = this.pluginContext.invocationStartTimestamp;
+        /*
+        this.startTimestamp = pluginContext.invocationStartTimestamp;
+        this.rootSpan.startTime = pluginContext.invocationStartTimestamp;
+        */
 
+        /*
         this.triggerClassName = this.injectTriggerTags(this.rootSpan, this.pluginContext, originalEvent, originalContext);
 
         this.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
@@ -153,9 +159,11 @@ export default class Trace {
         this.rootSpan.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
         this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
         this.rootSpan.tags['aws.lambda.invocation.request'] = this.getRequest(originalEvent);
+        */
     }
 
-    afterInvocation = (data: any) => {
+    afterInvocation = (pluginContext: PluginContext) => {
+        /*
         let response = data.response;
         const originalEvent = data.originalEvent;
 
@@ -222,6 +230,7 @@ export default class Trace {
         }
 
         this.destroy();
+        */
     }
 
     processAPIGWResponse(response: any, originalEvent: any): void {

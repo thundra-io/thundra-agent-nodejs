@@ -13,16 +13,15 @@ import {ApplicationManager} from '../application/ApplicationManager';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
 import Logger from './Logger';
 import LogManager from './LogManager';
+import Reporter from '../Reporter';
 
 const get = require('lodash.get');
 
 class Log {
-    reporter: any;
     enabled: boolean;
-    pluginContext: PluginContext;
-    apiKey: any;
     logData: LogData;
-    hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
+    hooks: { 'before-invocation': (pluginContext: PluginContext) => void;
+             'after-invocation': (pluginContext: PluginContext) => void; };
     logs: LogData[];
     pluginOrder: number = 4;
     consoleReference: any = console;
@@ -49,44 +48,41 @@ class Log {
         }
     }
 
-    report(logReport: any): void {
-        if (this.reporter) {
-            this.reporter.addReport(logReport);
+    report(logReport: any, reporter: Reporter): void {
+        if (reporter) {
+            reporter.addReport(logReport);
         }
     }
 
-    setPluginContext(pluginContext: PluginContext): void {
-        this.pluginContext = pluginContext;
-        this.apiKey = pluginContext.apiKey;
-    }
+    beforeInvocation = (pluginContext: PluginContext) => {
+        const { reporter } = pluginContext;
 
-    beforeInvocation = (data: any) => {
         this.captureLog = true;
         this.logs = [];
-        this.reporter = data.reporter;
-        this.logData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.LOG) as LogData;
+        this.logData = Utils.initMonitoringData(pluginContext, MonitoringDataType.LOG) as LogData;
 
-        this.logData.transactionId = this.pluginContext.transactionId ?
-            this.pluginContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
-        this.logData.traceId = this.pluginContext.traceId;
+        this.logData.transactionId = pluginContext.transactionId ?
+            pluginContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
+        this.logData.traceId = pluginContext.traceId;
 
         this.logData.tags = {};
     }
 
-    afterInvocation = (data: any) => {
+    afterInvocation = (pluginContext: PluginContext) => {
         const sampler = get(this.config, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled();
         if (sampled) {
             for (const log of this.logs) {
-                const logReportData = Utils.generateReport(log, this.apiKey);
+                const { apiKey, reporter } = pluginContext;
+                const logReportData = Utils.generateReport(log, apiKey);
                 // If lambda fails skip log filtering
                 if (InvocationSupport.isErrorenous()) {
-                    this.report(logReportData);
+                    this.report(logReportData, reporter);
                     continue;
                 }
 
                 if (logLevels[log.logLevel] >= this.logLevelFilter) {
-                    this.report(logReportData);
+                    this.report(logReportData, reporter);
                 }
             }
         } else {

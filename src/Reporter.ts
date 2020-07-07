@@ -72,12 +72,12 @@ class Reporter {
         this.reports = [...this.reports, report];
     }
 
-    getCompositeBatchedReports(): any[] {
+    getCompositeBatchedReports(reports: any[]): any[] {
+        reports = reports.slice(0);
+
         const batchedReports: any[] = [];
-        const reports = this.reports.slice(0);
         const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
-        const invocationReport =
-            this.reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
+        const invocationReport = reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
         if (!invocationReport) {
             return [];
         }
@@ -103,10 +103,10 @@ class Reporter {
         return batchedReports;
     }
 
-    async sendReports(): Promise<void> {
+    async sendReports(reports: any[]): Promise<void> {
         let batchedReports = [];
         try {
-            batchedReports = this.getCompositeBatchedReports();
+            batchedReports = this.getCompositeBatchedReports(reports);
         } catch (err) {
             ThundraLogger.error(`Cannot create batch request will send no report. ${err}`);
         }
@@ -132,7 +132,7 @@ class Reporter {
                 ThundraLogger.debug(
                     'Keep Alive connection reset by server. Will send monitoring data again.');
                 this.connectionRetryCount++;
-                await this.sendReports();
+                await this.sendReports(reports);
                 this.connectionRetryCount = 0;
                 return;
             }
@@ -159,7 +159,7 @@ class Reporter {
                         // If not no need to convert reports into JSON string to pass to "debug" function
                         // because "JSON.stringify" is not cheap operation.
                         if (ThundraLogger.isDebugEnabled()) {
-                            ThundraLogger.debug(JSON.stringify(this.reports));
+                            ThundraLogger.debug(JSON.stringify(batch));
                         }
                         return reject({
                             status: response.statusCode,

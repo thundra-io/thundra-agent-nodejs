@@ -34,6 +34,7 @@ import Utils from './plugins/utils/Utils';
 import {readFileSync} from 'fs';
 import ConfigProvider from './config/ConfigProvider';
 import ConfigNames from './config/ConfigNames';
+import execContext from './execContext';
 
 const path = require('path');
 
@@ -346,17 +347,18 @@ class ThundraWrapper {
             reporter: this.reporter,
         };
 
-        this.resetTime();
-
         InvocationSupport.setErrorenous(false);
 
         this.resolve = undefined;
         this.reject = undefined;
 
+        this.clearExecContext(execContext);
+        this.setStartTime(execContext);
+
         return new Promise((resolve, reject) => {
             this.resolve = resolve;
             this.reject = reject;
-            this.executeHook('before-invocation', beforeInvocationData, false)
+            this.executeHook('before-invocation', execContext, false)
                 .then(() => {
                     this.pluginContext.requestCount += 1;
                     this.timeout = this.setupTimeoutHandler();
@@ -412,15 +414,27 @@ class ThundraWrapper {
 
         afterInvocationData.error ? InvocationSupport.setErrorenous(true) : InvocationSupport.setErrorenous(false);
 
-        await this.executeHook('after-invocation', afterInvocationData, true);
-        this.resetTime();
-        await this.reporter.sendReports();
+        this.setEndTime(execContext);
+        await this.executeHook('after-invocation', execContext, true);
+        const { reports } = execContext;
+        console.log(reports);
+        await this.reporter.sendReports(reports);
 
         InvocationSupport.setErrorenous(false);
     }
 
-    resetTime() {
-        this.pluginContext.resetTimestamps();
+    clearExecContext(context: any) {
+        for (const key in context) {
+            delete context[key];
+        }
+    }
+
+    setStartTime(context: any) {
+        context.startTimestamp = Date.now();
+    }
+
+    setEndTime(context: any) {
+        context.finishTimestamp = Date.now();
     }
 
     async report(error: any, result: any, callback: any) {
@@ -457,7 +471,7 @@ class ThundraWrapper {
 
     isHTTPErrorResponse(result: any) {
         let isError = false;
-        if (Utils.isValidResponse(result) && result.body) {
+        if (Utils.isValidHTTPResponse(result) && result.body) {
             if (typeof result.body === 'string') {
                 if (result.statusCode >= 400 && result.statusCode <= 599) {
                     isError = true;

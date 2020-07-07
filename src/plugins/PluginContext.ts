@@ -13,8 +13,6 @@ class PluginContext {
     transactionId?: string;
     error?: Error;
     maxMemory?: number;
-    private $invocationStartTimestamp?: number;
-    private $invocationFinishTimestamp?: number;
 
     constructor(opt: any) {
         opt = opt ? opt : {};
@@ -28,32 +26,6 @@ class PluginContext {
         this.transactionId = opt.transactionId;
     }
 
-    get invocationStartTimestamp(): number {
-        if (!this.$invocationStartTimestamp) {
-            this.$invocationStartTimestamp = Date.now();
-        }
-        return this.$invocationStartTimestamp;
-    }
-
-    set invocationStartTimestamp(invocationStartTimestamp: number) {
-         this.$invocationStartTimestamp = invocationStartTimestamp;
-    }
-
-    get invocationFinishTimestamp(): number {
-        if (!this.$invocationFinishTimestamp) {
-            this.$invocationFinishTimestamp = Date.now();
-        }
-        return this.$invocationFinishTimestamp;
-    }
-
-    set invocationFinishTimestamp(invocationFinishTimestamp: number) {
-         this.$invocationFinishTimestamp = invocationFinishTimestamp;
-    }
-
-    resetTimestamps(): void {
-        this.$invocationStartTimestamp = undefined;
-        this.$invocationFinishTimestamp = undefined;
-    }
 }
 
 export default PluginContext;

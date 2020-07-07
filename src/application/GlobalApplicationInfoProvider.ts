@@ -44,7 +44,11 @@ export default class GlobalApplcationInfoProvider implements ApplicationInfoProv
             applicationRegion: fromConfig.applicationRegion || fromPlatform.applicationRegion,
             applicationVersion: fromConfig.applicationVersion || fromPlatform.applicationVersion,
             applicationTags: fromConfig.applicationTags || fromPlatform.applicationTags,
-        }
+        };
+    }
+
+    update(): void {
+        
     }
 
 }

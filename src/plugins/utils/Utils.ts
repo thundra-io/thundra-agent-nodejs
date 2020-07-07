@@ -536,7 +536,7 @@ class Utils {
         }
     }
 
-    static isValidResponse(response: any) {
+    static isValidHTTPResponse(response: any) {
         if (!response) {
             return false;
         }

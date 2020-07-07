@@ -28,7 +28,9 @@ interface WrappedFunction extends Function {
  * @param config options
  * @returns wrapper function
  */
-export function createWrapper(config: ThundraConfig): (f: Function) => WrappedFunction {
+export function createWrapper(): (f: Function) => WrappedFunction {
+    const config = ConfigProvider.thundraConfig;
+
     if (config.disableThundra) {
         return (originalFunc) => originalFunc;
     }
@@ -115,9 +117,7 @@ function createWrappedHandler(pluginContext: PluginContext, originalFunc: Functi
  */
 function createPluginContext(config: ThundraConfig, applicationInfo: ApplicationInfo): PluginContext {
     const pluginContext: PluginContext = new PluginContext({
-        applicationInstanceId: applicationInfo.applicationInstanceId,
-        applicationRegion: applicationInfo.applicationRegion,
-        applicationVersion: applicationInfo.applicationVersion,
+        ...applicationInfo,
         requestCount: 0,
         apiKey: config.apiKey,
         timeoutMargin: config.timeoutMargin,

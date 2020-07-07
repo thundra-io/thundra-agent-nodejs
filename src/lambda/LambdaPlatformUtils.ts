@@ -65,7 +65,7 @@ export class LambdaPlatformUtils extends PlatformUtils {
         return context ? context.awsRequestId : '';
     }
 
-    static setInvocationTags(invocationData: any, pluginContext: any) {
+    static setInvocationTags(invocationData: any, pluginContext: any, execContext: any) {
         const originalContext = LambdaContextProvider.getContext();
 
         invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;

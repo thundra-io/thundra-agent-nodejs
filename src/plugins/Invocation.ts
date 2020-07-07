@@ -13,15 +13,12 @@ import {ApplicationManager} from '../application/ApplicationManager';
 const get = require('lodash.get');
 
 export default class Invocation {
-    hooks: { 'before-invocation': (data: any) => void; 'after-invocation': (data: any) => void; };
-    options: InvocationConfig;
-    invocationData: InvocationData;
-    reporter: any;
-    pluginContext: PluginContext;
-    apiKey: any;
-    finishTimestamp: any;
-    startTimestamp: number;
     pluginOrder: number = 2;
+    pluginContext: PluginContext;
+    contextKey: string = 'invocationData';
+    options: InvocationConfig;
+    hooks: { 'before-invocation': (pluginContext: PluginContext) => void;
+             'after-invocation': (pluginContext: PluginContext) => void; };
 
     constructor(options?: any) {
         this.hooks = {
@@ -31,96 +28,104 @@ export default class Invocation {
         this.options = options;
     }
 
-    report(data: any): void {
-        this.reporter.addReport(data);
+    report(data: any, execContext: any): void {
+        const reports = get(execContext, 'reports', []);
+        execContext.reports = [...reports, data];
     }
 
     setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
-        this.apiKey = pluginContext.apiKey;
     }
 
-    beforeInvocation = (data?: any) => {
-        this.reporter = data.reporter;
-        this.finishTimestamp = null;
-        this.startTimestamp = this.pluginContext.invocationStartTimestamp;
+    beforeInvocation = (execContext: any) => {
+        if (execContext.error) {
+            execContext.error = undefined;
+        }
 
-        InvocationSupport.clearError();
+        const pluginContext = this.pluginContext;
 
-        this.invocationData = Utils.initMonitoringData(this.pluginContext,
+        const invocationData = Utils.initMonitoringData(pluginContext,
                              MonitoringDataType.INVOCATION) as InvocationData;
 
-        this.invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM;
-        this.invocationData.functionRegion = this.pluginContext.applicationRegion;
-        this.invocationData.tags = {};
-        this.invocationData.userTags = {};
-        this.invocationData.startTimestamp = this.startTimestamp;
-        this.invocationData.finishTimestamp = 0;
-        this.invocationData.duration = 0;
-        this.invocationData.erroneous = false;
-        this.invocationData.errorType = '';
-        this.invocationData.errorMessage = '';
-        this.invocationData.coldStart = this.pluginContext.requestCount === 0;
-        this.invocationData.timeout = false;
+        invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM;
+        invocationData.functionRegion = pluginContext.applicationRegion;
+        invocationData.tags = {};
+        invocationData.userTags = {};
+        invocationData.startTimestamp = execContext.startTimestamp;
+        invocationData.finishTimestamp = 0;
+        invocationData.duration = 0;
+        invocationData.erroneous = false;
+        invocationData.errorType = '';
+        invocationData.errorMessage = '';
+        invocationData.coldStart = pluginContext.requestCount === 0;
+        invocationData.timeout = false;
 
-        this.invocationData.transactionId = this.pluginContext.transactionId ?
-            this.pluginContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
+        invocationData.transactionId = execContext.transactionId ?
+            execContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
 
-        this.invocationData.spanId = this.pluginContext.spanId;
-        this.invocationData.traceId = this.pluginContext.traceId;
+        invocationData.spanId = execContext.spanId;
+        invocationData.traceId = execContext.traceId;
 
+        /*
         const xrayTraceInfo = Utils.getXRayTraceInfo();
 
         if (xrayTraceInfo.traceID) {
-            this.invocationData.tags['aws.xray.trace.id'] = xrayTraceInfo.traceID;
+            invocationData.tags['aws.xray.trace.id'] = xrayTraceInfo.traceID;
         }
         if (xrayTraceInfo.segmentID) {
-            this.invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
+            invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
         }
+        */
 
-        ApplicationManager.getPlatformUtils().setInvocationTags(this.invocationData, this.pluginContext);
+        ApplicationManager.getPlatformUtils().setInvocationTags(invocationData, pluginContext, execContext);
+
+        execContext[this.contextKey] = invocationData;
     }
 
-    afterInvocation = (data?: any) => {
-        if (InvocationSupport.hasError()) {
-            this.invocationData.setError(InvocationSupport.error);
-        }
+    afterInvocation = (execContext: any) => {
+        const { error } = execContext;
+        const pluginContext = this.pluginContext;
+        const invocationData = execContext[this.contextKey];
 
-        if (get(data, 'error')) {
-            const error = Utils.parseError(data.error);
-            this.invocationData.setError(error);
-            if (data.error instanceof TimeoutError) {
-                this.invocationData.timeout = true;
-                this.invocationData.tags['aws.lambda.invocation.timeout'] = true;
+        if (error) {
+            const parsedErr = Utils.parseError(error);
+            invocationData.setError(parsedErr);
+
+            if (error instanceof TimeoutError) {
+                invocationData.timeout = true;
+                invocationData.tags['aws.lambda.invocation.timeout'] = true;
             }
 
-            this.invocationData.tags.error = true;
-            this.invocationData.tags['error.message'] = error.errorMessage;
-            this.invocationData.tags['error.kind'] = error.errorType;
-            this.invocationData.tags['error.stack'] = error.stack;
-            if (error.code) {
-                this.invocationData.tags['error.code'] = error.code;
+            invocationData.tags.error = true;
+            invocationData.tags['error.message'] = parsedErr.errorMessage;
+            invocationData.tags['error.kind'] = parsedErr.errorType;
+            invocationData.tags['error.stack'] = parsedErr.stack;
+            if (parsedErr.code) {
+                invocationData.tags['error.code'] = error.code;
             }
-            if (error.stack) {
-                this.invocationData.tags['error.stack'] = error.stack;
+            if (parsedErr.stack) {
+                invocationData.tags['error.stack'] = error.stack;
             }
         }
 
-        this.invocationData.setTags(InvocationSupport.tags);
-        this.invocationData.setUserTags(InvocationSupport.userTags);
-        this.finishTimestamp = this.pluginContext.invocationFinishTimestamp;
-        this.invocationData.finishTimestamp = this.finishTimestamp;
-        this.invocationData.duration = this.finishTimestamp - this.startTimestamp;
-        this.invocationData.resources = InvocationTraceSupport.getResources(this.pluginContext.spanId);
-        this.invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
-        this.invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
+        invocationData.setTags(InvocationSupport.tags);
+        invocationData.setUserTags(InvocationSupport.userTags);
 
-        if (Utils.isValidResponse(get(data, 'response'))) {
-            this.invocationData.setUserTags({[HttpTags.HTTP_STATUS]: data.response.statusCode});
+        const { startTimestamp, finishTimestamp, spanId, response } = execContext;
+
+        invocationData.finishTimestamp = finishTimestamp;
+        invocationData.duration = finishTimestamp - startTimestamp;
+        invocationData.resources = InvocationTraceSupport.getResources(spanId);
+        invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
+        invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
+
+        if (Utils.isValidHTTPResponse(response)) {
+            invocationData.setUserTags({[HttpTags.HTTP_STATUS]: response.statusCode});
         }
 
-        const reportData = Utils.generateReport(this.invocationData, this.apiKey);
-        this.report(reportData);
+        const { apiKey } = pluginContext;
+        const reportData = Utils.generateReport(invocationData, apiKey);
+        this.report(reportData, execContext);
 
         this.destroy();
     }
