@@ -39,13 +39,9 @@ export default class Trace {
     hooks: { 'before-invocation': (pluginContext: PluginContext) => void;
             'after-invocation': (pluginContext: PluginContext) => void; };
     config: TraceConfig;
-    finishTimestamp: number;
-    startTimestamp: number;
-    tracer: ThundraTracer;
-    rootSpan: ThundraSpan;
     pluginOrder: number = 1;
+    contextKey: string = 'traceData';
     pluginContext: PluginContext;
-    triggerClassName: String;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
 
@@ -56,15 +52,11 @@ export default class Trace {
         };
 
         this.config = config;
-        const tracerConfig = get(config, 'tracerConfig', '');
-
-        this.tracer = config.tracer || new ThundraTracer(tracerConfig);
-
-        this.config.tracer = this.tracer;
         this.initIntegrations();
-
+        /*
         initGlobalTracer(this.tracer);
         Utils.registerSpanListenersFromConfigurations(this.tracer);
+        */
     }
 
     initIntegrations(): void {
@@ -92,145 +84,136 @@ export default class Trace {
         this.pluginContext = pluginContext;
     }
 
-    report(data: any, reporter: Reporter): void {
-        if (reporter) {
-            reporter.addReport(data);
-        }
+    report(data: any, execContext: any): void {
+        const reports = get(execContext, 'reports', []);
+        execContext.reports = [...reports, data];
     }
 
-    beforeInvocation = (pluginContext: PluginContext) => {
+    beforeInvocation = (execContext: any) => {
         this.destroy();
 
-        const { reporter } = pluginContext;
+        const traceData: any = {};
+        const { originalContext, originalEvent, tracer } = execContext;
 
-        /*
         // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.
         if (!originalContext.awsRequestId || originalContext.awsRequestId === 'id') {
             originalContext.awsRequestId = Utils.generateId();
         }
-        */
 
-        /*
         const propagatedSpanContext: ThundraSpanContext =
-            this.extractSpanContext(originalEvent, originalContext) as ThundraSpanContext;
+            this.extractSpanContext(tracer, originalEvent, originalContext) as ThundraSpanContext;
 
         if (propagatedSpanContext) {
-            this.pluginContext.traceId = propagatedSpanContext.traceId;
-            this.pluginContext.transactionId = Utils.generateId();
-            this.tracer.transactionId = this.pluginContext.transactionId;
+            traceData.traceId = propagatedSpanContext.traceId;
+            traceData.transactionId = Utils.generateId();
+            tracer.transactionId = traceData.transactionId;
 
-            this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
+            traceData.rootSpan = tracer._startSpan(originalContext.functionName, {
                 propagated: true,
                 parentContext: propagatedSpanContext,
-                rootTraceId: this.pluginContext.traceId,
+                rootTraceId: traceData.traceId,
                 domainName: DomainNames.API,
                 className: ClassNames.LAMBDA,
             });
         } else {
-            this.pluginContext.traceId = Utils.generateId();
-            this.pluginContext.transactionId = Utils.generateId();
-            this.tracer.transactionId = this.pluginContext.transactionId;
+            traceData.traceId = Utils.generateId();
+            traceData.transactionId = Utils.generateId();
+            tracer.transactionId = execContext.transactionId;
 
-            this.rootSpan = this.tracer._startSpan(originalContext.functionName, {
-                rootTraceId: this.pluginContext.traceId,
+            traceData.rootSpan = tracer._startSpan(originalContext.functionName, {
+                rootTraceId: traceData.traceId,
                 domainName: DomainNames.API,
                 className: ClassNames.LAMBDA,
             });
         }
 
-        this.pluginContext.spanId = this.rootSpan.spanContext.spanId;
-        */
+        traceData.spanId = traceData.rootSpan.spanContext.spanId;
+        traceData.rootSpan.startTime = execContext.startTimestamp;
+        traceData.triggerClassName = this.injectTriggerTags(
+            traceData.rootSpan, this.pluginContext, originalEvent, originalContext);
 
-        /*
-        this.startTimestamp = pluginContext.invocationStartTimestamp;
-        this.rootSpan.startTime = pluginContext.invocationStartTimestamp;
-        */
 
-        /*
-        this.triggerClassName = this.injectTriggerTags(this.rootSpan, this.pluginContext, originalEvent, originalContext);
+        traceData.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
+        traceData.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
+        traceData.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
+        traceData.rootSpan.tags['aws.region'] = this.pluginContext.applicationRegion;
+        traceData.rootSpan.tags['aws.lambda.log_group_name'] = originalContext.logGroupName;
+        traceData.rootSpan.tags['aws.lambda.name'] = originalContext.functionName;
+        traceData.rootSpan.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
+        traceData.rootSpan.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
+        traceData.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
+        traceData.rootSpan.tags['aws.lambda.invocation.request'] = this.getRequest(originalEvent, traceData.triggerClassName);
 
-        this.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
-        this.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
-        this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
-        this.rootSpan.tags['aws.region'] = this.pluginContext.applicationRegion;
-        this.rootSpan.tags['aws.lambda.log_group_name'] = originalContext.logGroupName;
-        this.rootSpan.tags['aws.lambda.name'] = originalContext.functionName;
-        this.rootSpan.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
-        this.rootSpan.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
-        this.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
-        this.rootSpan.tags['aws.lambda.invocation.request'] = this.getRequest(originalEvent);
-        */
+        execContext[this.contextKey] = traceData;
     }
 
-    afterInvocation = (pluginContext: PluginContext) => {
-        /*
-        let response = data.response;
-        const originalEvent = data.originalEvent;
+    afterInvocation = (execContext: any) => {
+        let { response } = execContext;
+        const { apiKey } = this.pluginContext;
+        const { originalEvent, finishTimestamp, tracer } = execContext;
+        const { rootSpan, error, triggerClassName } = execContext[this.contextKey];
 
-        if (InvocationSupport.hasError()) {
-            this.rootSpan.tags.error = true;
-            this.rootSpan.tags['error.message'] = InvocationSupport.error.errorMessage;
-            this.rootSpan.tags['error.kind'] = InvocationSupport.error.errorType;
-            if (InvocationSupport.error.code) {
-                this.rootSpan.tags['error.code'] = InvocationSupport.error.code;
+        if (error) {
+            rootSpan.tags.error = true;
+            rootSpan.tags['error.message'] = error.errorMessage;
+            rootSpan.tags['error.kind'] = error.errorType;
+            if (error.code) {
+                rootSpan.tags['error.code'] = error.code;
             }
-            if (InvocationSupport.error.stack) {
-                this.rootSpan.tags['error.stack'] = InvocationSupport.error.stack;
+            if (error.stack) {
+                rootSpan.tags['error.stack'] = error.stack;
             }
-            InvocationSupport.clearError();
         }
 
-        if (data.error) {
-            const error = Utils.parseError(data.error);
-            if (!(data.error instanceof HttpError)) {
+        if (error) {
+            const parsedErr = Utils.parseError(error);
+            if (!(error instanceof HttpError)) {
                 response = error;
             }
 
-            this.rootSpan.tags.error = true;
-            this.rootSpan.tags['error.message'] = error.errorMessage;
-            this.rootSpan.tags['error.kind'] = error.errorType;
+            rootSpan.tags.error = true;
+            rootSpan.tags['error.message'] = parsedErr.errorMessage;
+            rootSpan.tags['error.kind'] = parsedErr.errorType;
 
-            if (error.code) {
-                this.rootSpan.tags['error.code'] = error.code;
+            if (parsedErr.code) {
+                rootSpan.tags['error.code'] = parsedErr.code;
             }
-            if (error.stack) {
-                this.rootSpan.tags['error.stack'] = error.stack;
+            if (parsedErr.stack) {
+                rootSpan.tags['error.stack'] = parsedErr.stack;
             }
         }
 
-        if (this.triggerClassName === ClassNames.APIGATEWAY) {
+        if (triggerClassName === ClassNames.APIGATEWAY) {
             this.processAPIGWResponse(response, originalEvent);
         }
 
-        this.rootSpan.tags['aws.lambda.invocation.response'] = this.getResponse(response);
+        rootSpan.tags['aws.lambda.invocation.response'] = this.getResponse(response);
 
-        this.finishTimestamp = this.pluginContext.invocationFinishTimestamp;
-        this.rootSpan.finish();
-        this.rootSpan.finishTime = this.pluginContext.invocationFinishTimestamp;
+        rootSpan.finish();
+        rootSpan.finishTime = finishTimestamp;
 
-        const spanList = this.tracer.getRecorder().getSpanList();
+        const spanList = tracer.getRecorder().getSpanList();
 
-        const isSamplerPresent = this.config && this.config.sampler && typeof (this.config.sampler.isSampled) === 'function';
-        const sampled = isSamplerPresent ? this.config.sampler.isSampled(this.rootSpan) : true;
+        const isSampled = get(this.config, 'sampler.isSampled', () => true);
+        const sampled = isSampled(rootSpan);
 
         if (sampled) {
             for (const span of spanList) {
                 if (span) {
-                    if (isSamplerPresent && this.config.runSamplerOnEachSpan && this.config.sampler.isSampled(span)) {
+                    if (this.config.runSamplerOnEachSpan && !isSampled(span)) {
                         ThundraLogger.debug(
                             `Filtering span with name ${span.getOperationName()} due to custom sampling configuration`);
                         continue;
                     }
 
-                    const spanData = this.buildSpanData(span, this.pluginContext);
-                    const spanReportData = Utils.generateReport(spanData, this.apiKey);
-                    this.report(spanReportData);
+                    const spanData = this.buildSpanData(span, this.pluginContext, execContext);
+                    const spanReportData = Utils.generateReport(spanData, apiKey);
+                    this.report(spanReportData, execContext);
                 }
             }
         }
 
         this.destroy();
-        */
     }
 
     processAPIGWResponse(response: any, originalEvent: any): void {
@@ -243,17 +226,18 @@ export default class Trace {
         }
     }
 
-    buildSpanData(span: ThundraSpan, pluginContext: PluginContext): SpanData {
+    buildSpanData(span: ThundraSpan, pluginContext: PluginContext, execContext: any): SpanData {
         const spanData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.SPAN) as SpanData;
+        const traceData = execContext[this.contextKey];
 
         spanData.id = span.spanContext.spanId;
-        spanData.traceId = pluginContext.traceId;
-        spanData.transactionId = pluginContext.transactionId;
+        spanData.traceId = traceData.traceId;
+        spanData.transactionId = traceData.transactionId;
         spanData.parentSpanId = span.spanContext.parentId;
         spanData.spanOrder = span.order;
         spanData.domainName = span.domainName ? span.domainName : '';
         spanData.className = span.className ? span.className : '';
-        spanData.serviceName = this.rootSpan.operationName;
+        spanData.serviceName = traceData.rootSpan.operationName;
         spanData.operationName = span.operationName;
         spanData.startTimestamp = span.startTime;
         spanData.duration = span.getDuration();
@@ -265,6 +249,7 @@ export default class Trace {
     }
 
     destroy(): void {
+        /*
         if (this.config && !(this.config.disableInstrumentation)) {
             this.tracer.destroy();
             if (typeof this.instrumenter.unhookModuleCompile === 'function') {
@@ -272,9 +257,10 @@ export default class Trace {
             }
         }
         this.triggerClassName = undefined;
+        */
     }
 
-    private getRequest(originalEvent: any): any {
+    private getRequest(originalEvent: any, triggerClassName: string): any {
         const conf = this.config;
 
         // Masking and disableRequest should run first
@@ -292,15 +278,15 @@ export default class Trace {
         }
 
         let enableRequestData = true;
-        if (this.triggerClassName === ClassNames.CLOUDWATCH && !conf.enableCloudWatchRequest) {
+        if (triggerClassName === ClassNames.CLOUDWATCH && !conf.enableCloudWatchRequest) {
             enableRequestData = false;
         }
 
-        if (this.triggerClassName === ClassNames.FIREHOSE && !conf.enableFirehoseRequest) {
+        if (triggerClassName === ClassNames.FIREHOSE && !conf.enableFirehoseRequest) {
             enableRequestData = false;
         }
 
-        if (this.triggerClassName === ClassNames.KINESIS && !conf.enableKinesisRequest) {
+        if (triggerClassName === ClassNames.KINESIS && !conf.enableKinesisRequest) {
             enableRequestData = false;
         }
 
@@ -330,16 +316,16 @@ export default class Trace {
         return response;
     }
 
-    private extractSpanContext(originalEvent: any, originalContext: any): opentracing.SpanContext {
+    private extractSpanContext(tracer: ThundraTracer, originalEvent: any, originalContext: any): opentracing.SpanContext {
         const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
         if (lambdaEventType === LambdaEventType.Lambda) {
-            return this.tracer.extract(opentracing.FORMAT_TEXT_MAP, originalContext.clientContext.custom);
+            return tracer.extract(opentracing.FORMAT_TEXT_MAP, originalContext.clientContext.custom);
         } else if (lambdaEventType === LambdaEventType.APIGatewayProxy && originalEvent.headers) {
-            return this.tracer.extract(opentracing.FORMAT_HTTP_HEADERS, originalEvent.headers);
+            return tracer.extract(opentracing.FORMAT_HTTP_HEADERS, originalEvent.headers);
         } else if (lambdaEventType === LambdaEventType.SNS) {
-            return LambdaEventUtils.extractSpanContextFromSNSEvent(this.tracer, originalEvent);
+            return LambdaEventUtils.extractSpanContextFromSNSEvent(tracer, originalEvent);
         } else if (lambdaEventType === LambdaEventType.SQS) {
-            return LambdaEventUtils.extractSpanContextFromSQSEvent(this.tracer, originalEvent);
+            return LambdaEventUtils.extractSpanContextFromSQSEvent(tracer, originalEvent);
         }
     }
 

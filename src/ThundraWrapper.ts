@@ -35,8 +35,10 @@ import {readFileSync} from 'fs';
 import ConfigProvider from './config/ConfigProvider';
 import ConfigNames from './config/ConfigNames';
 import execContext from './execContext';
+import ThundraTracer from './opentracing/Tracer';
 
 const path = require('path');
+const get = require('lodash.get');
 
 class ThundraWrapper {
 
@@ -352,8 +354,18 @@ class ThundraWrapper {
         this.resolve = undefined;
         this.reject = undefined;
 
-        this.clearExecContext(execContext);
-        this.setStartTime(execContext);
+        // Execution context intialization
+        for (const key in execContext) {
+            delete execContext[key];
+        }
+
+        const thundraConfig = ConfigProvider.thundraConfig;
+        const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
+
+        execContext.tracer = new ThundraTracer(tracerConfig);
+        execContext.startTimestamp = Date.now();
+        execContext.originalContext = this.originalContext;
+        execContext.originalEvent = this.originalEvent;
 
         return new Promise((resolve, reject) => {
             this.resolve = resolve;
@@ -414,27 +426,13 @@ class ThundraWrapper {
 
         afterInvocationData.error ? InvocationSupport.setErrorenous(true) : InvocationSupport.setErrorenous(false);
 
-        this.setEndTime(execContext);
+        execContext.finishTimestamp = Date.now();
         await this.executeHook('after-invocation', execContext, true);
         const { reports } = execContext;
         console.log(reports);
         await this.reporter.sendReports(reports);
 
         InvocationSupport.setErrorenous(false);
-    }
-
-    clearExecContext(context: any) {
-        for (const key in context) {
-            delete context[key];
-        }
-    }
-
-    setStartTime(context: any) {
-        context.startTimestamp = Date.now();
-    }
-
-    setEndTime(context: any) {
-        context.finishTimestamp = Date.now();
     }
 
     async report(error: any, result: any, callback: any) {
@@ -457,6 +455,8 @@ class ThundraWrapper {
                         response: result,
                     };
                 }
+
+                execContext.response = result;
 
                 await this.executeAfterInvocationAndReport(afterInvocationData);
 

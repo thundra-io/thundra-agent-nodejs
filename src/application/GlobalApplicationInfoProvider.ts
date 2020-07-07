@@ -48,7 +48,7 @@ export default class GlobalApplcationInfoProvider implements ApplicationInfoProv
     }
 
     update(): void {
-        
+        // pass
     }
 
 }

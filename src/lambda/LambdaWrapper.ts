@@ -141,7 +141,6 @@ function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any
 
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && config.traceConfig.enabled) {
         const tracePlugin = new TracePlugin(config.traceConfig);
-        InvocationTraceSupport.tracer = tracePlugin.tracer;
         plugins.push(tracePlugin);
     }
 

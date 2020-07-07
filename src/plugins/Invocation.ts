@@ -60,8 +60,8 @@ export default class Invocation {
         invocationData.coldStart = pluginContext.requestCount === 0;
         invocationData.timeout = false;
 
-        invocationData.transactionId = execContext.transactionId ?
-            execContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
+        invocationData.transactionId = execContext.traceData.transactionId ?
+            execContext.traceData.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
 
         invocationData.spanId = execContext.spanId;
         invocationData.traceId = execContext.traceId;
