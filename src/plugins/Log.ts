@@ -55,8 +55,6 @@ class Log {
     }
 
     beforeInvocation = (pluginContext: PluginContext) => {
-        const { reporter } = pluginContext;
-
         this.captureLog = true;
         this.logs = [];
         this.logData = Utils.initMonitoringData(pluginContext, MonitoringDataType.LOG) as LogData;

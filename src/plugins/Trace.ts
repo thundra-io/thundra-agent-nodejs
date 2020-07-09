@@ -132,7 +132,6 @@ export default class Trace {
         traceData.triggerClassName = this.injectTriggerTags(
             traceData.rootSpan, this.pluginContext, originalEvent, originalContext);
 
-
         traceData.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
         traceData.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
         traceData.rootSpan.tags['aws.lambda.invocation.coldstart'] = this.pluginContext.requestCount === 0;
@@ -206,7 +205,7 @@ export default class Trace {
                         continue;
                     }
 
-                    const spanData = this.buildSpanData(span, this.pluginContext, execContext);
+                    const spanData = this.buildSpanData(span, execContext);
                     const spanReportData = Utils.generateReport(spanData, apiKey);
                     this.report(spanReportData, execContext);
                 }
@@ -226,7 +225,7 @@ export default class Trace {
         }
     }
 
-    buildSpanData(span: ThundraSpan, pluginContext: PluginContext, execContext: any): SpanData {
+    buildSpanData(span: ThundraSpan, execContext: any): SpanData {
         const spanData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.SPAN) as SpanData;
         const traceData = execContext[this.contextKey];
 

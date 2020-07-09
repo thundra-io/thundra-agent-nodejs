@@ -343,12 +343,6 @@ class ThundraWrapper {
 
         await this.startDebuggerProxyIfAvailable();
 
-        const beforeInvocationData = {
-            originalContext: this.originalContext,
-            originalEvent: this.originalEvent,
-            reporter: this.reporter,
-        };
-
         InvocationSupport.setErrorenous(false);
 
         this.resolve = undefined;
@@ -362,7 +356,7 @@ class ThundraWrapper {
         const thundraConfig = ConfigProvider.thundraConfig;
         const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
 
-        execContext.tracer = new ThundraTracer(tracerConfig);
+        execContext.tracer = new ThundraTracer(tracerConfig); // trace plugin
         execContext.startTimestamp = Date.now();
         execContext.originalContext = this.originalContext;
         execContext.originalEvent = this.originalEvent;

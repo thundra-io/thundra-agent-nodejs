@@ -18,6 +18,8 @@ export function expressMW() {
 
     return async (req: any, res: any, next: any) => {
         try {
+            // TODO: init new exec context
+            // create exec context
             beforeRequest(plugins, pluginContext);
 
             res.once('finish', async () => {

@@ -47,8 +47,8 @@ export default class Invocation {
         const invocationData = Utils.initMonitoringData(pluginContext,
                              MonitoringDataType.INVOCATION) as InvocationData;
 
-        invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM;
-        invocationData.functionRegion = pluginContext.applicationRegion;
+        invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM; // TODO: get from platform
+        invocationData.applicationRegion = pluginContext.applicationRegion;
         invocationData.tags = {};
         invocationData.userTags = {};
         invocationData.startTimestamp = execContext.startTimestamp;
@@ -63,10 +63,10 @@ export default class Invocation {
         invocationData.transactionId = execContext.traceData.transactionId ?
             execContext.traceData.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
 
-        invocationData.spanId = execContext.spanId;
-        invocationData.traceId = execContext.traceId;
+        invocationData.spanId = execContext.traceData.spanId;
+        invocationData.traceId = execContext.traceData.traceId;
 
-        /*
+        /* TODO: Move to platform utils
         const xrayTraceInfo = Utils.getXRayTraceInfo();
 
         if (xrayTraceInfo.traceID) {
@@ -91,7 +91,7 @@ export default class Invocation {
             const parsedErr = Utils.parseError(error);
             invocationData.setError(parsedErr);
 
-            if (error instanceof TimeoutError) {
+            if (error instanceof TimeoutError) { // TODO: Move to platform utils
                 invocationData.timeout = true;
                 invocationData.tags['aws.lambda.invocation.timeout'] = true;
             }

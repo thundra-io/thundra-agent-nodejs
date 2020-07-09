@@ -79,7 +79,7 @@ describe('invocation', () => {
             expect(invocation.invocationData.errorMessage).toEqual('');
             expect(invocation.invocationData.coldStart).toEqual(pluginContext.requestCount === 0);
             expect(invocation.invocationData.timeout).toEqual(false);
-            expect(invocation.invocationData.functionRegion).toEqual(pluginContext.applicationRegion);
+            expect(invocation.invocationData.applicationRegion).toEqual(pluginContext.applicationRegion);
             expect(invocation.invocationData.applicationPlatform).toEqual(LAMBDA_FUNCTION_PLATFORM);
             expect(invocation.invocationData.tags).toEqual({
                 'aws.lambda.arn': 'arn:aws:lambda:us-west-2:123456789123:function:test',
