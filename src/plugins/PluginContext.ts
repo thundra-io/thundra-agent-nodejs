@@ -13,6 +13,7 @@ class PluginContext {
     transactionId?: string;
     error?: Error;
     maxMemory?: number;
+    executor: any;
 
     constructor(opt: any) {
         opt = opt ? opt : {};
@@ -24,6 +25,7 @@ class PluginContext {
         this.apiKey = opt.apiKey;
         this.timeoutMargin = opt.timeoutMargin;
         this.transactionId = opt.transactionId;
+        this.executor = opt.executor;
     }
 
 }

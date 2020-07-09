@@ -7,13 +7,13 @@ import Utils from '../plugins/utils/Utils';
 import PluginContext from '../plugins/PluginContext';
 import { EnvVariableKeys } from '../Constants';
 import LogPlugin from '../plugins/Log';
-import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import ConfigNames from '../config/ConfigNames';
 import { ApplicationManager } from '../application/ApplicationManager';
 import { LambdaApplicationInfoProvider } from '../lambda/LambdaApplicationInfoProvider';
 import ThundraConfig from '../plugins/config/ThundraConfig';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import { LambdaContextProvider } from './LambdaContextProvider';
+import * as LambdaExecutor from './LambdaExecutor';
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
@@ -122,6 +122,7 @@ function createPluginContext(config: ThundraConfig, applicationInfo: Application
         apiKey: config.apiKey,
         timeoutMargin: config.timeoutMargin,
         transactionId: null,
+        executor: LambdaExecutor,
     });
 
     return pluginContext;
