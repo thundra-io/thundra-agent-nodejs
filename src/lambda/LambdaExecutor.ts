@@ -1,6 +1,6 @@
 import Utils from '../plugins/utils/Utils';
 import ThundraSpanContext from '../opentracing/SpanContext';
-import { DomainNames, ClassNames, TriggerHeaderTags } from '../Constants';
+import { DomainNames, ClassNames, TriggerHeaderTags, LAMBDA_FUNCTION_PLATFORM, HttpTags } from '../Constants';
 import ThundraTracer from '../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
 import * as opentracing from 'opentracing';
@@ -9,10 +9,16 @@ import ThundraLogger from '../ThundraLogger';
 import PluginContext from '../plugins/PluginContext';
 import ConfigProvider from '../config/ConfigProvider';
 import HttpError from '../plugins/error/HttpError';
+import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
+import InvocationData from '../plugins/data/invocation/InvocationData';
+import { ApplicationManager } from '../application/ApplicationManager';
+import TimeoutError from '../plugins/error/TimeoutError';
+import InvocationSupport from '../plugins/support/InvocationSupport';
+import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 
 const get = require('lodash.get');
 
-export function startExecution(pluginContext: PluginContext, execContext: any) {
+export function startTrace(pluginContext: PluginContext, execContext: any) {
     const { originalContext, originalEvent, tracer } = execContext;
 
     // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.
@@ -64,21 +70,9 @@ export function startExecution(pluginContext: PluginContext, execContext: any) {
     execContext.rootSpan.tags['aws.lambda.invocation.request'] = getRequest(originalEvent, execContext.triggerClassName);
 }
 
-export function finishExecution(pluginContext: PluginContext, execContext: any) {
+export function finishTrace(pluginContext: PluginContext, execContext: any) {
     let { response } = execContext;
     const { rootSpan, error, triggerClassName, originalEvent, finishTimestamp } = execContext;
-
-    if (error) {
-        rootSpan.tags.error = true;
-        rootSpan.tags['error.message'] = error.errorMessage;
-        rootSpan.tags['error.kind'] = error.errorType;
-        if (error.code) {
-            rootSpan.tags['error.code'] = error.code;
-        }
-        if (error.stack) {
-            rootSpan.tags['error.stack'] = error.stack;
-        }
-    }
 
     if (error) {
         const parsedErr = Utils.parseError(error);
@@ -106,6 +100,74 @@ export function finishExecution(pluginContext: PluginContext, execContext: any) 
 
     rootSpan.finish();
     rootSpan.finishTime = finishTimestamp;
+}
+
+export function startInvocation(pluginContext: PluginContext, execContext: any) {
+    const invocationData = Utils.initMonitoringData(pluginContext,
+        MonitoringDataType.INVOCATION) as InvocationData;
+
+    invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM; // TODO: get from platform
+    invocationData.applicationRegion = pluginContext.applicationRegion;
+    invocationData.tags = {};
+    invocationData.userTags = {};
+    invocationData.startTimestamp = execContext.startTimestamp;
+    invocationData.finishTimestamp = 0;
+    invocationData.duration = 0;
+    invocationData.erroneous = false;
+    invocationData.errorType = '';
+    invocationData.errorMessage = '';
+    invocationData.coldStart = pluginContext.requestCount === 0;
+    invocationData.timeout = false;
+
+    invocationData.transactionId = execContext.transactionId ?
+        execContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
+
+    invocationData.spanId = execContext.spanId;
+    invocationData.traceId = execContext.traceId;
+
+    ApplicationManager.getPlatformUtils().setInvocationTags(invocationData, pluginContext, execContext);
+
+    execContext.invocationData = invocationData;
+}
+
+export function finishInvocation(pluginContext: PluginContext, execContext: any) {
+    const { error, invocationData } = execContext;
+
+    if (error) {
+        const parsedErr = Utils.parseError(error);
+        invocationData.setError(parsedErr);
+
+        if (error instanceof TimeoutError) { // TODO: Move to platform utils
+            invocationData.timeout = true;
+            invocationData.tags['aws.lambda.invocation.timeout'] = true;
+        }
+
+        invocationData.tags.error = true;
+        invocationData.tags['error.message'] = parsedErr.errorMessage;
+        invocationData.tags['error.kind'] = parsedErr.errorType;
+        invocationData.tags['error.stack'] = parsedErr.stack;
+        if (parsedErr.code) {
+            invocationData.tags['error.code'] = error.code;
+        }
+        if (parsedErr.stack) {
+            invocationData.tags['error.stack'] = error.stack;
+        }
+    }
+
+    invocationData.setTags(InvocationSupport.tags);
+    invocationData.setUserTags(InvocationSupport.userTags);
+
+    const { startTimestamp, finishTimestamp, spanId, response } = execContext;
+
+    invocationData.finishTimestamp = finishTimestamp;
+    invocationData.duration = finishTimestamp - startTimestamp;
+    invocationData.resources = InvocationTraceSupport.getResources(spanId);
+    invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
+    invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
+
+    if (Utils.isValidHTTPResponse(response)) {
+        invocationData.setUserTags({ [HttpTags.HTTP_STATUS]: response.statusCode });
+    }
 }
 
 function extractSpanContext(tracer: ThundraTracer, originalEvent: any, originalContext: any): opentracing.SpanContext {
@@ -183,7 +245,7 @@ function getRequest(originalEvent: any, triggerClassName: string): any {
     if (conf && conf.maskRequest && typeof conf.maskRequest === 'function') {
         try {
             const eventCopy = JSON.parse(JSON.stringify(originalEvent));
-            return conf.maskRequest.call(this, eventCopy);
+            return conf.maskRequest.call({}, eventCopy);
         } catch (error) {
             ThundraLogger.error('Failed to mask request: ' + error);
         }
@@ -220,7 +282,7 @@ function getResponse(response: any): any {
     if (conf && conf.maskResponse && typeof conf.maskResponse === 'function') {
         try {
             const responseCopy = JSON.parse(JSON.stringify(response));
-            return conf.maskResponse.call(this, responseCopy);
+            return conf.maskResponse.call({}, responseCopy);
         } catch (error) {
             ThundraLogger.error('Failed to mask response: ' + error);
         }

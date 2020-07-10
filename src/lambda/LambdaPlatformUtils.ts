@@ -1,9 +1,9 @@
-import {EnvVariableKeys} from '../Constants';
+import { EnvVariableKeys } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import Utils from '../plugins/utils/Utils';
-import {PlatformUtils} from '../application/PlatformUtils';
-import {LambdaContextProvider} from './LambdaContextProvider';
+import { PlatformUtils } from '../application/PlatformUtils';
+import { LambdaContextProvider } from './LambdaContextProvider';
 
 export class LambdaPlatformUtils extends PlatformUtils {
     static getApplicationId(originalContext: any, opts: any = {}) {
@@ -84,5 +84,14 @@ export class LambdaPlatformUtils extends PlatformUtils {
 
         const { heapUsed } = process.memoryUsage();
         invocationData.tags['aws.lambda.invocation.memory_usage'] = Math.floor(heapUsed / (1024 * 1024));
+
+        const xrayTraceInfo = Utils.getXRayTraceInfo();
+
+        if (xrayTraceInfo.traceID) {
+            invocationData.tags['aws.xray.trace.id'] = xrayTraceInfo.traceID;
+        }
+        if (xrayTraceInfo.segmentID) {
+            invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
+        }
     }
 }

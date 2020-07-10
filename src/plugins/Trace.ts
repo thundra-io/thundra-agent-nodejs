@@ -31,7 +31,6 @@ export default class Trace {
             'after-invocation': (pluginContext: PluginContext) => void; };
     config: TraceConfig;
     pluginOrder: number = 1;
-    contextKey: string = 'traceData';
     pluginContext: PluginContext;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
@@ -86,7 +85,7 @@ export default class Trace {
         const { executor } = this.pluginContext;
 
         if (executor) {
-            executor.startExecution(this.pluginContext, execContext);
+            executor.startTrace(this.pluginContext, execContext);
         }
     }
 
@@ -95,7 +94,7 @@ export default class Trace {
         const { tracer, rootSpan } = execContext;
 
         if (executor) {
-            executor.finishExecution(this.pluginContext, execContext);
+            executor.finishTrace(this.pluginContext, execContext);
         }
 
         const spanList = tracer.getRecorder().getSpanList();

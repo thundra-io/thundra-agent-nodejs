@@ -157,9 +157,7 @@ function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any
     plugins.push(invocationPlugin);
 
     // Set plugin context for plugins
-    plugins.forEach((plugin: any) => {
-        plugin.setPluginContext(pluginContext);
-    });
+    plugins.forEach((plugin: any) => { plugin.setPluginContext(pluginContext); });
 
     return plugins;
 }

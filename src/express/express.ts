@@ -1,30 +1,32 @@
 import InvocationPlugin from '../plugins/Invocation';
-import LogPlugin from '../plugins/Log';
+import TracePlugin from '../plugins/Trace';
 import PluginContext from '../plugins/PluginContext';
 import Utils from '../plugins/utils/Utils';
 import Reporter from '../Reporter';
 import { ApplicationManager } from '../application/ApplicationManager';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import ConfigProvider from '../config/ConfigProvider';
+import execContext from '../execContext';
+import ThundraTracer from '../opentracing/Tracer';
+import * as ExpressExecutor from './ExpressExecutor';
+import ConfigNames from '../config/ConfigNames';
+
+const get = require('lodash.get');
 
 export function expressMW() {
     const applicationInfo = ApplicationManager.getApplicationInfo();
 
     const apiKey = ConfigProvider.thundraConfig.apiKey;
     const reporter = new Reporter(apiKey);
-
     const pluginContext = createPluginContext(applicationInfo, reporter, apiKey);
     const plugins = createPlugins(pluginContext);
 
-    return async (req: any, res: any, next: any) => {
+    return (req: any, res: any, next: any) => {
         try {
-            // TODO: init new exec context
-            // create exec context
-            beforeRequest(plugins, pluginContext);
+            beforeRequest(plugins);
 
             res.once('finish', async () => {
-                afterRequest(plugins, pluginContext);
-                // await reporter.sendReports();
+                await afterRequest(plugins, reporter);
             });
         } catch (err) {
             console.error(err);
@@ -34,34 +36,64 @@ export function expressMW() {
     };
 }
 
+function initializeExecContext(): any {
+    for (const key in execContext) {
+        delete execContext[key];
+    }
+
+    const { thundraConfig } = ConfigProvider;
+    const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
+
+    execContext.tracer = new ThundraTracer(tracerConfig); // trace plugin
+    execContext.startTimestamp = Date.now();
+}
+
 function createPluginContext(applicationInfo: ApplicationInfo, reporter: Reporter, apiKey: string): PluginContext {
     return new PluginContext({
         ...applicationInfo,
         transactionId: Utils.generateId(),
-        reporter,
         apiKey,
+        executor: ExpressExecutor,
     });
 }
 
 function createPlugins(pluginContext: PluginContext): any[] {
+    const { thundraConfig } = ConfigProvider;
+
     const plugins: any[] = [];
+    if (thundraConfig.disableMonitoring) {
+        return plugins;
+    }
 
-    plugins.push(new InvocationPlugin());
-    plugins.push(new LogPlugin());
+    if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && thundraConfig.traceConfig.enabled) {
+        const tracePlugin = new TracePlugin(thundraConfig.traceConfig);
+        plugins.push(tracePlugin);
+    }
 
+    const invocationPlugin = new InvocationPlugin(thundraConfig.invocationConfig);
+    plugins.push(invocationPlugin);
+
+    // Set plugin context for plugins
     plugins.forEach((plugin: any) => { plugin.setPluginContext(pluginContext); });
 
     return plugins;
 }
 
-function beforeRequest(plugins: any[], pluginContext: PluginContext) {
+function beforeRequest(plugins: any[]) {
+    initializeExecContext();
+
     for (const plugin of plugins) {
-        plugin.beforeInvocation({ pluginContext });
+        plugin.beforeInvocation(execContext);
     }
 }
 
-function afterRequest(plugins: any[], pluginContext: PluginContext) {
+async function afterRequest(plugins: any[], reporter: Reporter) {
+    execContext.finishTimestamp = Date.now();
+
     for (const plugin of plugins) {
-        plugin.afterInvocation({ pluginContext });
+        plugin.afterInvocation(execContext);
     }
+
+    const { reports } = execContext;
+    await reporter.sendReports(reports);
 }

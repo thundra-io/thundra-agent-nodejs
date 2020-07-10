@@ -157,6 +157,7 @@ export const ClassNames = {
     EVENTBRIDGE: 'AWS-EventBridge',
     ZEIT: 'ZEIT',
     NETLIFY: 'Netlify',
+    EXPRESS: 'Express',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
