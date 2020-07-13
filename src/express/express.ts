@@ -23,6 +23,8 @@ export function expressMW() {
 
     return (req: any, res: any, next: any) => {
         try {
+            initializeExecContext();
+
             beforeRequest(plugins);
 
             res.once('finish', async () => {
@@ -80,8 +82,6 @@ function createPlugins(pluginContext: PluginContext): any[] {
 }
 
 function beforeRequest(plugins: any[]) {
-    initializeExecContext();
-
     for (const plugin of plugins) {
         plugin.beforeInvocation(execContext);
     }
