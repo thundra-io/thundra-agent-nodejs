@@ -17,7 +17,7 @@ import LambdaEventUtils from '../../lambda/LambdaEventUtils';
 import InvocationSupport from '../support/InvocationSupport';
 import ThundraChaosError from '../error/ThundraChaosError';
 import AWSOperationTypesConfig from './AWSOperationTypes';
-import execContext from '../../execContext';
+import * as contextManager from '../../contextManager';
 
 const shimmer = require('shimmer');
 const md5 = require('md5');
@@ -173,6 +173,7 @@ export class AWSIntegration implements Integration {
             return function AWSSDKWrapper(callback: any) {
                 let activeSpan: ThundraSpan;
                 try {
+                    const execContext = contextManager.get();
                     const tracer = execContext.tracer;
 
                     if (!tracer) {

@@ -34,7 +34,7 @@ import Utils from './plugins/utils/Utils';
 import {readFileSync} from 'fs';
 import ConfigProvider from './config/ConfigProvider';
 import ConfigNames from './config/ConfigNames';
-import execContext from './execContext';
+import * as contextManager from './contextManager';
 import ThundraTracer from './opentracing/Tracer';
 
 const path = require('path');
@@ -348,15 +348,9 @@ class ThundraWrapper {
         this.resolve = undefined;
         this.reject = undefined;
 
+        const execContext = contextManager.get();
+
         // Execution context intialization
-        for (const key in execContext) {
-            delete execContext[key];
-        }
-
-        const thundraConfig = ConfigProvider.thundraConfig;
-        const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
-
-        execContext.tracer = new ThundraTracer(tracerConfig); // trace plugin
         execContext.startTimestamp = Date.now();
         execContext.originalContext = this.originalContext;
         execContext.originalEvent = this.originalEvent;
@@ -420,11 +414,12 @@ class ThundraWrapper {
 
         afterInvocationData.error ? InvocationSupport.setErrorenous(true) : InvocationSupport.setErrorenous(false);
 
+        const execContext = contextManager.get();
+
         execContext.finishTimestamp = Date.now();
+
         await this.executeHook('after-invocation', execContext, true);
-        const { reports } = execContext;
-        console.log(reports);
-        await this.reporter.sendReports(reports);
+        await this.reporter.sendReports(execContext.reports);
 
         InvocationSupport.setErrorenous(false);
     }
@@ -450,6 +445,7 @@ class ThundraWrapper {
                     };
                 }
 
+                const execContext = contextManager.get();
                 execContext.response = result;
 
                 await this.executeAfterInvocationAndReport(afterInvocationData);

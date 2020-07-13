@@ -14,6 +14,8 @@ import ThundraConfig from '../plugins/config/ThundraConfig';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import { LambdaContextProvider } from './LambdaContextProvider';
 import * as LambdaExecutor from './LambdaExecutor';
+import * as contextManager from '../contextManager';
+import ThundraTracer from '../opentracing/Tracer';
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
@@ -87,27 +89,41 @@ function createWrapperWithPlugins(config: ThundraConfig,
  */
 function createWrappedHandler(pluginContext: PluginContext, originalFunc: Function,
                               plugins: any[], config: ThundraConfig): WrappedFunction {
-    const wrappedFunction = async (originalEvent: any, originalContext: any, originalCallback: any) => {
-        LambdaContextProvider.setContext(originalContext);
-        // Creating applicationId here, since we need the information in context
-        pluginContext.applicationId = ApplicationManager.getApplicationInfo().applicationId;
+    const wrappedFunction = (originalEvent: any, originalContext: any, originalCallback: any) => contextManager.runWithContext(
+        createExecContext,
+        async () => {
+            LambdaContextProvider.setContext(originalContext);
+            // Creating applicationId here, since we need the information in context
+            pluginContext.applicationId = ApplicationManager.getApplicationInfo().applicationId;
 
-        const thundraWrapper = new ThundraWrapper(
-            this,
-            originalEvent,
-            originalContext,
-            originalCallback,
-            originalFunc,
-            plugins,
-            pluginContext,
-            config,
-        );
-        return await thundraWrapper.invoke();
-    };
+            const thundraWrapper = new ThundraWrapper(
+                this,
+                originalEvent,
+                originalContext,
+                originalCallback,
+                originalFunc,
+                plugins,
+                pluginContext,
+                config,
+            );
+            return await thundraWrapper.invoke();
+        },
+    );
 
     setWrapped(wrappedFunction, true);
 
     return wrappedFunction;
+}
+
+function createExecContext(): any {
+    const thundraConfig = ConfigProvider.thundraConfig;
+    const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
+
+    const tracer = new ThundraTracer(tracerConfig);
+
+    return {
+        tracer,
+    };
 }
 
 /**
