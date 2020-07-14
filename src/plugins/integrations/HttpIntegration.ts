@@ -11,6 +11,7 @@ import InvocationSupport from '../support/InvocationSupport';
 import HttpError from '../error/HttpError';
 import ThundraSpan from '../../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
+import * as contextManager from '../../context/contextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -74,7 +75,7 @@ class HttpIntegration implements Integration {
             return function requestWrapper(options: any, callback: any) {
                 let span: ThundraSpan;
                 try {
-                    const tracer = plugin.config.tracer;
+                    const { tracer } = contextManager.get();
 
                     if (!tracer) {
                         return request.apply(this, [options, callback]);

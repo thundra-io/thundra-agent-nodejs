@@ -1,5 +1,6 @@
 import ThundraLogger from '../../ThundraLogger';
 import Utils from '../utils/Utils';
+import * as contextManager from '../../context/contextManager';
 
 class InvocationSupport {
     static tags: any = {};
@@ -35,8 +36,10 @@ class InvocationSupport {
     }
 
     static setTag(key: string, value: any): void {
+        const execContext = contextManager.get();
+
         try {
-            InvocationSupport.userTags[key] = value;
+            execContext.userTags[key] = value;
         } catch (e) {
             ThundraLogger.error(e);
         }

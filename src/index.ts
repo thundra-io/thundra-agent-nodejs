@@ -10,7 +10,6 @@ import ConfigNames from './config/ConfigNames';
 import { loadHandler } from './runtime/RuntimeSupport';
 import { expressMW } from './express/express';
 import * as LambdaWrapper from './lambda/LambdaWrapper';
-import * as contextManager from './contextManager';
 import LogManager from './plugins/LogManager';
 import { ApplicationManager } from './application/ApplicationManager';
 import GlobalApplcationInfoProvider from './application/GlobalApplicationInfoProvider';
@@ -26,7 +25,6 @@ function createWrapper(options?: any) {
 function init(options?: any) {
     ConfigProvider.init(options);
     ApplicationManager.setApplicationInfoProvider(new GlobalApplcationInfoProvider());
-    contextManager.init();
 }
 
 function createLogger(options: any) {

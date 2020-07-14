@@ -9,6 +9,7 @@ import {
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,
 } from '../../Constants';
 import ThundraChaosError from '../error/ThundraChaosError';
+import * as contextManager from '../../context/contextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -40,7 +41,7 @@ class IORedisIntegration implements Integration {
             return function internalSendCommandWrapper(command: any) {
                 let span: ThundraSpan;
                 try {
-                    const tracer = plugin.config.tracer;
+                    const { tracer } = contextManager.get();
 
                     if (!tracer || !command || this.status !== 'ready') {
                         return original.call(this, command);

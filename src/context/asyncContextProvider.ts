@@ -1,6 +1,8 @@
+import ExecutionContext from './ExecutionContext';
+
 const asyncHooks = require('async_hooks');
 
-const contexts: any = {};
+const contexts: {[key: number]: ExecutionContext} = {};
 
 function destroyAsync(asyncId: number) {
     delete contexts[asyncId];

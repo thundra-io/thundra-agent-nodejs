@@ -4,6 +4,7 @@ import InvocationConfig from './config/InvocationConfig';
 import PluginContext from './PluginContext';
 import InvocationSupport from './support/InvocationSupport';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
+import ExecutionContext from '../context/ExecutionContext';
 
 const get = require('lodash.get');
 
@@ -11,8 +12,8 @@ export default class Invocation {
     pluginOrder: number = 2;
     pluginContext: PluginContext;
     options: InvocationConfig;
-    hooks: { 'before-invocation': (pluginContext: PluginContext) => void;
-             'after-invocation': (pluginContext: PluginContext) => void; };
+    hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
+             'after-invocation': (execContext: ExecutionContext) => void; };
 
     constructor(options?: any) {
         this.hooks = {
@@ -22,16 +23,11 @@ export default class Invocation {
         this.options = options;
     }
 
-    report(data: any, execContext: any): void {
-        const reports = get(execContext, 'reports', []);
-        execContext.reports = [...reports, data];
-    }
-
     setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
     }
 
-    beforeInvocation = (execContext: any) => {
+    beforeInvocation = (execContext: ExecutionContext) => {
         const { executor } = this.pluginContext;
 
         if (executor) {
@@ -39,7 +35,7 @@ export default class Invocation {
         }
     }
 
-    afterInvocation = (execContext: any) => {
+    afterInvocation = (execContext: ExecutionContext) => {
         const { executor } = this.pluginContext;
 
         if (executor) {
@@ -50,7 +46,7 @@ export default class Invocation {
         const { apiKey } = this.pluginContext;
         const reportData = Utils.generateReport(invocationData, apiKey);
 
-        this.report(reportData, execContext);
+        execContext.report(reportData);
         this.destroy();
     }
 

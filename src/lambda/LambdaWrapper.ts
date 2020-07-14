@@ -14,8 +14,9 @@ import ThundraConfig from '../plugins/config/ThundraConfig';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import { LambdaContextProvider } from './LambdaContextProvider';
 import * as LambdaExecutor from './LambdaExecutor';
-import * as contextManager from '../contextManager';
+import * as contextManager from '../context/contextManager';
 import ThundraTracer from '../opentracing/Tracer';
+import ExecutionContext from '../context/ExecutionContext';
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
@@ -43,6 +44,7 @@ export function createWrapper(): (f: Function) => WrappedFunction {
         Utils.setEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED, '0');
     }
 
+    contextManager.init();
     ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
     const applicationInfo = ApplicationManager.getApplicationInfo();
 
@@ -115,15 +117,15 @@ function createWrappedHandler(pluginContext: PluginContext, originalFunc: Functi
     return wrappedFunction;
 }
 
-function createExecContext(): any {
+function createExecContext(): ExecutionContext {
     const thundraConfig = ConfigProvider.thundraConfig;
     const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
 
     const tracer = new ThundraTracer(tracerConfig);
 
-    return {
+    return new ExecutionContext({
         tracer,
-    };
+    });
 }
 
 /**

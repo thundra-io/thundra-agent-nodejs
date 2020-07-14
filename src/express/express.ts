@@ -3,23 +3,26 @@ import TracePlugin from '../plugins/Trace';
 import PluginContext from '../plugins/PluginContext';
 import Utils from '../plugins/utils/Utils';
 import Reporter from '../Reporter';
+import ConfigNames from '../config/ConfigNames';
+import ThundraTracer from '../opentracing/Tracer';
+import ConfigProvider from '../config/ConfigProvider';
 import { ApplicationManager } from '../application/ApplicationManager';
 import { ApplicationInfo } from '../application/ApplicationInfo';
-import ConfigProvider from '../config/ConfigProvider';
-import ThundraTracer from '../opentracing/Tracer';
-import * as contextManager from '../contextManager';
+import * as contextManager from '../context/contextManager';
 import * as ExpressExecutor from './ExpressExecutor';
-import ConfigNames from '../config/ConfigNames';
+import * as asyncContextProvider from '../context/asyncContextProvider';
+import ExecutionContext from '../context/ExecutionContext';
 
 const get = require('lodash.get');
 
 export function expressMW() {
     const applicationInfo = ApplicationManager.getApplicationInfo();
-
     const apiKey = ConfigProvider.thundraConfig.apiKey;
     const reporter = new Reporter(apiKey);
-    const pluginContext = createPluginContext(applicationInfo, reporter, apiKey);
+    const pluginContext = createPluginContext(applicationInfo, apiKey);
     const plugins = createPlugins(pluginContext);
+
+    initContextManager();
 
     return (req: any, res: any, next: any) => contextManager.runWithContext(
         createExecContext,
@@ -38,20 +41,25 @@ export function expressMW() {
     );
 }
 
-function createExecContext(): any {
+function initContextManager() {
+    contextManager.setProvider(asyncContextProvider);
+    contextManager.init();
+}
+
+function createExecContext(): ExecutionContext {
     const { thundraConfig } = ConfigProvider;
     const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
 
     const tracer = new ThundraTracer(tracerConfig); // trace plugin
     const startTimestamp = Date.now();
 
-    return {
+    return new ExecutionContext({
         tracer,
         startTimestamp,
-    };
+    });
 }
 
-function createPluginContext(applicationInfo: ApplicationInfo, reporter: Reporter, apiKey: string): PluginContext {
+function createPluginContext(applicationInfo: ApplicationInfo, apiKey: string): PluginContext {
     return new PluginContext({
         ...applicationInfo,
         transactionId: Utils.generateId(),

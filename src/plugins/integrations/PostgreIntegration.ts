@@ -8,6 +8,7 @@ import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import ThundraChaosError from '../error/ThundraChaosError';
+import * as contextManager from '../../context/contextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -61,7 +62,7 @@ class PostgreIntegration implements Integration {
             return function queryWrapper() {
                 let span: ThundraSpan;
                 try {
-                    const tracer = integration.config.tracer;
+                    const { tracer } = contextManager.get();
 
                     if (!tracer) {
                         return query.apply(this, arguments);

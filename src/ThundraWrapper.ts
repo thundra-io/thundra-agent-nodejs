@@ -34,7 +34,7 @@ import Utils from './plugins/utils/Utils';
 import {readFileSync} from 'fs';
 import ConfigProvider from './config/ConfigProvider';
 import ConfigNames from './config/ConfigNames';
-import * as contextManager from './contextManager';
+import * as contextManager from './context/contextManager';
 import ThundraTracer from './opentracing/Tracer';
 
 const path = require('path');

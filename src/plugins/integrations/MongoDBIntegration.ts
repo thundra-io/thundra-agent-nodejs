@@ -9,6 +9,7 @@ import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
 import ThundraChaosError from '../error/ThundraChaosError';
+import * as contextManager from '../../context/contextManager';
 
 const get = require('lodash.get');
 
@@ -38,7 +39,7 @@ class MongoDBIntegration implements Integration {
     onStarted(event: any) {
         let span: ThundraSpan;
         try {
-            const tracer = this.config.tracer;
+            const { tracer } = contextManager.get();
 
             if (!tracer) {
                 return;

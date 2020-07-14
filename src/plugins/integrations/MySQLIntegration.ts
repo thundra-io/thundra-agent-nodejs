@@ -8,6 +8,7 @@ import ThundraSpan from '../../opentracing/Span';
 import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
 import ThundraChaosError from '../error/ThundraChaosError';
+import * as contextManager from '../../context/contextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -43,7 +44,7 @@ class MySQLIntegration implements Integration {
 
             return function queryWrapper(sql: any, values: any, cb: any) {
                 try {
-                    const tracer = integration.config.tracer;
+                    const { tracer } = contextManager.get();
 
                     if (!tracer) {
                         return query.call(this, sql, values, cb);

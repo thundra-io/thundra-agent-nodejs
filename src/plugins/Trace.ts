@@ -23,12 +23,13 @@ import Integration from './integrations/Integration';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
+import ExecutionContext from '../context/ExecutionContext';
 
 const get = require('lodash.get');
 
 export default class Trace {
-    hooks: { 'before-invocation': (pluginContext: PluginContext) => void;
-            'after-invocation': (pluginContext: PluginContext) => void; };
+    hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
+            'after-invocation': (execContext: ExecutionContext) => void; };
     config: TraceConfig;
     pluginOrder: number = 1;
     pluginContext: PluginContext;
@@ -74,12 +75,7 @@ export default class Trace {
         this.pluginContext = pluginContext;
     }
 
-    report(data: any, execContext: any): void {
-        const reports = get(execContext, 'reports', []);
-        execContext.reports = [...reports, data];
-    }
-
-    beforeInvocation = (execContext: any) => {
+    beforeInvocation = (execContext: ExecutionContext) => {
         this.destroy();
 
         const { executor } = this.pluginContext;
@@ -89,7 +85,7 @@ export default class Trace {
         }
     }
 
-    afterInvocation = (execContext: any) => {
+    afterInvocation = (execContext: ExecutionContext) => {
         const { apiKey, executor } = this.pluginContext;
         const { tracer, rootSpan } = execContext;
 
@@ -112,7 +108,7 @@ export default class Trace {
 
                     const spanData = this.buildSpanData(span, execContext);
                     const spanReportData = Utils.generateReport(spanData, apiKey);
-                    this.report(spanReportData, execContext);
+                    execContext.report(spanReportData);
                 }
             }
         }
