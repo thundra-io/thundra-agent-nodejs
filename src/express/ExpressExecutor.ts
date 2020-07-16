@@ -60,8 +60,8 @@ export function finishInvocation(pluginContext: PluginContext, execContext: any)
         }
     }
 
-    invocationData.setTags(InvocationSupport.tags);
-    invocationData.setUserTags(InvocationSupport.userTags);
+    invocationData.setTags(InvocationSupport.getAgentTags());
+    invocationData.setUserTags(InvocationSupport.getTags());
 
     const { startTimestamp, finishTimestamp, spanId, response } = execContext;
 

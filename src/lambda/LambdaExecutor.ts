@@ -19,7 +19,8 @@ import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 const get = require('lodash.get');
 
 export function startTrace(pluginContext: PluginContext, execContext: any) {
-    const { originalContext, originalEvent, tracer } = execContext;
+    const { platformData, tracer } = execContext;
+    const { originalEvent, originalContext } = platformData;
 
     // awsRequestId can be `id` or undefined in local lambda environments, so we generate a unique id here.
     if (!originalContext.awsRequestId || originalContext.awsRequestId === 'id') {
@@ -72,7 +73,8 @@ export function startTrace(pluginContext: PluginContext, execContext: any) {
 
 export function finishTrace(pluginContext: PluginContext, execContext: any) {
     let { response } = execContext;
-    const { rootSpan, error, triggerClassName, originalEvent, finishTimestamp } = execContext;
+    const { rootSpan, error, triggerClassName, platformData, finishTimestamp } = execContext;
+    const { originalEvent } = platformData;
 
     if (error) {
         const parsedErr = Utils.parseError(error);
@@ -154,8 +156,8 @@ export function finishInvocation(pluginContext: PluginContext, execContext: any)
         }
     }
 
-    invocationData.setTags(InvocationSupport.tags);
-    invocationData.setUserTags(InvocationSupport.userTags);
+    invocationData.setTags(InvocationSupport.getAgentTags());
+    invocationData.setUserTags(InvocationSupport.getTags());
 
     const { startTimestamp, finishTimestamp, spanId, response } = execContext;
 

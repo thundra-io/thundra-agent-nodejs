@@ -35,7 +35,6 @@ import {readFileSync} from 'fs';
 import ConfigProvider from './config/ConfigProvider';
 import ConfigNames from './config/ConfigNames';
 import * as contextManager from './context/contextManager';
-import ThundraTracer from './opentracing/Tracer';
 
 const path = require('path');
 const get = require('lodash.get');
@@ -343,8 +342,6 @@ class ThundraWrapper {
 
         await this.startDebuggerProxyIfAvailable();
 
-        InvocationSupport.setErrorenous(false);
-
         this.resolve = undefined;
         this.reject = undefined;
 
@@ -352,8 +349,8 @@ class ThundraWrapper {
 
         // Execution context intialization
         execContext.startTimestamp = Date.now();
-        execContext.originalContext = this.originalContext;
-        execContext.originalEvent = this.originalEvent;
+        execContext.platformData.originalContext = this.originalContext;
+        execContext.platformData.originalEvent = this.originalEvent;
 
         return new Promise((resolve, reject) => {
             this.resolve = resolve;
@@ -407,12 +404,10 @@ class ThundraWrapper {
         );
     }
 
-    async executeAfterInvocationAndReport(afterInvocationData: any) {
+    async executeAfterInvocationAndReport() {
         if (this.config.disableMonitoring) {
             return;
         }
-
-        afterInvocationData.error ? InvocationSupport.setErrorenous(true) : InvocationSupport.setErrorenous(false);
 
         const execContext = contextManager.get();
 
@@ -420,35 +415,23 @@ class ThundraWrapper {
 
         await this.executeHook('after-invocation', execContext, true);
         await this.reporter.sendReports(execContext.reports);
-
-        InvocationSupport.setErrorenous(false);
     }
 
     async report(error: any, result: any, callback: any) {
         if (!this.reported) {
             try {
-                this.reported = true;
-
-                this.destroyTimeoutHandler();
-
-                let afterInvocationData = {
-                    error,
-                    originalEvent: this.originalEvent,
-                    response: result,
-                };
-
-                if (this.isHTTPErrorResponse(result)) {
-                    afterInvocationData = {
-                        error: new HttpError('Lambda returned with error response.'),
-                        originalEvent: this.originalEvent,
-                        response: result,
-                    };
-                }
-
                 const execContext = contextManager.get();
                 execContext.response = result;
+                execContext.error = error;
 
-                await this.executeAfterInvocationAndReport(afterInvocationData);
+                if (this.isHTTPErrorResponse(result)) {
+                    execContext.error = new HttpError('Lambda returned with error response.');
+                }
+
+                this.reported = true;
+                this.destroyTimeoutHandler();
+
+                await this.executeAfterInvocationAndReport();
 
                 if (typeof callback === 'function') {
                     callback();

@@ -3,28 +3,35 @@ import Utils from '../utils/Utils';
 import * as contextManager from '../../context/contextManager';
 
 class InvocationSupport {
-    static tags: any = {};
-    static userTags: any = {};
     static functionName: string = '';
-    static errorenous: boolean;
-    static error: any;
 
     static setAgentTag(key: string, value: any): void {
+        const { tags } = contextManager.get();
         try {
-            InvocationSupport.tags[key] = value;
+            tags[key] = value;
         } catch (e) {
             ThundraLogger.error(e);
         }
     }
 
     static getAgentTag(key: string): any {
-        return InvocationSupport.tags[key];
+        const { tags } = contextManager.get();
+
+        return tags[key];
+    }
+
+    static getAgentTags(): any {
+        const { tags } = contextManager.get();
+
+        return tags;
     }
 
     static setAgentTags(keyValuePairs: {[key: string]: any }): void {
+        const { tags } = contextManager.get();
+
         try {
             Object.keys(keyValuePairs).forEach((key) => {
-                InvocationSupport.tags[key] = keyValuePairs[key];
+                tags[key] = keyValuePairs[key];
             });
         } catch (e) {
             ThundraLogger.error(e);
@@ -32,27 +39,37 @@ class InvocationSupport {
     }
 
     static removeAgentTags(): void {
-        InvocationSupport.tags = {};
+        // pass
     }
 
     static setTag(key: string, value: any): void {
-        const execContext = contextManager.get();
+        const { userTags } = contextManager.get();
 
         try {
-            execContext.userTags[key] = value;
+            userTags[key] = value;
         } catch (e) {
             ThundraLogger.error(e);
         }
     }
 
     static getTag(key: string): any {
-        return InvocationSupport.userTags[key];
+        const { userTags } = contextManager.get();
+
+        return userTags[key];
+    }
+
+    static getTags() {
+        const { userTags } = contextManager.get();
+
+        return userTags;
     }
 
     static removeTag(key: string): void {
+        const { userTags } = contextManager.get();
+
         try {
-            if (InvocationSupport.userTags[key]) {
-                delete InvocationSupport.userTags[key];
+            if (userTags[key]) {
+                delete userTags[key];
             }
         } catch (e) {
             ThundraLogger.error(e);
@@ -60,9 +77,11 @@ class InvocationSupport {
     }
 
     static setTags(keyValuePairs: {[key: string]: any }): void {
+        const { userTags } = contextManager.get();
+
         try {
             Object.keys(keyValuePairs).forEach((key) => {
-                InvocationSupport.userTags[key] = keyValuePairs[key];
+                userTags[key] = keyValuePairs[key];
             });
         } catch (e) {
             ThundraLogger.error(e);
@@ -70,7 +89,7 @@ class InvocationSupport {
     }
 
     static removeTags(): void {
-        InvocationSupport.userTags = {};
+        // pass
     }
 
     static setFunctionName(functionName: string): void {
@@ -81,28 +100,27 @@ class InvocationSupport {
         return InvocationSupport.functionName;
     }
 
-    static setErrorenous(errorenous: boolean): void {
-        InvocationSupport.errorenous = errorenous;
-    }
-
     static isErrorenous(): boolean {
-        return InvocationSupport.errorenous;
+        const { error } = contextManager.get();
+
+        return error ? true : false;
     }
 
     static setError(exception: any): void {
         if (exception instanceof Error) {
-            InvocationSupport.error = Utils.parseError(exception);
+            const execContext = contextManager.get();
+            execContext.error = exception;
         }
     }
 
     static hasError(): boolean {
-        return InvocationSupport.error !== undefined;
+        return InvocationSupport.isErrorenous();
     }
 
     static clearError(): void {
-        if (InvocationSupport.error) {
-            delete InvocationSupport.error;
-        }
+        const execContext = contextManager.get();
+
+        execContext.error = null;
     }
 
 }

@@ -13,6 +13,10 @@ export default class ExecutionContext {
     rootSpan: ThundraSpan;
     invocationData: InvocationData;
     userTags: any;
+    tags: any;
+    error: any;
+    platformData: any;
+    response: any;
 
     constructor(opts?: any) {
         this.startTimestamp = opts.startTimestamp || 0;
@@ -25,6 +29,10 @@ export default class ExecutionContext {
         this.rootSpan = opts.rootSpan || null;
         this.invocationData = opts.invocationData || null;
         this.userTags = opts.userTags || {};
+        this.tags = opts.tags || {};
+        this.error = opts.error || null;
+        this.platformData = opts.platformData || {};
+        this.response = opts.response || {};
     }
 
     report(data: any) {
