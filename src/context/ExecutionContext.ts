@@ -17,6 +17,8 @@ export default class ExecutionContext {
     error: any;
     platformData: any;
     response: any;
+    incomingTraceLinks: any[];
+    outgoingTraceLinks: any[];
 
     constructor(opts?: any) {
         this.startTimestamp = opts.startTimestamp || 0;
@@ -33,6 +35,8 @@ export default class ExecutionContext {
         this.error = opts.error || null;
         this.platformData = opts.platformData || {};
         this.response = opts.response || {};
+        this.incomingTraceLinks = opts.incomingTraceLinks || [];
+        this.outgoingTraceLinks = opts.outgoingTraceLinks || [];
     }
 
     report(data: any) {

@@ -10,6 +10,7 @@ import ConfigNames from './config/ConfigNames';
 import { loadHandler } from './runtime/RuntimeSupport';
 import { expressMW } from './express/express';
 import * as LambdaWrapper from './lambda/LambdaWrapper';
+import * as contextManager from './context/contextManager';
 import LogManager from './plugins/LogManager';
 import { ApplicationManager } from './application/ApplicationManager';
 import GlobalApplcationInfoProvider from './application/GlobalApplicationInfoProvider';
@@ -43,7 +44,7 @@ function addLogListener(listener: any) {
 }
 
 function tracer() {
-    return InvocationTraceSupport.tracer;
+    return contextManager.get().tracer;
 }
 
 const updateConfig = config.ThundraConfig.updateConfig;
