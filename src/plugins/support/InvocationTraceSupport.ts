@@ -1,6 +1,5 @@
 import ThundraLogger from '../../ThundraLogger';
 import Resource from '../data/invocation/Resource';
-import ThundraTracer from '../../opentracing/Tracer';
 import ThundraSpan from '../../opentracing/Span';
 import { SpanTags } from '../../Constants';
 import * as contextManager from '../../context/contextManager';

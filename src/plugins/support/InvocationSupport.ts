@@ -1,5 +1,4 @@
 import ThundraLogger from '../../ThundraLogger';
-import Utils from '../utils/Utils';
 import * as contextManager from '../../context/contextManager';
 
 class InvocationSupport {
