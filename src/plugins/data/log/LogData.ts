@@ -17,11 +17,11 @@ class LogData extends BaseMonitoringData {
         super(MonitorDataType.LOG);
     }
 
-    initWithLogDataValues(data: LogData, spanId: string, logInfo: any) {
+    initWithLogDataValues(data: LogData, spanId: string, transactionId: string, traceId: string, logInfo: any) {
         this.initWithBaseMonitoringDataValues(data);
         this.id = Utils.generateId();
-        this.traceId = data.traceId;
-        this.transactionId = data.transactionId;
+        this.traceId = traceId;
+        this.transactionId = transactionId;
         this.spanId = spanId;
         this.logMessage = logInfo.logMessage;
         this.logTimestamp =  logInfo.logTimestamp;

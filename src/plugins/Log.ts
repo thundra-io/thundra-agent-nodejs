@@ -5,29 +5,28 @@ import PluginContext from './PluginContext';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import { ConsoleShimmedMethods, logLevels, StdOutLogContext, StdErrorLogContext } from '../Constants';
 import * as util from 'util';
+import * as contextManager from '../context/contextManager';
 import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import {ApplicationManager} from '../application/ApplicationManager';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
-import Logger from './Logger';
 import LogManager from './LogManager';
-import Reporter from '../Reporter';
+import ExecutionContext from '../context/ExecutionContext';
 
 const get = require('lodash.get');
 
 class Log {
     enabled: boolean;
-    logData: LogData;
-    hooks: { 'before-invocation': (pluginContext: PluginContext) => void;
-             'after-invocation': (pluginContext: PluginContext) => void; };
-    logs: LogData[];
+    hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
+             'after-invocation': (execContext: ExecutionContext) => void; };
     pluginOrder: number = 4;
+    pluginContext: PluginContext;
     consoleReference: any = console;
     config: LogConfig;
-    captureLog = false;
     logLevelFilter: number = 0;
+    baseLogData: LogData;
 
     constructor(options?: LogConfig) {
         LogManager.addListener(this);
@@ -38,7 +37,6 @@ class Log {
         };
         this.enabled = get(options, 'enabled', true);
         this.config = options;
-        this.logs = [];
 
         const levelConfig = ConfigProvider.get<string>(ConfigNames.THUNDRA_LOG_LOGLEVEL);
         this.logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
@@ -48,57 +46,49 @@ class Log {
         }
     }
 
-    report(logReport: any, reporter: Reporter): void {
-        if (reporter) {
-            reporter.addReport(logReport);
-        }
+    setPluginContext = (pluginContext: PluginContext) => {
+        this.pluginContext = pluginContext;
     }
 
-    beforeInvocation = (pluginContext: PluginContext) => {
-        this.captureLog = true;
-        this.logs = [];
-        this.logData = Utils.initMonitoringData(pluginContext, MonitoringDataType.LOG) as LogData;
-
-        this.logData.transactionId = pluginContext.transactionId ?
-            pluginContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
-        this.logData.traceId = pluginContext.traceId;
-
-        this.logData.tags = {};
+    beforeInvocation = (execContext: ExecutionContext) => {
+        this.baseLogData = Utils.initMonitoringData(execContext, MonitoringDataType.LOG) as LogData;
     }
 
-    afterInvocation = (pluginContext: PluginContext) => {
+    afterInvocation = (execContext: ExecutionContext) => {
         const sampler = get(this.config, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled();
         if (sampled) {
-            for (const log of this.logs) {
-                const { apiKey, reporter } = pluginContext;
+            const { logs } = execContext;
+            for (const log of logs) {
+                const { apiKey } = this.pluginContext;
                 const logReportData = Utils.generateReport(log, apiKey);
                 // If lambda fails skip log filtering
                 if (InvocationSupport.isErrorenous()) {
-                    this.report(logReportData, reporter);
+                    execContext.report(logReportData);
                     continue;
                 }
 
                 if (logLevels[log.logLevel] >= this.logLevelFilter) {
-                    this.report(logReportData, reporter);
+                    execContext.report(logReportData);
                 }
             }
         } else {
             ThundraLogger.debug('Skipping reporting logs due to sampling.');
         }
 
-        this.captureLog = false;
+        execContext.captureLog = false;
     }
 
-    reportLog(logInfo: any): void {
+    reportLog(logInfo: any, execContext: ExecutionContext): void {
         if (!this.enabled) {
             return;
         }
         const logData = new LogData();
         const activeSpan = InvocationTraceSupport.getActiveSpan();
         const spanId = activeSpan ? activeSpan.spanContext.spanId : '';
-        logData.initWithLogDataValues(this.logData, spanId, logInfo);
-        this.logs.push(logData);
+        const { traceId, transactionId } = execContext;
+        logData.initWithLogDataValues(this.baseLogData, spanId, transactionId, traceId, logInfo);
+        execContext.logs.push(logData);
     }
 
     shimConsole(): void {
@@ -114,7 +104,9 @@ class Log {
                 }
 
                 this.consoleReference[method] = (...args: any[]) => {
-                    if (this.captureLog) {
+                    const execContext = contextManager.get();
+
+                    if (execContext && execContext.captureLog) {
                         if (logLevel >= this.logLevelFilter) {
                             const logInfo = {
                                 logMessage: util.format.apply(util, args),
@@ -123,7 +115,7 @@ class Log {
                                 logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
                                 logTimestamp: Date.now(),
                             };
-                            this.reportLog(logInfo);
+                            this.reportLog(logInfo, execContext);
                         }
                     }
                     originalConsoleMethod.apply(console, args);

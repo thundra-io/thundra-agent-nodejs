@@ -1,5 +1,6 @@
 import InvocationPlugin from '../plugins/Invocation';
 import TracePlugin from '../plugins/Trace';
+import LogPlugin from '../plugins/Log';
 import PluginContext from '../plugins/PluginContext';
 import Utils from '../plugins/utils/Utils';
 import Reporter from '../Reporter';
@@ -79,6 +80,10 @@ function createPlugins(pluginContext: PluginContext): any[] {
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && thundraConfig.traceConfig.enabled) {
         const tracePlugin = new TracePlugin(thundraConfig.traceConfig);
         plugins.push(tracePlugin);
+    }
+
+    if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && thundraConfig.logConfig.enabled) {
+        plugins.push(new LogPlugin(thundraConfig.logConfig));
     }
 
     const invocationPlugin = new InvocationPlugin(thundraConfig.invocationConfig);

@@ -1,6 +1,7 @@
 import ThundraTracer from '../opentracing/Tracer';
 import InvocationData from '../plugins/data/invocation/InvocationData';
 import ThundraSpan from '../opentracing/Span';
+import LogData from '../plugins/data/log/LogData';
 
 export default class ExecutionContext {
     startTimestamp: number;
@@ -19,6 +20,8 @@ export default class ExecutionContext {
     response: any;
     incomingTraceLinks: any[];
     outgoingTraceLinks: any[];
+    captureLog: boolean;
+    logs: LogData[];
 
     constructor(opts?: any) {
         this.startTimestamp = opts.startTimestamp || 0;
@@ -37,6 +40,8 @@ export default class ExecutionContext {
         this.response = opts.response || {};
         this.incomingTraceLinks = opts.incomingTraceLinks || [];
         this.outgoingTraceLinks = opts.outgoingTraceLinks || [];
+        this.captureLog = opts.captureLog || true;
+        this.logs = opts.logs || [];
     }
 
     report(data: any) {

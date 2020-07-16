@@ -5,8 +5,7 @@ import PluginContext from './PluginContext';
 import InvocationSupport from './support/InvocationSupport';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
 import ExecutionContext from '../context/ExecutionContext';
-
-const get = require('lodash.get');
+import * as contextManager from '../context/contextManager';
 
 export default class Invocation {
     pluginOrder: number = 2;

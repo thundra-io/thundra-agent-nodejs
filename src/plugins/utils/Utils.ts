@@ -22,7 +22,6 @@ import ThundraTracer from '../../opentracing/Tracer';
 import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
 import InvocationSupport from '../support/InvocationSupport';
 import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
-import {ApplicationManager} from '../../application/ApplicationManager';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
