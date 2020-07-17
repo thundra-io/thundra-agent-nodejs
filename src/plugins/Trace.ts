@@ -1,29 +1,18 @@
-/*
-*
-* Calculates duration of the lambda handler function.
-*
-* Generates trace report data.
-*
-* Adds the trace report to the Reporter instance if async monitoring is not enabled (environment variable
-* thundra_lambda_publish_cloudwatch_enable is not set), otherwise it logs the report for async monitoring.
-*
-*/
-
 import Utils from './utils/Utils';
 import TraceConfig from './config/TraceConfig';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
-import {
-    INTEGRATIONS,
-} from '../Constants';
+import { INTEGRATIONS } from '../Constants';
+import { initGlobalTracer } from 'opentracing';
 import ThundraLogger from '../ThundraLogger';
 import Integration from './integrations/Integration';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import ExecutionContext from '../context/ExecutionContext';
+import GlobalTracer from '../opentracing/GlobalTracer';
 
 const get = require('lodash.get');
 
@@ -44,8 +33,10 @@ export default class Trace {
 
         this.config = config;
         this.initIntegrations();
+
+        initGlobalTracer(new GlobalTracer());
+
         /*
-        initGlobalTracer(this.tracer);
         Utils.registerSpanListenersFromConfigurations(this.tracer);
         */
     }
