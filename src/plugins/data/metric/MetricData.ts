@@ -12,11 +12,11 @@ class MetricData extends BaseMonitoringData {
         super(MonitorDataType.METRIC);
     }
 
-    initWithMetricMonitoringDataValues(data: MetricData) {
+    initWithMetricMonitoringDataValues(data: MetricData, traceId: string, transactionId: string, spanId: string) {
         this.initWithBaseMonitoringDataValues(data);
-        this.traceId = data.traceId;
-        this.transactionId = data.transactionId;
-        this.spanId = data.spanId;
+        this.traceId = traceId;
+        this.transactionId = transactionId;
+        this.spanId = spanId;
         this.tags = data.tags;
     }
 }

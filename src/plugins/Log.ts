@@ -10,7 +10,6 @@ import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
-import {ApplicationManager} from '../application/ApplicationManager';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
 import LogManager from './LogManager';
 import ExecutionContext from '../context/ExecutionContext';
@@ -48,10 +47,11 @@ class Log {
 
     setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
+        this.baseLogData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.LOG) as LogData;
     }
 
     beforeInvocation = (execContext: ExecutionContext) => {
-        this.baseLogData = Utils.initMonitoringData(execContext, MonitoringDataType.LOG) as LogData;
+        // pass
     }
 
     afterInvocation = (execContext: ExecutionContext) => {

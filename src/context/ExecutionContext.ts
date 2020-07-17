@@ -13,6 +13,7 @@ export default class ExecutionContext {
     traceId: string;
     rootSpan: ThundraSpan;
     invocationData: InvocationData;
+    metrics: any;
     userTags: any;
     tags: any;
     error: any;
@@ -42,6 +43,7 @@ export default class ExecutionContext {
         this.outgoingTraceLinks = opts.outgoingTraceLinks || [];
         this.captureLog = opts.captureLog || true;
         this.logs = opts.logs || [];
+        this.metrics = opts.metric || {};
     }
 
     report(data: any) {
