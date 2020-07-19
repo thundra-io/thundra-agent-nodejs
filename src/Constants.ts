@@ -69,24 +69,12 @@ export const HOOKS = [
     'after-invocation',
 ];
 
-export function getDefaultAPIEndpoint() {
+export function getDefaultCollectorEndpoint() {
     const region = process.env[EnvVariableKeys.AWS_REGION];
     if (region) {
-        if (region.startsWith('us-west-')) {
-            return 'api.thundra.io';
-        } else if (region.startsWith('us-east-')
-            || region.startsWith('sa-')
-            || region.startsWith('ca-')) {
-            return 'api-us-east-1.thundra.io';
-        } else if (region === 'eu-west-1') {
-            return 'api-eu-west-1.thundra.io';
-        } else if (region.startsWith('eu-')) {
-            return 'api-eu-west-2.thundra.io';
-        } else if (region.startsWith('ap-')) {
-            return 'api-ap-northeast-1.thundra.io';
-        }
+        return `${region}.collector.thundra.io`;
     }
-    return 'api.thundra.io';
+    return 'collector.thundra.io';
 }
 
 export const MONITORING_DATA_PATH = '/monitoring-data';

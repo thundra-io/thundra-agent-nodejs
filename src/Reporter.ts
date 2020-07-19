@@ -2,7 +2,7 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import {COMPOSITE_MONITORING_DATA_PATH, getDefaultAPIEndpoint} from './Constants';
+import {COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint} from './Constants';
 import Utils from './plugins/utils/Utils';
 import ThundraLogger from './ThundraLogger';
 import ThundraConfig from './plugins/config/ThundraConfig';
@@ -32,7 +32,7 @@ class Reporter {
     constructor(config: ThundraConfig, u?: url.URL) {
         this.URL = url.parse(ConfigProvider.get<string>(
             ConfigNames.THUNDRA_REPORT_REST_BASEURL,
-            'https://' + getDefaultAPIEndpoint() + '/v1'));
+            'https://' + getDefaultCollectorEndpoint() + '/v1'));
         this.reports = [];
         this.config = config ? config : new ThundraConfig({});
         this.useHttps = (u ? u.protocol : this.URL.protocol) === 'https:';
