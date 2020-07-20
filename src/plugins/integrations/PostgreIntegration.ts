@@ -131,7 +131,19 @@ class PostgreIntegration implements Integration {
                         newArgs[callbackIndex] = wrappedCallback;
                     }
 
-                    return query.apply(this, newArgs);
+                    const result = query.apply(this, newArgs);
+
+                    if (result && typeof result.then === 'function') {
+                        result.then(function (value: any) {
+                            span.closeWithCallback(me , originalCallback, [null, value]);
+                            return value;
+                        }).catch(function (error: any) {
+                            span.closeWithCallback(me , originalCallback, [error, null]);
+                            return error;
+                        });
+                    }
+
+                    return result;
                 } catch (error) {
                     if (span) {
                         span.close();
