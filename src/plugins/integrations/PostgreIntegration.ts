@@ -135,10 +135,10 @@ class PostgreIntegration implements Integration {
 
                     if (result && typeof result.then === 'function') {
                         result.then(function (value: any) {
-                            span.closeWithCallback(me , originalCallback, [null, value]);
+                            span.close();
                             return value;
                         }).catch(function (error: any) {
-                            span.closeWithCallback(me , originalCallback, [error, null]);
+                            span.close();
                             return error;
                         });
                     }
