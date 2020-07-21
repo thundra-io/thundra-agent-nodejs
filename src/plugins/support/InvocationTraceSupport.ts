@@ -2,13 +2,13 @@ import ThundraLogger from '../../ThundraLogger';
 import Resource from '../data/invocation/Resource';
 import ThundraSpan from '../../opentracing/Span';
 import { SpanTags } from '../../Constants';
-import * as contextManager from '../../context/contextManager';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 const flatten = require('lodash.flatten');
 
 class InvocationTraceSupport {
     static getResources(rootSpanId: string = ''): Resource[] {
         try {
-            const { tracer } = contextManager.get();
+            const { tracer } = ExecutionContextManager.get();
 
             if (!tracer) {
                 return undefined;
@@ -64,32 +64,32 @@ class InvocationTraceSupport {
     }
 
     static addIncomingTraceLink(traceLink: string): void {
-        const { incomingTraceLinks } = contextManager.get();
+        const { incomingTraceLinks } = ExecutionContextManager.get();
         incomingTraceLinks.push(traceLink);
     }
 
     static addIncomingTraceLinks(traceLinks: any[]): void {
-        const { incomingTraceLinks } = contextManager.get();
+        const { incomingTraceLinks } = ExecutionContextManager.get();
         incomingTraceLinks.push(...traceLinks);
     }
 
     static getIncomingTraceLinks(): any[] {
-        const { incomingTraceLinks } = contextManager.get();
+        const { incomingTraceLinks } = ExecutionContextManager.get();
         return [...new Set(incomingTraceLinks)].filter((e) => e);
     }
 
     static addOutgoingTraceLink(traceLink: string): void {
-        const { outgoingTraceLinks } = contextManager.get();
+        const { outgoingTraceLinks } = ExecutionContextManager.get();
         outgoingTraceLinks.push(traceLink);
     }
 
     static addOutgoingTraceLinks(traceLinks: any[]): void {
-        const { outgoingTraceLinks } = contextManager.get();
+        const { outgoingTraceLinks } = ExecutionContextManager.get();
         outgoingTraceLinks.push(...traceLinks);
     }
 
     static getActiveSpan(): ThundraSpan {
-        const { tracer } = contextManager.get();
+        const { tracer } = ExecutionContextManager.get();
 
         if (!tracer) {
             return undefined;
@@ -99,7 +99,7 @@ class InvocationTraceSupport {
     }
 
     static getOutgoingTraceLinks(): any[] {
-        const { tracer, outgoingTraceLinks } = contextManager.get();
+        const { tracer, outgoingTraceLinks } = ExecutionContextManager.get();
 
         if (!tracer) {
             return undefined;

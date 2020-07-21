@@ -9,7 +9,7 @@ import ThundraTracer from '../opentracing/Tracer';
 import ConfigProvider from '../config/ConfigProvider';
 import { ApplicationManager } from '../application/ApplicationManager';
 import { ApplicationInfo } from '../application/ApplicationInfo';
-import * as contextManager from '../context/contextManager';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 import * as ExpressExecutor from './ExpressExecutor';
 import * as asyncContextProvider from '../context/asyncContextProvider';
 import ExecutionContext from '../context/ExecutionContext';
@@ -25,7 +25,7 @@ export function expressMW() {
 
     initContextManager();
 
-    return (req: any, res: any, next: any) => contextManager.runWithContext(
+    return (req: any, res: any, next: any) => ExecutionContextManager.runWithContext(
         createExecContext,
         () => {
             try {
@@ -43,8 +43,8 @@ export function expressMW() {
 }
 
 function initContextManager() {
-    contextManager.setProvider(asyncContextProvider);
-    contextManager.init();
+    ExecutionContextManager.setProvider(asyncContextProvider);
+    ExecutionContextManager.init();
 }
 
 function createExecContext(): ExecutionContext {
@@ -96,14 +96,14 @@ function createPlugins(pluginContext: PluginContext): any[] {
 }
 
 function beforeRequest(plugins: any[]) {
-    const context = contextManager.get();
+    const context = ExecutionContextManager.get();
     for (const plugin of plugins) {
         plugin.beforeInvocation(context);
     }
 }
 
 async function afterRequest(plugins: any[], reporter: Reporter) {
-    const context = contextManager.get();
+    const context = ExecutionContextManager.get();
     context.finishTimestamp = Date.now();
 
     for (const plugin of plugins) {

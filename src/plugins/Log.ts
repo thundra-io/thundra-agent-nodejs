@@ -5,7 +5,7 @@ import PluginContext from './PluginContext';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import { ConsoleShimmedMethods, logLevels, StdOutLogContext, StdErrorLogContext } from '../Constants';
 import * as util from 'util';
-import * as contextManager from '../context/contextManager';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 import ThundraLogger from '../ThundraLogger';
 import InvocationSupport from './support/InvocationSupport';
 import ConfigProvider from '../config/ConfigProvider';
@@ -104,7 +104,7 @@ class Log {
                 }
 
                 this.consoleReference[method] = (...args: any[]) => {
-                    const execContext = contextManager.get();
+                    const execContext = ExecutionContextManager.get();
 
                     if (execContext && execContext.captureLog) {
                         if (logLevel >= this.logLevelFilter) {

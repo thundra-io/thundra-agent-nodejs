@@ -6,10 +6,9 @@ import {
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
-import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
 import ThundraChaosError from '../error/ThundraChaosError';
-import * as contextManager from '../../context/contextManager';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -40,7 +39,7 @@ class RedisIntegration implements Integration {
             return function internalSendCommandWrapper(options: any) {
                 let span: ThundraSpan;
                 try {
-                    const { tracer } = contextManager.get();
+                    const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
                         return internalSendCommand.call(this, options);

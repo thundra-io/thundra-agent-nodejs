@@ -13,13 +13,11 @@ import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import * as opentracing from 'opentracing';
-import LambdaEventUtils from '../../lambda/LambdaEventUtils';
-import InvocationSupport from '../support/InvocationSupport';
 import ThundraChaosError from '../error/ThundraChaosError';
 import AWSOperationTypesConfig from './AWSOperationTypes';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
-import * as contextManager from '../../context/contextManager';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const md5 = require('md5');
@@ -177,7 +175,7 @@ export class AWSIntegration implements Integration {
             return function AWSSDKWrapper(callback: any) {
                 let activeSpan: ThundraSpan;
                 try {
-                    const { tracer } = contextManager.get();
+                    const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
                         return wrappedFunction.apply(this, [callback]);

@@ -14,7 +14,7 @@ import ThundraConfig from '../plugins/config/ThundraConfig';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import { LambdaContextProvider } from './LambdaContextProvider';
 import * as LambdaExecutor from './LambdaExecutor';
-import * as contextManager from '../context/contextManager';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 import ThundraTracer from '../opentracing/Tracer';
 import ExecutionContext from '../context/ExecutionContext';
 
@@ -44,7 +44,7 @@ export function createWrapper(): (f: Function) => WrappedFunction {
         Utils.setEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED, '0');
     }
 
-    contextManager.init();
+    ExecutionContextManager.init();
     ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
     const applicationInfo = ApplicationManager.getApplicationInfo();
 
@@ -91,7 +91,9 @@ function createWrapperWithPlugins(config: ThundraConfig,
  */
 function createWrappedHandler(pluginContext: PluginContext, originalFunc: Function,
                               plugins: any[], config: ThundraConfig): WrappedFunction {
-    const wrappedFunction = (originalEvent: any, originalContext: any, originalCallback: any) => contextManager.runWithContext(
+    const wrappedFunction = (originalEvent: any,
+                             originalContext: any,
+                             originalCallback: any) => ExecutionContextManager.runWithContext(
         createExecContext,
         async () => {
             LambdaContextProvider.setContext(originalContext);

@@ -22,7 +22,6 @@ import HttpError from './plugins/error/HttpError';
 import ThundraConfig from './plugins/config/ThundraConfig';
 import PluginContext from './plugins/PluginContext';
 import ThundraLogger from './ThundraLogger';
-import InvocationSupport from './plugins/support/InvocationSupport';
 import {
     BROKER_WS_HTTP_ERR_CODE_TO_MSG,
     BROKER_WS_HTTP_ERROR_PATTERN,
@@ -34,10 +33,9 @@ import Utils from './plugins/utils/Utils';
 import {readFileSync} from 'fs';
 import ConfigProvider from './config/ConfigProvider';
 import ConfigNames from './config/ConfigNames';
-import * as contextManager from './context/contextManager';
+import ExecutionContextManager from './context/ExecutionContextManager';
 
 const path = require('path');
-const get = require('lodash.get');
 
 class ThundraWrapper {
 
@@ -343,7 +341,7 @@ class ThundraWrapper {
         this.resolve = undefined;
         this.reject = undefined;
 
-        const execContext = contextManager.get();
+        const execContext = ExecutionContextManager.get();
 
         // Execution context intialization
         execContext.startTimestamp = Date.now();
@@ -407,7 +405,7 @@ class ThundraWrapper {
             return;
         }
 
-        const execContext = contextManager.get();
+        const execContext = ExecutionContextManager.get();
 
         execContext.finishTimestamp = Date.now();
 
@@ -418,7 +416,7 @@ class ThundraWrapper {
     async report(error: any, result: any, callback: any) {
         if (!this.reported) {
             try {
-                const execContext = contextManager.get();
+                const execContext = ExecutionContextManager.get();
                 execContext.response = result;
                 execContext.error = error;
 

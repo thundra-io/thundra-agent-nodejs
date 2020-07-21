@@ -7,11 +7,10 @@ import {
 import Utils from '../utils/Utils';
 import * as url from 'url';
 import ThundraLogger from '../../ThundraLogger';
-import InvocationSupport from '../support/InvocationSupport';
 import HttpError from '../error/HttpError';
 import ThundraSpan from '../../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
-import * as contextManager from '../../context/contextManager';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -75,7 +74,7 @@ class HttpIntegration implements Integration {
             return function requestWrapper(options: any, callback: any) {
                 let span: ThundraSpan;
                 try {
-                    const { tracer } = contextManager.get();
+                    const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
                         return request.apply(this, [options, callback]);

@@ -1,6 +1,6 @@
 import { Tracer } from 'opentracing';
 import { SpanContext } from 'opentracing';
-import * as contextManager from '../context/contextManager';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 
 class GlobalTracer extends Tracer {
     constructor() {
@@ -20,7 +20,7 @@ class GlobalTracer extends Tracer {
     }
 
     _startSpan(name: any, fields: any) {
-        const { tracer } = contextManager.get();
+        const { tracer } = ExecutionContextManager.get();
         if (tracer) {
             return null;
         }
@@ -28,7 +28,7 @@ class GlobalTracer extends Tracer {
     }
 
     _inject(spanContext: any, format: any, carrier: any): Tracer {
-        const { tracer } = contextManager.get();
+        const { tracer } = ExecutionContextManager.get();
         if (tracer) {
             return null;
         }
@@ -36,7 +36,7 @@ class GlobalTracer extends Tracer {
     }
 
     _extract(format: any, carrier: any): SpanContext {
-        const { tracer } = contextManager.get();
+        const { tracer } = ExecutionContextManager.get();
         if (tracer) {
             return null;
         }

@@ -1,6 +1,5 @@
 import Integration from './Integration';
 import ThundraSpan from '../../opentracing/Span';
-import InvocationSupport from '../support/InvocationSupport';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import Utils from '../utils/Utils';
@@ -9,7 +8,7 @@ import {
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,
 } from '../../Constants';
 import ThundraChaosError from '../error/ThundraChaosError';
-import * as contextManager from '../../context/contextManager';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -41,7 +40,7 @@ class IORedisIntegration implements Integration {
             return function internalSendCommandWrapper(command: any) {
                 let span: ThundraSpan;
                 try {
-                    const { tracer } = contextManager.get();
+                    const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer || !command || this.status !== 'ready') {
                         return original.call(this, command);

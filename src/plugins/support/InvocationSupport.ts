@@ -1,9 +1,9 @@
 import ThundraLogger from '../../ThundraLogger';
-import * as contextManager from '../../context/contextManager';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 class InvocationSupport {
     static setAgentTag(key: string, value: any): void {
-        const { tags } = contextManager.get();
+        const { tags } = ExecutionContextManager.get();
         try {
             tags[key] = value;
         } catch (e) {
@@ -12,19 +12,19 @@ class InvocationSupport {
     }
 
     static getAgentTag(key: string): any {
-        const { tags } = contextManager.get();
+        const { tags } = ExecutionContextManager.get();
 
         return tags[key];
     }
 
     static getAgentTags(): any {
-        const { tags } = contextManager.get();
+        const { tags } = ExecutionContextManager.get();
 
         return tags;
     }
 
     static setAgentTags(keyValuePairs: {[key: string]: any }): void {
-        const { tags } = contextManager.get();
+        const { tags } = ExecutionContextManager.get();
 
         try {
             Object.keys(keyValuePairs).forEach((key) => {
@@ -40,7 +40,7 @@ class InvocationSupport {
     }
 
     static setTag(key: string, value: any): void {
-        const { userTags } = contextManager.get();
+        const { userTags } = ExecutionContextManager.get();
 
         try {
             userTags[key] = value;
@@ -50,19 +50,19 @@ class InvocationSupport {
     }
 
     static getTag(key: string): any {
-        const { userTags } = contextManager.get();
+        const { userTags } = ExecutionContextManager.get();
 
         return userTags[key];
     }
 
     static getTags() {
-        const { userTags } = contextManager.get();
+        const { userTags } = ExecutionContextManager.get();
 
         return userTags;
     }
 
     static removeTag(key: string): void {
-        const { userTags } = contextManager.get();
+        const { userTags } = ExecutionContextManager.get();
 
         try {
             if (userTags[key]) {
@@ -74,7 +74,7 @@ class InvocationSupport {
     }
 
     static setTags(keyValuePairs: {[key: string]: any }): void {
-        const { userTags } = contextManager.get();
+        const { userTags } = ExecutionContextManager.get();
 
         try {
             Object.keys(keyValuePairs).forEach((key) => {
@@ -90,14 +90,14 @@ class InvocationSupport {
     }
 
     static isErrorenous(): boolean {
-        const { error } = contextManager.get();
+        const { error } = ExecutionContextManager.get();
 
         return error ? true : false;
     }
 
     static setError(exception: any): void {
         if (exception instanceof Error) {
-            const execContext = contextManager.get();
+            const execContext = ExecutionContextManager.get();
             execContext.error = exception;
         }
     }
@@ -107,7 +107,7 @@ class InvocationSupport {
     }
 
     static clearError(): void {
-        const execContext = contextManager.get();
+        const execContext = ExecutionContextManager.get();
 
         execContext.error = null;
     }
