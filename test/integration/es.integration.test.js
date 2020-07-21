@@ -1,18 +1,17 @@
 import ESIntegrations from '../../dist/plugins/integrations/ESIntegration';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import ES from './utils/es.integration.utils';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+import ExecutionContext from '../../dist/context/ExecutionContext';
 
 describe('ES integration', () => {
     let tracer;
     let integration;
 
     beforeAll(() => {
-        InvocationSupport.setFunctionName('functionName');
         tracer = new ThundraTracer();
-        integration = new ESIntegrations({
-            tracer,
-        });
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new ESIntegrations();
     });
 
     afterEach(() => {
@@ -23,8 +22,6 @@ describe('ES integration', () => {
         integration.config.esPathDepth = 2;
 
         const sdk = require('elasticsearch');
-
-        InvocationSupport.setFunctionName('functionName');
 
         return ES.query(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
@@ -39,9 +36,6 @@ describe('ES integration', () => {
             expect(span.tags['db.statement']).toBe('{"query":{"match":{"body":"elasticsearch"}}}');
 
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
 
             expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
             expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/tweets');
@@ -53,9 +47,9 @@ describe('ES integration', () => {
 
     test('should instrument ES calls with single host', () => {
         integration.config.esPathDepth = 1;
+
         const sdk = require('elasticsearch');
 
-        InvocationSupport.setFunctionName('functionName');
         const hostList = ['localhost', 'test.elastic.io'];
         const portList = [9200, 9201];
 
@@ -72,9 +66,6 @@ describe('ES integration', () => {
             expect(span.tags['db.statement']).toBe('{"query":{"match":{"body":"elasticsearch"}}}');
 
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
 
             expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
             expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter');
@@ -91,8 +82,6 @@ describe('ES integration', () => {
 
         const sdk = require('elasticsearch');
 
-        InvocationSupport.setFunctionName('functionName');
-
         return ES.query(sdk).then((data) => {
             const span = tracer.getRecorder().spanList[0];
 
@@ -108,9 +97,6 @@ describe('ES integration', () => {
             expect(span.tags['db.port']).toBe(9200);
             expect(span.tags['db.type']).toBe('elasticsearch');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
             expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/tweets');
             expect(span.tags['elasticsearch.method']).toEqual('POST');

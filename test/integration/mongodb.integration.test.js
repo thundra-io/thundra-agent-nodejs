@@ -1,18 +1,17 @@
 import MongoDBIntegration from '../../dist/plugins/integrations/MongoDBIntegration';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import MongoDB from './utils/mongodb.integration.utils';
 import ThundraTracer from '../../dist/opentracing/Tracer';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+import ExecutionContext from '../../dist/context/ExecutionContext';
 
 describe('MongoDB integration', () => {
     let tracer;
     let integration;
 
     beforeAll(() => {
-        InvocationSupport.setFunctionName('functionName');
         tracer = new ThundraTracer();
-        integration = new MongoDBIntegration({
-            tracer,
-        });
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new MongoDBIntegration();
     });
 
     afterEach(() => {
@@ -42,9 +41,6 @@ describe('MongoDB integration', () => {
             expect(span.tags['mongodb.collection.name']).toBe('testCollection');
 
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
 
             let command = JSON.parse(span.tags['mongodb.command']);
             expect(command.documents[0].name).toBe('foo');
@@ -73,9 +69,6 @@ describe('MongoDB integration', () => {
             expect(span.tags['mongodb.collection.name']).toBe('testCollection');
 
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
 
             let command = JSON.parse(span.tags['mongodb.command']);
             expect(command.updates[0].q.name).toBe('foo');
@@ -104,9 +97,6 @@ describe('MongoDB integration', () => {
             expect(span.tags['mongodb.collection.name']).toBe('non_exist');
 
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
 
             expect(span.tags['error']).toBe(true);
         });

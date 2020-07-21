@@ -37,7 +37,7 @@ export class AWSIntegration implements Integration {
 
     constructor(config: any) {
         this.wrappedFuncs = {};
-        this.config = config;
+        this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
             (lib: any, cfg: any) => {
@@ -46,7 +46,7 @@ export class AWSIntegration implements Integration {
             (lib: any, cfg: any) => {
                 this.doUnwrap.call(this, lib);
             },
-            config);
+            this.config);
     }
 
     static injectSpanContextIntoMessageAttributes(tracer: ThundraTracer, span: ThundraSpan): any {

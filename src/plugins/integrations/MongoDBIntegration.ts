@@ -22,7 +22,7 @@ class MongoDBIntegration implements Integration {
     spans: any;
 
     constructor(config: any) {
-        this.config = config;
+        this.config = config || {};
         this.spans = {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
@@ -32,7 +32,7 @@ class MongoDBIntegration implements Integration {
             (lib: any, cfg: any) => {
                 this.doUnwrap.call(this, lib);
             },
-            config);
+            this.config);
     }
 
     onStarted(event: any) {

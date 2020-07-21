@@ -12,6 +12,10 @@ export function get(): any {
     return globalContext || null;
 }
 
+export function set(execCtx: ExecutionContext) {
+    globalContext = execCtx;
+}
+
 export function init() {
     // noop
 }

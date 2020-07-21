@@ -1,18 +1,17 @@
 import IORedisIntegration from '../../dist/plugins/integrations/IORedisIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import Redis from './utils/redis.integration.utils';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+import ExecutionContext from '../../dist/context/ExecutionContext';
 
 describe('IORedis integration', () => {
     let tracer;
     let integration;
 
     beforeAll(() => {
-        InvocationSupport.setFunctionName('functionName');
         tracer = new ThundraTracer();
-        integration = new IORedisIntegration({
-            tracer,
-        });
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new IORedisIntegration();
     });
 
     afterEach(() => {
@@ -46,9 +45,6 @@ describe('IORedis integration', () => {
             expect(writeCommandSpan.tags['redis.command.type']).toBe('WRITE');
             expect(writeCommandSpan.tags['redis.command.args']).toBe('string key,string val');
             expect(writeCommandSpan.tags['topology.vertex']).toEqual(true);
-            expect(writeCommandSpan.tags['trigger.domainName']).toEqual('API');
-            expect(writeCommandSpan.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(writeCommandSpan.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 });

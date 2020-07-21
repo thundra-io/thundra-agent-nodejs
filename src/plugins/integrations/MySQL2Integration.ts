@@ -21,7 +21,7 @@ class MySQL2Integration implements Integration {
     instrumentContext: any;
 
     constructor(config: any) {
-        this.config = config;
+        this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
             (lib: any, cfg: any) => {
@@ -30,7 +30,7 @@ class MySQL2Integration implements Integration {
             (lib: any, cfg: any) => {
                 this.doUnwrap.call(this, lib);
             },
-            config,
+            this.config,
             null,
             FILE_NAME);
     }

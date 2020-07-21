@@ -26,7 +26,7 @@ class HttpIntegration implements Integration {
     instrumentContext: any;
 
     constructor(config: any) {
-        this.config = config;
+        this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME_HTTP, MODULE_NAME_HTTPS], null,
             (lib: any, cfg: any, moduleName: string) => {
@@ -35,7 +35,7 @@ class HttpIntegration implements Integration {
             (lib: any, cfg: any, moduleName: string) => {
                 this.doUnwrap.call(this, lib, moduleName);
             },
-            config);
+            this.config);
     }
 
     static isValidUrl(host: string): boolean {

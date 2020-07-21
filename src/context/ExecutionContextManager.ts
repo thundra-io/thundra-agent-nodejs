@@ -11,6 +11,10 @@ export default class ExecutionContextManager {
         return contextProvider.get();
     }
 
+    static set(execCtx: ExecutionContext) {
+        return contextProvider.set(execCtx);
+    }
+
     static init() {
         contextProvider.init();
     }

@@ -1,7 +1,8 @@
 import AWS from './utils/aws.integration.utils';
 import { AWSIntegration } from '../../dist/plugins/integrations/AWSIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+import ExecutionContext from '../../dist/context/ExecutionContext';
 
 const md5 = require('md5');
 const sdk = require('aws-sdk');
@@ -19,9 +20,9 @@ describe('AWS integration', () => {
     let integration;
 
     beforeAll(() => {
-        InvocationSupport.setFunctionName('functionName');
         tracer = new ThundraTracer();
-        integration = new AWSIntegration({ tracer });
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new AWSIntegration();
     });
 
     afterEach(() => {
@@ -45,9 +46,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.request.name']).toBe('putItem');
             expect(span.tags['db.statement']).toEqual({ TableName: 'test-table', Item: {id:{S:'1'}}});
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`]);
             expect(span.finishTime).toBeTruthy();
         });
@@ -73,9 +71,6 @@ describe('AWS integration', () => {
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['aws.request.name']).toBe('putItem');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual([`SAVE:${span.spanContext.spanId}`]);
             expect(span.finishTime).toBeTruthy();
         });
@@ -107,9 +102,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.request.name']).toBe('getObject');
             expect(span.tags['aws.s3.object.name']).toBe('test.txt');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
             expect(span.finishTime).toBeTruthy();
         });
@@ -142,9 +134,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.request.name']).toBe('listBuckets');
             expect(span.tags['aws.s3.object.name']).not.toBeTruthy();
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
             expect(span.finishTime).toBeTruthy();
         });
@@ -178,9 +167,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.request.name']).toBe('invoke');
             expect(span.tags['aws.lambda.invocation.type']).toBe('RequestResponse');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
             expect(span.finishTime).toBeTruthy();
         });
@@ -240,9 +226,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.sqs.queue.name']).toBe('MyQueue');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
             expect(span.finishTime).toBeTruthy();
         });
@@ -289,9 +272,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.sqs.queue.name']).not.toBeTruthy();
             expect(span.tags['operation.type']).toBe('LIST');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(undefined);
             expect(span.finishTime).toBeTruthy();
         });
@@ -326,9 +306,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.sns.topic.name']).toBe('TEST_TOPIC');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
             expect(span.finishTime).toBeTruthy();
         });
@@ -362,9 +339,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.sns.target.name']).toBe('TEST_TARGET');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
             expect(span.finishTime).toBeTruthy();
         });
@@ -398,9 +372,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.sns.sms.phone_number']).toBe('+901234567890');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_MESSAGE_ID_123']);
             expect(span.finishTime).toBeTruthy();
         });
@@ -464,9 +435,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.kinesis.stream.name']).toBe('STRING_VALUE');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(['us-west-2:STRING_VALUE:SHARD_ID_1:SEQUENCE_NUMBER_1',
                 'us-west-2:STRING_VALUE:SHARD_ID_2:SEQUENCE_NUMBER_2']);
             expect(span.finishTime).toBeTruthy();
@@ -504,9 +472,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.firehose.stream.name']).toBe('STRING_VALUE');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.tags['trace.links']).toEqual(traceLinks);
             expect(span.finishTime).toBeTruthy();
         });
@@ -528,9 +493,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.athena.request.query.executionIds']).toBeUndefined();
             expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -552,9 +514,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.athena.request.query.executionIds']).toBeUndefined();
             expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -575,9 +534,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.athena.request.query.executionIds']).toEqual(['sample-query-execution-id']);
             expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -599,9 +555,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.athena.request.query.executionIds']).toBeUndefined();
             expect(span.tags['aws.athena.request.namedQuery.ids']).toEqual(['sample-id-1', 'sample-id-2']);
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -622,9 +575,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.athena.request.query.executionIds']).toEqual(['sample-id-1', 'sample-id-2']);
             expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -658,9 +608,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.athena.request.namedQuery.ids']).toBeUndefined();
             expect(span.tags['aws.athena.response.namedQuery.ids']).toEqual(['sample-named-query-id']);
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -675,11 +622,8 @@ describe('AWS integration', () => {
             expect(span.tags['aws.request.name']).toBe('putEvents');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['aws.eventbridge.eventbus.name']).toBe('default');
-            expect(span.tags['resource.names']).toEqual(["detail-type-1", "detail-type-2"]);
+            expect(span.tags['resource.names']).toEqual(['detail-type-1', 'detail-type-2']);
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -694,11 +638,8 @@ describe('AWS integration', () => {
             expect(span.tags['aws.request.name']).toBe('putEvents');
             expect(span.tags['operation.type']).toBe('WRITE');
             expect(span.tags['aws.eventbridge.eventbus.name']).toBe('AWSEventBridgeRequest');
-            expect(span.tags['resource.names']).toEqual(["detail-type-1", "detail-type-2"]);
+            expect(span.tags['resource.names']).toEqual(['detail-type-1', 'detail-type-2']);
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -730,9 +671,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.eventbridge.eventbus.name']).toBe('AWSEventBridgeRequest');
             expect(span.tags['aws.request.name']).toBe('listEventBuses');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
             expect(span.finishTime).toBeTruthy();
         });
     });
@@ -766,9 +704,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.ses.mail.body']).not.toBeTruthy();
 
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 
@@ -784,9 +719,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.ses.mail.destination']).toContain('test@thundra.io');
 
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 
@@ -805,9 +737,6 @@ describe('AWS integration', () => {
             expect(span.tags['aws.ses.mail.template.data']).not.toBeTruthy();
 
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 

@@ -29,6 +29,10 @@ export function get(): any {
     return contexts[asyncHooks.executionAsyncId()] || null;
 }
 
+export function set(execCtx: ExecutionContext) {
+    contexts[asyncHooks.executionAsyncId()] = execCtx;
+}
+
 export function init() {
     const hook = asyncHooks.createHook({
         init: initAsync,
