@@ -46,7 +46,6 @@ class MongoDBIntegration implements Integration {
             }
             let hostPort: string[];
             const parentSpan = tracer.getActiveSpan();
-            const functionName = InvocationSupport.getFunctionName();
             const commandName: string = get(event, 'commandName', '');
             const commandNameUpper: string = commandName.toUpperCase();
             const collectionName: string = get(event.command, commandName, '');
@@ -91,7 +90,6 @@ class MongoDBIntegration implements Integration {
                     [SpanTags.TOPOLOGY_VERTEX]: true,
                     [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                     [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-                    [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                 },
             });
 

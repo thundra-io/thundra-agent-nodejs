@@ -359,8 +359,7 @@ class Utils {
             ConfigNames.THUNDRA_APPLICATION_ID,
             (pluginContext ? pluginContext.applicationId : ''));
         const applicationName = ConfigProvider.get<string>(
-            ConfigNames.THUNDRA_APPLICATION_NAME,
-            (InvocationSupport.getFunctionName() || ''));
+            ConfigNames.THUNDRA_APPLICATION_NAME, '');
         const applicationClassName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_CLASS_NAME);
         const applicationDomainName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME);
         const applicationStage = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_STAGE, '');

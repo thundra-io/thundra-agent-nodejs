@@ -2,8 +2,6 @@ import ThundraLogger from '../../ThundraLogger';
 import * as contextManager from '../../context/contextManager';
 
 class InvocationSupport {
-    static functionName: string = '';
-
     static setAgentTag(key: string, value: any): void {
         const { tags } = contextManager.get();
         try {
@@ -89,14 +87,6 @@ class InvocationSupport {
 
     static removeTags(): void {
         // pass
-    }
-
-    static setFunctionName(functionName: string): void {
-        InvocationSupport.functionName = functionName;
-    }
-
-    static getFunctionName(): string {
-        return InvocationSupport.functionName;
     }
 
     static isErrorenous(): boolean {

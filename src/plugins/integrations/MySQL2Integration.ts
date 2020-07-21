@@ -50,7 +50,6 @@ class MySQL2Integration implements Integration {
                     }
 
                     const me = this;
-                    const functionName = InvocationSupport.getFunctionName();
                     const parentSpan = tracer.getActiveSpan();
 
                     span = tracer._startSpan(this.config.database, {
@@ -70,7 +69,6 @@ class MySQL2Integration implements Integration {
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                         [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                         [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-                        [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                     });
 
                     const sequence = query.call(this, sql, values, cb);

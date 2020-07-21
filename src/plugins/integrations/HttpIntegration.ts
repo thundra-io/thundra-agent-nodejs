@@ -81,8 +81,6 @@ class HttpIntegration implements Integration {
                         return request.apply(this, [options, callback]);
                     }
 
-                    const functionName = InvocationSupport.getFunctionName();
-
                     const method = (options.method || 'GET').toUpperCase();
                     options = typeof options === 'string' ? url.parse(options) : options;
                     const host = options.hostname || options.host || 'localhost';
@@ -124,7 +122,6 @@ class HttpIntegration implements Integration {
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                         [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                         [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-                        [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                     });
 
                     const me = this;

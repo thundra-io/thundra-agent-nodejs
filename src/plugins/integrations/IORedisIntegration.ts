@@ -47,7 +47,6 @@ class IORedisIntegration implements Integration {
                         return original.call(this, command);
                     }
 
-                    const functionName = InvocationSupport.getFunctionName();
                     const parentSpan = tracer.getActiveSpan();
                     const host: string = get(this.options, 'host', 'localhost');
                     const port: string = get(this.options, 'port', '6379');
@@ -73,7 +72,6 @@ class IORedisIntegration implements Integration {
                             [SpanTags.TOPOLOGY_VERTEX]: true,
                             [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                             [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-                            [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                         },
                     });
 

@@ -111,8 +111,6 @@ class ThundraWrapper {
             },
         }, this.wrappedContext);
 
-        InvocationSupport.setFunctionName(this.originalContext.functionName);
-
         if (this.shouldInitDebugger()) {
             this.initDebugger();
         }
