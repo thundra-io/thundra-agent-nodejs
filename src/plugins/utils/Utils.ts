@@ -438,7 +438,7 @@ class Utils {
         return 1 + Math.floor(Math.random() * bound);
     }
 
-    static registerSpanListenersFromConfigurations(tracer: ThundraTracer): any {
+    static createSpanListeners(): any[] {
         const listeners: any[] = [];
         for (const key of ConfigProvider.names()) {
             if (key.startsWith(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)) {
@@ -453,10 +453,8 @@ class Utils {
                     const listenerDef = JSON.parse(value);
                     const listenerClass = LISTENERS[listenerDef.type];
                     const listenerConfig = listenerDef.config;
-
                     const listenerInstance = new listenerClass(listenerConfig);
 
-                    tracer.addSpanListener(listenerInstance);
                     listeners.push(listenerInstance);
                 } catch (ex) {
                     ThundraLogger.error(

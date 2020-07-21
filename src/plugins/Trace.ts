@@ -24,6 +24,7 @@ export default class Trace {
     pluginContext: PluginContext;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
+    listeners: any[];
 
     constructor(config: TraceConfig) {
         this.hooks = {
@@ -32,13 +33,11 @@ export default class Trace {
         };
 
         this.config = config;
+        this.listeners = Utils.createSpanListeners();
+
         this.initIntegrations();
 
         initGlobalTracer(new GlobalTracer());
-
-        /*
-        Utils.registerSpanListenersFromConfigurations(this.tracer);
-        */
     }
 
     initIntegrations(): void {
@@ -70,6 +69,9 @@ export default class Trace {
         this.destroy();
 
         const { executor } = this.pluginContext;
+        const { tracer } = execContext;
+
+        tracer.setSpanListeners(this.listeners);
 
         if (executor) {
             executor.startTrace(this.pluginContext, execContext);

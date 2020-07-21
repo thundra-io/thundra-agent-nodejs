@@ -15,8 +15,6 @@ import LogManager from './plugins/LogManager';
 import { ApplicationManager } from './application/ApplicationManager';
 import GlobalApplcationInfoProvider from './application/GlobalApplicationInfoProvider';
 
-const get = require('lodash.get');
-
 function createWrapper(options?: any) {
     ConfigProvider.init(options);
 
