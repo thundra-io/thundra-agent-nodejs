@@ -208,6 +208,14 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_MASK]: {
+        type: 'boolean',
+        defaultValue: true,
+    },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_LOG_CONSOLE_DISABLE]: {
         type: 'boolean',
         defaultValue: false,

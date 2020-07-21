@@ -5,7 +5,7 @@ import MySQLIntegration from './plugins/integrations/MySQLIntegration';
 import RedisIntegration from './plugins/integrations/RedisIntegration';
 import MongoDBIntegration from './plugins/integrations/MongoDBIntegration';
 import IORedisIntegration from './plugins/integrations/IORedisIntegration';
-import { AWSIntegration } from './plugins/integrations/AWSIntegration';
+import {AWSIntegration} from './plugins/integrations/AWSIntegration';
 import ESIntegration from './plugins/integrations/ESIntegration';
 import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
@@ -69,24 +69,12 @@ export const HOOKS = [
     'after-invocation',
 ];
 
-export function getDefaultAPIEndpoint() {
+export function getDefaultCollectorEndpoint() {
     const region = process.env[EnvVariableKeys.AWS_REGION];
     if (region) {
-        if (region.startsWith('us-west-')) {
-            return 'api.thundra.io';
-        } else if (region.startsWith('us-east-')
-            || region.startsWith('sa-')
-            || region.startsWith('ca-')) {
-            return 'api-us-east-1.thundra.io';
-        } else if (region === 'eu-west-1') {
-            return 'api-eu-west-1.thundra.io';
-        } else if (region.startsWith('eu-')) {
-            return 'api-eu-west-2.thundra.io';
-        } else if (region.startsWith('ap-')) {
-            return 'api-ap-northeast-1.thundra.io';
-        }
+        return `${region}.collector.thundra.io`;
     }
-    return 'api.thundra.io';
+    return 'collector.thundra.io';
 }
 
 export const MONITORING_DATA_PATH = '/monitoring-data';
@@ -158,6 +146,7 @@ export const ClassNames = {
     ZEIT: 'ZEIT',
     NETLIFY: 'Netlify',
     EXPRESS: 'Express',
+    SES: 'AWS-SES',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -458,6 +447,17 @@ export const AwsSQSTags = {
     MESSAGES: 'aws.sqs.messages',
 };
 
+export const AwsSESTags = {
+    SERVICE_REQUEST: 'AWSSESRequest',
+    SUBJECT: 'aws.ses.mail.subject',
+    BODY: 'aws.ses.mail.body',
+    TEMPLATE_NAME: 'aws.ses.mail.template.name',
+    TEMPLATE_ARN: 'aws.ses.mail.template.arn',
+    TEMPLATE_DATA: 'aws.ses.mail.template.data',
+    SOURCE: 'aws.ses.mail.source',
+    DESTINATION: 'aws.ses.mail.destination',
+};
+
 export const SpanTags = {
     SPAN_TYPE: 'span.type',
     OPERATION_TYPE: 'operation.type',
@@ -487,6 +487,7 @@ export const SpanTypes = {
     AWS_LAMBDA: 'AWS-Lambda',
     AWS_ATHENA: 'AWS-Athena',
     AWS_EVENTBRIDGE: 'AWS-EventBridge',
+    AWS_SES: 'AWS-SES',
 };
 
 export const INTEGRATIONS: any = {

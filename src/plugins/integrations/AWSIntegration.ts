@@ -6,7 +6,7 @@ import {
     SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-    AwsAthenaTags, AwsEventBridgeTags,
+    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags,
 } from '../../Constants';
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
@@ -17,6 +17,8 @@ import LambdaEventUtils from '../../lambda/LambdaEventUtils';
 import InvocationSupport from '../support/InvocationSupport';
 import ThundraChaosError from '../error/ThundraChaosError';
 import AWSOperationTypesConfig from './AWSOperationTypes';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 import * as contextManager from '../../context/contextManager';
 
 const shimmer = require('shimmer');
@@ -123,6 +125,8 @@ export class AWSIntegration implements Integration {
                 return AWSAthenaIntegration;
             case 'events':
                 return AWSEventBridgeIntegration;
+            case 'email':
+                return AWSSESIntegration;
             default:
                 return AWSServiceIntegration;
         }
@@ -1061,6 +1065,65 @@ export class AWSServiceIntegration {
                 [AwsSDKTags.REQUEST_NAME]: operationName,
             },
         });
+
+        return activeSpan;
+    }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        return [];
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
+    }
+}
+
+export class AWSSESIntegration {
+    public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
+        const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
+        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SES);
+        const functionName = InvocationSupport.getFunctionName();
+
+        const maskMail = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_MASK);
+        const maskDestination = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK);
+
+        const source = get(request, 'params.Source', []);
+        const destination = maskDestination ? undefined : get(request, 'params.Destination',
+            get(request, 'params.Destinations', []));
+        const subject = maskMail ? undefined : get(request, 'params.Message.Subject', undefined);
+        const body = maskMail ? undefined : get(request, 'params.Message.Body', undefined);
+        const templateName = get(request, 'params.Template', undefined);
+        const templateArn = get(request, 'params.TemplateArn', undefined);
+        const templateData = maskMail ? undefined : get(request, 'params.TemplateData', undefined);
+
+        const spanName = operationName;
+
+        const parentSpan = tracer.getActiveSpan();
+        const activeSpan = tracer._startSpan(spanName, {
+            childOf: parentSpan,
+            domainName: DomainNames.MESSAGING,
+            className: ClassNames.SES,
+            disableActiveStart: true,
+            tags: {
+                [SpanTags.SPAN_TYPE]: SpanTypes.AWS_SES,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
+                [SpanTags.OPERATION_TYPE]: operationType,
+                [AwsSESTags.SOURCE]: source,
+                [AwsSESTags.DESTINATION]: destination,
+                [AwsSESTags.SUBJECT]: subject,
+                [AwsSESTags.BODY]: body,
+                [AwsSESTags.TEMPLATE_NAME]: templateName,
+                [AwsSESTags.TEMPLATE_ARN]: templateArn,
+                [AwsSESTags.TEMPLATE_DATA]: templateData,
+            },
+        });
+
+        if (operationType) {
+            activeSpan.setTag(SpanTags.TRIGGER_OPERATION_NAMES, [functionName]);
+            activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+        }
 
         return activeSpan;
     }

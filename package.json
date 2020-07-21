@@ -1,6 +1,6 @@
 {
   "name": "@thundra/core",
-  "version": "2.10.6",
+  "version": "2.10.12",
   "description": "Thundra Lambda Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
@@ -68,7 +68,8 @@
     "nock": "^10.0.6",
     "npm-run-all": "^4.1.1",
     "opentracing": "0.14.1",
-    "pg": "6.4.2",
+    "pg": "^7.4.1",
+    "pg-hstore": "^2.3.2",
     "redis": "^2.8.0",
     "release-it": "^7.5.0",
     "rollup": "^1.16.4",
@@ -77,6 +78,7 @@
     "rollup-plugin-node-resolve": "^5.1.0",
     "rollup-plugin-terser": "^5.0.0",
     "rollup-plugin-typescript": "^1.0.1",
+    "sequelize": "^5.21.1",
     "ts-loader": "^4.4.1",
     "ts-node": "^7.0.0",
     "tslint": "5.7.0",

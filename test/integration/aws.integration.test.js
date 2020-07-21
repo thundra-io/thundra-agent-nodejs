@@ -750,6 +750,67 @@ describe('AWS integration', () => {
         });
     });
 
+    test('should instrument AWS SES sendEmail ', () => {
+        return AWS.sesSendEmail(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('sendEmail');
+
+            expect(span.className).toBe('AWS-SES');
+            expect(span.domainName).toBe('Messaging');
+
+            expect(span.tags['aws.ses.mail.source']).toBe('demo@thundra.io');
+            expect(span.tags['aws.ses.mail.destination'].ToAddresses).toContain('test@thundra.io');
+            expect(span.tags['aws.ses.mail.destination'].CcAddresses).toContain('test-cc@thundra.io');
+
+            expect(span.tags['aws.ses.mail.subject']).not.toBeTruthy();
+            expect(span.tags['aws.ses.mail.body']).not.toBeTruthy();
+
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+        });
+    });
+
+    test('should instrument AWS SES sendRawEmail ', () => {
+        return AWS.sesSendRawEmail(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('sendRawEmail');
+
+            expect(span.className).toBe('AWS-SES');
+            expect(span.domainName).toBe('Messaging');
+
+            expect(span.tags['aws.ses.mail.source']).toBe('demo@thundra.io');
+            expect(span.tags['aws.ses.mail.destination']).toContain('test@thundra.io');
+
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+        });
+    });
+
+    test('should instrument AWS SES sendTemplatedEmail ', () => {
+        return AWS.sesSendTemplatedEmail(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+            expect(span.operationName).toBe('sendTemplatedEmail');
+
+            expect(span.className).toBe('AWS-SES');
+            expect(span.domainName).toBe('Messaging');
+
+            expect(span.tags['aws.ses.mail.source']).toBe('demo@thundra.io');
+            expect(span.tags['aws.ses.mail.destination'].ToAddresses).toContain('test@thundra.io');
+            expect(span.tags['aws.ses.mail.template.name']).toBe('TestTemplate');
+            expect(span.tags['aws.ses.mail.template.arn']).toBe('test');
+            expect(span.tags['aws.ses.mail.template.data']).not.toBeTruthy();
+
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trigger.domainName']).toEqual('API');
+            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
+            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
+        });
+    });
+
     test('should get correct operationTypes', () => {
         if (!AWSIntegration.AWSOperationTypes) {
             AWSIntegration.parseAWSOperationTypes();

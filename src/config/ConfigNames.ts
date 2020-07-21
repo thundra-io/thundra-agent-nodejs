@@ -152,6 +152,12 @@ class ConfigNames {
     public static readonly THUNDRA_TRACE_INTEGRATIONS_EVENTBRIDGE_DETAIL_MASK: string =
         'thundra.agent.trace.integrations.aws.eventbridge.detail.mask';
 
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_MASK: string =
+        'thundra.agent.trace.integrations.aws.ses.mail.mask';
+
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK: string =
+        'thundra.agent.trace.integrations.aws.ses.mail.destination.mask';
+
     /////////////////////////////////////////////////////////////////////////////
 
     public static readonly THUNDRA_LOG_CONSOLE_DISABLE: string =

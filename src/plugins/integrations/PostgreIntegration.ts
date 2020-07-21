@@ -58,7 +58,7 @@ class PostgreIntegration implements Integration {
 
     wrap(lib: any, config: any) {
         const integration = this;
-        function wrapper(query: any, args: any) {
+        function wrapper(query: any) {
             return function queryWrapper() {
                 let span: ThundraSpan;
                 try {
@@ -97,29 +97,8 @@ class PostgreIntegration implements Integration {
                     }
 
                     const newArgs = [...arguments];
-                    const hasCallback = newArgs.length > 0 && typeof newArgs[newArgs.length - 1] === 'function';
-                    let originalCallback = () => {
-                        // empty callback
-                    };
-
-                    if (hasCallback) {
-                        originalCallback = newArgs.pop();
-                    }
-
-                    const wrappedCallback = (err: any, res: any) => {
-                        if (err) {
-                            span.setErrorTag(err);
-                        }
-
-                        span.closeWithCallback(me, originalCallback, [err, res]);
-                    };
-
-                    newArgs.push(wrappedCallback);
-
-                    const originalRes = query.apply(this, newArgs);
 
                     const statement = integration.getStatement(newArgs);
-
                     if (statement) {
                         const statementType = statement.split(' ')[0].toUpperCase();
                         span.addTags({
@@ -132,7 +111,40 @@ class PostgreIntegration implements Integration {
 
                     span._initialized();
 
-                    return originalRes;
+                    let originalCallback: any;
+                    let callbackIndex = -1;
+
+                    for (let i = 1; i < newArgs.length; i++) {
+                        if (typeof newArgs[i] === 'function') {
+                            originalCallback = newArgs[i];
+                            callbackIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (callbackIndex >= 0) {
+                        const wrappedCallback = (err: any, res: any) => {
+                            if (err) {
+                                span.setErrorTag(err);
+                            }
+                            span.closeWithCallback(me, originalCallback, [err, res]);
+                        };
+                        newArgs[callbackIndex] = wrappedCallback;
+                    }
+
+                    const result = query.apply(this, newArgs);
+
+                    if (result && typeof result.then === 'function') {
+                        result.then(function (value: any) {
+                            span.close();
+                            return value;
+                        }).catch(function (error: any) {
+                            span.close();
+                            return error;
+                        });
+                    }
+
+                    return result;
                 } catch (error) {
                     if (span) {
                         span.close();

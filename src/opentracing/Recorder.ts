@@ -38,10 +38,8 @@ class ThundraRecorder {
                     shouldInvokeCallback = !isCallbackCalled;
                 }
             }
-            if (shouldInvokeCallback) {
-                if (typeof(options.callback) === 'function') {
-                    options.callback.apply(options.me, options.args);
-                }
+            if (shouldInvokeCallback && typeof(options.callback) === 'function') {
+                options.callback.apply(options.me, options.args);
             }
         } else if (spanEvent === SpanEvent.SPAN_INITIALIZE) {
             ThundraLogger.debug(`Span with name ${span.operationName} initialized.`);
