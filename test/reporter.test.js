@@ -58,10 +58,6 @@ describe('constructor', () => {
     it('should set api key', () => {
         expect(reporter.apiKey).toEqual('apiKey');
     });
-
-    it('should set reports to empty array', () => {
-        expect(reporter.reports).toEqual([]);
-    });
 });
 
 describe('reporter', () => {
@@ -71,21 +67,6 @@ describe('reporter', () => {
 
         it('should set api key', () => {
             expect(reporter.apiKey).toEqual('apiKey');
-        });
-
-        it('should set reports to empty array', () => {
-            expect(reporter.reports).toEqual([]);
-        });
-    });
-
-    describe('add reports', () => {
-        const reporter = new Reporter('apiKey');
-        const mockReport = {data: {type: 'Invocation', data: 'data1'}};
-
-        reporter.addReport(mockReport);
-
-        it('should add report to reports array', () => {
-            expect(reporter.reports).toEqual([mockReport]);
         });
     });
 
@@ -98,10 +79,7 @@ describe('reporter', () => {
         reports.push(mockReport1);
         reports.push(mockReport2);
 
-        reporter.addReport(mockReport1);
-        reporter.addReport(mockReport2);
-
-        reporter.sendReports();
+        reporter.sendReports(reports);
 
         const sentData = httpsSentData;
 
@@ -126,14 +104,15 @@ describe('reporter', () => {
         const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
         const mockReport2 = {data: {type: 'Span', data: 'data2'}};
 
+        const reports = [];
+        reports.push(mockReport1);
+        reports.push(mockReport2);
+
         reporter.request = jest.fn(async () => {
             return {status: 200};
         });
 
-        reporter.addReport(mockReport1);
-        reporter.addReport(mockReport2);
-
-        reporter.sendReports();
+        reporter.sendReports(reports);
 
         it('should make a single https request', () => {
             expect(reporter.request.mock.calls.length).toBe(1);
@@ -148,13 +127,11 @@ describe('reporter', () => {
         const reporter = new Reporter('apiKey');
         const mockReport = {data: {type: 'Invocation', data: 'data1'}};
 
-        reporter.addReport(mockReport);
+        const reports = [];
+        reports.push(mockReport);
 
-        reporter.sendReports();
+        reporter.sendReports(reports);
 
-        it('should add report to reports array', () => {
-            expect(reporter.reports.length).toBe(1);
-        });
         it('should write report to process.stdout', () => {
             expect(stdout).toBeTruthy();
         });

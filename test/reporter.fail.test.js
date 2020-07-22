@@ -64,9 +64,7 @@ describe('reporter', () => {
         reports.push(mockReport2);
 
         test('should make http request', () => {
-            reporter.addReport(mockReport1);
-            reporter.addReport(mockReport2);
-            reporter.sendReports();
+            reporter.sendReports(reports);
             expect(httpRequestCalled).toEqual(true);
             expect(httpRequestOnCalled).toEqual(true);
             expect(httpRequestWriteCalled).toEqual(true);
@@ -94,9 +92,7 @@ describe('reporter', () => {
 
         console['log'] = jest.fn(input => (consoleOutput = input));
 
-        reporter.addReport(mockReport1);
-        reporter.addReport(mockReport2);
-        return reporter.sendReports().then(() => {
+        return reporter.sendReports(reports).then(() => {
             expect(consoleOutput).toEqual(JSON.stringify(reports));
         });
     });

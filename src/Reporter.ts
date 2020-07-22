@@ -20,7 +20,6 @@ const httpsAgent = new https.Agent({
 
 class Reporter {
     private readonly MAX_MONITOR_DATA_BATCH_SIZE: number = 100;
-    private reports: any[];
     private useHttps: boolean;
     private requestOptions: http.RequestOptions;
     private connectionRetryCount: number;
@@ -32,7 +31,6 @@ class Reporter {
         this.URL = url.parse(ConfigProvider.get<string>(
             ConfigNames.THUNDRA_REPORT_REST_BASEURL,
             'https://' + getDefaultCollectorEndpoint() + '/v1'));
-        this.reports = [];
         this.apiKey = apiKey;
         this.useHttps = (u ? u.protocol : this.URL.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
@@ -66,10 +64,6 @@ class Reporter {
                 }
             },
         };
-    }
-
-    addReport(report: any): void {
-        this.reports = [...this.reports, report];
     }
 
     getCompositeBatchedReports(reports: any[]): any[] {
