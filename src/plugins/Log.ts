@@ -51,14 +51,14 @@ class Log {
     }
 
     beforeInvocation = (execContext: ExecutionContext) => {
-        // pass
+        execContext.captureLog = true;
     }
 
     afterInvocation = (execContext: ExecutionContext) => {
         const sampler = get(this.config, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled();
-        if (sampled) {
-            const { logs } = execContext;
+        const { logs } = execContext;
+        if (logs && sampled) {
             for (const log of logs) {
                 const { apiKey } = this.pluginContext;
                 const logReportData = Utils.generateReport(log, apiKey);

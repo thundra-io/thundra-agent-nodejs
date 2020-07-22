@@ -36,7 +36,8 @@ class InvocationSupport {
     }
 
     static removeAgentTags(): void {
-        // pass
+        const execContext = ExecutionContextManager.get();
+        execContext.tags = {};
     }
 
     static setTag(key: string, value: any): void {
@@ -86,7 +87,8 @@ class InvocationSupport {
     }
 
     static removeTags(): void {
-        // pass
+        const execContext = ExecutionContextManager.get();
+        execContext.userTags = {};
     }
 
     static isErrorenous(): boolean {
@@ -100,6 +102,11 @@ class InvocationSupport {
             const execContext = ExecutionContextManager.get();
             execContext.error = exception;
         }
+    }
+
+    static getError(): Error {
+        const execContext = ExecutionContextManager.get();
+        return execContext.error;
     }
 
     static hasError(): boolean {

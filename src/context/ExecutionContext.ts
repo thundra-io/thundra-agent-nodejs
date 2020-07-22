@@ -24,7 +24,7 @@ export default class ExecutionContext {
     captureLog: boolean;
     logs: LogData[];
 
-    constructor(opts?: any) {
+    constructor(opts: any = {}) {
         this.startTimestamp = opts.startTimestamp || 0;
         this.finishTimestamp = opts.finishTimestamp || 0;
         this.tracer = opts.tracer || null;

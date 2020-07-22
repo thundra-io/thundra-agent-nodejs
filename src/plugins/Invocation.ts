@@ -49,8 +49,8 @@ export default class Invocation {
     }
 
     destroy(): void {
-        InvocationSupport.removeTags();
-        InvocationSupport.removeAgentTags();
-        InvocationTraceSupport.clear();
+        // InvocationSupport.removeTags();
+        // InvocationSupport.removeAgentTags();
+        // InvocationTraceSupport.clear();
     }
 }

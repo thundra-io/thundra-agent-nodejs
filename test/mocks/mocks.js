@@ -1,4 +1,5 @@
 import {LambdaContextProvider} from '../../dist/lambda/LambdaContextProvider';
+import * as LambdaExecutor from '../../dist/lambda/LambdaExecutor';
 
 const createMockContext = () => {
     return {
@@ -66,7 +67,7 @@ const createMockBeforeInvocationData = () => {
         originalEvent: mockWrapperInstance.originalEvent,
         reporter: mockWrapperInstance.reporter,
         contextId: 'contextId',
-        transactionId: 'transactionId'
+        transactionId: 'transactionId',
     };
 };
 

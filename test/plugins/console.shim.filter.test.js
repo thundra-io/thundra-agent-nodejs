@@ -8,6 +8,8 @@ import {LambdaApplicationInfoProvider} from '../../dist/lambda/LambdaApplication
 ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 
 import TestUtils from '../utils';
+import ExecutionContext from '../../dist/context/ExecutionContext';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();
@@ -24,18 +26,12 @@ describe('console integration should filter logs with levels', () => {
         ConfigProvider.set(ConfigNames.THUNDRA_LOG_LOGLEVEL, 'WARN');
 
         const logPlugin = new LogPlugin();
-        logPlugin.enable();
+        logPlugin.setPluginContext(createMockPluginContext());
+        
+        const mockExecContext = new ExecutionContext({});
+        ExecutionContextManager.set(mockExecContext);
 
-        const pluginContext = createMockPluginContext();
-        const beforeInvocationData = createMockBeforeInvocationData();
-
-        const logs = [];
-        logPlugin.report = (logReport) => {
-            logs.push(logReport);
-        };
-
-        logPlugin.setPluginContext(pluginContext);
-        logPlugin.beforeInvocation(beforeInvocationData);
+        logPlugin.beforeInvocation(mockExecContext);
 
         console.log('log');
         console.warn('warn');
@@ -43,16 +39,18 @@ describe('console integration should filter logs with levels', () => {
         console.info('info');
         console.error('error');
 
-        logPlugin.afterInvocation();
+        logPlugin.afterInvocation(mockExecContext);
 
-        expect(logs.length).toBe(2);
+        const { reports } = mockExecContext;
+
+        expect(reports.length).toBe(2);
    
-        expect(logs[0].data.logLevel).toBe('WARN');
-        expect(logs[0].data.logMessage).toBe('warn');
-        expect(logs[0].data.logContextName).toBe('STDOUT');
+        expect(reports[0].data.logLevel).toBe('WARN');
+        expect(reports[0].data.logMessage).toBe('warn');
+        expect(reports[0].data.logContextName).toBe('STDOUT');
 
-        expect(logs[1].data.logLevel).toBe('ERROR');
-        expect(logs[1].data.logMessage).toBe('error');
-        expect(logs[1].data.logContextName).toBe('STDERR');
+        expect(reports[1].data.logLevel).toBe('ERROR');
+        expect(reports[1].data.logMessage).toBe('error');
+        expect(reports[1].data.logContextName).toBe('STDERR');
     });
 });
