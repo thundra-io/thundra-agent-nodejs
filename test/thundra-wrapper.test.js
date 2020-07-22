@@ -12,11 +12,6 @@ beforeEach(() => {
     ConfigProvider.clear();
 });
 
-afterEach(() => {
-    TestUtils.clearEnvironmentVariables();
-    ConfigProvider.clear();
-});
-
 const pluginContext = createMockPluginContext();
 
 jest.useFakeTimers();

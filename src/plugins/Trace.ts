@@ -74,7 +74,7 @@ export default class Trace {
         tracer.setSpanListeners(this.listeners);
 
         if (executor) {
-            executor.startTrace(this.pluginContext, execContext);
+            executor.startTrace(this.pluginContext, execContext, this.config);
         }
     }
 
@@ -83,7 +83,7 @@ export default class Trace {
         const { tracer, rootSpan } = execContext;
 
         if (executor) {
-            executor.finishTrace(this.pluginContext, execContext);
+            executor.finishTrace(this.pluginContext, execContext, this.config);
         }
 
         const spanList = tracer.getRecorder().getSpanList();

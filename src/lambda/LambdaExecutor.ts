@@ -15,10 +15,11 @@ import { ApplicationManager } from '../application/ApplicationManager';
 import TimeoutError from '../plugins/error/TimeoutError';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
+import TraceConfig from '../plugins/config/TraceConfig';
 
 const get = require('lodash.get');
 
-export function startTrace(pluginContext: PluginContext, execContext: any) {
+export function startTrace(pluginContext: PluginContext, execContext: any, config: TraceConfig) {
     const { platformData, tracer } = execContext;
     const { originalEvent, originalContext } = platformData;
 
@@ -68,10 +69,10 @@ export function startTrace(pluginContext: PluginContext, execContext: any) {
     execContext.rootSpan.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
     execContext.rootSpan.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
     execContext.rootSpan.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
-    execContext.rootSpan.tags['aws.lambda.invocation.request'] = getRequest(originalEvent, execContext.triggerClassName);
+    execContext.rootSpan.tags['aws.lambda.invocation.request'] = getRequest(originalEvent, execContext.triggerClassName, config);
 }
 
-export function finishTrace(pluginContext: PluginContext, execContext: any) {
+export function finishTrace(pluginContext: PluginContext, execContext: any, config: TraceConfig) {
     let { response } = execContext;
     const { rootSpan, error, triggerClassName, platformData, finishTimestamp } = execContext;
     const { originalEvent } = platformData;
@@ -98,7 +99,7 @@ export function finishTrace(pluginContext: PluginContext, execContext: any) {
         processAPIGWResponse(response, originalEvent);
     }
 
-    rootSpan.tags['aws.lambda.invocation.response'] = getResponse(response);
+    rootSpan.tags['aws.lambda.invocation.response'] = getResponse(response, config);
 
     rootSpan.finish();
     rootSpan.finishTime = finishTimestamp;
@@ -235,34 +236,31 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent:
     }
 }
 
-function getRequest(originalEvent: any, triggerClassName: string): any {
-    const thundraConfig = ConfigProvider.thundraConfig;
-    const conf = thundraConfig.traceConfig;
-
+function getRequest(originalEvent: any, triggerClassName: string, config: TraceConfig): any {
     // Masking and disableRequest should run first
-    if (conf && conf.disableRequest) {
+    if (config && config.disableRequest) {
         return null;
     }
 
-    if (conf && conf.maskRequest && typeof conf.maskRequest === 'function') {
+    if (config && config.maskRequest && typeof config.maskRequest === 'function') {
         try {
             const eventCopy = JSON.parse(JSON.stringify(originalEvent));
-            return conf.maskRequest.call({}, eventCopy);
+            return config.maskRequest.call({}, eventCopy);
         } catch (error) {
             ThundraLogger.error('Failed to mask request: ' + error);
         }
     }
 
     let enableRequestData = true;
-    if (triggerClassName === ClassNames.CLOUDWATCH && !conf.enableCloudWatchRequest) {
+    if (triggerClassName === ClassNames.CLOUDWATCH && !config.enableCloudWatchRequest) {
         enableRequestData = false;
     }
 
-    if (triggerClassName === ClassNames.FIREHOSE && !conf.enableFirehoseRequest) {
+    if (triggerClassName === ClassNames.FIREHOSE && !config.enableFirehoseRequest) {
         enableRequestData = false;
     }
 
-    if (triggerClassName === ClassNames.KINESIS && !conf.enableKinesisRequest) {
+    if (triggerClassName === ClassNames.KINESIS && !config.enableKinesisRequest) {
         enableRequestData = false;
     }
 
@@ -273,18 +271,15 @@ function getRequest(originalEvent: any, triggerClassName: string): any {
     }
 }
 
-function getResponse(response: any): any {
-    const thundraConfig = ConfigProvider.thundraConfig;
-    const conf = thundraConfig.traceConfig;
-
-    if (conf && conf.disableResponse) {
+function getResponse(response: any, config: TraceConfig): any {
+    if (config && config.disableResponse) {
         return null;
     }
 
-    if (conf && conf.maskResponse && typeof conf.maskResponse === 'function') {
+    if (config && config.maskResponse && typeof config.maskResponse === 'function') {
         try {
             const responseCopy = JSON.parse(JSON.stringify(response));
-            return conf.maskResponse.call({}, responseCopy);
+            return config.maskResponse.call({}, responseCopy);
         } catch (error) {
             ThundraLogger.error('Failed to mask response: ' + error);
         }

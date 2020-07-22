@@ -39,22 +39,24 @@ test('configuration should be able to passed through environment variables', () 
 test('configuration should be able to passed through options', () => {
     try {
         const options = {
-            my: {
-                key: 'my-value'
-            },
-            lambda: {
+            config: {
                 my: {
-                    key2: 'my-value2'
-                }
-            },
-            thundra: {
-                agent: {
+                    key: 'my-value'
+                },
+                lambda: {
                     my: {
-                        key3: 'my-value3'
-                    },
-                    lambda: {
+                        key2: 'my-value2'
+                    }
+                },
+                thundra: {
+                    agent: {
                         my: {
-                            key4: 'my-value4'
+                            key3: 'my-value3'
+                        },
+                        lambda: {
+                            my: {
+                                key4: 'my-value4'
+                            }
                         }
                     }
                 }
@@ -81,7 +83,7 @@ test('configuration should be able to passed through options', () => {
 
 test('configuration should be able to passed through config file', () => {
     try {
-        ConfigProvider.init(null, __dirname + '/sample-config.json');
+        ConfigProvider.init({ configFilePath: __dirname + '/sample-config.json' });
 
         // 'thundra.agent' prefix is added automatically
         expect(ConfigProvider.get('thundra.agent.my.key')).toEqual('my-value');
@@ -105,16 +107,18 @@ test('configuration should be returned in the type that given in the metadata', 
         process.env['thundra_agent_lambda_debugger_port'] = '3000';
         process.env['thundra_agent_trace_integrations_aws_dynamodb_traceInjection_enable'] = 'true';
         const options = {
-          thundra: {
-              agent: {
-                  application: {
-                      className: 'TEST'
-                  },
-                  debug: {
-                      enable: true
-                  }
-              }
-          }
+            config: {
+                thundra: {
+                    agent: {
+                        application: {
+                            className: 'TEST'
+                        },
+                        debug: {
+                            enable: true
+                        }
+                    }
+                }
+            }
         };
         try {
             ConfigProvider.init(options);

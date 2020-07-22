@@ -1,5 +1,7 @@
 import {LambdaContextProvider} from '../../dist/lambda/LambdaContextProvider';
 import * as LambdaExecutor from '../../dist/lambda/LambdaExecutor';
+import ExecutionContext from '../../dist/context/ExecutionContext';
+import ThundraTracer from '../../dist/opentracing/Tracer';
 
 const createMockContext = () => {
     return {
@@ -58,6 +60,17 @@ const createMockPluginContext = () => {
         resetTimestamps: () => undefined,
     };
 };
+
+const createMockLambdaExecContext = () => {
+    return new ExecutionContext({
+        tracer: new ThundraTracer(),
+        platformData: {
+            originalContext: createMockContext(),
+            originalEvent: { key: 'data' },
+        },
+        response: { key: 'data' },
+    });
+}
 
 const createMockBeforeInvocationData = () => {
     const mockWrapperInstance = createMockWrapperInstance();
@@ -513,5 +526,6 @@ module.exports = {
     createBatchMockSQSEventDifferentIds,
     createBatchMockSQSEventSameIds, 
     createBatchMockSNSEventWithDifferentIds, 
-    createBatchMockSNSEventWithSameIds
+    createBatchMockSNSEventWithSameIds,
+    createMockLambdaExecContext
 };
