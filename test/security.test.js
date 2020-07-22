@@ -12,6 +12,7 @@ import MongoCalls from './integration/utils/mongodb.integration.utils';
 import ThundraWrapper from '../dist/ThundraWrapper';
 import Recorder from '../dist/opentracing/Recorder';
 import { AWSIntegration } from '../dist/plugins/integrations/AWSIntegration';
+import ExecutionContextManager from '../dist/context/ExecutionContextManager';
 
 import TestUtils from './utils.js';
 
@@ -209,15 +210,8 @@ describe('whitelist config', () => {
     };
 
     let thundraWrapper;
-    let recorder;
     const originalEvent = { key: 'value' };
     const originalContext = createMockContext();
-
-    const clearRecorder = (recorder) => {
-        recorder.activeSpanStack.clear();
-        recorder.spanList = [];
-        recorder.spanOrder = 1;
-    };
 
     const checkIfWhitelisted = (span) => {
         expect(span.tags[SecurityTags.BLOCKED]).toBeUndefined();
@@ -229,11 +223,6 @@ describe('whitelist config', () => {
     beforeAll(() => {
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
         thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
-        recorder = thundra.tracer().recorder;
-    });
-
-    afterEach(() => {
-        clearRecorder(recorder);
     });
 
     describe('using aws integration', () => {
@@ -245,7 +234,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -255,7 +245,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -265,7 +256,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -275,7 +267,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -285,7 +278,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -295,7 +289,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -305,7 +300,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -315,7 +311,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -330,7 +327,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -340,7 +338,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -354,7 +353,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -369,7 +369,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                for (const span of recorder.spanList) {
+                const { tracer } = ExecutionContextManager.get();
+                for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
                         checkIfWhitelisted(span);
                         break;
@@ -383,7 +384,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                for (const span of recorder.spanList) {
+                const { tracer } = ExecutionContextManager.get();
+                for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
                         checkIfWhitelisted(span);
                         break;
@@ -402,7 +404,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -412,7 +415,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -426,7 +430,8 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
         });
@@ -436,7 +441,6 @@ describe('whitelist config', () => {
 
 describe('blacklist config', () => {
     let thundraWrapper;
-    let recorder;
     const config = {
         type: 'SecurityAwareSpanListener',
         config: {
@@ -448,12 +452,6 @@ describe('blacklist config', () => {
     const securityErrorMessage = 'Operation was blocked due to security configuration';
     const originalEvent = { key: 'value' };
     const originalContext = createMockContext();
-
-    const clearRecorder = (recorder) => {
-        recorder.activeSpanStack.clear();
-        recorder.spanList = [];
-        recorder.spanOrder = 1;
-    };
 
     const checkIfBlacklisted = (span) => {
         expect(span.startTime).toBeGreaterThan(0);
@@ -468,11 +466,6 @@ describe('blacklist config', () => {
     beforeAll(() => {
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
         thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
-        recorder = thundra.tracer().recorder;
-    });
-
-    afterEach(() => {
-        clearRecorder(recorder);
     });
 
     describe('using aws integration', () => {
@@ -484,7 +477,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -494,7 +488,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -504,7 +499,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -514,7 +510,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -524,7 +521,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -534,7 +532,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -544,7 +543,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -554,7 +554,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -569,7 +570,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -579,7 +581,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -593,7 +596,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -608,7 +612,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                for (const span of recorder.spanList) {
+                const { tracer } = ExecutionContextManager.get();
+                for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
                         checkIfBlacklisted(span);
                         break;
@@ -622,7 +627,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                for (const span of recorder.spanList) {
+                const { tracer } = ExecutionContextManager.get();
+                for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
                         checkIfBlacklisted(span);
                         break;
@@ -641,7 +647,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -651,7 +658,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
@@ -665,7 +673,8 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const span = recorder.spanList[1];
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
