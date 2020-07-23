@@ -54,7 +54,7 @@ describe('reporter', () => {
 
     describe('http', () => {
         // noinspection JSAnnotator
-        const url = new URL('http://api.thundra.io/api');
+        const url = new URL('http://collector.thundra.io/api');
         const reporter = new Reporter({apiKey: 'apiKey'}, url);
         const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
         const mockReport2 = {data: {type: 'Span', data: 'data2'}};
