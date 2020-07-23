@@ -49,7 +49,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     },
     [ConfigNames.THUNDRA_REPORT_REST_BASEURL]: {
         type: 'string',
-        defaultValue: 'https://api.thundra.io/v1',
+        defaultValue: 'https://collector.thundra.io/v1',
     },
     [ConfigNames.THUNDRA_REPORT_REST_TRUSTALLCERTIFICATES]: {
         type: 'boolean',
