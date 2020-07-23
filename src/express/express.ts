@@ -2,7 +2,6 @@ import InvocationPlugin from '../plugins/Invocation';
 import TracePlugin from '../plugins/Trace';
 import LogPlugin from '../plugins/Log';
 import PluginContext from '../plugins/PluginContext';
-import Utils from '../plugins/utils/Utils';
 import Reporter from '../Reporter';
 import ConfigNames from '../config/ConfigNames';
 import ThundraTracer from '../opentracing/Tracer';
@@ -13,6 +12,7 @@ import ExecutionContextManager from '../context/ExecutionContextManager';
 import * as ExpressExecutor from './ExpressExecutor';
 import * as asyncContextProvider from '../context/asyncContextProvider';
 import ExecutionContext from '../context/ExecutionContext';
+import { ExpressApplicationInfoProvider } from './ExpressApplicationInfoProvider';
 
 const get = require('lodash.get');
 
@@ -23,6 +23,7 @@ export function expressMW() {
     const pluginContext = createPluginContext(applicationInfo, apiKey);
     const plugins = createPlugins(pluginContext);
 
+    ApplicationManager.setApplicationInfoProvider(new ExpressApplicationInfoProvider());
     initContextManager();
 
     return (req: any, res: any, next: any) => ExecutionContextManager.runWithContext(
@@ -63,7 +64,6 @@ function createExecContext(): ExecutionContext {
 function createPluginContext(applicationInfo: ApplicationInfo, apiKey: string): PluginContext {
     return new PluginContext({
         ...applicationInfo,
-        transactionId: Utils.generateId(),
         apiKey,
         executor: ExpressExecutor,
     });

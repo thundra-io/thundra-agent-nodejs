@@ -3,6 +3,9 @@ import ThundraConfig from '../plugins/config/ThundraConfig';
 
 const get = require('lodash.get');
 
+/**
+ * Provides configurations by gathering different resources.
+ */
 class ConfigProvider {
 
     public static thundraConfig: ThundraConfig;

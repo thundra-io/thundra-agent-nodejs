@@ -1,20 +1,30 @@
 import { ApplicationInfoProvider } from './ApplicationInfoProvider';
-import { PlatformUtils } from './PlatformUtils';
 import { ApplicationInfo } from './ApplicationInfo';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import Utils from '../plugins/utils/Utils';
-import { ExpressApplicationInfoProvider } from '../express/ExpressApplicationInfoProvider';
 
-export default class GlobalApplcationInfoProvider implements ApplicationInfoProvider {
-    public platformUtils = PlatformUtils;
+/**
+ * {@link ApplicationInfoProvider} implementation which provides {@link ApplicationInfo}
+ * based on underlying platform and configuration.
+ */
+export default class GlobalApplicationInfoProvider implements ApplicationInfoProvider {
+
+    private applicationInfoProvider: ApplicationInfoProvider;
     private applicationInfo: ApplicationInfo;
 
-    constructor() {
-        const fromConfig = this.appInfoFromConfig();
-        const fromPlatform = this.appInfoFromPlatform();
+    constructor(applicationInfoProvider: ApplicationInfoProvider) {
+        this.applicationInfoProvider = applicationInfoProvider;
 
-        this.applicationInfo = this.mergeAppInfo(fromConfig, fromPlatform);
+        const fromConfig: ApplicationInfo = this.appInfoFromConfig();
+        const fromGiven: ApplicationInfo = applicationInfoProvider
+            ? applicationInfoProvider.getApplicationInfo()
+            : {} as ApplicationInfo;
+        this.applicationInfo = this.mergeAppInfo(fromConfig, fromGiven);
+    }
+
+    getApplicationInfoProvider(): ApplicationInfoProvider {
+        return this.applicationInfoProvider;
     }
 
     getApplicationInfo(): ApplicationInfo {
@@ -25,30 +35,28 @@ export default class GlobalApplcationInfoProvider implements ApplicationInfoProv
         return {
             applicationId: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_ID),
             applicationInstanceId: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_INSTANCE_ID),
+            applicationName: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME),
+            applicationClassName: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_CLASS_NAME),
+            applicationDomainName: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME),
             applicationRegion: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_REGION),
             applicationVersion: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_VERSION),
+            applicationStage: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_STAGE),
             applicationTags: Utils.getApplicationTags(),
         };
     }
 
-    appInfoFromPlatform(): ApplicationInfo {
-        // Get application info specific to current platform
-        const applicationInfoProvider = new ExpressApplicationInfoProvider();
-        return applicationInfoProvider.getApplicationInfo();
-    }
-
-    mergeAppInfo(fromConfig: ApplicationInfo, fromPlatform: ApplicationInfo): ApplicationInfo {
+    mergeAppInfo(fromConfig: ApplicationInfo, fromGiven: ApplicationInfo): ApplicationInfo {
         return {
-            applicationId: fromConfig.applicationId || fromPlatform.applicationId,
-            applicationInstanceId: fromConfig.applicationInstanceId || fromPlatform.applicationInstanceId,
-            applicationRegion: fromConfig.applicationRegion || fromPlatform.applicationRegion,
-            applicationVersion: fromConfig.applicationVersion || fromPlatform.applicationVersion,
-            applicationTags: fromConfig.applicationTags || fromPlatform.applicationTags,
+            applicationId: fromConfig.applicationId || fromGiven.applicationId,
+            applicationInstanceId: fromConfig.applicationInstanceId || fromGiven.applicationInstanceId,
+            applicationName: fromConfig.applicationName || fromGiven.applicationName,
+            applicationClassName: fromConfig.applicationClassName || fromGiven.applicationClassName,
+            applicationDomainName: fromConfig.applicationDomainName || fromGiven.applicationDomainName,
+            applicationRegion: fromConfig.applicationRegion || fromGiven.applicationRegion,
+            applicationVersion: fromConfig.applicationVersion || fromGiven.applicationVersion,
+            applicationStage: fromConfig.applicationStage || fromGiven.applicationStage,
+            applicationTags: fromConfig.applicationTags || fromGiven.applicationTags,
         };
-    }
-
-    update(): void {
-        // pass
     }
 
 }

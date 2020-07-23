@@ -7,15 +7,15 @@ import * as opentracing from 'opentracing';
 import ThundraSpan from '../opentracing/Span';
 import ThundraLogger from '../ThundraLogger';
 import PluginContext from '../plugins/PluginContext';
-import ConfigProvider from '../config/ConfigProvider';
 import HttpError from '../plugins/error/HttpError';
 import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
 import InvocationData from '../plugins/data/invocation/InvocationData';
-import { ApplicationManager } from '../application/ApplicationManager';
 import TimeoutError from '../plugins/error/TimeoutError';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import TraceConfig from '../plugins/config/TraceConfig';
+import { LambdaContextProvider } from './LambdaContextProvider';
+import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 
 const get = require('lodash.get');
 
@@ -122,15 +122,43 @@ export function startInvocation(pluginContext: PluginContext, execContext: any) 
     invocationData.coldStart = pluginContext.requestCount === 0;
     invocationData.timeout = false;
 
-    invocationData.transactionId = execContext.transactionId ?
-        execContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
-
-    invocationData.spanId = execContext.spanId;
     invocationData.traceId = execContext.traceId;
+    invocationData.transactionId = execContext.transactionId;
+    invocationData.spanId = execContext.spanId;
 
-    ApplicationManager.getPlatformUtils().setInvocationTags(invocationData, pluginContext, execContext);
+    setInvocationTags(invocationData, pluginContext, execContext);
 
     execContext.invocationData = invocationData;
+}
+
+function setInvocationTags(invocationData: any, pluginContext: any, execContext: any) {
+    const originalContext = LambdaContextProvider.getContext();
+
+    invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;
+    invocationData.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
+    invocationData.tags['aws.region'] = pluginContext.applicationRegion;
+    invocationData.tags['aws.lambda.invocation.timeout'] = false;
+
+    if (originalContext) {
+        invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
+        invocationData.tags['aws.account_no'] = LambdaPlatformUtils.getAWSAccountNo(originalContext.invokedFunctionArn);
+        invocationData.tags['aws.lambda.log_group_name'] = originalContext ? originalContext.logGroupName : '';
+        invocationData.tags['aws.lambda.name'] = originalContext ? originalContext.functionName : '';
+        invocationData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
+        invocationData.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
+    }
+
+    const { heapUsed } = process.memoryUsage();
+    invocationData.tags['aws.lambda.invocation.memory_usage'] = Math.floor(heapUsed / (1024 * 1024));
+
+    const xrayTraceInfo = Utils.getXRayTraceInfo();
+
+    if (xrayTraceInfo.traceID) {
+        invocationData.tags['aws.xray.trace.id'] = xrayTraceInfo.traceID;
+    }
+    if (xrayTraceInfo.segmentID) {
+        invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
+    }
 }
 
 export function finishInvocation(pluginContext: PluginContext, execContext: any) {

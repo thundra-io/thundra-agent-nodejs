@@ -1,3 +1,6 @@
+/**
+ * Holds and provides all configuration names as constant.
+ */
 class ConfigNames {
 
     public static readonly THUNDRA_APIKEY: string =

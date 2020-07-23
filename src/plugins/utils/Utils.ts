@@ -18,10 +18,9 @@ import MetricData from '../data/metric/MetricData';
 import SpanData from '../data/trace/SpanData';
 import LogData from '../data/log/LogData';
 import ThundraLogger from '../../ThundraLogger';
-import ThundraTracer from '../../opentracing/Tracer';
 import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
-import InvocationSupport from '../support/InvocationSupport';
 import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
+import {ApplicationManager} from '../../application/ApplicationManager';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
@@ -355,28 +354,18 @@ class Utils {
     static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
-        const applicationId = ConfigProvider.get<string>(
-            ConfigNames.THUNDRA_APPLICATION_ID,
-            (pluginContext ? pluginContext.applicationId : ''));
-        const applicationName = ConfigProvider.get<string>(
-            ConfigNames.THUNDRA_APPLICATION_NAME, '');
-        const applicationClassName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_CLASS_NAME);
-        const applicationDomainName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME);
-        const applicationStage = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_STAGE, '');
-        const applicationVersion = ConfigProvider.get<string>(
-            ConfigNames.THUNDRA_APPLICATION_VERSION,
-            (pluginContext ? pluginContext.applicationVersion : ''));
+        const applicationInfo = ApplicationManager.getApplicationInfo();
 
         monitoringData.id = Utils.generateId();
         monitoringData.agentVersion = AGENT_VERSION;
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
-        monitoringData.applicationInstanceId = pluginContext ? pluginContext.applicationInstanceId : '';
-        monitoringData.applicationId = applicationId;
-        monitoringData.applicationName = applicationName;
-        monitoringData.applicationClassName = applicationClassName;
-        monitoringData.applicationDomainName = applicationDomainName;
-        monitoringData.applicationStage = applicationStage;
-        monitoringData.applicationVersion = applicationVersion;
+        monitoringData.applicationInstanceId = applicationInfo.applicationInstanceId;
+        monitoringData.applicationId = applicationInfo.applicationId;
+        monitoringData.applicationName = applicationInfo.applicationName;
+        monitoringData.applicationClassName = applicationInfo.applicationClassName;
+        monitoringData.applicationDomainName = applicationInfo.applicationDomainName;
+        monitoringData.applicationStage = applicationInfo.applicationStage;
+        monitoringData.applicationVersion = applicationInfo.applicationVersion;
         monitoringData.applicationRuntimeVersion = process.version;
 
         monitoringData.applicationTags = {
@@ -562,6 +551,7 @@ class Utils {
         }
         return applicationTags;
     }
+
 }
 
 export default Utils;
