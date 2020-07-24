@@ -2,9 +2,13 @@ const Instrumenter = require('../../dist/opentracing/instrument/Instrumenter').d
 const ThundraTracer = require( '../../dist/opentracing/Tracer').default;
 const TraceConfig = require('../../dist/plugins/config/TraceConfig').default;
 const assert = require('assert');
+const { default: ExecutionContextManager } = require('../../dist/context/ExecutionContextManager');
+const { default: ExecutionContext } = require('../../dist/context/ExecutionContext');
 
 const automatic_instrumentation_test = function () {
     const tracer = new ThundraTracer();
+    ExecutionContextManager.set(new ExecutionContext({ tracer }));
+    
     const config = new TraceConfig({
         traceableConfigs: [{
             pattern: 'test.instrumentation.utils.automated.instrumentation.util.*',
