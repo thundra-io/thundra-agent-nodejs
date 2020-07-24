@@ -1,4 +1,4 @@
-import { ApplicationInfo } from "../application/ApplicationInfo";
+import { ApplicationInfo } from '../application/ApplicationInfo';
 
 class PluginContext {
     applicationInfo: ApplicationInfo;
