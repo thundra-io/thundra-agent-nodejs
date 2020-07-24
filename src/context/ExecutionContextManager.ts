@@ -1,6 +1,7 @@
 import ExecutionContext from './ExecutionContext';
+import * as globalContextProvider from './globalContextProvider';
 
-let contextProvider = require('./globalContextProvider');
+let contextProvider = globalContextProvider;
 
 export default class ExecutionContextManager {
     static runWithContext(createExecContext: Function, fn: Function) {
