@@ -63,7 +63,7 @@ class Log {
                 const { apiKey } = this.pluginContext;
                 const logReportData = Utils.generateReport(log, apiKey);
                 // If lambda fails skip log filtering
-                if (InvocationSupport.isErrorenous()) {
+                if (InvocationSupport.hasError()) {
                     execContext.report(logReportData);
                     continue;
                 }

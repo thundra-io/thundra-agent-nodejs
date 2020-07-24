@@ -91,32 +91,27 @@ class InvocationSupport {
         execContext.userTags = {};
     }
 
-    static isErrorenous(): boolean {
-        const { error } = ExecutionContextManager.get();
+    static hasError(): boolean {
+        const { error, userError } = ExecutionContextManager.get();
 
-        return error ? true : false;
+        return (error || userError) ? true : false;
     }
 
-    static setError(exception: any): void {
-        if (exception instanceof Error) {
+    static setError(error: any): void {
+        if (error instanceof Error) {
             const execContext = ExecutionContextManager.get();
-            execContext.error = exception;
+            execContext.userError = error;
         }
     }
 
     static getError(): Error {
         const execContext = ExecutionContextManager.get();
-        return execContext.error;
-    }
-
-    static hasError(): boolean {
-        return InvocationSupport.isErrorenous();
+        return execContext.userError;
     }
 
     static clearError(): void {
         const execContext = ExecutionContextManager.get();
-
-        execContext.error = null;
+        execContext.userError = null;
     }
 
 }

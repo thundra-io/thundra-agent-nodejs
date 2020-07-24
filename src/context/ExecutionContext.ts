@@ -17,6 +17,7 @@ export default class ExecutionContext {
     userTags: any;
     tags: any;
     error: any;
+    userError: any;
     platformData: any;
     response: any;
     incomingTraceLinks: any[];
@@ -37,6 +38,7 @@ export default class ExecutionContext {
         this.userTags = opts.userTags || {};
         this.tags = opts.tags || {};
         this.error = opts.error || null;
+        this.userError = opts.userError || null;
         this.platformData = opts.platformData || {};
         this.response = opts.response || {};
         this.incomingTraceLinks = opts.incomingTraceLinks || [];

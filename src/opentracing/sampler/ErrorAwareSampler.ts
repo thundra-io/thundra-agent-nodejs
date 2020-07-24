@@ -3,7 +3,7 @@ import Sampler from './Sampler';
 
 class ErrorAwareSampler implements Sampler<null> {
     isSampled(): boolean {
-        return InvocationSupport.isErrorenous();
+        return InvocationSupport.hasError();
     }
 }
 

@@ -69,9 +69,11 @@ export function startTrace(pluginContext: PluginContext, execContext: any, confi
 }
 
 export function finishTrace(pluginContext: PluginContext, execContext: any, config: TraceConfig) {
-    let { response } = execContext;
-    const { rootSpan, error, triggerClassName, platformData, finishTimestamp } = execContext;
+    let { response, error } = execContext;
+    const { rootSpan, userError, triggerClassName, platformData, finishTimestamp } = execContext;
     const { originalEvent } = platformData;
+
+    error = error || userError;
 
     if (error) {
         const parsedErr = Utils.parseError(error);
@@ -158,13 +160,16 @@ function setInvocationTags(invocationData: any, pluginContext: any, execContext:
 }
 
 export function finishInvocation(pluginContext: PluginContext, execContext: any) {
-    const { error, invocationData } = execContext;
+    let { error } = execContext;
+    const { invocationData, userError } = execContext;
+
+    error = error || userError;
 
     if (error) {
         const parsedErr = Utils.parseError(error);
         invocationData.setError(parsedErr);
 
-        if (error instanceof TimeoutError) { // TODO: Move to platform utils
+        if (error instanceof TimeoutError) {
             invocationData.timeout = true;
             invocationData.tags['aws.lambda.invocation.timeout'] = true;
         }
