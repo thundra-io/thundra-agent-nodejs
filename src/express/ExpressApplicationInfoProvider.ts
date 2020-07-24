@@ -4,7 +4,7 @@ import { ApplicationInfo } from '../application/ApplicationInfo';
 
 export class ExpressApplicationInfoProvider implements ApplicationInfoProvider {
 
-    private readonly applicationInfo: ApplicationInfo;
+    private applicationInfo: ApplicationInfo;
 
     constructor() {
         this.applicationInfo = {
@@ -22,6 +22,10 @@ export class ExpressApplicationInfoProvider implements ApplicationInfoProvider {
 
     getApplicationInfo(): ApplicationInfo {
         return this.applicationInfo;
+    }
+
+    update(opts: any = {}) {
+        this.applicationInfo = Utils.mergeApplicationInfo(opts, this.applicationInfo);
     }
 
 }

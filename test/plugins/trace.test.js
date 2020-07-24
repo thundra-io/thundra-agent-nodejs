@@ -1,14 +1,11 @@
 import Trace from '../../dist/plugins/Trace';
-import ThundraTracer from '../../dist/opentracing/Tracer';
-import ExecutionContext from '../../dist/context/ExecutionContext';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../../dist/plugins/support/InvocationTraceSupport';
 import TraceConfig from '../../dist/plugins/config/TraceConfig';
-import { DATA_MODEL_VERSION } from '../../dist/Constants';
 import * as LambdaExecutor from '../../dist/lambda/LambdaExecutor';
 import {
-    createMockPluginContext, createMockBeforeInvocationData, createMockApiGatewayProxy, createMockLambdaExecContext,
+    createMockPluginContext, createMockApiGatewayProxy, createMockLambdaExecContext,
     createMockSNSEvent, createMockSQSEvent, createMockClientContext, createBatchMockSQSEventDifferentIds,
     createBatchMockSQSEventSameIds, createBatchMockSNSEventWithDifferentIds, createBatchMockSNSEventWithSameIds
 } from '../mocks/mocks';

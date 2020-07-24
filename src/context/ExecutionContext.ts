@@ -31,7 +31,7 @@ export default class ExecutionContext {
         this.reports = opts.reports || [];
         this.transactionId = opts.transactionId || '';
         this.spanId = opts.spanId || '';
-        this.traceId = opts.traceId || '';
+        this.traceId = opts.traceId || null;
         this.rootSpan = opts.rootSpan || null;
         this.invocationData = opts.invocationData || null;
         this.userTags = opts.userTags || {};

@@ -15,12 +15,10 @@ export default class GlobalApplicationInfoProvider implements ApplicationInfoPro
 
     constructor(applicationInfoProvider: ApplicationInfoProvider) {
         this.applicationInfoProvider = applicationInfoProvider;
+        this.applicationInfo = applicationInfoProvider ? applicationInfoProvider.getApplicationInfo() : {} as ApplicationInfo;
 
         const fromConfig: ApplicationInfo = this.appInfoFromConfig();
-        const fromGiven: ApplicationInfo = applicationInfoProvider
-            ? applicationInfoProvider.getApplicationInfo()
-            : {} as ApplicationInfo;
-        this.applicationInfo = this.mergeAppInfo(fromConfig, fromGiven);
+        this.update(fromConfig);
     }
 
     getApplicationInfoProvider(): ApplicationInfoProvider {
@@ -45,18 +43,7 @@ export default class GlobalApplicationInfoProvider implements ApplicationInfoPro
         };
     }
 
-    mergeAppInfo(fromConfig: ApplicationInfo, fromGiven: ApplicationInfo): ApplicationInfo {
-        return {
-            applicationId: fromConfig.applicationId || fromGiven.applicationId,
-            applicationInstanceId: fromConfig.applicationInstanceId || fromGiven.applicationInstanceId,
-            applicationName: fromConfig.applicationName || fromGiven.applicationName,
-            applicationClassName: fromConfig.applicationClassName || fromGiven.applicationClassName,
-            applicationDomainName: fromConfig.applicationDomainName || fromGiven.applicationDomainName,
-            applicationRegion: fromConfig.applicationRegion || fromGiven.applicationRegion,
-            applicationVersion: fromConfig.applicationVersion || fromGiven.applicationVersion,
-            applicationStage: fromConfig.applicationStage || fromGiven.applicationStage,
-            applicationTags: fromConfig.applicationTags || fromGiven.applicationTags,
-        };
+    update(opts: any = {}) {
+        this.applicationInfo = Utils.mergeApplicationInfo(opts, this.applicationInfo);
     }
-
 }

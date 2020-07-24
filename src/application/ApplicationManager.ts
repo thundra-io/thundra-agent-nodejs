@@ -10,7 +10,7 @@ export class ApplicationManager {
     static applicationInfoProvider: GlobalApplicationInfoProvider;
 
     static getApplicationInfoProvider(): ApplicationInfoProvider {
-        return ApplicationManager.applicationInfoProvider.getApplicationInfoProvider();
+        return ApplicationManager.applicationInfoProvider;
     }
 
     static setApplicationInfoProvider(applicationInfoProvider: ApplicationInfoProvider) {

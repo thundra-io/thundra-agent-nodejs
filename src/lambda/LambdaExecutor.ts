@@ -33,8 +33,6 @@ export function startTrace(pluginContext: PluginContext, execContext: any, confi
 
     if (propagatedSpanContext) {
         execContext.traceId = propagatedSpanContext.traceId;
-        execContext.transactionId = Utils.generateId();
-        tracer.transactionId = execContext.transactionId;
 
         execContext.rootSpan = tracer._startSpan(originalContext.functionName, {
             propagated: true,
@@ -45,8 +43,6 @@ export function startTrace(pluginContext: PluginContext, execContext: any, confi
         });
     } else {
         execContext.traceId = Utils.generateId();
-        execContext.transactionId = Utils.generateId();
-        tracer.transactionId = execContext.transactionId;
 
         execContext.rootSpan = tracer._startSpan(originalContext.functionName, {
             rootTraceId: execContext.traceId,
@@ -63,7 +59,7 @@ export function startTrace(pluginContext: PluginContext, execContext: any, confi
     execContext.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
     execContext.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
     execContext.rootSpan.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
-    execContext.rootSpan.tags['aws.region'] = pluginContext.applicationRegion;
+    execContext.rootSpan.tags['aws.region'] = pluginContext.applicationInfo.applicationRegion;
     execContext.rootSpan.tags['aws.lambda.log_group_name'] = originalContext.logGroupName;
     execContext.rootSpan.tags['aws.lambda.name'] = originalContext.functionName;
     execContext.rootSpan.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
@@ -110,7 +106,7 @@ export function startInvocation(pluginContext: PluginContext, execContext: any) 
         MonitoringDataType.INVOCATION) as InvocationData;
 
     invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM; // TODO: get from platform
-    invocationData.applicationRegion = pluginContext.applicationRegion;
+    invocationData.applicationRegion = pluginContext.applicationInfo.applicationRegion;
     invocationData.tags = {};
     invocationData.userTags = {};
     invocationData.startTimestamp = execContext.startTimestamp;
@@ -136,7 +132,7 @@ function setInvocationTags(invocationData: any, pluginContext: any, execContext:
 
     invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;
     invocationData.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
-    invocationData.tags['aws.region'] = pluginContext.applicationRegion;
+    invocationData.tags['aws.region'] = pluginContext.applicationInfo.applicationRegion;
     invocationData.tags['aws.lambda.invocation.timeout'] = false;
 
     if (originalContext) {

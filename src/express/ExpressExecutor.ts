@@ -12,7 +12,7 @@ export function startInvocation(pluginContext: PluginContext, execContext: any) 
         MonitoringDataType.INVOCATION) as InvocationData;
 
     invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM; // TODO: get from platform
-    invocationData.applicationRegion = pluginContext.applicationRegion;
+    invocationData.applicationRegion = pluginContext.applicationInfo.applicationRegion;
     invocationData.tags = {};
     invocationData.userTags = {};
     invocationData.startTimestamp = execContext.startTimestamp;
@@ -75,8 +75,6 @@ export function startTrace(pluginContext: PluginContext, execContext: any) {
     const { tracer } = execContext;
 
     execContext.traceId = Utils.generateId();
-    execContext.transactionId = Utils.generateId();
-    tracer.transactionId = execContext.transactionId;
 
     execContext.rootSpan = tracer._startSpan('express-root-span', {
         rootTraceId: execContext.traceId,

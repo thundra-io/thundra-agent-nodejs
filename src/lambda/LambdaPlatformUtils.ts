@@ -68,7 +68,7 @@ export class LambdaPlatformUtils {
 
         invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;
         invocationData.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
-        invocationData.tags['aws.region'] = pluginContext.applicationRegion;
+        invocationData.tags['aws.region'] = pluginContext.applicationInfo.applicationRegion;
         invocationData.tags['aws.lambda.invocation.timeout'] = false;
 
         if (originalContext) {

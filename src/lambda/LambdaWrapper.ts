@@ -17,6 +17,7 @@ import * as LambdaExecutor from './LambdaExecutor';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 import ThundraTracer from '../opentracing/Tracer';
 import ExecutionContext from '../context/ExecutionContext';
+import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
@@ -97,8 +98,9 @@ function createWrappedHandler(pluginContext: PluginContext, originalFunc: Functi
         createExecContext,
         async () => {
             LambdaContextProvider.setContext(originalContext);
-            // Creating applicationId here, since we need the information in context
-            pluginContext.applicationId = ApplicationManager.getApplicationInfo().applicationId;
+            ApplicationManager.getApplicationInfoProvider().update({
+                applicationId: LambdaPlatformUtils.getApplicationId(originalContext),
+            });
 
             const thundraWrapper = new ThundraWrapper(
                 this,
@@ -124,9 +126,13 @@ function createExecContext(): ExecutionContext {
     const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
 
     const tracer = new ThundraTracer(tracerConfig);
+    const transactionId = Utils.generateId();
+
+    tracer.transactionId = transactionId;
 
     return new ExecutionContext({
         tracer,
+        transactionId,
     });
 }
 
@@ -137,11 +143,10 @@ function createExecContext(): ExecutionContext {
  */
 function createPluginContext(config: ThundraConfig, applicationInfo: ApplicationInfo): PluginContext {
     const pluginContext: PluginContext = new PluginContext({
-        ...applicationInfo,
+        applicationInfo,
         requestCount: 0,
         apiKey: config.apiKey,
         timeoutMargin: config.timeoutMargin,
-        transactionId: null,
         executor: LambdaExecutor,
     });
 

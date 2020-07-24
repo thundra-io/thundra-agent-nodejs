@@ -10,8 +10,7 @@ import { LambdaPlatformUtils } from './LambdaPlatformUtils';
  * from underlying AWS-Lambda platform.
  */
 export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
-
-    private readonly applicationInfo: ApplicationInfo;
+    private applicationInfo: ApplicationInfo;
 
     constructor() {
         const logStreamName = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_LOG_STREAM_NAME);
@@ -19,25 +18,23 @@ export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
         const functionVersion = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_VERSION);
         const functionName = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_NAME);
         this.applicationInfo = {
-            applicationId: undefined,
+            applicationId: '',
             applicationInstanceId: logStreamName ? logStreamName.split(']').pop() : Utils.generateId(),
             applicationName: functionName,
             applicationClassName: LAMBDA_APPLICATION_CLASS_NAME,
             applicationDomainName: LAMBDA_APPLICATION_DOMAIN_NAME,
             applicationRegion: region ? region : '',
-            applicationStage: undefined,
+            applicationStage: '',
             applicationVersion: functionVersion ? functionVersion : '',
             applicationTags: Utils.getApplicationTags(),
         };
     }
 
     getApplicationInfo(): ApplicationInfo {
-        const lambdaContext = LambdaContextProvider.getContext();
-        if (!this.applicationInfo.applicationId && lambdaContext) {
-            this.applicationInfo.applicationId = LambdaPlatformUtils.getApplicationId(lambdaContext);
-        }
-
         return this.applicationInfo;
     }
 
+    update(opts: any = {}) {
+        this.applicationInfo = Utils.mergeApplicationInfo(opts, this.applicationInfo);
+    }
 }

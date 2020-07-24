@@ -1,5 +1,4 @@
 import {LambdaContextProvider} from '../../dist/lambda/LambdaContextProvider';
-import * as LambdaExecutor from '../../dist/lambda/LambdaExecutor';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 
@@ -48,10 +47,12 @@ const createMockPlugin = () => {
 
 const createMockPluginContext = () => {
     return {
-        applicationId: 'applicationId',
-        applicationProfile: 'default',
-        applicationRegion: 'region',
-        applicationVersion: 'version',
+        applicationInfo: {
+            applicationId: 'applicationId',
+            applicationProfile: 'default',
+            applicationRegion: 'region',
+            applicationVersion: 'version',
+        },
         requestCount: 0,
         apiKey: 'apiKey',
         maxMemory: 512,
@@ -64,6 +65,7 @@ const createMockPluginContext = () => {
 const createMockLambdaExecContext = () => {
     return new ExecutionContext({
         tracer: new ThundraTracer(),
+        transactionId: 'foo',
         platformData: {
             originalContext: createMockContext(),
             originalEvent: { key: 'data' },

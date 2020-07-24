@@ -21,6 +21,7 @@ import ThundraLogger from '../../ThundraLogger';
 import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
 import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
 import {ApplicationManager} from '../../application/ApplicationManager';
+import { ApplicationInfo } from '../../application/ApplicationInfo';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
@@ -370,7 +371,7 @@ class Utils {
 
         monitoringData.applicationTags = {
             ...monitoringData.applicationTags,
-            ...pluginContext.applicationTags,
+            ...applicationInfo.applicationTags,
         };
 
         return monitoringData;
@@ -550,6 +551,21 @@ class Utils {
             }
         }
         return applicationTags;
+    }
+
+    static mergeApplicationInfo(updates: any = {}, applicationInfo: ApplicationInfo) {
+        const newAppInfo: ApplicationInfo = {...applicationInfo};
+        newAppInfo.applicationId = updates.applicationId || applicationInfo.applicationId;
+        newAppInfo.applicationInstanceId = updates.applicationInstanceId || applicationInfo.applicationInstanceId;
+        newAppInfo.applicationName = updates.applicationName || applicationInfo.applicationName;
+        newAppInfo.applicationClassName = updates.applicationClassName || applicationInfo.applicationClassName;
+        newAppInfo.applicationDomainName = updates.applicationDomainName || applicationInfo.applicationDomainName;
+        newAppInfo.applicationRegion = updates.applicationRegion || applicationInfo.applicationRegion;
+        newAppInfo.applicationStage = updates.applicationStage || applicationInfo.applicationStage;
+        newAppInfo.applicationVersion = updates.applicationVersion || applicationInfo.applicationVersion;
+        newAppInfo.applicationTags = updates.applicationTags || applicationInfo.applicationTags;
+
+        return newAppInfo;
     }
 
 }

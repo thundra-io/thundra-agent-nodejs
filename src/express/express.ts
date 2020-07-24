@@ -13,6 +13,7 @@ import * as ExpressExecutor from './ExpressExecutor';
 import * as asyncContextProvider from '../context/asyncContextProvider';
 import ExecutionContext from '../context/ExecutionContext';
 import { ExpressApplicationInfoProvider } from './ExpressApplicationInfoProvider';
+import Utils from '../plugins/utils/Utils';
 
 const get = require('lodash.get');
 
@@ -52,11 +53,16 @@ function createExecContext(): ExecutionContext {
     const { thundraConfig } = ConfigProvider;
     const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
 
-    const tracer = new ThundraTracer(tracerConfig); // trace plugin
+    const tracer = new ThundraTracer(tracerConfig);
+    const transactionId = Utils.generateId();
+
+    tracer.transactionId = transactionId;
+
     const startTimestamp = Date.now();
 
     return new ExecutionContext({
         tracer,
+        transactionId,
         startTimestamp,
     });
 }

@@ -379,8 +379,6 @@ class LambdaEventUtils {
 
         span._setOperationName(functionName);
 
-        pluginContext.applicationId = LambdaPlatformUtils.getApplicationId(originalContext, { functionName });
-
         this.injectTrigerTragsForInvocation(domainName, className, [siteName]);
         this.injectTrigerTragsForSpan(span, domainName, className, [siteName]);
 
