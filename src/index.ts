@@ -13,14 +13,25 @@ import * as LambdaWrapper from './lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
 
-function createWrapper(options?: any) {
-    ConfigProvider.init(options);
-
-    return LambdaWrapper.createWrapper();
-}
+let initialized = false;
 
 function init(options?: any) {
     ConfigProvider.init(options);
+    initialized = true;
+}
+
+function createLambdaWrapper(options?: any) {
+    init(options);
+    return LambdaWrapper.createWrapper();
+}
+
+function lambdaWrapper(handler: any) {
+    if (!initialized) {
+        // If not initialized yet, init without any option
+        init();
+    }
+    const wrapper = LambdaWrapper.createWrapper();
+    return wrapper(handler);
 }
 
 function createLogger(options: any) {
@@ -44,8 +55,8 @@ function tracer() {
 
 const updateConfig = config.ThundraConfig.updateConfig;
 
-// Expose createWrapper
-module.exports = createWrapper;
+// Expose Lambda wrapper creator by default
+module.exports = createLambdaWrapper;
 
 // Named exports
 Object.assign(module.exports, {
@@ -57,6 +68,7 @@ Object.assign(module.exports, {
     createLogger,
     loadUserHandler,
     addLogListener,
+    lambdaWrapper,
     expressMW,
     tracer,
     InvocationSupport,

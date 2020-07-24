@@ -1,4 +1,4 @@
-import ThundraWrapper from '../ThundraWrapper';
+import LambdaHandlerWrapper from './LambdaHandlerWrapper';
 import TracePlugin from '../plugins/Trace';
 import MetricPlugin from '../plugins/Metric';
 import InvocationPlugin from '../plugins/Invocation';
@@ -102,7 +102,7 @@ function createWrappedHandler(pluginContext: PluginContext, originalFunc: Functi
                 applicationId: LambdaPlatformUtils.getApplicationId(originalContext),
             });
 
-            const thundraWrapper = new ThundraWrapper(
+            const thundraWrapper = new LambdaHandlerWrapper(
                 this,
                 originalEvent,
                 originalContext,

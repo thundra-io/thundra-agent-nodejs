@@ -1,43 +1,35 @@
-/*
-*
-* Wraps the lambda handler function.
-*
-* Implemented in Hook & Plugin structure. Runs plugins' related functions by executing hooks.
-*
-* Wraps the original callback and context.
-*
-* invoke function calls the original lambda handler with original event, wrapped context and wrapped callback.
-*
-* Wrapped context methods (done, succeed, fail) and callback call report function.
-*
-* report function uses the Reporter instance to make a single request to send reports if async monitoring is
-* not enabled (environment variable thundra_lambda_report_cloudwatch_enable is not set). After reporting it calls
-* original callback/succeed/done/fail.
-*
-*/
-
-import Reporter from './Reporter';
-import TimeoutError from './plugins/error/TimeoutError';
-import HttpError from './plugins/error/HttpError';
-import ThundraConfig from './plugins/config/ThundraConfig';
-import PluginContext from './plugins/PluginContext';
-import ThundraLogger from './ThundraLogger';
+import Reporter from '../Reporter';
+import TimeoutError from '../plugins/error/TimeoutError';
+import HttpError from '../plugins/error/HttpError';
+import ThundraConfig from '../plugins/config/ThundraConfig';
+import PluginContext from '../plugins/PluginContext';
+import ThundraLogger from '../ThundraLogger';
 import {
     BROKER_WS_HTTP_ERR_CODE_TO_MSG,
     BROKER_WS_HTTP_ERROR_PATTERN,
     BROKER_WS_PROTOCOL,
     BROKER_WSS_PROTOCOL,
     DEBUG_BRIDGE_FILE_NAME,
-} from './Constants';
-import Utils from './plugins/utils/Utils';
+} from '../Constants';
+import Utils from '../plugins/utils/Utils';
 import {readFileSync} from 'fs';
-import ConfigProvider from './config/ConfigProvider';
-import ConfigNames from './config/ConfigNames';
-import ExecutionContextManager from './context/ExecutionContextManager';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 
 const path = require('path');
 
-class ThundraWrapper {
+/**
+ * Wraps the Lambda handler function.
+ *
+ * - Implemented in Hook & Plugin structure. Runs plugins' related functions by executing hooks.
+ * - Wraps the original callback and context.
+ * - {@link invoke} function calls the original Lambda handler with original event, wrapped context and wrapped callback.
+ * - Wrapped context methods (done, succeed, fail) and callback call report function.
+ * - {@link report} function uses the {@link Reporter} instance to to send collected reports.
+ * - After reporting it calls original callback/succeed/done/fail.
+ */
+class LambdaHandlerWrapper {
 
     private originalThis: any;
     private originalEvent: any;
@@ -500,4 +492,4 @@ class ThundraWrapper {
 
 }
 
-export default ThundraWrapper;
+export default LambdaHandlerWrapper;
