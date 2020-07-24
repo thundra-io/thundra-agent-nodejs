@@ -297,25 +297,25 @@ describe('thundra wrapper', () => {
             });
         });
 
-        // describe('invoke', () => {
-        //     const originalContext = createMockContext();
-        //     const originalCallback = null;
-        //     const originalFunction = jest.fn((e, c) => c.succeed());
-        //     const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
-        //     thundraWrapper.wrappedContext.succeed = jest.fn();
+        describe('invoke', () => {
+            const originalContext = createMockContext();
+            const originalCallback = null;
+            const originalFunction = jest.fn((e, c) => c.succeed());
+            const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
+            thundraWrapper.wrappedContext.succeed = jest.fn();
 
-        //     beforeAll(() => {
-        //         const mockExecContext = new ExecutionContext();
-        //         ExecutionContextManager.set(mockExecContext);
+            beforeAll(() => {
+                const mockExecContext = new ExecutionContext();
+                ExecutionContextManager.set(mockExecContext);
 
-        //         thundraWrapper.invoke();
-        //     });
+                thundraWrapper.invoke();
+            });
 
-        //     it('should call original function and wrappedContext\'s succeed', async () => {
-        //         expect(originalFunction).toHaveBeenCalledTimes(1);
-        //         expect(thundraWrapper.wrappedContext.succeed).toHaveBeenCalledTimes(1);
-        //     });
-        // });
+            it('should call original function and wrappedContext\'s succeed', async () => {
+                expect(originalFunction).toHaveBeenCalledTimes(1);
+                expect(thundraWrapper.wrappedContext.succeed).toHaveBeenCalledTimes(1);
+            });
+        });
 
     });
 
