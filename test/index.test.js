@@ -1,5 +1,5 @@
 const Thundra = require('../dist/index');
-import ThundraWrapper from '../dist/ThundraWrapper';
+import LambdaHandlerWrapper from '../dist/lambda/LambdaHandlerWrapper';
 import Utils from '../dist/plugins/utils/Utils.js';
 import ConfigProvider from '../dist/config/ConfigProvider';
 import ConfigNames from '../dist/config/ConfigNames';
@@ -21,7 +21,7 @@ beforeAll(() => {
         });
     });
 
-    ThundraWrapper.prototype.executeAfteInvocationAndReport = jest.fn();
+    LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();
 });
 
 beforeEach(() => {

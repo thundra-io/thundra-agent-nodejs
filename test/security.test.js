@@ -9,7 +9,7 @@ import ESCalls from './integration/utils/es.integration.utils';
 import RedisCalls from './integration/utils/redis.integration.utils';
 import MySQLCalls from './integration/utils/mysql.integration.utils';
 import MongoCalls from './integration/utils/mongodb.integration.utils';
-import ThundraWrapper from '../dist/ThundraWrapper';
+import LambdaHandlerWrapper from '../dist/lambda/LambdaHandlerWrapper';
 import Recorder from '../dist/opentracing/Recorder';
 import { AWSIntegration } from '../dist/plugins/integrations/AWSIntegration';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
@@ -196,7 +196,7 @@ beforeAll(() => {
             cb(Error('foo error'), null);
         };
     });
-    ThundraWrapper.prototype.executeAfteInvocationAndReport = jest.fn();
+    LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();
     Recorder.prototype.destroy = jest.fn();
 });
 
