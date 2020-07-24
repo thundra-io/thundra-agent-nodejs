@@ -83,17 +83,17 @@ class ThundraWrapper {
         this.wrappedContext = {
             ...context,
             done: (error: any, result: any) => {
-                this.report(error, result, () => {
+                return this.report(error, result, () => {
                     this.originalContext.done(error, result);
                 });
             },
             succeed: (result: any) => {
-                this.report(null, result, () => {
+                return this.report(null, result, () => {
                     this.originalContext.succeed(result);
                 });
             },
             fail: (error: any) => {
-                this.report(error, null, () => {
+                return this.report(error, null, () => {
                     this.originalContext.fail(error);
                 });
             },
@@ -115,7 +115,7 @@ class ThundraWrapper {
     }
 
     wrappedCallback = (error: any, result: any) => {
-        this.report(error, result, () => {
+        return this.report(error, result, () => {
             this.invokeCallback(error, result);
         });
     }
