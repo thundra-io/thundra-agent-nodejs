@@ -68,6 +68,7 @@ Object.assign(module.exports, {
     createLogger,
     loadUserHandler,
     addLogListener,
+    createLambdaWrapper,
     lambdaWrapper,
     expressMW,
     tracer,

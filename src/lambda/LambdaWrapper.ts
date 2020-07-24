@@ -39,13 +39,14 @@ export function createWrapper(): (f: Function) => WrappedFunction {
         return (originalFunc) => originalFunc;
     }
     if (!(config.apiKey)) {
-        console.warn(`Thundra API Key is not given, monitoring is disabled.`);
+        console.warn('Thundra API Key is not given, monitoring is disabled.');
     }
     if (config.trustAllCert) {
         Utils.setEnvVar(EnvVariableKeys.NODE_TLS_REJECT_UNAUTHORIZED, '0');
     }
 
     ExecutionContextManager.init();
+
     ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
     const applicationInfo = ApplicationManager.getApplicationInfo();
 
