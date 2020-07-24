@@ -453,13 +453,17 @@ class ThundraWrapper {
     }
 
     destroyTimeoutHandler() {
+        ThundraLogger.debug('Destroying timeout handler');
         if (this.timeout) {
+            ThundraLogger.debug('Clearing timeout handler');
             clearTimeout(this.timeout);
             this.timeout = null;
         }
     }
 
     setupTimeoutHandler(): NodeJS.Timer | undefined {
+        ThundraLogger.debug('Setting up timeout handler');
+
         this.destroyTimeoutHandler();
 
         const { getRemainingTimeInMillis = () => 0 } = this.originalContext;
@@ -476,6 +480,7 @@ class ThundraWrapper {
         const endTime = Math.min(configEndTime, maxEndTime);
 
         return setTimeout(() => {
+            ThundraLogger.debug('Detected timeout');
             if (this.debuggerProxy) {
                 // Debugger proxy exists, let it know about the timeout
                 try {
@@ -488,6 +493,7 @@ class ThundraWrapper {
                     this.debuggerProxy = null;
                 }
             }
+            ThundraLogger.debug('Reporting timeout error');
             this.report(new TimeoutError('Lambda is timed out.'), null, null);
         }, endTime);
     }
