@@ -106,20 +106,30 @@ describe('thundra wrapper', () => {
         });
     });
 
-    describe.skip('timeout', () => {
+    describe('timeout', () => {
         const originalCallback = jest.fn();
         const mockContext = createMockContext();
         const mockPluginContext = createMockPluginContext();
         const mockPromise = new Promise((res, rej) => {} );
         const originalFunction = jest.fn(async (event, context, callback) => {
             jest.runAllTimers();
+            // Since mock promise is not resolved, awaiting it blocks handler call
             await mockPromise;
             callback(null, 'hey');
         });
+
         mockContext.getRemainingTimeInMillis = () => 5000;
         mockPluginContext.timeoutMargin = 200;
+
         const thundraWrapper = new ThundraWrapper(originalThis, originalEvent, mockContext, originalCallback, originalFunction, plugins, mockPluginContext);
-        thundraWrapper.report = jest.fn();
+
+        let reportResolve;
+        const reportPromise = new Promise((res, rej) => {
+            reportResolve = res;
+        });
+        thundraWrapper.report = jest.fn(() => {
+            reportResolve();
+        });
 
         beforeAll(() => {
             const mockExecContext = new ExecutionContext();
@@ -127,7 +137,8 @@ describe('thundra wrapper', () => {
         });
 
         it('setupTimeoutHandler calls set timeout.', async () => {
-            await thundraWrapper.invoke();
+            thundraWrapper.invoke();
+            await reportPromise;
             expect(thundraWrapper.report).toBeCalledWith(new TimeoutError('Lambda is timed out.'), null, null);
         });
     });
