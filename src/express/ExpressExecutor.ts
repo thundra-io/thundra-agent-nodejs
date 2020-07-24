@@ -3,7 +3,6 @@ import { LAMBDA_FUNCTION_PLATFORM, HttpTags, DomainNames, ClassNames } from '../
 import PluginContext from '../plugins/PluginContext';
 import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
 import InvocationData from '../plugins/data/invocation/InvocationData';
-import { ApplicationManager } from '../application/ApplicationManager';
 import TimeoutError from '../plugins/error/TimeoutError';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
@@ -25,13 +24,9 @@ export function startInvocation(pluginContext: PluginContext, execContext: any) 
     invocationData.coldStart = pluginContext.requestCount === 0;
     invocationData.timeout = false;
 
-    invocationData.transactionId = execContext.transactionId ?
-        execContext.transactionId : ApplicationManager.getPlatformUtils().getTransactionId();
-
-    invocationData.spanId = execContext.spanId;
     invocationData.traceId = execContext.traceId;
-
-    ApplicationManager.getPlatformUtils().setInvocationTags(invocationData, pluginContext, execContext);
+    invocationData.transactionId = execContext.transactionId;
+    invocationData.spanId = execContext.spanId;
 
     execContext.invocationData = invocationData;
 }

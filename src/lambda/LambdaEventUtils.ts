@@ -13,22 +13,26 @@ import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 
 const get = require('lodash.get');
 
+/**
+ * Utility class for AWS Lambda event related stuff.
+ */
 class LambdaEventUtils {
+
     static LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
 
     static getLambdaEventType(originalEvent: any, originalContext: any): LambdaEventType {
         if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
             originalEvent.Records[0] && originalEvent.Records[0].kinesis) {
             return LambdaEventType.Kinesis;
-       } else if (originalEvent.deliveryStreamArn && Array.isArray(originalEvent.records)) {
+        } else if (originalEvent.deliveryStreamArn && Array.isArray(originalEvent.records)) {
             return LambdaEventType.FireHose;
-       } else if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
+        } else if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
             originalEvent.Records[0] && originalEvent.Records[0].dynamodb) {
             return LambdaEventType.DynamoDB;
-       } else if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
+        } else if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
             originalEvent.Records[0] && originalEvent.Records[0].EventSource === 'aws:sns') {
             return LambdaEventType.SNS;
-       } else if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
+        } else if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
             originalEvent.Records[0] && originalEvent.Records[0].eventSource === 'aws:sqs') {
             return LambdaEventType.SQS;
         } else if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
@@ -461,7 +465,7 @@ class LambdaEventUtils {
     }
 }
 
-export default  LambdaEventUtils;
+export default LambdaEventUtils;
 
 export enum LambdaEventType {
     Kinesis,

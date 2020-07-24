@@ -12,8 +12,6 @@ import { expressMW } from './express/express';
 import * as LambdaWrapper from './lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
-import { ApplicationManager } from './application/ApplicationManager';
-import GlobalApplcationInfoProvider from './application/GlobalApplicationInfoProvider';
 
 function createWrapper(options?: any) {
     ConfigProvider.init(options);
@@ -23,7 +21,6 @@ function createWrapper(options?: any) {
 
 function init(options?: any) {
     ConfigProvider.init(options);
-    ApplicationManager.setApplicationInfoProvider(new GlobalApplcationInfoProvider());
 }
 
 function createLogger(options: any) {

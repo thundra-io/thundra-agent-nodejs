@@ -2,10 +2,13 @@ import { EnvVariableKeys } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import Utils from '../plugins/utils/Utils';
-import { PlatformUtils } from '../application/PlatformUtils';
 import { LambdaContextProvider } from './LambdaContextProvider';
 
-export class LambdaPlatformUtils extends PlatformUtils {
+/**
+ * Utility class for AWS Lambda platform related stuff
+ */
+export class LambdaPlatformUtils {
+
     static getApplicationId(originalContext: any, opts: any = {}) {
         const arn = originalContext.invokedFunctionArn;
         const region = opts.region || Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
@@ -60,11 +63,6 @@ export class LambdaPlatformUtils extends PlatformUtils {
         return Utils.getEnvVar(EnvVariableKeys.SLS_LOCAL) === 'true';
     }
 
-    static getTransactionId(): string {
-        const context = LambdaContextProvider.getContext();
-        return context ? context.awsRequestId : '';
-    }
-
     static setInvocationTags(invocationData: any, pluginContext: any, execContext: any) {
         const originalContext = LambdaContextProvider.getContext();
 
@@ -94,4 +92,5 @@ export class LambdaPlatformUtils extends PlatformUtils {
             invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
         }
     }
+
 }
