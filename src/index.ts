@@ -8,7 +8,6 @@ import InvocationSupport from './plugins/support/InvocationSupport';
 import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
 import ConfigNames from './config/ConfigNames';
 import { loadHandler } from './runtime/RuntimeSupport';
-import { expressMW } from './express/express';
 import * as LambdaWrapper from './lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
@@ -70,7 +69,6 @@ Object.assign(module.exports, {
     addLogListener,
     createLambdaWrapper,
     lambdaWrapper,
-    expressMW,
     tracer,
     InvocationSupport,
     InvocationTraceSupport,
