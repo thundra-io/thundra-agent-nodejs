@@ -1,19 +1,18 @@
 import MySQL2Integration from '../../dist/plugins/integrations/MySQL2Integration';
 import MySQLIntegration from '../../dist/plugins/integrations/MySQLIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import mysql from './utils/mysql.integration.utils';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+import ExecutionContext from '../../dist/context/ExecutionContext';
 
 describe('MySQL2 integration', () => {
     let tracer;
     let integration;
 
     beforeAll(() => {
-        InvocationSupport.setFunctionName('functionName');
         tracer = new ThundraTracer();
-        integration = new MySQL2Integration({
-            tracer,
-        });
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new MySQL2Integration();
     });
 
     afterEach(() => {
@@ -37,9 +36,6 @@ describe('MySQL2 integration', () => {
             expect(span.tags['db.statement.type']).toBe('SELECT');
             expect(span.tags['db.statement']).toBe('SELECT 1 + 1 AS solution');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 
@@ -63,9 +59,6 @@ describe('MySQL2 integration', () => {
             expect(span.tags['db.type']).toBe('mysql');
             expect(span.tags['db.statement.type']).toBe('SELECT');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 });
@@ -75,11 +68,9 @@ describe('MySQL Integration', () => {
     let integration;
 
     beforeAll(() => {
-        InvocationSupport.setFunctionName('functionName');
         tracer = new ThundraTracer();
-        integration = new MySQLIntegration({
-            tracer,
-        });
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new MySQLIntegration();
     });
 
     afterEach(() => {
@@ -104,9 +95,6 @@ describe('MySQL Integration', () => {
             expect(span.tags['db.statement.type']).toBe('SELECT');
             expect(span.tags['db.statement']).toBe('SELECT 1 + 1 AS solution');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 
@@ -132,9 +120,6 @@ describe('MySQL Integration', () => {
             expect(span.tags['db.type']).toBe('mysql');
             expect(span.tags['db.statement.type']).toBe('SELECT'); 
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 });

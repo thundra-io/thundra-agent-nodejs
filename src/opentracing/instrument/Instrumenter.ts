@@ -2,12 +2,12 @@ import TraceConfig from '../../plugins/config/TraceConfig';
 import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import ThundraLogger from '../../ThundraLogger';
-import ThundraTracer from '../Tracer';
 import ThundraSpan from '../Span';
 import { ThundraSourceCodeInstrumenter } from '@thundra/instrumenter';
 import { ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Constants';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const Module = require('module');
 const path = require('path');
@@ -21,7 +21,6 @@ const TRACE_DEF_SEPERATOR: string = '.';
 */
 class Instrumenter {
     origCompile: any;
-    tracer: ThundraTracer;
     sourceCodeInstrumenter: ThundraSourceCodeInstrumenter;
 
     constructor(traceConfig: TraceConfig) {
@@ -29,7 +28,6 @@ class Instrumenter {
         const traceableConfigPrefix = ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX);
 
         this.sourceCodeInstrumenter = new ThundraSourceCodeInstrumenter(traceableConfigs, traceableConfigPrefix);
-        this.tracer = get(traceConfig, 'tracer');
     }
 
     unhookModuleCompile() {
@@ -70,8 +68,8 @@ class Instrumenter {
     }
 
     setGlobalFunction() {
-        const tracer = this.tracer;
         global.__thundraTraceEntry__ = function (args: any) {
+            const { tracer } = ExecutionContextManager.get();
             try {
                 const span = tracer.startSpan(args.path + '.' + args.name) as ThundraSpan;
                 const spanArguments: Argument[] = [];
@@ -183,6 +181,7 @@ class Instrumenter {
         };
 
         global.__thundraTraceExit__ = function (args: any) {
+            const { tracer } = ExecutionContextManager.get();
             try {
                 const entryData = args.entryData;
                 if (entryData.latestLineSpan) {

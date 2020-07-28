@@ -1,23 +1,21 @@
 import Logger from '../../dist/plugins/Logger';
-import { logLevels } from '../../dist/Constants';
 import LogManager from '../../dist/plugins/LogManager';
 import Log from '../../dist/plugins/Log';
 
 import { createMockLogManager } from '../mocks/mocks';
 
+beforeEach(() => {
+    LogManager.destroy();
+});
+
 describe('logger', () => {
     describe('constructor', () => {
-        const logManager = createMockLogManager();
-        Logger.logManagerInstance = logManager;
         const options = {opt1: 1, opt2: 2};
         const logger = new Logger(options);
         const loggerWithName = new Logger({loggerName: 'logger'});
 
         it('should set options', () => {
             expect(logger.options).toBe(options);
-        });
-        it('should set logManager', () => {
-            expect(Logger.getLogManager()).toBeTruthy();
         });
         it('should set loggerName', () => {
             expect(logger.loggerName).toBe('default');
@@ -47,8 +45,7 @@ describe('logger', () => {
     });
 
     describe('warn', () => {
-        const logManager = createMockLogManager();
-        const logger = new Logger({}, logManager);
+        const logger = new Logger({});
         logger.reportLog = jest.fn();
         logger.warn(1, 2, 3);
         it('should report log', () => {
@@ -57,8 +54,7 @@ describe('logger', () => {
     });
 
     describe('info', () => {
-        const logManager = createMockLogManager();
-        const logger = new Logger({}, logManager);
+        const logger = new Logger({});
         logger.reportLog = jest.fn();
         logger.info(1, 2, 3);
         it('should report log', () => {
@@ -67,8 +63,7 @@ describe('logger', () => {
     });
 
     describe('debug', () => {
-        const logManager = createMockLogManager();
-        const logger = new Logger({}, logManager);
+        const logger = new Logger({});
         logger.reportLog = jest.fn();
         logger.debug(1, 2, 3);
         it('should report log', () => {
@@ -77,8 +72,7 @@ describe('logger', () => {
     });
 
     describe('trace', () => {
-        const logManager = createMockLogManager();
-        const logger = new Logger({}, logManager);
+        const logger = new Logger({});
         logger.reportLog = jest.fn();
         logger.trace(1, 2, 3);
         it('should report log', () => {
@@ -87,43 +81,20 @@ describe('logger', () => {
     });
 
     describe('fatal', () => {
-        const logManager = createMockLogManager();
-        const logger = new Logger({}, logManager);
+        const logger = new Logger({});
         logger.reportLog = jest.fn();
         logger.fatal(1, 2, 3);
         it('should report log', () => {
             expect(logger.reportLog).toBeCalledWith('FATAL', [1, 2, 3]);
         });
     });
-
-    describe('report log', () => {
-        const logManager = createMockLogManager();
-        const logger = new Logger({});
-        Logger.logManagerInstance = logManager;
-        Date.now = () => {return null;};
-        const logReport = {
-            logMessage: 'test 1 {\"key1\":1,\"key2\":\"two\"} more',
-            logLevel: 'DEBUG',
-            logLevelCode: logLevels['DEBUG'],
-            logContextName: logger.loggerName,
-            logTimestamp: null,
-        };
-        logger.reportLog('DEBUG', ['%s %d %j', 'test', 1, {key1: 1, key2: 'two'}, 'more']);
-        it('should call logManager.reportLog', () => {
-            expect(logManager.reportLog).toBeCalledWith(logReport);
-        });
-    });
-
 });
 
 describe('logger with env level variable', () => {
     describe('should not report', () => {
-        const logManager = new LogManager();
         const log = new Log({});
         log.logs = [];        
-        logManager.addListener(log);
         const logger = new Logger({});
-        Logger.logManagerInstance = logManager;
         logger.reportLog = jest.fn();
         logger.fatal(1, 2, 3);
         logger.error(1, 2, 3);
@@ -131,14 +102,13 @@ describe('logger with env level variable', () => {
         logger.info(1, 2, 3);
         logger.debug(1, 2, 3);
         logger.trace(1, 2, 3);
-        it('should report log', () => {
+        it('no logs reported', () => {
             expect(log.logs.length).toBe(0);
         });
     });
 });
 
 describe('logger', () => {
-    const logManager = createMockLogManager();
     const logger = new Logger({});
     logger.levels = {
         'trace': jest.fn(),

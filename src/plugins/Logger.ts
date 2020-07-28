@@ -5,7 +5,6 @@ import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 
 class Logger {
-    static logManagerInstance: LogManager;
     options: any;
     loggerName: any;
     logLevel: any;
@@ -26,13 +25,6 @@ class Logger {
         };
     }
 
-    static getLogManager(): LogManager {
-        if (!Logger.logManagerInstance) {
-            Logger.logManagerInstance = new LogManager();
-        }
-        return Logger.logManagerInstance;
-    }
-
     reportLog(level: any, args: any) {
         const logInfo = {
             logMessage: util.format.apply(util, args),
@@ -41,7 +33,7 @@ class Logger {
             logContextName: this.loggerName,
             logTimestamp: Date.now(),
         };
-        Logger.getLogManager().reportLog(logInfo);
+        LogManager.reportLog(logInfo);
     }
 
     trace(...args: any[]) {
@@ -103,7 +95,7 @@ class Logger {
     }
 
     destroy() {
-        Logger.logManagerInstance.destroy();
+        // pass
     }
 }
 

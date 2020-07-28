@@ -1,3 +1,6 @@
+/**
+ * Holds and provides all configuration names as constant.
+ */
 class ConfigNames {
 
     public static readonly THUNDRA_APIKEY: string =
@@ -21,6 +24,10 @@ class ConfigNames {
 
     public static readonly THUNDRA_APPLICATION_ID: string =
         'thundra.agent.application.id';
+    public static readonly THUNDRA_APPLICATION_INSTANCE_ID: string =
+        'thundra.agent.application.instanceid';
+    public static readonly THUNDRA_APPLICATION_REGION: string =
+        'thundra.agent.application.region';
     public static readonly THUNDRA_APPLICATION_NAME: string =
         'thundra.agent.application.name';
     public static readonly THUNDRA_APPLICATION_STAGE: string =

@@ -1,57 +1,21 @@
-import ThundraConfig from './config/ThundraConfig';
+import { ApplicationInfo } from '../application/ApplicationInfo';
 
 class PluginContext {
-    applicationId: string;
-    applicationInstanceId: string;
-    applicationRegion: string;
-    applicationVersion: string;
+    applicationInfo: ApplicationInfo;
     requestCount: number;
     apiKey: string;
     timeoutMargin: number;
-    config: ThundraConfig;
-    reporter?: any;
-    spanId?: string;
-    traceId?: string;
-    transactionId?: string;
-    error?: Error;
-    maxMemory?: number;
-    private $invocationStartTimestamp?: number;
-    private $invocationFinishTimestamp?: number;
+    maxMemory: number;
+    executor: any;
 
-    constructor(opt: any) {
-        opt = opt ? opt : {};
-        this.applicationId = opt.applicationId;
-        this.applicationInstanceId = opt.applicationInstanceId;
-        this.applicationRegion = opt.applicationRegion;
-        this.applicationVersion = opt.applicationVersion;
+    constructor(opt: any = {}) {
         this.requestCount = opt.requestCount;
         this.apiKey = opt.apiKey;
         this.timeoutMargin = opt.timeoutMargin;
-        this.transactionId = opt.transactionId;
-        this.config = opt.config;
+        this.executor = opt.executor;
+        this.applicationInfo = opt.applicationInfo;
     }
 
-    get invocationStartTimestamp(): number {
-        if (!this.$invocationStartTimestamp) {
-            this.$invocationStartTimestamp = Date.now();
-        }
-        return this.$invocationStartTimestamp;
-    }
-
-    set invocationStartTimestamp(invocationStartTimestamp: number) {
-         this.$invocationStartTimestamp = invocationStartTimestamp;
-    }
-
-    get invocationFinishTimestamp(): number {
-        if (!this.$invocationFinishTimestamp) {
-            this.$invocationFinishTimestamp = Date.now();
-        }
-        return this.$invocationFinishTimestamp;
-    }
-
-    set invocationFinishTimestamp(invocationFinishTimestamp: number) {
-         this.$invocationFinishTimestamp = invocationFinishTimestamp;
-    }
 }
 
 export default PluginContext;

@@ -1,43 +1,35 @@
-/*
-*
-* Wraps the lambda handler function.
-*
-* Implemented in Hook & Plugin structure. Runs plugins' related functions by executing hooks.
-*
-* Wraps the original callback and context.
-*
-* invoke function calls the original lambda handler with original event, wrapped context and wrapped callback.
-*
-* Wrapped context methods (done, succeed, fail) and callback call report function.
-*
-* report function uses the Reporter instance to make a single request to send reports if async monitoring is
-* not enabled (environment variable thundra_lambda_report_cloudwatch_enable is not set). After reporting it calls
-* original callback/succeed/done/fail.
-*
-*/
-
-import Reporter from './Reporter';
-import TimeoutError from './plugins/error/TimeoutError';
-import HttpError from './plugins/error/HttpError';
-import ThundraConfig from './plugins/config/ThundraConfig';
-import PluginContext from './plugins/PluginContext';
-import ThundraLogger from './ThundraLogger';
-import InvocationSupport from './plugins/support/InvocationSupport';
+import Reporter from '../Reporter';
+import TimeoutError from '../plugins/error/TimeoutError';
+import HttpError from '../plugins/error/HttpError';
+import ThundraConfig from '../plugins/config/ThundraConfig';
+import PluginContext from '../plugins/PluginContext';
+import ThundraLogger from '../ThundraLogger';
 import {
     BROKER_WS_HTTP_ERR_CODE_TO_MSG,
     BROKER_WS_HTTP_ERROR_PATTERN,
     BROKER_WS_PROTOCOL,
     BROKER_WSS_PROTOCOL,
     DEBUG_BRIDGE_FILE_NAME,
-} from './Constants';
-import Utils from './plugins/utils/Utils';
+} from '../Constants';
+import Utils from '../plugins/utils/Utils';
 import {readFileSync} from 'fs';
-import ConfigProvider from './config/ConfigProvider';
-import ConfigNames from './config/ConfigNames';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 
 const path = require('path');
 
-class ThundraWrapper {
+/**
+ * Wraps the Lambda handler function.
+ *
+ * - Implemented in Hook & Plugin structure. Runs plugins' related functions by executing hooks.
+ * - Wraps the original callback and context.
+ * - {@link invoke} function calls the original Lambda handler with original event, wrapped context and wrapped callback.
+ * - Wrapped context methods (done, succeed, fail) and callback call report function.
+ * - {@link report} function uses the {@link Reporter} instance to to send collected reports.
+ * - After reporting it calls original callback/succeed/done/fail.
+ */
+class LambdaHandlerWrapper {
 
     private originalThis: any;
     private originalEvent: any;
@@ -58,7 +50,6 @@ class ThundraWrapper {
     private debuggerPort: number;
     private debuggerMaxWaitTime: number;
     private debuggerIOWaitTime: number;
-    private monitoringDisabled: boolean;
     private brokerHost: string;
     private sessionName: string;
     private brokerProtocol: string;
@@ -68,34 +59,33 @@ class ThundraWrapper {
     private debuggerProxy: any;
     private debuggerLogsEnabled: boolean;
 
-    constructor(self: any, event: any, context: any, callback: any,
-                originalFunction: any, plugins: any, pluginContext: PluginContext, monitoringDisabled: boolean) {
+    constructor(self: any, event: any, context: any, callback: any, originalFunction: any,
+                plugins: any, pluginContext: PluginContext, config: ThundraConfig) {
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
         this.originalCallback = callback;
         this.originalFunction = originalFunction;
-        this.config = pluginContext.config ? pluginContext.config : new ThundraConfig({});
+        this.config = config || new ThundraConfig({ disableMonitoring: false });
         this.plugins = plugins;
         this.pluginContext = pluginContext;
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
         this.reported = false;
-        this.reporter = new Reporter(pluginContext.config);
-        this.monitoringDisabled = monitoringDisabled;
+        this.reporter = new Reporter(this.config.apiKey);
         this.wrappedContext = {
             ...context,
             done: (error: any, result: any) => {
-                this.report(error, result, () => {
+                return this.report(error, result, () => {
                     this.originalContext.done(error, result);
                 });
             },
             succeed: (result: any) => {
-                this.report(null, result, () => {
+                return this.report(null, result, () => {
                     this.originalContext.succeed(result);
                 });
             },
             fail: (error: any) => {
-                this.report(error, null, () => {
+                return this.report(error, null, () => {
                     this.originalContext.fail(error);
                 });
             },
@@ -111,15 +101,13 @@ class ThundraWrapper {
             },
         }, this.wrappedContext);
 
-        InvocationSupport.setFunctionName(this.originalContext.functionName);
-
         if (this.shouldInitDebugger()) {
             this.initDebugger();
         }
     }
 
     wrappedCallback = (error: any, result: any) => {
-        this.report(error, result, () => {
+        return this.report(error, result, () => {
             this.invokeCallback(error, result);
         });
     }
@@ -342,23 +330,20 @@ class ThundraWrapper {
 
         await this.startDebuggerProxyIfAvailable();
 
-        const beforeInvocationData = {
-            originalContext: this.originalContext,
-            originalEvent: this.originalEvent,
-            reporter: this.reporter,
-        };
-
-        this.resetTime();
-
-        InvocationSupport.setErrorenous(false);
-
         this.resolve = undefined;
         this.reject = undefined;
+
+        const execContext = ExecutionContextManager.get();
+
+        // Execution context intialization
+        execContext.startTimestamp = Date.now();
+        execContext.platformData.originalContext = this.originalContext;
+        execContext.platformData.originalEvent = this.originalEvent;
 
         return new Promise((resolve, reject) => {
             this.resolve = resolve;
             this.reject = reject;
-            this.executeHook('before-invocation', beforeInvocationData, false)
+            this.executeHook('before-invocation', execContext, false)
                 .then(() => {
                     this.pluginContext.requestCount += 1;
                     this.timeout = this.setupTimeoutHandler();
@@ -407,47 +392,34 @@ class ThundraWrapper {
         );
     }
 
-    async executeAfterInvocationAndReport(afterInvocationData: any) {
-        if (this.monitoringDisabled) {
+    async executeAfterInvocationAndReport() {
+        if (this.config.disableMonitoring) {
             return;
         }
 
-        afterInvocationData.error ? InvocationSupport.setErrorenous(true) : InvocationSupport.setErrorenous(false);
+        const execContext = ExecutionContextManager.get();
 
-        await this.executeHook('after-invocation', afterInvocationData, true);
-        this.resetTime();
-        await this.reporter.sendReports();
+        execContext.finishTimestamp = Date.now();
 
-        InvocationSupport.setErrorenous(false);
-    }
-
-    resetTime() {
-        this.pluginContext.invocationStartTimestamp = undefined;
-        this.pluginContext.invocationFinishTimestamp = undefined;
+        await this.executeHook('after-invocation', execContext, true);
+        await this.reporter.sendReports(execContext.reports);
     }
 
     async report(error: any, result: any, callback: any) {
         if (!this.reported) {
             try {
-                this.reported = true;
+                const execContext = ExecutionContextManager.get();
+                execContext.response = result;
+                execContext.error = error;
 
-                this.destroyTimeoutHandler();
-
-                let afterInvocationData = {
-                    error,
-                    originalEvent: this.originalEvent,
-                    response: result,
-                };
-
-                if (this.isErrorResponse(result)) {
-                    afterInvocationData = {
-                        error: new HttpError('Lambda returned with error response.'),
-                        originalEvent: this.originalEvent,
-                        response: result,
-                    };
+                if (this.isHTTPErrorResponse(result)) {
+                    execContext.error = new HttpError('Lambda returned with error response.');
                 }
 
-                await this.executeAfterInvocationAndReport(afterInvocationData);
+                this.reported = true;
+                this.destroyTimeoutHandler();
+
+                await this.executeAfterInvocationAndReport();
 
                 if (typeof callback === 'function') {
                     callback();
@@ -458,9 +430,9 @@ class ThundraWrapper {
         }
     }
 
-    isErrorResponse(result: any) {
+    isHTTPErrorResponse(result: any) {
         let isError = false;
-        if (Utils.isValidResponse(result) && result.body) {
+        if (Utils.isValidHTTPResponse(result) && result.body) {
             if (typeof result.body === 'string') {
                 if (result.statusCode >= 400 && result.statusCode <= 599) {
                     isError = true;
@@ -473,13 +445,17 @@ class ThundraWrapper {
     }
 
     destroyTimeoutHandler() {
+        ThundraLogger.debug('Destroying timeout handler');
         if (this.timeout) {
+            ThundraLogger.debug('Clearing timeout handler');
             clearTimeout(this.timeout);
             this.timeout = null;
         }
     }
 
     setupTimeoutHandler(): NodeJS.Timer | undefined {
+        ThundraLogger.debug('Setting up timeout handler');
+
         this.destroyTimeoutHandler();
 
         const { getRemainingTimeInMillis = () => 0 } = this.originalContext;
@@ -496,6 +472,7 @@ class ThundraWrapper {
         const endTime = Math.min(configEndTime, maxEndTime);
 
         return setTimeout(() => {
+            ThundraLogger.debug('Detected timeout');
             if (this.debuggerProxy) {
                 // Debugger proxy exists, let it know about the timeout
                 try {
@@ -508,10 +485,11 @@ class ThundraWrapper {
                     this.debuggerProxy = null;
                 }
             }
+            ThundraLogger.debug('Reporting timeout error');
             this.report(new TimeoutError('Lambda is timed out.'), null, null);
         }, endTime);
     }
 
 }
 
-export default ThundraWrapper;
+export default LambdaHandlerWrapper;

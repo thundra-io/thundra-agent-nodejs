@@ -7,10 +7,10 @@ import {
 import Utils from '../utils/Utils';
 import * as url from 'url';
 import ThundraLogger from '../../ThundraLogger';
-import InvocationSupport from '../support/InvocationSupport';
 import HttpError from '../error/HttpError';
 import ThundraSpan from '../../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -26,7 +26,7 @@ class HttpIntegration implements Integration {
     instrumentContext: any;
 
     constructor(config: any) {
-        this.config = config;
+        this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME_HTTP, MODULE_NAME_HTTPS], null,
             (lib: any, cfg: any, moduleName: string) => {
@@ -35,7 +35,7 @@ class HttpIntegration implements Integration {
             (lib: any, cfg: any, moduleName: string) => {
                 this.doUnwrap.call(this, lib, moduleName);
             },
-            config);
+            this.config);
     }
 
     static isValidUrl(host: string): boolean {
@@ -74,13 +74,11 @@ class HttpIntegration implements Integration {
             return function requestWrapper(options: any, callback: any) {
                 let span: ThundraSpan;
                 try {
-                    const tracer = plugin.config.tracer;
+                    const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
                         return request.apply(this, [options, callback]);
                     }
-
-                    const functionName = InvocationSupport.getFunctionName();
 
                     const method = (options.method || 'GET').toUpperCase();
                     options = typeof options === 'string' ? url.parse(options) : options;
@@ -123,7 +121,6 @@ class HttpIntegration implements Integration {
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                         [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                         [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-                        [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                     });
 
                     const me = this;

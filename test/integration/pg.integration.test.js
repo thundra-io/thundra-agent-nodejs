@@ -1,19 +1,17 @@
 import PostgreIntegration from '../../dist/plugins/integrations/PostgreIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import PG from './utils/pg.integration.utils';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
-
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+import ExecutionContext from '../../dist/context/ExecutionContext';
 
 describe('PostgreSQL integration', () => {
     let tracer;
     let integration;
 
     beforeAll(() => {
-        InvocationSupport.setFunctionName('functionName');
         tracer = new ThundraTracer();
-        integration = new PostgreIntegration({
-            tracer,
-        });
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new PostgreIntegration();
     });
 
     afterEach(() => {
@@ -37,9 +35,6 @@ describe('PostgreSQL integration', () => {
             expect(span.tags['db.type']).toBe('postgresql');
             expect(span.tags['db.statement']).toBe('SELECT Hello world!::text as message');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 
@@ -63,9 +58,6 @@ describe('PostgreSQL integration', () => {
         expect(span.tags['db.port']).toBe(5432);
         expect(span.tags['db.type']).toBe('postgresql');
         expect(span.tags['topology.vertex']).toEqual(true);
-        expect(span.tags['trigger.domainName']).toEqual('API');
-        expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-        expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
     });
 
     test('should mask PostgreSQL statements', () => {
@@ -87,9 +79,6 @@ describe('PostgreSQL integration', () => {
             expect(span.tags['db.port']).toBe(5432);
             expect(span.tags['db.type']).toBe('postgresql');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['trigger.domainName']).toEqual('API');
-            expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         });
     });
 });

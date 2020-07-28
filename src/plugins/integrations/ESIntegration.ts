@@ -5,9 +5,9 @@ import {
 } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
-import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
 import ThundraChaosError from '../error/ThundraChaosError';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const has = require('lodash.has');
 const shimmer = require('shimmer');
@@ -20,7 +20,7 @@ class ESIntegration implements Integration {
     instrumentContext: any;
 
     constructor(config: any) {
-        this.config = config;
+        this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
             (lib: any, cfg: any) => {
@@ -29,7 +29,7 @@ class ESIntegration implements Integration {
             (lib: any, cfg: any) => {
                 this.doUnwrap.call(this, lib);
             },
-            config);
+            this.config);
     }
 
     static hostSelect(me: any): Promise<any> {
@@ -73,14 +73,13 @@ class ESIntegration implements Integration {
 
             return async function requestWithTrace(params: any, cb: any) {
                 try {
-                    const tracer = integration.config.tracer;
+                    const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
                         return request.call(this, params, cb);
                     }
 
                     const me = this;
-                    const functionName = InvocationSupport.getFunctionName();
                     const parentSpan = tracer.getActiveSpan();
                     const host = await ESIntegration.hostSelect(me);
                     const normalizedPath = integration.getNormalizedPath(params.path);
@@ -99,7 +98,6 @@ class ESIntegration implements Integration {
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                         [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                         [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-                        [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                         [ESTags.ES_URI]: params.path,
                         [ESTags.ES_NORMALIZED_URI]: normalizedPath,
                         [ESTags.ES_METHOD]: params.method,

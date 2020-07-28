@@ -5,7 +5,6 @@ import * as url from 'url';
 import {COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint} from './Constants';
 import Utils from './plugins/utils/Utils';
 import ThundraLogger from './ThundraLogger';
-import ThundraConfig from './plugins/config/ThundraConfig';
 import BaseMonitoringData from './plugins/data/base/BaseMonitoringData';
 import MonitoringDataType from './plugins/data/base/MonitoringDataType';
 import ConfigNames from './config/ConfigNames';
@@ -21,20 +20,18 @@ const httpsAgent = new https.Agent({
 
 class Reporter {
     private readonly MAX_MONITOR_DATA_BATCH_SIZE: number = 100;
-    private reports: any[];
-    private config: ThundraConfig;
     private useHttps: boolean;
     private requestOptions: http.RequestOptions;
     private connectionRetryCount: number;
     private latestReportingLimitedMinute: number;
     private URL: url.UrlWithStringQuery;
+    private apiKey: string;
 
-    constructor(config: ThundraConfig, u?: url.URL) {
+    constructor(apiKey: string, u?: url.URL) {
         this.URL = url.parse(ConfigProvider.get<string>(
             ConfigNames.THUNDRA_REPORT_REST_BASEURL,
             'https://' + getDefaultCollectorEndpoint() + '/v1'));
-        this.reports = [];
-        this.config = config ? config : new ThundraConfig({});
+        this.apiKey = apiKey;
         this.useHttps = (u ? u.protocol : this.URL.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
         this.connectionRetryCount = 0;
@@ -51,7 +48,7 @@ class Reporter {
             port: parseInt(u ? u.port : this.URL.port, 0),
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'ApiKey ' + this.config.apiKey,
+                'Authorization': 'ApiKey ' + this.apiKey,
             },
             agent: this.useHttps ? httpsAgent : httpAgent,
             createConnection: (options: http.ClientRequestArgs, oncreate: (err: Error, socket: net.Socket) => void) => {
@@ -69,16 +66,12 @@ class Reporter {
         };
     }
 
-    addReport(report: any): void {
-        this.reports = [...this.reports, report];
-    }
+    getCompositeBatchedReports(reports: any[]): any[] {
+        reports = reports.slice(0);
 
-    getCompositeBatchedReports(): any[] {
         const batchedReports: any[] = [];
-        const reports = this.reports.slice(0);
         const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
-        const invocationReport =
-            this.reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
+        const invocationReport = reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
         if (!invocationReport) {
             return [];
         }
@@ -97,17 +90,17 @@ class Reporter {
             }
 
             compositeData.allMonitoringData = batch;
-            const compositeDataReport = Utils.generateReport(compositeData, this.config.apiKey);
+            const compositeDataReport = Utils.generateReport(compositeData, this.apiKey);
             batchedReports.push(compositeDataReport);
         }
 
         return batchedReports;
     }
 
-    async sendReports(): Promise<void> {
+    async sendReports(reports: any[]): Promise<void> {
         let batchedReports = [];
         try {
-            batchedReports = this.getCompositeBatchedReports();
+            batchedReports = this.getCompositeBatchedReports(reports);
         } catch (err) {
             ThundraLogger.error(`Cannot create batch request will send no report. ${err}`);
         }
@@ -133,7 +126,7 @@ class Reporter {
                 ThundraLogger.debug(
                     'Keep Alive connection reset by server. Will send monitoring data again.');
                 this.connectionRetryCount++;
-                await this.sendReports();
+                await this.sendReports(reports);
                 this.connectionRetryCount = 0;
                 return;
             }
@@ -160,7 +153,7 @@ class Reporter {
                         // If not no need to convert reports into JSON string to pass to "debug" function
                         // because "JSON.stringify" is not cheap operation.
                         if (ThundraLogger.isDebugEnabled()) {
-                            ThundraLogger.debug(JSON.stringify(this.reports));
+                            ThundraLogger.debug(JSON.stringify(batch));
                         }
                         return reject({
                             status: response.statusCode,

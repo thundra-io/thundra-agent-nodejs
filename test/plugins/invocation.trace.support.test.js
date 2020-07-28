@@ -1,19 +1,21 @@
+import TestUtils from '../utils';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import InvocationTraceSupport from '../../dist/plugins/support/InvocationTraceSupport';
+import ExecutionContext from '../../dist/context/ExecutionContext';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import { SpanTags } from '../../dist/Constants';
-
-import TestUtils from '../utils';
 
 describe('invocation trace support', () => {
     test('should only add topology vertex spans as resources', () => {
         const tracer = new ThundraTracer();
-        InvocationTraceSupport.tracer = tracer;
-        tracer.recorder.destroy();
+        const mockExecContext = new ExecutionContext({ tracer });
+
+        ExecutionContextManager.set(mockExecContext);
 
         const span1 = tracer.startSpan('resource1');
         span1.className = 'className1';
-        
-        const span2 = tracer.startSpan('resource2');    
+
+        const span2 = tracer.startSpan('resource2');
         span2.className = 'className2';
         span2.setTag(SpanTags.OPERATION_TYPE, 'operationType2');
         span2.startTime = 0;
@@ -22,7 +24,7 @@ describe('invocation trace support', () => {
 
         const span3 = tracer.startSpan('resource3');
         span3.className = 'className3';
-        
+
         const resources = InvocationTraceSupport.getResources();
 
         expect(resources.length).toBe(1);
@@ -36,9 +38,10 @@ describe('invocation trace support', () => {
 
     test('should merge resources if same resource id resource is created', () => {
         const tracer = new ThundraTracer();
-        InvocationTraceSupport.tracer = tracer;
-        tracer.recorder.destroy();
-           
+        const mockExecContext = new ExecutionContext({ tracer });
+
+        ExecutionContextManager.set(mockExecContext);
+
         const spanOptions = {
             operationName: 'resource',
             className: 'className',
@@ -53,8 +56,8 @@ describe('invocation trace support', () => {
         TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.duration = 30;
-        TestUtils.createMockSpan(tracer ,spanOptions);
-    
+        TestUtils.createMockSpan(tracer, spanOptions);
+
         const resources = InvocationTraceSupport.getResources();
         const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span1);
         const resource = resources.filter((resource) => resource.generateId() === resourceId)[0];
@@ -72,8 +75,9 @@ describe('invocation trace support', () => {
 
     test('should merge resources errors if same resource id resource is created', () => {
         const tracer = new ThundraTracer();
-        InvocationTraceSupport.tracer = tracer;
-        tracer.recorder.destroy();
+        const mockExecContext = new ExecutionContext({ tracer });
+
+        ExecutionContextManager.set(mockExecContext);
 
         const spanOptions = {
             operationName: 'resource_error',
@@ -90,7 +94,7 @@ describe('invocation trace support', () => {
         spanOptions.errorKind = 'Database Error1';
         spanOptions.duration = 20;
         TestUtils.createMockSpan(tracer, spanOptions);
-        
+
         spanOptions.errorKind = 'Database Error2';
         spanOptions.duration = 30;
         TestUtils.createMockSpan(tracer, spanOptions);
@@ -105,14 +109,15 @@ describe('invocation trace support', () => {
         expect(resource.resourceDuration).toBe(60);
         expect(resource.resourceCount).toBe(3);
         expect(resource.resourceErrorCount).toBe(3);
-        
+
         expect(resource.resourceErrors).toEqual(['Database Error1', 'Database Error2']);
     });
 
     test('should set resourceMaxDuration while merging resources', () => {
         const tracer = new ThundraTracer();
-        InvocationTraceSupport.tracer = tracer;
-        tracer.recorder.destroy();
+        const mockExecContext = new ExecutionContext({ tracer });
+
+        ExecutionContextManager.set(mockExecContext);
 
         const spanOptions = {
             operationName: 'resource',
@@ -128,7 +133,7 @@ describe('invocation trace support', () => {
         TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.duration = 30;
-        TestUtils.createMockSpan(tracer ,spanOptions);
+        TestUtils.createMockSpan(tracer, spanOptions);
 
         const resources = InvocationTraceSupport.getResources();
         const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span1);
@@ -147,8 +152,9 @@ describe('invocation trace support', () => {
 
     test('should set resourceAvgDuration while merging resources', () => {
         const tracer = new ThundraTracer();
-        InvocationTraceSupport.tracer = tracer;
-        tracer.recorder.destroy();
+        const mockExecContext = new ExecutionContext({ tracer });
+
+        ExecutionContextManager.set(mockExecContext);
 
         const spanOptions = {
             operationName: 'resource',
@@ -164,7 +170,7 @@ describe('invocation trace support', () => {
         TestUtils.createMockSpan(tracer, spanOptions);
 
         spanOptions.duration = 30;
-        TestUtils.createMockSpan(tracer ,spanOptions);
+        TestUtils.createMockSpan(tracer, spanOptions);
 
         const resources = InvocationTraceSupport.getResources();
         const resourceId = InvocationTraceSupport.generateResourceIdFromSpan(span1);

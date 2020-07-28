@@ -5,6 +5,8 @@ import CountAwareSampler from '../../dist/opentracing/sampler/CountAwareSampler'
 import CompositeSampler from '../../dist/opentracing/sampler/CompositeSampler';
 import { SamplerCompositionOperator } from '../../dist/opentracing/sampler/CompositeSampler';
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import ExecutionContext from '../../dist/context/ExecutionContext';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 
 describe('duration aware sampler with duration 500ms and longerThan true', () => {
     const sampler = new DurationAwareSampler(500, true);
@@ -29,13 +31,15 @@ describe('error aware sampler', () => {
     const sampler = new ErrorAwareSampler();
 
     test('should sample root span with error', () => {
-        InvocationSupport.setErrorenous(true);
-        
+        const mockExecContext = new ExecutionContext({ error: new Error() });
+        ExecutionContextManager.set(mockExecContext);
+
         expect(sampler.isSampled()).toBe(true);
     });
 
     test('should not sample root span without error', () => {
-        InvocationSupport.setErrorenous(false);
+        const mockExecContext = new ExecutionContext();
+        ExecutionContextManager.set(mockExecContext);
 
         expect(sampler.isSampled()).toBe(false);
     });
@@ -43,14 +47,14 @@ describe('error aware sampler', () => {
 
 describe('time aware sampler with time frequency 2 second', () => {
     const sampler = new TimeAwareSampler(2000);
-   
+
     test('should not sample after calling 1 second', (done) => {
         sampler.isSampled();
         setTimeout(() => {
             expect(sampler.isSampled()).toBe(false);
             done();
         }, 1000);
-        
+
     });
 
     test('should sample after calling more than 2 seconds', (done) => {
@@ -89,8 +93,10 @@ describe('composite sampler with error and count aware samplers with frequency 5
     let sampledCount = 0;
 
     test('should sample 10 of 10 calls', () => {
+        const mockExecContext = new ExecutionContext({ error: new Error() });
+        ExecutionContextManager.set(mockExecContext);
+
         for (let sample = 0; sample < 10; sample++) {
-            InvocationSupport.setErrorenous(true);
             if (sampler.isSampled()) {
                 sampledCount++;
             }
@@ -111,8 +117,10 @@ describe('composite sampler with error and count aware samplers with frequency 5
     let sampledCount = 0;
 
     test('should sample 2 of 10 calls', () => {
+        const mockExecContext = new ExecutionContext({ error: new Error() });
+        ExecutionContextManager.set(mockExecContext);
+
         for (let sample = 0; sample < 10; sample++) {
-            InvocationSupport.setErrorenous(true);
             if (sampler.isSampled()) {
                 sampledCount++;
             }
@@ -126,7 +134,7 @@ describe('composite sampler should pass data to underlying sampler', () => {
 
     const samplers = [];
     samplers.push(sampler1);
-    
+
     const sampler = new CompositeSampler(samplers, SamplerCompositionOperator.AND);
 
     test('should sample root span with duration greater than 500 ms', () => {

@@ -102,6 +102,10 @@ class ThundraRecorder {
     addSpanListener(listener: ThundraSpanListener) {
         this.listeners.push(listener);
     }
+
+    setSpanListeners(listeners: ThundraSpanListener[]) {
+        this.listeners = listeners;
+    }
 }
 
 export default ThundraRecorder;

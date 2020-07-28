@@ -1,18 +1,17 @@
 import HttpIntegration from '../../dist/plugins/integrations/HttpIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import Http from './utils/http.integration.utils';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+import ExecutionContext from '../../dist/context/ExecutionContext';
 
 describe('HTTP integration', () => {
     let tracer;
     let integration;
 
     beforeAll(() => {
-        InvocationSupport.setFunctionName('functionName');
         tracer = new ThundraTracer();
-        integration = new HttpIntegration({
-            tracer,
-        });
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new HttpIntegration();
     });
 
     afterEach(() => {
@@ -40,15 +39,14 @@ describe('HTTP integration', () => {
         expect(span.tags['http.query_params']).toBe('userId=1');
         expect(span.tags['http.status_code']).toBe(200);
         expect(span.tags['topology.vertex']).toEqual(true);
-        expect(span.tags['trigger.domainName']).toEqual('API');
-        expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-        expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         expect(span.tags['http.body']).not.toBeTruthy();
     });
 
     test('should set 4XX 5XX errors on HTTP calls', async () => {
         integration.config.httpPathDepth = 2;
+
         const sdk = require('http');
+
         await Http.getError(sdk);
 
         const span = tracer.getRecorder().spanList[0];
@@ -66,17 +64,16 @@ describe('HTTP integration', () => {
         expect(span.tags['error.kind']).toBe('HttpError');
         expect(span.tags['error.message']).toBe('Not Found');
         expect(span.tags['topology.vertex']).toEqual(true);
-        expect(span.tags['trigger.domainName']).toEqual('API');
-        expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-        expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         expect(span.tags['http.body']).not.toBeTruthy();
     });
 
     test('should disable 4XX 5XX errors on HTTP calls', async () => {
         integration.config.disableHttp4xxError = true;
+
         const sdk = require('http');
 
         await Http.getError(sdk);
+
         const span = tracer.getRecorder().spanList[0];
         expect(span.operationName).toBe('httpstat.us/404');
         expect(span.className).toBe('HTTP');
@@ -92,17 +89,16 @@ describe('HTTP integration', () => {
         expect(span.tags['error.kind']).toBe(undefined);
         expect(span.tags['error.message']).toBe(undefined);
         expect(span.tags['topology.vertex']).toEqual(true);
-        expect(span.tags['trigger.domainName']).toEqual('API');
-        expect(span.tags['trigger.className']).toEqual('AWS-Lambda');
-        expect(span.tags['trigger.operationNames']).toEqual(['functionName']);
         expect(span.tags['http.body']).not.toBeTruthy();
     });
 
     test('should instrument HTTPS POST calls', async () => {
         integration.config.httpPathDepth = 0;
-        const sdk = require('https');
 
-        await Http.post(sdk)
+        const sdk = require('http');
+
+        await Http.post(sdk);
+
         const span = tracer.getRecorder().spanList[0];
 
         expect(span.operationName).toBe('flaviocopes.com');
@@ -115,7 +111,8 @@ describe('HTTP integration', () => {
 
     test('should mask body in post', async () => {
         integration.config.maskHttpBody = true;
-        const sdk = require('https');
+
+        const sdk = require('http');
 
         await Http.post(sdk);
         

@@ -27,6 +27,12 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     [ConfigNames.THUNDRA_APPLICATION_ID]: {
         type: 'string',
     },
+    [ConfigNames.THUNDRA_APPLICATION_REGION]: {
+        type: 'string',
+    },
+    [ConfigNames.THUNDRA_APPLICATION_INSTANCE_ID]: {
+        type: 'string',
+    },
     [ConfigNames.THUNDRA_APPLICATION_NAME]: {
         type: 'string',
     },

@@ -1,11 +1,13 @@
-import {EnvVariableKeys} from '../Constants';
+import { EnvVariableKeys } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import Utils from '../plugins/utils/Utils';
-import {PlatformUtils} from '../application/PlatformUtils';
-import {LambdaContextProvider} from './LambdaContextProvider';
+import { LambdaContextProvider } from './LambdaContextProvider';
 
-export class LambdaPlatformUtils extends PlatformUtils {
+/**
+ * Utility class for AWS Lambda platform related stuff
+ */
+export class LambdaPlatformUtils {
 
     static getApplicationId(originalContext: any, opts: any = {}) {
         const arn = originalContext.invokedFunctionArn;
@@ -61,17 +63,12 @@ export class LambdaPlatformUtils extends PlatformUtils {
         return Utils.getEnvVar(EnvVariableKeys.SLS_LOCAL) === 'true';
     }
 
-    static getTransactionId(): string {
-        const context = LambdaContextProvider.getContext();
-        return context ? context.awsRequestId : '';
-    }
-
-    static setInvocationTags(invocationData: any, pluginContext: any) {
+    static setInvocationTags(invocationData: any, pluginContext: any, execContext: any) {
         const originalContext = LambdaContextProvider.getContext();
 
         invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;
         invocationData.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
-        invocationData.tags['aws.region'] = pluginContext.applicationRegion;
+        invocationData.tags['aws.region'] = pluginContext.applicationInfo.applicationRegion;
         invocationData.tags['aws.lambda.invocation.timeout'] = false;
 
         if (originalContext) {
@@ -85,5 +82,15 @@ export class LambdaPlatformUtils extends PlatformUtils {
 
         const { heapUsed } = process.memoryUsage();
         invocationData.tags['aws.lambda.invocation.memory_usage'] = Math.floor(heapUsed / (1024 * 1024));
+
+        const xrayTraceInfo = Utils.getXRayTraceInfo();
+
+        if (xrayTraceInfo.traceID) {
+            invocationData.tags['aws.xray.trace.id'] = xrayTraceInfo.traceID;
+        }
+        if (xrayTraceInfo.segmentID) {
+            invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
+        }
     }
+
 }

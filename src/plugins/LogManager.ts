@@ -1,28 +1,26 @@
 import Logger from './Logger';
 
 class LogManager {
-    listeners: any[];
+    static listeners: any[] = [];
 
-    constructor() {
-        this.listeners = [];
+    static addListener(listener: any) {
+        if (!LogManager.listeners.includes(listener)) {
+            LogManager.listeners = [...LogManager.listeners, listener];
+        }
     }
 
-    addListener(listener: any) {
-        this.listeners = [...this.listeners, listener];
-    }
-
-    createLogger(options: any) {
+    static createLogger(options: any) {
         return new Logger(options);
     }
 
-    reportLog(logReport: any) {
-        this.listeners.forEach((listener) => {
+    static reportLog(logReport: any) {
+        LogManager.listeners.forEach((listener) => {
             listener.reportLog(logReport);
         });
     }
 
-    destroy() {
-        this.listeners = [];
+    static destroy() {
+        LogManager.listeners = [];
     }
 }
 

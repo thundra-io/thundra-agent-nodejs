@@ -1,11 +1,21 @@
 import ConfigMetadata from './ConfigMetadata';
+import ThundraConfig from '../plugins/config/ThundraConfig';
 
+const get = require('lodash.get');
+
+/**
+ * Provides configurations by gathering different resources.
+ */
 class ConfigProvider {
 
+    public static thundraConfig: ThundraConfig;
     private static configs: {[key: string]: any} = {};
 
-    static init(options?: any, configFilePath?: string): void {
+    static init(options?: any): void {
         ConfigProvider.clear();
+
+        const configOptions = get(options, 'config');
+        const configFilePath = get(options, 'configFilePath');
 
         // 1. Fill configs from file if it is given
         try {
@@ -19,9 +29,9 @@ class ConfigProvider {
         } catch (e) { /* do nothing */ }
 
         // 2. Fill configs from options if it is given
-        if (options) {
-            Object.keys(options).forEach((optionName: string) => {
-                const optionVal: any = options[optionName];
+        if (configOptions) {
+            Object.keys(configOptions).forEach((optionName: string) => {
+                const optionVal: any = configOptions[optionName];
                 ConfigProvider.traverseConfigObject(optionVal, optionName);
             });
         }
@@ -45,6 +55,9 @@ class ConfigProvider {
                 ConfigProvider.configs[aliasConfigName] = configValue;
             }
         }
+
+        // 5. Initialize Thundra Config
+        ConfigProvider.thundraConfig = new ThundraConfig(options);
     }
 
     static clear(): void {

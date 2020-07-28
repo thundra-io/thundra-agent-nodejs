@@ -17,9 +17,6 @@ afterEach(() => {
 
 describe('listener config', () => {
     it('should read listener config from environment variable with multiple filters and listener', () => {
-        // Arrange
-        const tracer = new ThundraTracer({});
-
         const listenerConfig = {
             type: 'FilteringSpanListener',
             config: {
@@ -55,7 +52,7 @@ describe('listener config', () => {
             JSON.stringify(listenerConfig));
 
         //Act
-        const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
+        const listeners = Utils.createSpanListeners();
         
         //Assert
         expect(listeners.length).toBe(1);
@@ -80,14 +77,9 @@ describe('listener config', () => {
         expect(listener.spanFilterer.spanFilters[1].operationName).toBe('http_request');       
         expect(listener.spanFilterer.spanFilters[1].className).toBe('HTTP');   
         expect(listener.spanFilterer.spanFilters[1].getTag('http.host')).toBe('foobar.com');
-
-        tracer.destroy();
     });
 
     it('should read listener config from environment variable with multiple filters and listener', () => {
-        // Arrange
-        const tracer = new ThundraTracer({});
-
         const listenerConfig = {
             type: 'FilteringSpanListener',
             config: {
@@ -117,7 +109,7 @@ describe('listener config', () => {
             JSON.stringify(listenerConfig));
 
         //Act
-        const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
+        const listeners = Utils.createSpanListeners();
         
         //Assert
         expect(listeners.length).toBe(1);
@@ -139,24 +131,17 @@ describe('listener config', () => {
         expect(listener.spanFilterer.spanFilters[0].domainName).toBe('Messaging');       
         expect(listener.spanFilterer.spanFilters[0].className).toBe('AWS-SQS');   
         expect(listener.spanFilterer.spanFilters[0].getTag('foo')).toBe('bar');    
-        
-        tracer.destroy();
     });
 
     it('should not add invalid listener', () => {
-        // Arrange
-        const tracer = new ThundraTracer({});
-
         ConfigProvider.set(
             ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG,
             'InvalidSpanListener[]');
 
         //Act
-        const listeners = Utils.registerSpanListenersFromConfigurations(tracer);
+        const listeners = Utils.createSpanListeners();
         
         //Assert
         expect(listeners.length).toBe(0);
-       
-        tracer.destroy();
     });
 });   

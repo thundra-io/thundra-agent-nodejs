@@ -1,62 +1,68 @@
 import LogPlugin from '../../dist/plugins/Log';
-
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
 import {ApplicationManager} from '../../dist/application/ApplicationManager';
 import {LambdaApplicationInfoProvider} from '../../dist/lambda/LambdaApplicationInfoProvider';
+import ExecutionContext from '../../dist/context/ExecutionContext';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 
 ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 
 describe('log plugin shim console', () => {
-    const logPlugin = new LogPlugin();
-    logPlugin.enable();
-    
-    const pluginContext = createMockPluginContext();
-    const beforeInvocationData = createMockBeforeInvocationData();
-    logPlugin.setPluginContext(pluginContext);
-    logPlugin.beforeInvocation(beforeInvocationData);
-    logPlugin.logs = [];
-    console.log('log');
-    console.debug('debug');        
-    console.info('info');
-    console.warn('warn');
-    console.error('error');
-
     it('should capture console.log statements', () => {  
-        expect(logPlugin.logs.length).toBe(5);
+        const logPlugin = new LogPlugin();
+    
+        logPlugin.setPluginContext(createMockPluginContext());
+    
+        const mockExecContext = new ExecutionContext({});
+        ExecutionContextManager.set(mockExecContext);
+    
+        logPlugin.beforeInvocation(mockExecContext);
+    
+        console.log('log');
+        console.debug('debug');        
+        console.info('info');
+        console.warn('warn');
+        console.error('error');
+    
+        logPlugin.afterInvocation(mockExecContext);
+    
+        const { reports } = mockExecContext;
 
-        expect(logPlugin.logs[0].logLevel).toBe('INFO');
-        expect(logPlugin.logs[0].logMessage).toBe('log');
-        expect(logPlugin.logs[0].logContextName).toBe('STDOUT');
+        expect(reports.length).toBe(5);
 
-        expect(logPlugin.logs[1].logLevel).toBe('DEBUG');
-        expect(logPlugin.logs[1].logMessage).toBe('debug');
-        expect(logPlugin.logs[1].logContextName).toBe('STDOUT');
-
-        expect(logPlugin.logs[2].logLevel).toBe('INFO');
-        expect(logPlugin.logs[2].logMessage).toBe('info');
-        expect(logPlugin.logs[2].logContextName).toBe('STDOUT');
-
-        expect(logPlugin.logs[3].logLevel).toBe('WARN');
-        expect(logPlugin.logs[3].logMessage).toBe('warn');
-        expect(logPlugin.logs[3].logContextName).toBe('STDOUT');
-
-        expect(logPlugin.logs[4].logLevel).toBe('ERROR');
-        expect(logPlugin.logs[4].logMessage).toBe('error');
-        expect(logPlugin.logs[4].logContextName).toBe('STDERR');
+        expect(reports[0].data.logLevel).toBe('INFO');
+        expect(reports[0].data.logMessage).toBe('log');
+        expect(reports[0].data.logContextName).toBe('STDOUT');
+        expect(reports[1].data.logLevel).toBe('DEBUG');
+        expect(reports[1].data.logMessage).toBe('debug');
+        expect(reports[1].data.logContextName).toBe('STDOUT');
+        expect(reports[2].data.logLevel).toBe('INFO');
+        expect(reports[2].data.logMessage).toBe('info');
+        expect(reports[2].data.logContextName).toBe('STDOUT');
+        expect(reports[3].data.logLevel).toBe('WARN');
+        expect(reports[3].data.logMessage).toBe('warn');
+        expect(reports[3].data.logContextName).toBe('STDOUT');
+        expect(reports[4].data.logLevel).toBe('ERROR');
+        expect(reports[4].data.logMessage).toBe('error');
+        expect(reports[4].data.logContextName).toBe('STDERR');
     });       
 });
 
 describe('log plugin unshim console', () => {
-    const logPlugin = new LogPlugin();
-    logPlugin.enable();
-    const pluginContext = createMockPluginContext();
-    const beforeInvocationData = createMockBeforeInvocationData();
-    logPlugin.setPluginContext(pluginContext);
-    logPlugin.beforeInvocation(beforeInvocationData);
-    logPlugin.afterInvocation();
-
     it('should not capture console.log statements after Invocation', () => {
+        const logPlugin = new LogPlugin();
+    
+        logPlugin.setPluginContext(createMockPluginContext());
+    
+        const mockExecContext = new ExecutionContext({});
+        ExecutionContextManager.set(mockExecContext);
+    
+        logPlugin.beforeInvocation(mockExecContext);
+        logPlugin.afterInvocation(mockExecContext);
+        
         console.log('log');
-        expect(logPlugin.logs.length).toBe(0);
+        const { reports } = mockExecContext;
+
+        expect(reports.length).toBe(0);
     });       
 });

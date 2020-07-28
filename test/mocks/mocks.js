@@ -1,4 +1,6 @@
 import {LambdaContextProvider} from '../../dist/lambda/LambdaContextProvider';
+import ExecutionContext from '../../dist/context/ExecutionContext';
+import ThundraTracer from '../../dist/opentracing/Tracer';
 
 const createMockContext = () => {
     return {
@@ -45,17 +47,32 @@ const createMockPlugin = () => {
 
 const createMockPluginContext = () => {
     return {
-        applicationId: 'applicationId',
-        applicationProfile: 'default',
-        applicationRegion: 'region',
-        applicationVersion: 'version',
+        applicationInfo: {
+            applicationId: 'applicationId',
+            applicationProfile: 'default',
+            applicationRegion: 'region',
+            applicationVersion: 'version',
+        },
         requestCount: 0,
         apiKey: 'apiKey',
         maxMemory: 512,
         invocationStartTimestamp: Date.now(),
-        invocationFinishTimestamp: Date.now()
+        invocationFinishTimestamp: Date.now(),
+        resetTimestamps: () => undefined,
     };
 };
+
+const createMockLambdaExecContext = () => {
+    return new ExecutionContext({
+        tracer: new ThundraTracer(),
+        transactionId: 'foo',
+        platformData: {
+            originalContext: createMockContext(),
+            originalEvent: { key: 'data' },
+        },
+        response: { key: 'data' },
+    });
+}
 
 const createMockBeforeInvocationData = () => {
     const mockWrapperInstance = createMockWrapperInstance();
@@ -65,7 +82,7 @@ const createMockBeforeInvocationData = () => {
         originalEvent: mockWrapperInstance.originalEvent,
         reporter: mockWrapperInstance.reporter,
         contextId: 'contextId',
-        transactionId: 'transactionId'
+        transactionId: 'transactionId',
     };
 };
 
@@ -511,5 +528,6 @@ module.exports = {
     createBatchMockSQSEventDifferentIds,
     createBatchMockSQSEventSameIds, 
     createBatchMockSNSEventWithDifferentIds, 
-    createBatchMockSNSEventWithSameIds
+    createBatchMockSNSEventWithSameIds,
+    createMockLambdaExecContext
 };

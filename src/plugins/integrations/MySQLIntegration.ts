@@ -5,9 +5,9 @@ import {
 } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
-import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
 import ThundraChaosError from '../error/ThundraChaosError';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -21,7 +21,7 @@ class MySQLIntegration implements Integration {
     instrumentContext: any;
 
     constructor(config: any) {
-        this.config = config;
+        this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
             (lib: any, cfg: any) => {
@@ -30,7 +30,7 @@ class MySQLIntegration implements Integration {
             (lib: any, cfg: any) => {
                 this.doUnwrap.call(this, lib);
             },
-            config,
+            this.config,
             null,
             FILE_NAME);
     }
@@ -43,14 +43,13 @@ class MySQLIntegration implements Integration {
 
             return function queryWrapper(sql: any, values: any, cb: any) {
                 try {
-                    const tracer = integration.config.tracer;
+                    const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
                         return query.call(this, sql, values, cb);
                     }
 
                     const me = this;
-                    const functionName = InvocationSupport.getFunctionName();
                     const parentSpan = tracer.getActiveSpan();
 
                     span = tracer._startSpan(this.config.database, {
@@ -70,7 +69,6 @@ class MySQLIntegration implements Integration {
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                         [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                         [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-                        [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                     });
 
                     const statement = sql;

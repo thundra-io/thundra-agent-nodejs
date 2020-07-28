@@ -1,18 +1,26 @@
 import AWS from './utils/aws.integration.utils';
-import { AWSIntegration } from '../../dist/plugins/integrations/AWSIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import { AWSIntegration } from '../../dist/plugins/integrations/AWSIntegration';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+import ExecutionContext from '../../dist/context/ExecutionContext';
+
+const sdk = require('aws-sdk');
 
 describe('AWS integration', () => {
-    InvocationSupport.setFunctionName('functionName');
+    let tracer;
+    let integration;
 
-    test('should close span when worked with promise', () => { 
-        const tracer = new ThundraTracer();
-        const integration = new AWSIntegration({
-            tracer,
-        });
-        const sdk = require('aws-sdk');
+    beforeAll(() => {
+        tracer = new ThundraTracer();
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new AWSIntegration();
+    });
 
+    afterEach(() => {
+        tracer.destroy();
+    });
+
+    test('should close span when worked with promise', () => {
         return AWS.s3_with_promise(sdk).then(() => {
             const span = tracer.getRecorder().spanList[0];
             expect(span.finishTime).toBeTruthy();

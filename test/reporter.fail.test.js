@@ -55,7 +55,7 @@ describe('reporter', () => {
     describe('http', () => {
         // noinspection JSAnnotator
         const url = new URL('http://collector.thundra.io/api');
-        const reporter = new Reporter({apiKey: 'apiKey'}, url);
+        const reporter = new Reporter('apiKey', url);
         const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
         const mockReport2 = {data: {type: 'Span', data: 'data2'}};
 
@@ -64,9 +64,7 @@ describe('reporter', () => {
         reports.push(mockReport2);
 
         test('should make http request', () => {
-            reporter.addReport(mockReport1);
-            reporter.addReport(mockReport2);
-            reporter.sendReports();
+            reporter.sendReports(reports);
             expect(httpRequestCalled).toEqual(true);
             expect(httpRequestOnCalled).toEqual(true);
             expect(httpRequestWriteCalled).toEqual(true);
@@ -84,7 +82,7 @@ describe('reporter', () => {
     describe('send reports failure', () => {
         let consoleOutput;
 
-        const reporter = new Reporter({apiKey: 'apiKey'});
+        const reporter = new Reporter('apiKey');
         const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
         const mockReport2 = {data: {type: 'Span', data: 'data2'}};
 
@@ -94,9 +92,7 @@ describe('reporter', () => {
 
         console['log'] = jest.fn(input => (consoleOutput = input));
 
-        reporter.addReport(mockReport1);
-        reporter.addReport(mockReport2);
-        return reporter.sendReports().then(() => {
+        return reporter.sendReports(reports).then(() => {
             expect(consoleOutput).toEqual(JSON.stringify(reports));
         });
     });

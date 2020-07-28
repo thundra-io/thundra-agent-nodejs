@@ -6,8 +6,8 @@ import {
 import Utils from '../utils/Utils';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
-import InvocationSupport from '../support/InvocationSupport';
 import ThundraChaosError from '../error/ThundraChaosError';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -20,7 +20,7 @@ class PostgreIntegration implements Integration {
     instrumentContext: any;
 
     constructor(config: any) {
-        this.config = config;
+        this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
             (lib: any, cfg: any) => {
@@ -29,7 +29,7 @@ class PostgreIntegration implements Integration {
             (lib: any, cfg: any) => {
                 this.doUnwrap.call(this, lib);
             },
-            config);
+            this.config);
     }
 
     getStatement(args: any[]) {
@@ -61,13 +61,12 @@ class PostgreIntegration implements Integration {
             return function queryWrapper() {
                 let span: ThundraSpan;
                 try {
-                    const tracer = integration.config.tracer;
+                    const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
                         return query.apply(this, arguments);
                     }
 
-                    const functionName = InvocationSupport.getFunctionName();
                     const parentSpan = tracer.getActiveSpan();
 
                     const params = this.connectionParameters;
@@ -91,7 +90,6 @@ class PostgreIntegration implements Integration {
                             [SpanTags.TOPOLOGY_VERTEX]: true,
                             [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                             [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-                            [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                         });
                     }
 

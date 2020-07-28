@@ -1,5 +1,5 @@
 const Thundra = require('../dist/index');
-import ThundraWrapper from '../dist/ThundraWrapper';
+import LambdaHandlerWrapper from '../dist/lambda/LambdaHandlerWrapper';
 import Utils from '../dist/plugins/utils/Utils.js';
 import ConfigProvider from '../dist/config/ConfigProvider';
 import ConfigNames from '../dist/config/ConfigNames';
@@ -21,7 +21,7 @@ beforeAll(() => {
         });
     });
 
-    ThundraWrapper.prototype.executeAfteInvocationAndReport = jest.fn();
+    LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();
 });
 
 beforeEach(() => {
@@ -257,7 +257,7 @@ describe('thundra library', () => {
             
             beforeAll(() => {
                 thundraWrapper = new Thundra({ apiKey: 'apiKey', trustAllCert: true });
-                wrappedFunction = new thundraWrapper(originalFunction);
+                wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 
@@ -278,7 +278,7 @@ describe('thundra library', () => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_REPORT_REST_TRUSTALLCERTIFICATES, true);
 
                 thundraWrapper = new Thundra({ apiKey: 'apiKey' });
-                wrappedFunction = new thundraWrapper(originalFunction); 
+                wrappedFunction = thundraWrapper(originalFunction); 
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
 

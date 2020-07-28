@@ -1,19 +1,17 @@
 import RedisIntegration from '../../dist/plugins/integrations/RedisIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import Redis from './utils/redis.integration.utils';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+import ExecutionContext from '../../dist/context/ExecutionContext';
 
 describe('Redis integration', () => {
-    InvocationSupport.setFunctionName('functionName');
     let tracer;
     let integration;
 
     beforeAll(() => {
-        InvocationSupport.setFunctionName('functionName');
         tracer = new ThundraTracer();
-        integration = new RedisIntegration({
-            tracer,
-        });
+        ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        integration = new RedisIntegration();
     });
 
     afterEach(() => {
@@ -24,7 +22,6 @@ describe('Redis integration', () => {
         integration.config.disableInstrumentation = true;
         integration.config.maskRedisCommand = true;
         const sdk = require('redis');
-
 
         tracer.getRecorder().spanList = [];
 
@@ -53,10 +50,6 @@ describe('Redis integration', () => {
             expect(writeCommandSpan.tags['redis.port']).toBe('6379');
             expect(writeCommandSpan.tags['redis.command.type']).toBe('WRITE');
             expect(writeCommandSpan.tags['topology.vertex']).toEqual(true);
-            expect(writeCommandSpan.tags['trigger.domainName']).toEqual('API');
-            expect(writeCommandSpan.tags['trigger.className']).toEqual('AWS-Lambda');
-            expect(writeCommandSpan.tags['trigger.operationNames']).toEqual(['functionName']);
-
         });
     });
 });

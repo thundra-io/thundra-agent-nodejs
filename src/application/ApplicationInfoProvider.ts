@@ -1,7 +1,9 @@
-import {ApplicationInfo} from './ApplicationInfo';
-import {PlatformUtils} from './PlatformUtils';
+import { ApplicationInfo } from './ApplicationInfo';
 
+/**
+ * Provides application information by {@link ApplicationInfo}.
+ */
 export interface ApplicationInfoProvider {
-    platformUtils: typeof PlatformUtils;
     getApplicationInfo: () => ApplicationInfo;
+    update: (opts: any) => void;
 }

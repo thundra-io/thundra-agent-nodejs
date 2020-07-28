@@ -1,18 +1,15 @@
 import ThundraLogger from '../../ThundraLogger';
 import Resource from '../data/invocation/Resource';
-import ThundraTracer from '../../opentracing/Tracer';
 import ThundraSpan from '../../opentracing/Span';
 import { SpanTags } from '../../Constants';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 const flatten = require('lodash.flatten');
 
 class InvocationTraceSupport {
-    static tracer: ThundraTracer;
-    static incomingTraceLinks: any[] = [];
-    static outgoingTraceLinks: any[] = [];
-
     static getResources(rootSpanId: string = ''): Resource[] {
         try {
-            const tracer = InvocationTraceSupport.tracer;
+            const { tracer } = ExecutionContextManager.get();
+
             if (!tracer) {
                 return undefined;
             }
@@ -67,27 +64,42 @@ class InvocationTraceSupport {
     }
 
     static addIncomingTraceLink(traceLink: string): void {
-        InvocationTraceSupport.incomingTraceLinks.push(traceLink);
+        const { incomingTraceLinks } = ExecutionContextManager.get();
+        incomingTraceLinks.push(traceLink);
     }
 
     static addIncomingTraceLinks(traceLinks: any[]): void {
-        InvocationTraceSupport.incomingTraceLinks.push(...traceLinks);
+        const { incomingTraceLinks } = ExecutionContextManager.get();
+        incomingTraceLinks.push(...traceLinks);
     }
 
     static getIncomingTraceLinks(): any[] {
-        return [...new Set(InvocationTraceSupport.incomingTraceLinks)].filter((e) => e);
+        const { incomingTraceLinks } = ExecutionContextManager.get();
+        return [...new Set(incomingTraceLinks)].filter((e) => e);
     }
 
     static addOutgoingTraceLink(traceLink: string): void {
-        InvocationTraceSupport.outgoingTraceLinks.push(traceLink);
+        const { outgoingTraceLinks } = ExecutionContextManager.get();
+        outgoingTraceLinks.push(traceLink);
     }
 
     static addOutgoingTraceLinks(traceLinks: any[]): void {
-        InvocationTraceSupport.outgoingTraceLinks.push(...traceLinks);
+        const { outgoingTraceLinks } = ExecutionContextManager.get();
+        outgoingTraceLinks.push(...traceLinks);
+    }
+
+    static getActiveSpan(): ThundraSpan {
+        const { tracer } = ExecutionContextManager.get();
+
+        if (!tracer) {
+            return undefined;
+        }
+
+        return tracer.getActiveSpan();
     }
 
     static getOutgoingTraceLinks(): any[] {
-        const tracer = InvocationTraceSupport.tracer;
+        const { tracer, outgoingTraceLinks } = ExecutionContextManager.get();
 
         if (!tracer) {
             return undefined;
@@ -95,12 +107,12 @@ class InvocationTraceSupport {
 
         try {
             const spans = tracer.recorder.getSpanList();
-            const outgoingTraceLinks = flatten(
+            const traceLinks = flatten(
                 spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
                     .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
             );
-            outgoingTraceLinks.push(...InvocationTraceSupport.outgoingTraceLinks);
-            return [...new Set(outgoingTraceLinks)];
+            traceLinks.push(...outgoingTraceLinks);
+            return [...new Set(traceLinks)];
         } catch (e) {
             ThundraLogger.error(
                 `Error while getting the outgoing trace links for invocation. ${e}`);
@@ -108,8 +120,7 @@ class InvocationTraceSupport {
     }
 
     static clear(): void {
-        InvocationTraceSupport.incomingTraceLinks = [];
-        InvocationTraceSupport.outgoingTraceLinks = [];
+        // pass
     }
 }
 

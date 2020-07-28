@@ -6,9 +6,9 @@ import {
 } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
-import InvocationSupport from '../support/InvocationSupport';
 import Utils from '../utils/Utils';
 import ThundraChaosError from '../error/ThundraChaosError';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const get = require('lodash.get');
 
@@ -22,7 +22,7 @@ class MongoDBIntegration implements Integration {
     spans: any;
 
     constructor(config: any) {
-        this.config = config;
+        this.config = config || {};
         this.spans = {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
@@ -32,20 +32,19 @@ class MongoDBIntegration implements Integration {
             (lib: any, cfg: any) => {
                 this.doUnwrap.call(this, lib);
             },
-            config);
+            this.config);
     }
 
     onStarted(event: any) {
         let span: ThundraSpan;
         try {
-            const tracer = this.config.tracer;
+            const { tracer } = ExecutionContextManager.get();
 
             if (!tracer) {
                 return;
             }
             let hostPort: string[];
             const parentSpan = tracer.getActiveSpan();
-            const functionName = InvocationSupport.getFunctionName();
             const commandName: string = get(event, 'commandName', '');
             const commandNameUpper: string = commandName.toUpperCase();
             const collectionName: string = get(event.command, commandName, '');
@@ -90,7 +89,6 @@ class MongoDBIntegration implements Integration {
                     [SpanTags.TOPOLOGY_VERTEX]: true,
                     [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
                     [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
-                    [SpanTags.TRIGGER_OPERATION_NAMES]: [functionName],
                 },
             });
 

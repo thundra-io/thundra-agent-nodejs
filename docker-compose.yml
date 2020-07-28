@@ -2,7 +2,7 @@ version: '2'
 services:
   postgres:
     image: postgres:9.5-alpine
-    environment: 
+    environment:
       - POSTGRES_PASSWORD=postgres
     ports:
       - '127.0.0.1:5432:5432'

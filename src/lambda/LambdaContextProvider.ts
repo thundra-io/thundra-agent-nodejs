@@ -1,4 +1,8 @@
+/**
+ * Provides active Lambda context during invocation.
+ */
 export class LambdaContextProvider {
+
     static context: any;
 
     static setContext(context: any) {
@@ -8,4 +12,5 @@ export class LambdaContextProvider {
     static getContext() {
         return LambdaContextProvider.context;
     }
+
 }
