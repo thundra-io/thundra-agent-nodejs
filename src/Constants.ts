@@ -145,7 +145,6 @@ export const ClassNames = {
     EVENTBRIDGE: 'AWS-EventBridge',
     ZEIT: 'ZEIT',
     NETLIFY: 'Netlify',
-    EXPRESS: 'Express',
     SES: 'AWS-SES',
 };
 
