@@ -173,6 +173,9 @@ const AWSOperationTypes: any = {
       ReorderReceiptRuleSet: 'WRITE',
       TestRenderTemplate: 'WRITE',
     },
+    'AWS-StepFunctions': {
+      StartExecution: 'EXECUTE',
+    },
   },
   patterns: {
     '^List.*$': 'LIST',

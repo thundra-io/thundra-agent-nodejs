@@ -74,6 +74,8 @@ class ConfigNames {
         'thundra.agent.lambda.trace.firehose.request.enable';
     public static readonly THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE: string =
         'thundra.agent.lambda.trace.cloudwatchlog.request.enable';
+    public static readonly THUNDRA_LAMBDA_AWS_STEPFUNCTIONS: string =
+        'thundra.agent.lambda.aws.stepfunctions';
 
     /////////////////////////////////////////////////////////////////////////////
 

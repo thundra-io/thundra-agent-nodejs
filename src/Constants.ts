@@ -146,6 +146,7 @@ export const ClassNames = {
     ZEIT: 'ZEIT',
     NETLIFY: 'Netlify',
     SES: 'AWS-SES',
+    STEPFUNCTIONS: 'AWS-StepFunctions',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -455,6 +456,14 @@ export const AwsSESTags = {
     TEMPLATE_DATA: 'aws.ses.mail.template.data',
     SOURCE: 'aws.ses.mail.source',
     DESTINATION: 'aws.ses.mail.destination',
+};
+
+export const AwsStepFunctionsTags = {
+    STATE_MACHINE_ARN: 'aws.sf.state_machine.arn',
+    EXECUTION_NAME: 'aws.sf.execution.name',
+    EXECUTION_INPUT: 'aws.sf.execution.input',
+    EXECUTION_ARN: 'aws.sf.execution.arn',
+    EXECUTION_START_DATE: 'aws.sf.execution.start_date',
 };
 
 export const SpanTags = {
