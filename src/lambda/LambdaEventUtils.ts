@@ -9,7 +9,6 @@ import InvocationSupport from '../plugins/support/InvocationSupport';
 import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../plugins/integrations/AWSIntegration';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import Utils from '../plugins/utils/Utils';
-import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 
 const get = require('lodash.get');
 
