@@ -496,6 +496,7 @@ export const SpanTypes = {
     AWS_ATHENA: 'AWS-Athena',
     AWS_EVENTBRIDGE: 'AWS-EventBridge',
     AWS_SES: 'AWS-SES',
+    AWS_STEPFUNCTIONS: 'AWS-StepFunctions',
 };
 
 export const INTEGRATIONS: any = {

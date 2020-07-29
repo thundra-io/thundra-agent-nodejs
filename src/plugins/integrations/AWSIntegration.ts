@@ -3,7 +3,7 @@ import ThundraTracer from '../../opentracing/Tracer';
 import {
     AwsSDKTags, AwsSQSTags, AwsSNSTags, SpanTags, AwsDynamoTags,
     AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
-    SpanTypes, ClassNames, DomainNames,
+    AwsStepFunctionsTags, SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
     AwsAthenaTags, AwsEventBridgeTags, AwsSESTags,
@@ -125,6 +125,8 @@ export class AWSIntegration implements Integration {
                 return AWSEventBridgeIntegration;
             case 'email':
                 return AWSSESIntegration;
+            case 'states':
+                return AWSStepFunctionsIntegration;
             default:
                 return AWSServiceIntegration;
         }
@@ -536,6 +538,55 @@ export class AWSSNSIntegration {
     }
 }
 
+export class AWSStepFunctionsIntegration {
+    public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
+        const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
+        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.STEPFUNCTIONS);
+
+        const spanName = AWSStepFunctionsIntegration.getStateMachineName(request) || AWS_SERVICE_REQUEST;
+        const parentSpan = tracer.getActiveSpan();
+        const activeSpan = tracer._startSpan(spanName, {
+            childOf: parentSpan,
+            domainName: DomainNames.AWS,
+            className: ClassNames.STEPFUNCTIONS,
+            disableActiveStart: true,
+            tags: {
+                [SpanTags.OPERATION_TYPE]: operationType,
+                [SpanTags.SPAN_TYPE]: SpanTypes.AWS_STEPFUNCTIONS,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
+            },
+        });
+
+        const stateMachineARN = get(request, 'params.stateMachineArn', '');
+        const executionName = get(request, 'params.name', '');
+
+        activeSpan.setTag(AwsStepFunctionsTags.STATE_MACHINE_ARN, stateMachineARN);
+        activeSpan.setTag(AwsStepFunctionsTags.EXECUTION_NAME, executionName);
+        activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+        activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+        activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+
+        return activeSpan;
+    }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        return [];
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
+    }
+
+    public static getStateMachineName(request: any): string {
+        const stateMachineARN = get(request, 'params.stateMachineArn');
+        if (!stateMachineARN) {
+            return undefined;
+        }
+        const stateMachineARNParts = stateMachineARN.split(':');
+        return stateMachineARNParts[stateMachineARNParts.length - 1];
+    }
+}
+
 export class AWSSQSIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
@@ -848,7 +899,7 @@ export class AWSDynamoDBIntegration {
     }
 
     public static generateDynamoTraceLinks(attributes: any, operationType: string, tableName: string, region: string,
-                                           timestamp: number): any[] {
+        timestamp: number): any[] {
         if (attributes) {
             const attrHash = md5(AWSDynamoDBIntegration.serializeAttributes(attributes));
             return [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
