@@ -259,6 +259,8 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent:
             return LambdaEventUtils.injectTriggerTagsForZeit(span, originalEvent);
         } else if (lambdaEventType === LambdaEventType.Netlify) {
             return LambdaEventUtils.injectTriggerTagsForNetlify(span, pluginContext, originalContext);
+        } else {
+            return LambdaEventUtils.injectTriggerTagsForCommon(span, originalEvent, originalContext);
         }
     } catch (error) {
         ThundraLogger.error('Cannot inject trigger tags. ' + error);
