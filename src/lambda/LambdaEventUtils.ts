@@ -48,7 +48,7 @@ class LambdaEventUtils {
         } else if (originalEvent.requestContext && originalEvent.resource && originalEvent.path) {
             return LambdaEventType.APIGatewayProxy;
         } else if (originalEvent.context && originalEvent.context.stage && originalEvent.context['resource-path']) {
-                return LambdaEventType.APIGatewayPassThrough;
+            return LambdaEventType.APIGatewayPassThrough;
         } else if (process.env[NetlifyConstants.NETLIFY_UNIQUE_ENV] || process.env[NetlifyConstants.NETLIFY_DEV]) {
             return LambdaEventType.Netlify;
         } else if (originalContext.clientContext) {
@@ -326,14 +326,15 @@ class LambdaEventUtils {
     }
 
     static injectTriggerTagsForLambda(span: ThundraSpan, originalContext: any): String {
+        if (originalContext && originalContext.awsRequestId) {
+            InvocationTraceSupport.addIncomingTraceLinks([originalContext.awsRequestId]);
+        }
         if (originalContext && originalContext.clientContext && originalContext.clientContext.custom &&
             originalContext.clientContext.custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME]) {
             const domainName = DomainNames.API;
             const className = ClassNames.LAMBDA;
             const operationNames = [originalContext.clientContext.custom[LambdaEventUtils.LAMBDA_TRIGGER_OPERATION_NAME]];
-            const requestId = originalContext.awsRequestId;
 
-            InvocationTraceSupport.addIncomingTraceLinks([requestId]);
             this.injectTrigerTragsForInvocation(domainName, className, operationNames);
             this.injectTrigerTragsForSpan(span, domainName, className, operationNames);
 
@@ -382,6 +383,13 @@ class LambdaEventUtils {
         this.injectTrigerTragsForSpan(span, domainName, className, [siteName]);
 
         return className;
+    }
+
+    static injectTriggerTagsForCommon(span: ThundraSpan, originalEvent: any, originalContext: any): string {
+        if (originalContext && originalContext.awsRequestId) {
+            InvocationTraceSupport.addIncomingTraceLinks([originalContext.awsRequestId]);
+        }
+        return null;
     }
 
     static extractSpanContextFromSNSEvent(tracer: ThundraTracer, originalEvent: any): ThundraSpanContext {
