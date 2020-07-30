@@ -46,4 +46,5 @@ export default class GlobalApplicationInfoProvider implements ApplicationInfoPro
     update(opts: any = {}) {
         this.applicationInfo = Utils.mergeApplicationInfo(opts, this.applicationInfo);
     }
+
 }
