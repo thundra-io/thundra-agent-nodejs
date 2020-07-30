@@ -17,8 +17,16 @@ const get = require('lodash.get');
  * Utility class for AWS Lambda event related stuff.
  */
 class LambdaEventUtils {
-
     static LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
+
+    static extractTraceLinkFromEvent(originalEvent: any) {
+        try {
+            const traceLinkKey = '_thundra';
+            if (traceLinkKey in originalEvent) {
+                InvocationTraceSupport.addIncomingTraceLinks(originalEvent[traceLinkKey].trace_link);
+            }
+        } catch (e) { /* pass */ }
+    }
 
     static getLambdaEventType(originalEvent: any, originalContext: any): LambdaEventType {
         if (originalEvent.Records && Array.isArray(originalEvent.Records) &&

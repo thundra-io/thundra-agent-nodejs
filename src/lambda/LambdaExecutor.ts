@@ -227,6 +227,7 @@ function processAPIGWResponse(response: any, originalEvent: any): void {
 
 function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent: any, originalContext: any): String {
     try {
+        LambdaEventUtils.extractTraceLinkFromEvent(originalEvent);
         const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
 
         if (lambdaEventType === LambdaEventType.Kinesis) {
