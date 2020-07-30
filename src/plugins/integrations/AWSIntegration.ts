@@ -557,6 +557,8 @@ export class AWSStepFunctionsIntegration {
             },
         });
 
+        AWSStepFunctionsIntegration.createStepFunctionTraceLink(request, activeSpan);
+
         const stateMachineARN = get(request, 'params.stateMachineArn', '');
         const executionName = get(request, 'params.name', '');
 
@@ -574,16 +576,41 @@ export class AWSStepFunctionsIntegration {
     }
 
     public static processResponse(span: ThundraSpan, request: any, config: any): void {
-        return;
+        const executionARN = get(request, 'response.executionArn', '');
+        const startDate = get(request, 'response.startDate');
+
+        span.setTag(AwsStepFunctionsTags.EXECUTION_ARN, executionARN);
+
+        if (startDate) {
+            span.setTag(AwsStepFunctionsTags.EXECUTION_START_DATE, startDate);
+        }
     }
 
-    public static getStateMachineName(request: any): string {
+    private static getStateMachineName(request: any): string {
         const stateMachineARN = get(request, 'params.stateMachineArn');
         if (!stateMachineARN) {
             return undefined;
         }
         const stateMachineARNParts = stateMachineARN.split(':');
         return stateMachineARNParts[stateMachineARNParts.length - 1];
+    }
+
+    private static createStepFunctionTraceLink(request: any, span: ThundraSpan): void {
+        const originalInput = get(request, 'params.input');
+
+        if (originalInput) {
+            const parsedInput = JSON.parse(originalInput);
+            const traceLink = Utils.generateId();
+            const traceLinkKey = '_thundra';
+
+            parsedInput[traceLinkKey] = { trace_link: traceLink, step: 0 };
+
+            span.setTag(AwsStepFunctionsTags.EXECUTION_INPUT, originalInput);
+
+            request.params.input = JSON.stringify(parsedInput);
+
+            span.setTag(SpanTags.TRACE_LINKS, [traceLink]);
+        }
     }
 }
 
