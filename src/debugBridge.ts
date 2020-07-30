@@ -1,3 +1,8 @@
+/**
+ * Connects Node.js {@code Inspector} at application side here and
+ * Debugger at user/developer side over Thundra Debug Broker.
+ */
+
 const net = require('net');
 const WebSocket = require('ws');
 const { DEBUGGER_PORT, BROKER_HOST, BROKER_PORT,
