@@ -2,14 +2,13 @@ import Utils from '../plugins/utils/Utils';
 import { EnvVariableKeys, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME } from '../Constants';
 import { ApplicationInfoProvider } from '../application/ApplicationInfoProvider';
 import { ApplicationInfo } from '../application/ApplicationInfo';
-import { LambdaContextProvider } from './LambdaContextProvider';
-import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 
 /**
  * {@link ApplicationInfoProvider} implementation which provides {@link ApplicationInfo}
  * from underlying AWS-Lambda platform.
  */
 export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
+
     private applicationInfo: ApplicationInfo;
 
     constructor() {
@@ -37,4 +36,5 @@ export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
     update(opts: any = {}) {
         this.applicationInfo = Utils.mergeApplicationInfo(opts, this.applicationInfo);
     }
+
 }
