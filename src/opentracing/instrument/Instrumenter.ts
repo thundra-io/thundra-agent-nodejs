@@ -70,6 +70,9 @@ class Instrumenter {
     setGlobalFunction() {
         global.__thundraTraceEntry__ = function (args: any) {
             const { tracer } = ExecutionContextManager.get();
+            if (!tracer) {
+                return;
+            }
             try {
                 const span = tracer.startSpan(args.path + '.' + args.name) as ThundraSpan;
                 const spanArguments: Argument[] = [];
@@ -94,7 +97,11 @@ class Instrumenter {
                     span,
                 };
             } catch (ex) {
-                tracer.finishSpan();
+                try {
+                    tracer.finishSpan();
+                } catch (ex2) {
+                    // Ignore
+                }
             }
         };
 
@@ -182,6 +189,9 @@ class Instrumenter {
 
         global.__thundraTraceExit__ = function (args: any) {
             const { tracer } = ExecutionContextManager.get();
+            if (!tracer) {
+                return;
+            }
             try {
                 const entryData = args.entryData;
                 if (entryData.latestLineSpan) {
@@ -201,7 +211,11 @@ class Instrumenter {
                 }
                 span.finish();
             } catch (ex) {
-                tracer.finishSpan();
+                try {
+                    tracer.finishSpan();
+                } catch (ex2) {
+                    // Ignore
+                }
             }
         };
     }

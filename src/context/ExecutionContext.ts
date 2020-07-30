@@ -4,6 +4,7 @@ import ThundraSpan from '../opentracing/Span';
 import LogData from '../plugins/data/log/LogData';
 
 export default class ExecutionContext {
+
     startTimestamp: number;
     finishTimestamp: number;
     tracer: ThundraTracer;
@@ -51,4 +52,5 @@ export default class ExecutionContext {
     report(data: any) {
         this.reports = [...this.reports, data];
     }
+
 }

@@ -6,6 +6,7 @@ import ExecutionContextManager from '../../context/ExecutionContextManager';
 const flatten = require('lodash.flatten');
 
 class InvocationTraceSupport {
+
     static getResources(rootSpanId: string = ''): Resource[] {
         try {
             const { tracer } = ExecutionContextManager.get();
@@ -65,27 +66,38 @@ class InvocationTraceSupport {
 
     static addIncomingTraceLink(traceLink: string): void {
         const { incomingTraceLinks } = ExecutionContextManager.get();
-        incomingTraceLinks.push(traceLink);
+        if (incomingTraceLinks) {
+            incomingTraceLinks.push(traceLink);
+        }
     }
 
     static addIncomingTraceLinks(traceLinks: any[]): void {
         const { incomingTraceLinks } = ExecutionContextManager.get();
-        incomingTraceLinks.push(...traceLinks);
+        if (incomingTraceLinks) {
+            incomingTraceLinks.push(...traceLinks);
+        }
     }
 
     static getIncomingTraceLinks(): any[] {
         const { incomingTraceLinks } = ExecutionContextManager.get();
+        if (!incomingTraceLinks) {
+            return [];
+        }
         return [...new Set(incomingTraceLinks)].filter((e) => e);
     }
 
     static addOutgoingTraceLink(traceLink: string): void {
         const { outgoingTraceLinks } = ExecutionContextManager.get();
-        outgoingTraceLinks.push(traceLink);
+        if (outgoingTraceLinks) {
+            outgoingTraceLinks.push(traceLink);
+        }
     }
 
     static addOutgoingTraceLinks(traceLinks: any[]): void {
         const { outgoingTraceLinks } = ExecutionContextManager.get();
-        outgoingTraceLinks.push(...traceLinks);
+        if (outgoingTraceLinks) {
+            outgoingTraceLinks.push(...traceLinks);
+        }
     }
 
     static getActiveSpan(): ThundraSpan {
@@ -102,7 +114,7 @@ class InvocationTraceSupport {
         const { tracer, outgoingTraceLinks } = ExecutionContextManager.get();
 
         if (!tracer) {
-            return undefined;
+            return [];
         }
 
         try {
@@ -111,7 +123,9 @@ class InvocationTraceSupport {
                 spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
                     .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
             );
-            traceLinks.push(...outgoingTraceLinks);
+            if (outgoingTraceLinks) {
+                traceLinks.push(...outgoingTraceLinks);
+            }
             return [...new Set(traceLinks)];
         } catch (e) {
             ThundraLogger.error(
@@ -122,6 +136,7 @@ class InvocationTraceSupport {
     static clear(): void {
         // pass
     }
+
 }
 
 export default InvocationTraceSupport;
