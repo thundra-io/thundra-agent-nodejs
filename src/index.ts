@@ -7,7 +7,7 @@ import { EnvVariableKeys } from './Constants';
 import InvocationSupport from './plugins/support/InvocationSupport';
 import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
 import ConfigNames from './config/ConfigNames';
-import { loadHandler } from './runtime/RuntimeSupport';
+import { loadHandler } from './lambda/lambdaRuntimeSupport';
 import * as LambdaWrapper from './lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
