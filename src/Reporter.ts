@@ -18,6 +18,9 @@ const httpsAgent = new https.Agent({
     keepAlive: true,
 });
 
+/**
+ * Reports given telemetry data to given/configured Thundra collector endpoint
+ */
 class Reporter {
 
     private readonly MAX_MONITOR_DATA_BATCH_SIZE: number = 100;
@@ -38,65 +41,11 @@ class Reporter {
         this.latestReportingLimitedMinute = -1;
     }
 
-    createRequestOptions(u?: url.URL): http.RequestOptions {
-        const path = COMPOSITE_MONITORING_DATA_PATH;
-
-        return {
-            method: 'POST',
-            hostname: u ? u.hostname : this.URL.hostname,
-            path: (u ? u.pathname : this.URL.pathname) + path,
-            port: parseInt(u ? u.port : this.URL.port, 0),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'ApiKey ' + this.apiKey,
-            },
-            agent: this.useHttps ? httpsAgent : httpAgent,
-            createConnection: (options: http.ClientRequestArgs, oncreate: (err: Error, socket: net.Socket) => void) => {
-                try {
-                    const socket: net.Socket = net.createConnection(options.port as number, options.hostname);
-                    socket.setNoDelay(true);
-                    socket.setKeepAlive(true);
-                    oncreate(null, socket);
-                    return socket;
-                } catch (e) {
-                    oncreate(e, null);
-                    throw e;
-                }
-            },
-        };
-    }
-
-    getCompositeBatchedReports(reports: any[]): any[] {
-        reports = reports.slice(0);
-
-        const batchedReports: any[] = [];
-        const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
-        const invocationReport = reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
-        if (!invocationReport) {
-            return [];
-        }
-        const initialCompositeData = Utils.initCompositeMonitoringData(invocationReport.data);
-
-        for (let i = 0; i < batchCount; i++) {
-            const compositeData = Utils.initCompositeMonitoringData(initialCompositeData);
-            const batch: any[] = [];
-            for (let j = 1; j < this.MAX_MONITOR_DATA_BATCH_SIZE; j++) {
-                const report = reports.shift();
-                if (!report) {
-                    break;
-                }
-
-                batch.push(Utils.stripCommonFields(report.data as BaseMonitoringData));
-            }
-
-            compositeData.allMonitoringData = batch;
-            const compositeDataReport = Utils.generateReport(compositeData, this.apiKey);
-            batchedReports.push(compositeDataReport);
-        }
-
-        return batchedReports;
-    }
-
+    /**
+     * Reports given data
+     * @param reports data to be reported
+     * @return {Promise} the promise to track the result of reporting
+     */
     sendReports(reports: any[]): Promise<void> {
         let batchedReports: any = [];
         try {
@@ -128,7 +77,66 @@ class Reporter {
         });
     }
 
-    sendBatchedReports(batchedReports: any[]) {
+    private createRequestOptions(u?: url.URL): http.RequestOptions {
+        const path = COMPOSITE_MONITORING_DATA_PATH;
+
+        return {
+            method: 'POST',
+            hostname: u ? u.hostname : this.URL.hostname,
+            path: (u ? u.pathname : this.URL.pathname) + path,
+            port: parseInt(u ? u.port : this.URL.port, 0),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'ApiKey ' + this.apiKey,
+            },
+            agent: this.useHttps ? httpsAgent : httpAgent,
+            createConnection: (options: http.ClientRequestArgs, oncreate: (err: Error, socket: net.Socket) => void) => {
+                try {
+                    const socket: net.Socket = net.createConnection(options.port as number, options.hostname);
+                    socket.setNoDelay(true);
+                    socket.setKeepAlive(true);
+                    oncreate(null, socket);
+                    return socket;
+                } catch (e) {
+                    oncreate(e, null);
+                    throw e;
+                }
+            },
+        };
+    }
+
+    private getCompositeBatchedReports(reports: any[]): any[] {
+        reports = reports.slice(0);
+
+        const batchedReports: any[] = [];
+        const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
+        const invocationReport = reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
+        if (!invocationReport) {
+            return [];
+        }
+        const initialCompositeData = Utils.initCompositeMonitoringData(invocationReport.data);
+
+        for (let i = 0; i < batchCount; i++) {
+            const compositeData = Utils.initCompositeMonitoringData(initialCompositeData);
+            const batch: any[] = [];
+            for (let j = 1; j < this.MAX_MONITOR_DATA_BATCH_SIZE; j++) {
+                const report = reports.shift();
+                if (!report) {
+                    break;
+                }
+
+                batch.push(Utils.stripCommonFields(report.data as BaseMonitoringData));
+            }
+
+            compositeData.allMonitoringData = batch;
+            const compositeDataReport = Utils.generateReport(compositeData, this.apiKey);
+            batchedReports.push(compositeDataReport);
+        }
+
+        return batchedReports;
+    }
+
+    private sendBatchedReports(batchedReports: any[]) {
         const isAsync = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE);
 
         const reportPromises: any[] = [];
@@ -148,7 +156,7 @@ class Reporter {
         return Promise.all(reportPromises);
     }
 
-    request(batch: any[]): Promise<any> {
+    private request(batch: any[]): Promise<any> {
         return new Promise((resolve, reject) => {
             let request: http.ClientRequest;
             const responseHandler = (response: http.IncomingMessage) => {
@@ -195,7 +203,7 @@ class Reporter {
         });
     }
 
-    writeBatchToCW(batch: any[]): Promise<any> {
+    private writeBatchToCW(batch: any[]): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
                 const jsonStringReport = '\n' + JSON.stringify(batch).replace(/\r?\n|\r/g, '') + '\n';
