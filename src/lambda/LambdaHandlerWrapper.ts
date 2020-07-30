@@ -335,7 +335,7 @@ class LambdaHandlerWrapper {
 
         const execContext = ExecutionContextManager.get();
 
-        // Execution context intialization
+        // Execution context initialization
         execContext.startTimestamp = Date.now();
         execContext.platformData.originalContext = this.originalContext;
         execContext.platformData.originalEvent = this.originalEvent;

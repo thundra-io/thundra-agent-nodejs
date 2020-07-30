@@ -21,7 +21,7 @@ class GlobalTracer extends Tracer {
 
     _startSpan(name: any, fields: any) {
         const { tracer } = ExecutionContextManager.get();
-        if (tracer) {
+        if (!tracer) {
             return null;
         }
         return tracer._startSpan(name, fields);
@@ -29,7 +29,7 @@ class GlobalTracer extends Tracer {
 
     _inject(spanContext: any, format: any, carrier: any): Tracer {
         const { tracer } = ExecutionContextManager.get();
-        if (tracer) {
+        if (!tracer) {
             return null;
         }
         return tracer._inject(spanContext, format, carrier);
@@ -37,7 +37,7 @@ class GlobalTracer extends Tracer {
 
     _extract(format: any, carrier: any): SpanContext {
         const { tracer } = ExecutionContextManager.get();
-        if (tracer) {
+        if (!tracer) {
             return null;
         }
         return tracer._extract(format, carrier);
