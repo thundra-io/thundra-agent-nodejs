@@ -19,10 +19,11 @@ const httpsAgent = new https.Agent({
 });
 
 class Reporter {
+
     private readonly MAX_MONITOR_DATA_BATCH_SIZE: number = 100;
+
     private useHttps: boolean;
     private requestOptions: http.RequestOptions;
-    private connectionRetryCount: number;
     private latestReportingLimitedMinute: number;
     private URL: url.UrlWithStringQuery;
     private apiKey: string;
@@ -34,7 +35,6 @@ class Reporter {
         this.apiKey = apiKey;
         this.useHttps = (u ? u.protocol : this.URL.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
-        this.connectionRetryCount = 0;
         this.latestReportingLimitedMinute = -1;
     }
 
@@ -97,14 +97,38 @@ class Reporter {
         return batchedReports;
     }
 
-    async sendReports(reports: any[]): Promise<void> {
-        let batchedReports = [];
+    sendReports(reports: any[]): Promise<void> {
+        let batchedReports: any = [];
         try {
             batchedReports = this.getCompositeBatchedReports(reports);
         } catch (err) {
             ThundraLogger.error(`Cannot create batch request will send no report. ${err}`);
         }
 
+        return new Promise<void>((resolve, reject) => {
+            this.sendBatchedReports(batchedReports)
+                .then(() => {
+                    resolve();
+                })
+                .catch((err: any) => {
+                    if (err.code === 'ECONNRESET') {
+                        ThundraLogger.debug('Connection reset by server. Will send monitoring data again.');
+                        this.sendBatchedReports(batchedReports)
+                            .then(() => {
+                                resolve();
+                            })
+                            .catch((err2: any) => {
+                                reject(err2);
+                            });
+                    } else {
+                        ThundraLogger.error(err);
+                        reject(err);
+                    }
+                });
+        });
+    }
+
+    sendBatchedReports(batchedReports: any[]) {
         const isAsync = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE);
 
         const reportPromises: any[] = [];
@@ -121,19 +145,7 @@ class Reporter {
             }
         });
 
-        await Promise.all(reportPromises).catch(async (err) => {
-            if (this.connectionRetryCount === 0 && err.code === 'ECONNRESET') {
-                ThundraLogger.debug(
-                    'Keep Alive connection reset by server. Will send monitoring data again.');
-                this.connectionRetryCount++;
-                await this.sendReports(reports);
-                this.connectionRetryCount = 0;
-                return;
-            }
-            ThundraLogger.error(err);
-        });
-
-        this.connectionRetryCount = 0;
+        return Promise.all(reportPromises);
     }
 
     request(batch: any[]): Promise<any> {
@@ -195,6 +207,7 @@ class Reporter {
             }
         });
     }
+
 }
 
 export default Reporter;
