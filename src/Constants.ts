@@ -1,3 +1,7 @@
+/**
+ * Defines all global constants here
+ */
+
 import HttpIntegration from './plugins/integrations/HttpIntegration';
 import PostgreIntegration from './plugins/integrations/PostgreIntegration';
 import MySQL2Integration from './plugins/integrations/MySQL2Integration';
@@ -12,6 +16,7 @@ import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanList
 import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
 import TagInjectorSpanListener from './plugins/listeners/TagInjectorSpanListener';
 import SecurityAwareSpanListener from './plugins/listeners/SecurityAwareSpanListener';
+
 const { version } = require('../package.json');
 
 export const EnvVariableKeys = {
