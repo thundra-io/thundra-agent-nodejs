@@ -1,3 +1,7 @@
+/**
+ * Wraps the original AWS Lambda handler to hook into AWS Lambda invocation cycle
+ */
+
 import LambdaHandlerWrapper from './LambdaHandlerWrapper';
 import TracePlugin from '../plugins/Trace';
 import MetricPlugin from '../plugins/Metric';
@@ -29,8 +33,7 @@ interface WrappedFunction extends Function {
 /**
  * Creates a function that wraps the original
  * AWS Lambda handler with Thundra's wrapper
- * @param config options
- * @returns wrapper function
+ * @return the wrapper function
  */
 export function createWrapper(): (f: Function) => WrappedFunction {
     const config = ConfigProvider.thundraConfig;
@@ -57,11 +60,12 @@ export function createWrapper(): (f: Function) => WrappedFunction {
 }
 
 /**
- * Creates a function that wraps the original
- * AWS Lambda handler with Thundra's wrapper
- * @param config options
+ * Creates a function that wraps the original AWS Lambda handler with Thundra's wrapper
+ * @param {ThundraConfig} config the {@link ThundraConfig}
  * @param plugins plugins to be attached to the wrapped function
- * @returns wrapper function
+ * @param {PluginContext} pluginContext the {@link PluginContext} object that contains the
+ * information might be needed by the plugins
+ * @return the wrapper function
  */
 function createWrapperWithPlugins(config: ThundraConfig,
                                   plugins: any[],
@@ -84,12 +88,12 @@ function createWrapperWithPlugins(config: ThundraConfig,
 
 /**
  * Creates a wrapped handler function given the original handler
- * @param pluginContext PluginContext object that contains the
+ * @param {PluginContext} pluginContext the {@link PluginContext} object that contains the
  * information might be needed by the plugins
- * @param originalFunc original AWS Lambda handler
+ * @param {Function} originalFunc original AWS Lambda handler
  * @param plugins plugins to be attached to the wrapped function
- * @param config Thundra configuration
- * @returns new AWS Lambda handler wrapped with Thundra
+ * @param {ThundraConfig} config the {@link ThundraConfig}
+ * @return {WrappedFunction} new AWS Lambda handler wrapped with Thundra
  */
 function createWrappedHandler(pluginContext: PluginContext, originalFunc: Function,
                               plugins: any[], config: ThundraConfig): WrappedFunction {
@@ -122,6 +126,10 @@ function createWrappedHandler(pluginContext: PluginContext, originalFunc: Functi
     return wrappedFunction;
 }
 
+/**
+ * Creates {@link ExecutionContext}
+ * @return {ExecutionContext} the created {@link ExecutionContext}
+ */
 function createExecContext(): ExecutionContext {
     const thundraConfig = ConfigProvider.thundraConfig;
     const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
@@ -138,9 +146,9 @@ function createExecContext(): ExecutionContext {
 }
 
 /**
- * Creates a new plugin context
- * @param config Thundra configuration
- * @returns new PluginContext object
+ * Creates a new {@link PluginContext} object
+ * @param {ThundraConfig} config the {@link ThundraConfig}
+ * @return {PluginContext} the created new {@link PluginContext} object
  */
 function createPluginContext(config: ThundraConfig, applicationInfo: ApplicationInfo): PluginContext {
     const pluginContext: PluginContext = new PluginContext({
@@ -156,8 +164,10 @@ function createPluginContext(config: ThundraConfig, applicationInfo: Application
 
 /**
  * Creates plugins given a configuration
- * @param config Thundra configuration
- * @returns list of plugins
+ * @param {ThundraConfig} config Thundra configuration
+ * @param {PluginContext} pluginContext the {@link PluginContext} object that contains the
+ * information might be needed by the plugins
+ * @return list of plugins
  */
 function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
     const plugins: any[] = [];
@@ -189,9 +199,9 @@ function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any
 }
 
 /**
- * Marks given function as wrapped by thundra
- * @param func Function to be marked
- * @param wrapped value to be marked
+ * Marks given function as wrapped by Thundra
+ * @param {WrappedFunction} func the function to be marked
+ * @param {boolean} the wrapped value to be marked
  */
 function setWrapped(func: WrappedFunction, wrapped: boolean) {
     if (func) {
@@ -201,8 +211,8 @@ function setWrapped(func: WrappedFunction, wrapped: boolean) {
 
 /**
  * Returns if the given function is wrapped by Thundra
- * @param func Function to be checked
- * @return true if wrapped by Thundra, false otherwise
+ * @param {WrappedFunction} func the function to be checked
+ * @return {@code true} if wrapped by Thundra, {@code false} otherwise
  */
 function isWrapped(func: WrappedFunction) {
     return get(func, 'thundraWrapped', false);
