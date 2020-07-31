@@ -1,21 +1,21 @@
-import Reporter from '../Reporter';
-import TimeoutError from '../plugins/error/TimeoutError';
-import HttpError from '../plugins/error/HttpError';
-import ThundraConfig from '../plugins/config/ThundraConfig';
-import PluginContext from '../plugins/PluginContext';
-import ThundraLogger from '../ThundraLogger';
+import Reporter from '../../Reporter';
+import TimeoutError from '../../plugins/error/TimeoutError';
+import HttpError from '../../plugins/error/HttpError';
+import ThundraConfig from '../../plugins/config/ThundraConfig';
+import PluginContext from '../../plugins/PluginContext';
+import ThundraLogger from '../../ThundraLogger';
 import {
     BROKER_WS_HTTP_ERR_CODE_TO_MSG,
     BROKER_WS_HTTP_ERROR_PATTERN,
     BROKER_WS_PROTOCOL,
     BROKER_WSS_PROTOCOL,
     DEBUG_BRIDGE_FILE_NAME,
-} from '../Constants';
-import Utils from '../plugins/utils/Utils';
+} from '../../Constants';
+import Utils from '../../plugins/utils/Utils';
 import {readFileSync} from 'fs';
-import ConfigProvider from '../config/ConfigProvider';
-import ConfigNames from '../config/ConfigNames';
-import ExecutionContextManager from '../context/ExecutionContextManager';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const path = require('path');
 
@@ -104,6 +104,61 @@ class LambdaHandlerWrapper {
         if (this.shouldInitDebugger()) {
             this.initDebugger();
         }
+    }
+
+    /**
+     * Invokes wrapper handler which delegates to wrapped original handler
+     * @return {Promise} the {@link Promise} to track the invocation
+     */
+    async invoke() {
+        this.config.refreshConfig();
+
+        await this.startDebuggerProxyIfAvailable();
+
+        this.resolve = undefined;
+        this.reject = undefined;
+
+        const execContext = ExecutionContextManager.get();
+
+        // Execution context initialization
+        execContext.startTimestamp = Date.now();
+        execContext.platformData.originalContext = this.originalContext;
+        execContext.platformData.originalEvent = this.originalEvent;
+
+        return new Promise((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+            this.executeHook('before-invocation', execContext, false)
+                .then(() => {
+                    this.pluginContext.requestCount += 1;
+                    this.timeout = this.setupTimeoutHandler();
+                    try {
+                        const result = this.originalFunction.call(
+                            this.originalThis,
+                            this.originalEvent,
+                            this.wrappedContext,
+                            this.wrappedCallback,
+                        );
+                        if (result && result.then !== undefined && typeof result.then === 'function') {
+                            result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
+                        }
+                    } catch (error) {
+                        this.report(error, null, null);
+                    }
+                })
+                .catch((error) => {
+                    ThundraLogger.error(error);
+                    // There is an error on "before-invocation" phase
+                    // So skip Thundra wrapping and call original function directly
+                    const result = this.originalFunction.call(
+                        this.originalThis,
+                        this.originalEvent,
+                        this.originalContext,
+                        this.originalCallback,
+                    );
+                    resolve(result);
+                });
+        });
     }
 
     private wrappedCallback = (error: any, result: any) => {
@@ -323,61 +378,6 @@ class LambdaHandlerWrapper {
                 this.debuggerProxy = null;
             }
         }
-    }
-
-    /**
-     * Invokes wrapper handler which delegates to wrapped original handler
-     * @return {Promise} the {@link Promise} to track the invocation
-     */
-    async invoke() {
-        this.config.refreshConfig();
-
-        await this.startDebuggerProxyIfAvailable();
-
-        this.resolve = undefined;
-        this.reject = undefined;
-
-        const execContext = ExecutionContextManager.get();
-
-        // Execution context initialization
-        execContext.startTimestamp = Date.now();
-        execContext.platformData.originalContext = this.originalContext;
-        execContext.platformData.originalEvent = this.originalEvent;
-
-        return new Promise((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
-            this.executeHook('before-invocation', execContext, false)
-                .then(() => {
-                    this.pluginContext.requestCount += 1;
-                    this.timeout = this.setupTimeoutHandler();
-                    try {
-                        const result = this.originalFunction.call(
-                            this.originalThis,
-                            this.originalEvent,
-                            this.wrappedContext,
-                            this.wrappedCallback,
-                        );
-                        if (result && result.then !== undefined && typeof result.then === 'function') {
-                            result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
-                        }
-                    } catch (error) {
-                        this.report(error, null, null);
-                    }
-                })
-                .catch((error) => {
-                    ThundraLogger.error(error);
-                    // There is an error on "before-invocation" phase
-                    // So skip Thundra wrapping and call original function directly
-                    const result = this.originalFunction.call(
-                        this.originalThis,
-                        this.originalEvent,
-                        this.originalContext,
-                        this.originalCallback,
-                    );
-                    resolve(result);
-                });
-        });
     }
 
     private async executeHook(hook: any, data: any, reverse: boolean) {

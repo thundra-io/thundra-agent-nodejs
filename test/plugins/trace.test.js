@@ -3,7 +3,7 @@ import ExecutionContextManager from '../../dist/context/ExecutionContextManager'
 import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../../dist/plugins/support/InvocationTraceSupport';
 import TraceConfig from '../../dist/plugins/config/TraceConfig';
-import * as LambdaExecutor from '../../dist/lambda/LambdaExecutor';
+import * as LambdaExecutor from '../../dist/wrappers/lambda/LambdaExecutor';
 import {
     createMockPluginContext, createMockApiGatewayProxy, createMockLambdaExecContext,
     createMockSNSEvent, createMockSQSEvent, createMockClientContext, createBatchMockSQSEventDifferentIds,
@@ -11,7 +11,7 @@ import {
 } from '../mocks/mocks';
 import * as mockAWSEvents from '../mocks/aws.events.mocks';
 import { ApplicationManager } from '../../dist/application/ApplicationManager';
-import { LambdaApplicationInfoProvider } from '../../dist/lambda/LambdaApplicationInfoProvider';
+import { LambdaApplicationInfoProvider } from '../../dist/wrappers/lambda/LambdaApplicationInfoProvider';
 
 const md5 = require('md5');
 const flatten = require('lodash.flatten');

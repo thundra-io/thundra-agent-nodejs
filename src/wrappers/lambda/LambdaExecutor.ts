@@ -2,25 +2,25 @@
  * Hooks into AWS Lambda invocation and executes it
  */
 
-import Utils from '../plugins/utils/Utils';
-import ThundraSpanContext from '../opentracing/SpanContext';
-import { DomainNames, ClassNames, TriggerHeaderTags, LAMBDA_FUNCTION_PLATFORM, HttpTags } from '../Constants';
-import ThundraTracer from '../opentracing/Tracer';
+import Utils from '../../plugins/utils/Utils';
+import ThundraSpanContext from '../../opentracing/SpanContext';
+import { DomainNames, ClassNames, TriggerHeaderTags, LAMBDA_FUNCTION_PLATFORM, HttpTags } from '../../Constants';
+import ThundraTracer from '../../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
 import * as opentracing from 'opentracing';
-import ThundraSpan from '../opentracing/Span';
-import ThundraLogger from '../ThundraLogger';
-import PluginContext from '../plugins/PluginContext';
-import HttpError from '../plugins/error/HttpError';
-import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
-import InvocationData from '../plugins/data/invocation/InvocationData';
-import TimeoutError from '../plugins/error/TimeoutError';
-import InvocationSupport from '../plugins/support/InvocationSupport';
-import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
-import TraceConfig from '../plugins/config/TraceConfig';
+import ThundraSpan from '../../opentracing/Span';
+import ThundraLogger from '../../ThundraLogger';
+import PluginContext from '../../plugins/PluginContext';
+import HttpError from '../../plugins/error/HttpError';
+import MonitoringDataType from '../../plugins/data/base/MonitoringDataType';
+import InvocationData from '../../plugins/data/invocation/InvocationData';
+import TimeoutError from '../../plugins/error/TimeoutError';
+import InvocationSupport from '../../plugins/support/InvocationSupport';
+import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
+import TraceConfig from '../../plugins/config/TraceConfig';
 import { LambdaContextProvider } from './LambdaContextProvider';
 import { LambdaPlatformUtils } from './LambdaPlatformUtils';
-import ExecutionContext from '../context/ExecutionContext';
+import ExecutionContext from '../../context/ExecutionContext';
 
 const get = require('lodash.get');
 

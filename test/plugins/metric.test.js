@@ -4,7 +4,7 @@ import ExecutionContext from '../../dist/context/ExecutionContext';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
 import { ApplicationManager } from '../../dist/application/ApplicationManager';
-import { LambdaApplicationInfoProvider } from '../../dist/lambda/LambdaApplicationInfoProvider';
+import { LambdaApplicationInfoProvider } from '../../dist/wrappers/lambda/LambdaApplicationInfoProvider';
 
 ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 

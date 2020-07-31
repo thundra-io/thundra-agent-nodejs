@@ -3,24 +3,24 @@
  */
 
 import LambdaHandlerWrapper from './LambdaHandlerWrapper';
-import TracePlugin from '../plugins/Trace';
-import MetricPlugin from '../plugins/Metric';
-import InvocationPlugin from '../plugins/Invocation';
-import ConfigProvider from '../config/ConfigProvider';
-import Utils from '../plugins/utils/Utils';
-import PluginContext from '../plugins/PluginContext';
-import { EnvVariableKeys } from '../Constants';
-import LogPlugin from '../plugins/Log';
-import ConfigNames from '../config/ConfigNames';
-import { ApplicationManager } from '../application/ApplicationManager';
-import { LambdaApplicationInfoProvider } from '../lambda/LambdaApplicationInfoProvider';
-import ThundraConfig from '../plugins/config/ThundraConfig';
-import { ApplicationInfo } from '../application/ApplicationInfo';
+import TracePlugin from '../../plugins/Trace';
+import MetricPlugin from '../../plugins/Metric';
+import InvocationPlugin from '../../plugins/Invocation';
+import ConfigProvider from '../../config/ConfigProvider';
+import Utils from '../../plugins/utils/Utils';
+import PluginContext from '../../plugins/PluginContext';
+import { EnvVariableKeys } from '../../Constants';
+import LogPlugin from '../../plugins/Log';
+import ConfigNames from '../../config/ConfigNames';
+import { ApplicationManager } from '../../application/ApplicationManager';
+import { LambdaApplicationInfoProvider } from './LambdaApplicationInfoProvider';
+import ThundraConfig from '../../plugins/config/ThundraConfig';
+import { ApplicationInfo } from '../../application/ApplicationInfo';
 import { LambdaContextProvider } from './LambdaContextProvider';
 import * as LambdaExecutor from './LambdaExecutor';
-import ExecutionContextManager from '../context/ExecutionContextManager';
-import ThundraTracer from '../opentracing/Tracer';
-import ExecutionContext from '../context/ExecutionContext';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
+import ThundraTracer from '../../opentracing/Tracer';
+import ExecutionContext from '../../context/ExecutionContext';
 import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 
 const ThundraWarmup = require('@thundra/warmup');

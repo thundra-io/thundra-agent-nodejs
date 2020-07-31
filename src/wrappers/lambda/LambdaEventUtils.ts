@@ -1,14 +1,14 @@
-import ThundraSpan from '../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants, EnvVariableKeys } from '../Constants';
-import ThundraLogger from '../ThundraLogger';
+import ThundraSpan from '../../opentracing/Span';
+import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants, EnvVariableKeys } from '../../Constants';
+import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
-import ThundraSpanContext from '../opentracing/SpanContext';
-import ThundraTracer from '../opentracing/Tracer';
+import ThundraSpanContext from '../../opentracing/SpanContext';
+import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
-import InvocationSupport from '../plugins/support/InvocationSupport';
-import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../plugins/integrations/AWSIntegration';
-import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
-import Utils from '../plugins/utils/Utils';
+import InvocationSupport from '../../plugins/support/InvocationSupport';
+import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../../plugins/integrations/AWSIntegration';
+import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
+import Utils from '../../plugins/utils/Utils';
 
 const get = require('lodash.get');
 
