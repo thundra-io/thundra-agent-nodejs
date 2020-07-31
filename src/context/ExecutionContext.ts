@@ -13,6 +13,7 @@ export default class ExecutionContext {
     finishTimestamp: number;
     tracer: ThundraTracer;
     reports: any[];
+    triggerClassName: string;
     transactionId: string;
     spanId: string;
     traceId: string;
