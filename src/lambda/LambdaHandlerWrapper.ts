@@ -106,13 +106,13 @@ class LambdaHandlerWrapper {
         }
     }
 
-    wrappedCallback = (error: any, result: any) => {
+    private wrappedCallback = (error: any, result: any) => {
         return this.report(error, result, () => {
             this.invokeCallback(error, result);
         });
     }
 
-    shouldInitDebugger(): boolean {
+    private shouldInitDebugger(): boolean {
         const authToken = ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN);
         const debuggerEnable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, null);
 
@@ -123,13 +123,13 @@ class LambdaHandlerWrapper {
         }
     }
 
-    invokeCallback(error: any, result: any): void {
+    private invokeCallback(error: any, result: any): void {
         if (typeof this.originalCallback === 'function') {
             this.originalCallback(error, result);
         }
     }
 
-    onFinish(error: any, result: any): void {
+    private onFinish(error: any, result: any): void {
         this.finishDebuggerProxyIfAvailable();
         if (error && this.reject) {
             this.reject(error);
@@ -138,7 +138,7 @@ class LambdaHandlerWrapper {
         }
     }
 
-    initDebugger(): void {
+    private initDebugger(): void {
         try {
             this.inspector = require('inspector');
             this.fork = require('child_process').fork;
@@ -190,7 +190,7 @@ class LambdaHandlerWrapper {
         }
     }
 
-    getDebuggerProxyIOMetrics(): any {
+    private getDebuggerProxyIOMetrics(): any {
         try {
             const ioContent = readFileSync('/proc/' + this.debuggerProxy.pid + '/io', 'utf8');
             const ioMetrics = ioContent.split('\n');
@@ -203,7 +203,7 @@ class LambdaHandlerWrapper {
         }
     }
 
-    async waitForDebugger() {
+    private async waitForDebugger() {
         let prevRchar = 0;
         let prevWchar = 0;
         let initCompleted = false;
@@ -239,7 +239,7 @@ class LambdaHandlerWrapper {
         }
     }
 
-    async startDebuggerProxyIfAvailable() {
+    private async startDebuggerProxyIfAvailable() {
         if (this.debuggerProxy) {
             this.finishDebuggerProxyIfAvailable();
         }
@@ -303,7 +303,7 @@ class LambdaHandlerWrapper {
         }
     }
 
-    finishDebuggerProxyIfAvailable(): void {
+    private finishDebuggerProxyIfAvailable(): void {
         try {
             if (this.inspector) {
                 this.inspector.close();
@@ -325,6 +325,10 @@ class LambdaHandlerWrapper {
         }
     }
 
+    /**
+     * Invokes wrapper handler which delegates to wrapped original handler
+     * @return {Promise} the {@link Promise} to track the invocation
+     */
     async invoke() {
         this.config.refreshConfig();
 
@@ -376,7 +380,7 @@ class LambdaHandlerWrapper {
         });
     }
 
-    async executeHook(hook: any, data: any, reverse: boolean) {
+    private async executeHook(hook: any, data: any, reverse: boolean) {
         this.plugins.sort((p1: any, p2: any) => p1.pluginOrder > p2.pluginOrder ? 1 : -1);
 
         if (reverse) {
@@ -392,7 +396,7 @@ class LambdaHandlerWrapper {
         );
     }
 
-    async executeAfterInvocationAndReport() {
+    private async executeAfterInvocationAndReport() {
         if (this.config.disableMonitoring) {
             return;
         }
@@ -405,7 +409,7 @@ class LambdaHandlerWrapper {
         await this.reporter.sendReports(execContext.reports);
     }
 
-    async report(error: any, result: any, callback: any) {
+    private async report(error: any, result: any, callback: any) {
         if (!this.reported) {
             try {
                 const execContext = ExecutionContextManager.get();
@@ -430,7 +434,7 @@ class LambdaHandlerWrapper {
         }
     }
 
-    isHTTPErrorResponse(result: any) {
+    private isHTTPErrorResponse(result: any) {
         let isError = false;
         if (Utils.isValidHTTPResponse(result) && result.body) {
             if (typeof result.body === 'string') {
@@ -444,7 +448,7 @@ class LambdaHandlerWrapper {
         return isError;
     }
 
-    destroyTimeoutHandler() {
+    private destroyTimeoutHandler() {
         ThundraLogger.debug('Destroying timeout handler');
         if (this.timeout) {
             ThundraLogger.debug('Clearing timeout handler');
@@ -453,7 +457,7 @@ class LambdaHandlerWrapper {
         }
     }
 
-    setupTimeoutHandler(): NodeJS.Timer | undefined {
+    private setupTimeoutHandler(): NodeJS.Timer | undefined {
         ThundraLogger.debug('Setting up timeout handler');
 
         this.destroyTimeoutHandler();
