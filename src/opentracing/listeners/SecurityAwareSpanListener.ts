@@ -1,8 +1,8 @@
 import ThundraSpanListener from './ThundraSpanListener';
-import ThundraSpan from '../../opentracing/Span';
+import ThundraSpan from '../Span';
 import { SpanTags, SecurityTags } from '../../Constants';
-import ThundraChaosError from '../error/ThundraChaosError';
-import InvocationSupport from '../support/InvocationSupport';
+import ThundraChaosError from '../../plugins/error/ThundraChaosError';
+import InvocationSupport from '../../plugins/support/InvocationSupport';
 
 const get = require('lodash.get');
 

@@ -11,11 +11,11 @@ import MongoDBIntegration from './plugins/integrations/MongoDBIntegration';
 import IORedisIntegration from './plugins/integrations/IORedisIntegration';
 import {AWSIntegration} from './plugins/integrations/AWSIntegration';
 import ESIntegration from './plugins/integrations/ESIntegration';
-import FilteringSpanListener from './plugins/listeners/FilteringSpanListener';
-import ErrorInjectorSpanListener from './plugins/listeners/ErrorInjectorSpanListener';
-import LatencyInjectorSpanListener from './plugins/listeners/LatencyInjectorSpanListener';
-import TagInjectorSpanListener from './plugins/listeners/TagInjectorSpanListener';
-import SecurityAwareSpanListener from './plugins/listeners/SecurityAwareSpanListener';
+import FilteringSpanListener from './opentracing/listeners/FilteringSpanListener';
+import ErrorInjectorSpanListener from './opentracing/listeners/ErrorInjectorSpanListener';
+import LatencyInjectorSpanListener from './opentracing/listeners/LatencyInjectorSpanListener';
+import TagInjectorSpanListener from './opentracing/listeners/TagInjectorSpanListener';
+import SecurityAwareSpanListener from './opentracing/listeners/SecurityAwareSpanListener';
 
 const { version } = require('../package.json');
 
