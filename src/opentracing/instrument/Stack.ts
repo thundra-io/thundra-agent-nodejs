@@ -1,21 +1,45 @@
+/**
+ * The built-in stack implementation for internal ussage
+ */
 class Stack<T> {
-  store: T[] = [];
-  push(val: T) {
-    this.store.push(val);
-  }
-  pop(): T | undefined {
-    return this.store.pop();
-  }
-  peek(): T | undefined {
-    if (this.store.length === 0) {
-      return undefined;
-    } else {
-      return (this.store[this.store.length - 1]);
+
+    private store: T[] = [];
+
+    /**
+     * Pushed the value to stack
+     * @param val the value to be pushed
+     */
+    push(val: T) {
+        this.store.push(val);
     }
-  }
-  clear(): void {
-    this.store = [];
-  }
+
+    /**
+     * Pops value from stack
+     * @return the popped value from stack
+     */
+    pop(): T | undefined {
+        return this.store.pop();
+    }
+
+    /**
+     * Peeks value from stack
+     * @return the peeked value from stack
+     */
+    peek(): T | undefined {
+        if (this.store.length === 0) {
+            return undefined;
+        } else {
+            return (this.store[this.store.length - 1]);
+        }
+    }
+
+    /**
+     * Clears stack
+     */
+    clear(): void {
+        this.store = [];
+    }
+
 }
 
 export default Stack;
