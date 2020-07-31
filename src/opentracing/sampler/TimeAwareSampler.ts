@@ -4,9 +4,14 @@ import ConfigNames from '../../config/ConfigNames';
 
 const koalas = require('koalas');
 
+/**
+ * Time based {@link Sampler} implementation
+ * which allows sampling for every specified time period
+ */
 class TimeAwareSampler implements Sampler<null> {
-    timeFreq: number;
-    latestTime: number;
+
+    private timeFreq: number;
+    private latestTime: number;
 
     constructor(timeFreq?: number) {
         this.timeFreq = ConfigProvider.get<number>(
@@ -15,6 +20,9 @@ class TimeAwareSampler implements Sampler<null> {
         this.latestTime = 0;
     }
 
+    /**
+     * @inheritDoc
+     */
     isSampled(): boolean {
         const currentTimeValue = Date.now();
         if (currentTimeValue > this.latestTime + this.timeFreq) {
@@ -24,6 +32,7 @@ class TimeAwareSampler implements Sampler<null> {
             return false;
         }
     }
+
 }
 
 export default TimeAwareSampler;
