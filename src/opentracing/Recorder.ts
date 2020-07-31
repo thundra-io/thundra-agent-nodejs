@@ -1,5 +1,5 @@
 import ThundraSpan, { SpanEvent } from './Span';
-import Stack from './instrument/Stack';
+import Stack from './utils/Stack';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpanListener from '../plugins/listeners/ThundraSpanListener';
 
