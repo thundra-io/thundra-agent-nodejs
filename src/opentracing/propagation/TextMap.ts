@@ -1,12 +1,22 @@
 import ThundraSpanContext from '../SpanContext';
 
+/**
+ * Propagator to inject/extract {@link ThundraSpanContext}
+ * into/from carrier as text
+ */
 class TextMapPropagator {
+
     static TRACE_ID_KEY: string =   'x-thundra-trace-id';
     static TRANSACTION_ID_KEY: string =  'x-thundra-transaction-id';
     static SPAN_ID_KEY: string = 'x-thundra-span-id';
     static BAGGAGE_PREFIX: string = 'x-thundra-baggage-';
     static BAGGAGE_PATTERN: RegExp = new RegExp(`^${TextMapPropagator.BAGGAGE_PREFIX}(.+)$`);
 
+    /**
+     * Injects given {@link ThundraSpanContext} into carrier as text
+     * @param spanContext {@link ThundraSpanContext} to be injected
+     * @param carrier the carried to be injected into
+     */
     inject(spanContext: ThundraSpanContext, carrier: any) {
         if (spanContext.traceId) {
             carrier[TextMapPropagator.TRACE_ID_KEY] = spanContext.traceId.toString();
@@ -23,6 +33,11 @@ class TextMapPropagator {
         this._injectBaggageItems(spanContext, carrier);
     }
 
+    /**
+     * Extracts {@link ThundraSpanContext} from carrier as text
+     * @param carrier the carrier to be extracted from
+     * @return the extracted {@link ThundraSpanContext}
+     */
     extract(carrier: any) {
         if (!carrier[TextMapPropagator.TRACE_ID_KEY]
             || !carrier[TextMapPropagator.SPAN_ID_KEY]
@@ -53,10 +68,11 @@ class TextMapPropagator {
         Object.keys(carrier).forEach((key)  => {
             const result = key.match(TextMapPropagator.BAGGAGE_PATTERN);
             if (result) {
-              spanContext.baggageItems[result[1]] = carrier[key];
+                spanContext.baggageItems[result[1]] = carrier[key];
             }
         });
     }
+
 }
 
 export default TextMapPropagator;
