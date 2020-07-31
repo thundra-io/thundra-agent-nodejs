@@ -1,3 +1,7 @@
+/**
+ * Module entry point for listeners
+ */
+
 import ErrorInjectorSpanListener from './ErrorInjectorSpanListener';
 import FilteringSpanListener from './FilteringSpanListener';
 import LatencyInjectorSpanListener from './LatencyInjectorSpanListener';
