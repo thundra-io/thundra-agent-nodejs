@@ -1,7 +1,7 @@
 import ThundraSpan, { SpanEvent } from './Span';
 import Stack from './utils/Stack';
 import ThundraLogger from '../ThundraLogger';
-import ThundraSpanListener from '../plugins/listeners/ThundraSpanListener';
+import ThundraSpanListener from './listeners/ThundraSpanListener';
 
 class ThundraRecorder {
     private activeSpanStack: Stack<ThundraSpan>;

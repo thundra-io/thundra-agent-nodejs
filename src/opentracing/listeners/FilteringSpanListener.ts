@@ -1,5 +1,5 @@
 import ThundraSpanListener from './ThundraSpanListener';
-import ThundraSpan from '../../opentracing/Span';
+import ThundraSpan from '../Span';
 import { LISTENERS } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import SpanFilter from './SpanFilter';

@@ -1,4 +1,4 @@
-import ThundraSpan from '../../opentracing/Span';
+import ThundraSpan from '../Span';
 
 interface ThundraSpanListener {
     onSpanStarted: (span: ThundraSpan, me?: any, callback?: () => any,

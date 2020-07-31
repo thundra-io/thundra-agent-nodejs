@@ -3,7 +3,7 @@ import * as opentracing from 'opentracing';
 import ThundraSpan, { SpanEvent } from './Span';
 import ThundraRecorder from './Recorder';
 import Utils from '../plugins/utils/Utils';
-import ThundraSpanListener from '../plugins/listeners/ThundraSpanListener';
+import ThundraSpanListener from './listeners/ThundraSpanListener';
 import TextMapPropagator from './propagation/TextMap';
 import HttpPropagator from './propagation/Http';
 import BinaryPropagator from './propagation/Binary';

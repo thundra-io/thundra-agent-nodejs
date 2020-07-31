@@ -1,5 +1,5 @@
 import ThundraSpanListener from './ThundraSpanListener';
-import ThundraSpan from '../../opentracing/Span';
+import ThundraSpan from '../Span';
 
 const get = require('lodash.get');
 
