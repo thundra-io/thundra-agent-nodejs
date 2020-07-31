@@ -1,7 +1,7 @@
-import Utils from '../plugins/utils/Utils';
-import { EnvVariableKeys, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME } from '../Constants';
-import { ApplicationInfoProvider } from '../application/ApplicationInfoProvider';
-import { ApplicationInfo } from '../application/ApplicationInfo';
+import Utils from '../../plugins/utils/Utils';
+import { EnvVariableKeys, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME } from '../../Constants';
+import { ApplicationInfoProvider } from '../../application/ApplicationInfoProvider';
+import { ApplicationInfo } from '../../application/ApplicationInfo';
 
 /**
  * {@link ApplicationInfoProvider} implementation which provides {@link ApplicationInfo}

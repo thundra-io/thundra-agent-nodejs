@@ -1,7 +1,7 @@
-import { EnvVariableKeys } from '../Constants';
-import ConfigProvider from '../config/ConfigProvider';
-import ConfigNames from '../config/ConfigNames';
-import Utils from '../plugins/utils/Utils';
+import { EnvVariableKeys } from '../../Constants';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
+import Utils from '../../plugins/utils/Utils';
 
 /**
  * Utility class for AWS Lambda platform related stuff
