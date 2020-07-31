@@ -292,7 +292,7 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent:
     }
 }
 
-function getRequest(originalEvent: any, triggerClassName: String, config: TraceConfig): any {
+function getRequest(originalEvent: any, triggerClassName: string, config: TraceConfig): any {
     // Masking and disableRequest should run first
     if (config && config.disableRequest) {
         return null;

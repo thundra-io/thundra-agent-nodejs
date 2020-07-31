@@ -2,13 +2,21 @@ import { EnvVariableKeys } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import Utils from '../plugins/utils/Utils';
-import { LambdaContextProvider } from './LambdaContextProvider';
 
 /**
  * Utility class for AWS Lambda platform related stuff
  */
 export class LambdaPlatformUtils {
 
+    private constructor() {
+    }
+
+    /**
+     * Gets the application id
+     * @param originalContext the original AWS Lambda invocation context
+     * @param opts the options
+     * @return {string} the application id
+     */
     static getApplicationId(originalContext: any, opts: any = {}) {
         const arn = originalContext.invokedFunctionArn;
         const region = opts.region || Utils.getEnvVar(EnvVariableKeys.AWS_REGION)
@@ -20,14 +28,23 @@ export class LambdaPlatformUtils {
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
     }
 
-    static getApplicationName(originalContext: any) {
-        return ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME,
-            originalContext.functionName
-            || Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
-            || 'lambda-app');
+    /**
+     * Extracts AWS account no from the given AWS Lambda function ARN
+     * @param {string} arn the given AWS Lambda function ARN
+     */
+    static getAWSAccountNo(arn: string) {
+        return LambdaPlatformUtils.getARNPart(arn, 4);
     }
 
-    static getAccountNo(arn: string, apiKey: string) {
+    /**
+     * Extracts AWS region from the given AWS Lambda function ARN
+     * @param {string} arn the given AWS Lambda function ARN
+     */
+    static getAWSRegion(arn: string) {
+        return LambdaPlatformUtils.getARNPart(arn, 3);
+    }
+
+    private static getAccountNo(arn: string, apiKey: string) {
         if (LambdaPlatformUtils.getIfSAMLocalDebugging()) {
             return 'sam_local';
         } else if (LambdaPlatformUtils.getIfSLSLocalDebugging()) {
@@ -39,15 +56,14 @@ export class LambdaPlatformUtils {
         }
     }
 
-    static getAWSAccountNo(arn: string) {
-        return LambdaPlatformUtils.getARNPart(arn, 4);
+    private static getApplicationName(originalContext: any) {
+        return ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME,
+            originalContext.functionName
+            || Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
+            || 'lambda-app');
     }
 
-    static getAWSRegion(arn: string) {
-        return LambdaPlatformUtils.getARNPart(arn, 3);
-    }
-
-    static getARNPart(arn: string, index: number) {
+    private static getARNPart(arn: string, index: number) {
         try {
             return arn.split(':')[index];
         } catch (error) {
@@ -55,42 +71,12 @@ export class LambdaPlatformUtils {
         }
     }
 
-    static getIfSAMLocalDebugging() {
+    private static getIfSAMLocalDebugging() {
         return Utils.getEnvVar(EnvVariableKeys.AWS_SAM_LOCAL) === 'true';
     }
 
-    static getIfSLSLocalDebugging() {
+    private static getIfSLSLocalDebugging() {
         return Utils.getEnvVar(EnvVariableKeys.SLS_LOCAL) === 'true';
-    }
-
-    static setInvocationTags(invocationData: any, pluginContext: any, execContext: any) {
-        const originalContext = LambdaContextProvider.getContext();
-
-        invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;
-        invocationData.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
-        invocationData.tags['aws.region'] = pluginContext.applicationInfo.applicationRegion;
-        invocationData.tags['aws.lambda.invocation.timeout'] = false;
-
-        if (originalContext) {
-            invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
-            invocationData.tags['aws.account_no'] = LambdaPlatformUtils.getAWSAccountNo(originalContext.invokedFunctionArn);
-            invocationData.tags['aws.lambda.log_group_name'] = originalContext ? originalContext.logGroupName : '';
-            invocationData.tags['aws.lambda.name'] = originalContext ? originalContext.functionName : '';
-            invocationData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
-            invocationData.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
-        }
-
-        const { heapUsed } = process.memoryUsage();
-        invocationData.tags['aws.lambda.invocation.memory_usage'] = Math.floor(heapUsed / (1024 * 1024));
-
-        const xrayTraceInfo = Utils.getXRayTraceInfo();
-
-        if (xrayTraceInfo.traceID) {
-            invocationData.tags['aws.xray.trace.id'] = xrayTraceInfo.traceID;
-        }
-        if (xrayTraceInfo.segmentID) {
-            invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
-        }
     }
 
 }
