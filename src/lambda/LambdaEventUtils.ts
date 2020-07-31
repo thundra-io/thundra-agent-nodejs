@@ -17,7 +17,10 @@ const get = require('lodash.get');
  */
 class LambdaEventUtils {
 
-    static LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
+    private static readonly LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
+
+    private constructor() {
+    }
 
     /**
      * Gets the {@link LambdaEventType} of the given event
