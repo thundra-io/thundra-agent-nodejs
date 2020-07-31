@@ -80,7 +80,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForKinesis(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForKinesis(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.STREAM;
         const className = ClassNames.KINESIS;
         const traceLinks: any[] = [];
@@ -109,7 +109,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForFirehose(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForFirehose(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.STREAM;
         const className = ClassNames.FIREHOSE;
         const streamARN = originalEvent.deliveryStreamArn;
@@ -141,7 +141,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForDynamoDB(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForDynamoDB(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.DB;
         const className = ClassNames.DYNAMODB;
         const traceLinks: any[] = [];
@@ -204,7 +204,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForSNS(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForSNS(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.MESSAGING;
         const className = ClassNames.SNS;
         const traceLinks: any[] = [];
@@ -229,7 +229,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForSQS(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForSQS(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.MESSAGING;
         const className = ClassNames.SQS;
         const traceLinks: any[] = [];
@@ -254,7 +254,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForS3(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForS3(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.STORAGE;
         const className = ClassNames.S3;
         const traceLinks: any[] = [];
@@ -281,7 +281,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForEventBridge(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForEventBridge(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.MESSAGING;
         const className = ClassNames.EVENTBRIDGE;
         const traceLinks: any[] = [];
@@ -303,7 +303,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForCloudWatchSchedule(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForCloudWatchSchedule(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.SCHEDULE;
         const className = ClassNames.CLOUDWATCH;
 
@@ -325,7 +325,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForCloudWatchLogs(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForCloudWatchLogs(span: ThundraSpan, originalEvent: any): string {
         try {
             const buffer = Buffer.from(originalEvent.awslogs.data, 'base64');
             const logData = JSON.parse(zlib.gunzipSync(buffer).toString('utf-8'));
@@ -347,7 +347,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForCloudFront(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForCloudFront(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.CDN;
         const className = ClassNames.CLOUDFRONT;
 
@@ -369,7 +369,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForAPIGatewayProxy(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForAPIGatewayProxy(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.API;
         const className = ClassNames.APIGATEWAY;
         const operationName = originalEvent.resource;
@@ -390,7 +390,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForAPIGatewayPassThrough(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForAPIGatewayPassThrough(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.API;
         const className = ClassNames.APIGATEWAY;
         const host = get(originalEvent, 'params.header.Host', '');
@@ -408,7 +408,7 @@ class LambdaEventUtils {
      * @param originalContext the original AWS Lambda invocation context
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForLambda(span: ThundraSpan, originalContext: any): String {
+    static injectTriggerTagsForLambda(span: ThundraSpan, originalContext: any): string {
         if (originalContext && originalContext.awsRequestId) {
             InvocationTraceSupport.addIncomingTraceLinks([originalContext.awsRequestId]);
         }
@@ -431,7 +431,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForZeit(span: ThundraSpan, originalEvent: any): String {
+    static injectTriggerTagsForZeit(span: ThundraSpan, originalEvent: any): string {
         const className = ClassNames.ZEIT;
         const domainName = DomainNames.API;
         let operationName = 'zeit-now';

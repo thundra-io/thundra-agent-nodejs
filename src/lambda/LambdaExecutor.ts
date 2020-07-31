@@ -1,3 +1,7 @@
+/**
+ * Hooks into AWS Lambda invocation and executes it
+ */
+
 import Utils from '../plugins/utils/Utils';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import { DomainNames, ClassNames, TriggerHeaderTags, LAMBDA_FUNCTION_PLATFORM, HttpTags } from '../Constants';
@@ -16,10 +20,17 @@ import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import TraceConfig from '../plugins/config/TraceConfig';
 import { LambdaContextProvider } from './LambdaContextProvider';
 import { LambdaPlatformUtils } from './LambdaPlatformUtils';
+import ExecutionContext from '../context/ExecutionContext';
 
 const get = require('lodash.get');
 
-export function startTrace(pluginContext: PluginContext, execContext: any, config: TraceConfig) {
+/**
+ * Starts trace for AWS Lambda request
+ * @param {PluginContext} pluginContext the {@link PluginContext}
+ * @param {ExecutionContext} execContext the {@link ExecutionContext}
+ * @param {TraceConfig} config the {@link TraceConfig}
+ */
+export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext, config: TraceConfig) {
     const { platformData, tracer } = execContext;
     const { originalEvent, originalContext } = platformData;
 
@@ -53,8 +64,7 @@ export function startTrace(pluginContext: PluginContext, execContext: any, confi
 
     execContext.spanId = execContext.rootSpan.spanContext.spanId;
     execContext.rootSpan.startTime = execContext.startTimestamp;
-    execContext.triggerClassName = injectTriggerTags(
-        execContext.rootSpan, pluginContext, originalEvent, originalContext);
+    execContext.triggerClassName = injectTriggerTags(execContext.rootSpan, pluginContext, originalEvent, originalContext);
 
     execContext.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
     execContext.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
@@ -68,7 +78,13 @@ export function startTrace(pluginContext: PluginContext, execContext: any, confi
     execContext.rootSpan.tags['aws.lambda.invocation.request'] = getRequest(originalEvent, execContext.triggerClassName, config);
 }
 
-export function finishTrace(pluginContext: PluginContext, execContext: any, config: TraceConfig) {
+/**
+ * Finishes trace for AWS Lambda request
+ * @param {PluginContext} pluginContext the {@link PluginContext}
+ * @param {ExecutionContext} execContext the {@link ExecutionContext}
+ * @param {TraceConfig} config the {@link TraceConfig}
+ */
+export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext, config: TraceConfig) {
     let { response, error } = execContext;
     const { rootSpan, userError, triggerClassName, platformData, finishTimestamp } = execContext;
     const { originalEvent } = platformData;
@@ -103,9 +119,13 @@ export function finishTrace(pluginContext: PluginContext, execContext: any, conf
     rootSpan.finishTime = finishTimestamp;
 }
 
-export function startInvocation(pluginContext: PluginContext, execContext: any) {
-    const invocationData = Utils.initMonitoringData(pluginContext,
-        MonitoringDataType.INVOCATION) as InvocationData;
+/**
+ * Starts invocation for AWS Lambda request
+ * @param {PluginContext} pluginContext the {@link PluginContext}
+ * @param {ExecutionContext} execContext the {@link ExecutionContext}
+ */
+export function startInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
+    const invocationData = Utils.initMonitoringData(pluginContext, MonitoringDataType.INVOCATION) as InvocationData;
 
     invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM; // TODO: get from platform
     invocationData.applicationRegion = pluginContext.applicationInfo.applicationRegion;
@@ -129,7 +149,7 @@ export function startInvocation(pluginContext: PluginContext, execContext: any) 
     execContext.invocationData = invocationData;
 }
 
-function setInvocationTags(invocationData: any, pluginContext: any, execContext: any) {
+function setInvocationTags(invocationData: any, pluginContext: PluginContext, execContext: ExecutionContext) {
     const originalContext = LambdaContextProvider.getContext();
 
     invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;
@@ -159,7 +179,12 @@ function setInvocationTags(invocationData: any, pluginContext: any, execContext:
     }
 }
 
-export function finishInvocation(pluginContext: PluginContext, execContext: any) {
+/**
+ * Finishes invocation for AWS Lambda request
+ * @param {PluginContext} pluginContext the {@link PluginContext}
+ * @param {ExecutionContext} execContext the {@link ExecutionContext}
+ */
+export function finishInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
     let { error } = execContext;
     const { invocationData, userError } = execContext;
 
@@ -225,7 +250,7 @@ function processAPIGWResponse(response: any, originalEvent: any): void {
     }
 }
 
-function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent: any, originalContext: any): String {
+function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent: any, originalContext: any): string {
     try {
         const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
 
@@ -258,7 +283,7 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent:
         } else if (lambdaEventType === LambdaEventType.Zeit) {
             return LambdaEventUtils.injectTriggerTagsForZeit(span, originalEvent);
         } else if (lambdaEventType === LambdaEventType.Netlify) {
-            return LambdaEventUtils.injectTriggerTagsForNetlify(span, pluginContext, originalContext);
+            return LambdaEventUtils.injectTriggerTagsForNetlify(span, originalEvent);
         } else {
             return LambdaEventUtils.injectTriggerTagsForCommon(span, originalEvent, originalContext);
         }
@@ -267,7 +292,7 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent:
     }
 }
 
-function getRequest(originalEvent: any, triggerClassName: string, config: TraceConfig): any {
+function getRequest(originalEvent: any, triggerClassName: String, config: TraceConfig): any {
     // Masking and disableRequest should run first
     if (config && config.disableRequest) {
         return null;
