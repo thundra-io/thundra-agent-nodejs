@@ -16,12 +16,13 @@ const stringify = require('json-stringify-safe');
 
 const TRACE_DEF_SEPERATOR: string = '.';
 
-/*
-    Most of the code is derived from njsTrace : https://github.com/ValYouW/njsTrace
-*/
+/**
+ * Instruments specified/configured modules/method during load time
+ */
 class Instrumenter {
-    origCompile: any;
-    sourceCodeInstrumenter: ThundraSourceCodeInstrumenter;
+
+    private origCompile: any;
+    private sourceCodeInstrumenter: ThundraSourceCodeInstrumenter;
 
     constructor(traceConfig: TraceConfig) {
         const traceableConfigs = get(traceConfig, 'traceableConfigs');
@@ -30,10 +31,16 @@ class Instrumenter {
         this.sourceCodeInstrumenter = new ThundraSourceCodeInstrumenter(traceableConfigs, traceableConfigPrefix);
     }
 
+    /**
+     * Unhooks itself from module load cycle
+     */
     unhookModuleCompile() {
         Module.prototype._compile = this.origCompile;
     }
 
+    /**
+     * Hooks itself into module load cycle to instrument specified/configured modules/methods
+     */
     hookModuleCompile() {
         this.origCompile = Module.prototype._compile;
 
@@ -67,7 +74,7 @@ class Instrumenter {
         };
     }
 
-    setGlobalFunction() {
+    private setGlobalFunction() {
         global.__thundraTraceEntry__ = function (args: any) {
             const { tracer } = ExecutionContextManager.get();
             if (!tracer) {
@@ -219,6 +226,7 @@ class Instrumenter {
             }
         };
     }
+
 }
 
 export default Instrumenter;
