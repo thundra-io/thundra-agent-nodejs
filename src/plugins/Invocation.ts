@@ -1,5 +1,5 @@
 
-import Utils from './utils/Utils';
+import Utils from '../utils/Utils';
 import InvocationConfig from './config/InvocationConfig';
 import PluginContext from './PluginContext';
 import InvocationSupport from './support/InvocationSupport';

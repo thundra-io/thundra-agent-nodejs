@@ -8,7 +8,7 @@ import {
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
     AwsAthenaTags, AwsEventBridgeTags, AwsSESTags,
 } from '../../Constants';
-import Utils from '../utils/Utils';
+import Utils from '../../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';

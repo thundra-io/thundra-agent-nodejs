@@ -7,7 +7,7 @@ import TracePlugin from '../../plugins/Trace';
 import MetricPlugin from '../../plugins/Metric';
 import InvocationPlugin from '../../plugins/Invocation';
 import ConfigProvider from '../../config/ConfigProvider';
-import Utils from '../../plugins/utils/Utils';
+import Utils from '../../utils/Utils';
 import PluginContext from '../../plugins/PluginContext';
 import { EnvVariableKeys } from '../../Constants';
 import LogPlugin from '../../plugins/Log';

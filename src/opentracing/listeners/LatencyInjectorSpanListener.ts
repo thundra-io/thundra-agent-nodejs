@@ -1,6 +1,6 @@
 import ThundraSpanListener from './ThundraSpanListener';
 import ThundraSpan from '../Span';
-import Utils from '../../plugins/utils/Utils';
+import Utils from '../../utils/Utils';
 
 const get = require('lodash.get');
 

@@ -1,4 +1,4 @@
-import Utils from '../../plugins/utils/Utils';
+import Utils from '../../utils/Utils';
 import { EnvVariableKeys, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME } from '../../Constants';
 import { ApplicationInfoProvider } from '../../application/ApplicationInfoProvider';
 import { ApplicationInfo } from '../../application/ApplicationInfo';

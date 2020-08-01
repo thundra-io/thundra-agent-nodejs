@@ -6,7 +6,7 @@ import {
 } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
-import Utils from '../utils/Utils';
+import Utils from '../../utils/Utils';
 import ThundraChaosError from '../../error/ThundraChaosError';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 

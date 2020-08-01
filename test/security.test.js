@@ -1,6 +1,6 @@
 import ConfigProvider from '../dist/config/ConfigProvider';
 import ConfigNames from '../dist/config/ConfigNames';
-import Utils from '../dist/plugins/utils/Utils';
+import Utils from '../dist/utils/Utils';
 import { createMockContext } from './mocks/mocks';
 import { SecurityTags, ClassNames } from '../dist/Constants';
 import AWSCalls from './integration/utils/aws.integration.utils';

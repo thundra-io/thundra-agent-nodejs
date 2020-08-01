@@ -1,4 +1,4 @@
-import Utils from './utils/Utils';
+import Utils from '../utils/Utils';
 import TraceConfig from './config/TraceConfig';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraSpan from '../opentracing/Span';

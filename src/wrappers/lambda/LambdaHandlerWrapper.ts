@@ -11,7 +11,7 @@ import {
     BROKER_WSS_PROTOCOL,
     DEBUG_BRIDGE_FILE_NAME,
 } from '../../Constants';
-import Utils from '../../plugins/utils/Utils';
+import Utils from '../../utils/Utils';
 import {readFileSync} from 'fs';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
