@@ -16,7 +16,7 @@ class InvocationTraceSupport {
             }
 
             const resourcesMap: Map<string, Resource> = new Map<string, Resource>();
-            const spans = tracer.recorder.getSpanList().
+            const spans = tracer.getSpanList().
                             filter((span: ThundraSpan) => span.getTag(SpanTags.TOPOLOGY_VERTEX)).
                             filter((span: ThundraSpan) => span.spanContext.spanId !== rootSpanId);
 
@@ -118,7 +118,7 @@ class InvocationTraceSupport {
         }
 
         try {
-            const spans = tracer.recorder.getSpanList();
+            const spans = tracer.getSpanList();
             const traceLinks = flatten(
                 spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
                     .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),

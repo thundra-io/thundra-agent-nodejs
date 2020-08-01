@@ -137,7 +137,7 @@ function createExecContext(): ExecutionContext {
     const tracer = new ThundraTracer(tracerConfig);
     const transactionId = Utils.generateId();
 
-    tracer.transactionId = transactionId;
+    tracer.setTransactionId(transactionId);
 
     return new ExecutionContext({
         tracer,
