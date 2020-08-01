@@ -8,7 +8,7 @@ import * as opentracing from 'opentracing';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
 import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../../plugins/integrations/AWSIntegration';
 import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
-import Utils from '../../plugins/utils/Utils';
+import Utils from '../../utils/Utils';
 
 const get = require('lodash.get');
 

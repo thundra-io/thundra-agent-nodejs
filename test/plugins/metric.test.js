@@ -1,5 +1,5 @@
 import Metric from '../../dist/plugins/Metric';
-import Utils from '../../dist/plugins/utils/Utils';
+import Utils from '../../dist/utils/Utils';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';

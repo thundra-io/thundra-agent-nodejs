@@ -1,6 +1,6 @@
 import { Span } from 'opentracing';
 import ThundraSpanContext from './SpanContext';
-import Utils from '../plugins/utils/Utils';
+import Utils from '../utils/Utils';
 import ThundraTracer from './Tracer';
 import ThundraLogger from '../ThundraLogger';
 

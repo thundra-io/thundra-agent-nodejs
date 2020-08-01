@@ -5,7 +5,7 @@ import TestUtils from '../utils';
 
 import {ApplicationManager} from '../../dist/application/ApplicationManager';
 import {LambdaApplicationInfoProvider} from '../../dist/wrappers/lambda/LambdaApplicationInfoProvider';
-import Utils from '../../dist/plugins/utils/Utils';
+import Utils from '../../dist/utils/Utils';
 
 ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
 

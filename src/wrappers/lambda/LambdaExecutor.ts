@@ -2,7 +2,7 @@
  * Hooks into AWS Lambda invocation and executes it
  */
 
-import Utils from '../../plugins/utils/Utils';
+import Utils from '../../utils/Utils';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import { DomainNames, ClassNames, TriggerHeaderTags, LAMBDA_FUNCTION_PLATFORM, HttpTags } from '../../Constants';
 import ThundraTracer from '../../opentracing/Tracer';

@@ -3,7 +3,7 @@ import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
 import {COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint} from './Constants';
-import Utils from './plugins/utils/Utils';
+import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
 import BaseMonitoringData from './plugins/data/base/BaseMonitoringData';
 import MonitoringDataType from './plugins/data/base/MonitoringDataType';

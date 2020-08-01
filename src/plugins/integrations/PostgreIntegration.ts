@@ -3,7 +3,7 @@ import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes,
     SQLQueryOperationTypes, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
 } from '../../Constants';
-import Utils from '../utils/Utils';
+import Utils from '../../utils/Utils';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import ThundraChaosError from '../../error/ThundraChaosError';

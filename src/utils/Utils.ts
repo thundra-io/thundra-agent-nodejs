@@ -4,24 +4,24 @@ import {
     DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
     EnvVariableKeys,
     LISTENERS, AGENT_VERSION,
-} from '../../Constants';
-import ConfigProvider from '../../config/ConfigProvider';
-import ConfigNames from '../../config/ConfigNames';
-import ThundraSpanContext from '../../opentracing/SpanContext';
+} from '../Constants';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
+import ThundraSpanContext from '../opentracing/SpanContext';
 import Reference from 'opentracing/lib/reference';
 import * as opentracing from 'opentracing';
-import MonitorDataType from '../data/base/MonitoringDataType';
-import BaseMonitoringData from '../data/base/BaseMonitoringData';
-import MonitoringDataType from '../data/base/MonitoringDataType';
-import InvocationData from '../data/invocation/InvocationData';
-import MetricData from '../data/metric/MetricData';
-import SpanData from '../data/trace/SpanData';
-import LogData from '../data/log/LogData';
-import ThundraLogger from '../../ThundraLogger';
-import CompositeMonitoringData from '../data/composite/CompositeMonitoringData';
-import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
-import {ApplicationManager} from '../../application/ApplicationManager';
-import { ApplicationInfo } from '../../application/ApplicationInfo';
+import MonitorDataType from '../plugins/data/base/MonitoringDataType';
+import BaseMonitoringData from '../plugins/data/base/BaseMonitoringData';
+import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
+import InvocationData from '../plugins/data/invocation/InvocationData';
+import MetricData from '../plugins/data/metric/MetricData';
+import SpanData from '../plugins/data/trace/SpanData';
+import LogData from '../plugins/data/log/LogData';
+import ThundraLogger from '../ThundraLogger';
+import CompositeMonitoringData from '../plugins/data/composite/CompositeMonitoringData';
+import ModuleVersionValidator from '../plugins/integrations/ModuleVersionValidator';
+import {ApplicationManager} from '../application/ApplicationManager';
+import { ApplicationInfo } from '../application/ApplicationInfo';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');

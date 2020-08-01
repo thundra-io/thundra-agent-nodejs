@@ -4,7 +4,7 @@ import {
     HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, TriggerHeaderTags,
 } from '../../Constants';
-import Utils from '../utils/Utils';
+import Utils from '../../utils/Utils';
 import * as url from 'url';
 import ThundraLogger from '../../ThundraLogger';
 import HttpError from '../../error/HttpError';

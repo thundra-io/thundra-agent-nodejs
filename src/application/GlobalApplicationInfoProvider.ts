@@ -2,7 +2,7 @@ import { ApplicationInfoProvider } from './ApplicationInfoProvider';
 import { ApplicationInfo } from './ApplicationInfo';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
-import Utils from '../plugins/utils/Utils';
+import Utils from '../utils/Utils';
 
 /**
  * {@link ApplicationInfoProvider} implementation which provides {@link ApplicationInfo}

@@ -2,7 +2,7 @@ import Integration from './Integration';
 import ThundraSpan from '../../opentracing/Span';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
-import Utils from '../utils/Utils';
+import Utils from '../../utils/Utils';
 import {
     DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,

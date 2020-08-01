@@ -1,5 +1,5 @@
 import { DATA_MODEL_VERSION } from '../../dist/Constants';
-import Utils from '../../dist/plugins/utils/Utils';
+import Utils from '../../dist/utils/Utils';
 import ConfigProvider from '../../dist/config/ConfigProvider';
 import ConfigNames from '../../dist/config/ConfigNames';
 

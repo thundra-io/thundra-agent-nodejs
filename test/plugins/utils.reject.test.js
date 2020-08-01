@@ -1,4 +1,4 @@
-import Utils from '../../dist/plugins/utils/Utils';
+import Utils from '../../dist/utils/Utils';
 
 jest.mock('../../dist/Constants', () => ({
     PROC_STAT_PATH: 'does-not-exist',
