@@ -19,7 +19,7 @@ import SpanData from '../plugins/data/trace/SpanData';
 import LogData from '../plugins/data/log/LogData';
 import ThundraLogger from '../ThundraLogger';
 import CompositeMonitoringData from '../plugins/data/composite/CompositeMonitoringData';
-import ModuleVersionValidator from '../plugins/integrations/ModuleVersionValidator';
+import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
 import {ApplicationManager} from '../application/ApplicationManager';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 

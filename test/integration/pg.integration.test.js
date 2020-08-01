@@ -1,4 +1,4 @@
-import PostgreIntegration from '../../dist/plugins/integrations/PostgreIntegration';
+import PostgreIntegration from '../../dist/integrations/PostgreIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import PG from './utils/pg.integration.utils';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';

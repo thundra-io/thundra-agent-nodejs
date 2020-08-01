@@ -1,5 +1,5 @@
 import Integration from './Integration';
-import ThundraTracer from '../../opentracing/Tracer';
+import ThundraTracer from '../opentracing/Tracer';
 import {
     AwsSDKTags, AwsSQSTags, AwsSNSTags, SpanTags, AwsDynamoTags,
     AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
@@ -7,17 +7,17 @@ import {
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
     AwsAthenaTags, AwsEventBridgeTags, AwsSESTags,
-} from '../../Constants';
-import Utils from '../../utils/Utils';
+} from '../Constants';
+import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
-import ThundraLogger from '../../ThundraLogger';
-import ThundraSpan from '../../opentracing/Span';
+import ThundraLogger from '../ThundraLogger';
+import ThundraSpan from '../opentracing/Span';
 import * as opentracing from 'opentracing';
-import ThundraChaosError from '../../error/ThundraChaosError';
+import ThundraChaosError from '../error/ThundraChaosError';
 import AWSOperationTypesConfig from './AWSOperationTypes';
-import ConfigProvider from '../../config/ConfigProvider';
-import ConfigNames from '../../config/ConfigNames';
-import ExecutionContextManager from '../../context/ExecutionContextManager';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const md5 = require('md5');

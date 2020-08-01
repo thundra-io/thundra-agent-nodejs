@@ -1,4 +1,4 @@
-import HttpIntegration from '../../dist/plugins/integrations/HttpIntegration';
+import HttpIntegration from '../../dist/integrations/HttpIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import Http from './utils/http.integration.utils';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';

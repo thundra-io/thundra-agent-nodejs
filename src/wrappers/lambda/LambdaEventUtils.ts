@@ -6,7 +6,7 @@ import ThundraSpanContext from '../../opentracing/SpanContext';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
-import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../../plugins/integrations/AWSIntegration';
+import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../../integrations/AWSIntegration';
 import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
 import Utils from '../../utils/Utils';
 

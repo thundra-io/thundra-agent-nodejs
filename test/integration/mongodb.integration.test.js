@@ -1,4 +1,4 @@
-import MongoDBIntegration from '../../dist/plugins/integrations/MongoDBIntegration';
+import MongoDBIntegration from '../../dist/integrations/MongoDBIntegration';
 import MongoDB from './utils/mongodb.integration.utils';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';

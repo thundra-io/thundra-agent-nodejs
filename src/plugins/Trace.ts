@@ -7,7 +7,7 @@ import PluginContext from './PluginContext';
 import { INTEGRATIONS } from '../Constants';
 import * as opentracing from 'opentracing';
 import ThundraLogger from '../ThundraLogger';
-import Integration from './integrations/Integration';
+import Integration from '../integrations/Integration';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';

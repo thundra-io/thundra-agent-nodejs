@@ -11,7 +11,7 @@ import MySQLCalls from './integration/utils/mysql.integration.utils';
 import MongoCalls from './integration/utils/mongodb.integration.utils';
 import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
 import Recorder from '../dist/opentracing/Recorder';
-import { AWSIntegration } from '../dist/plugins/integrations/AWSIntegration';
+import { AWSIntegration } from '../dist/integrations/AWSIntegration';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
 
 import TestUtils from './utils.js';

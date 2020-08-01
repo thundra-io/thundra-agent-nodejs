@@ -3,14 +3,14 @@ import * as opentracing from 'opentracing';
 import {
     HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, TriggerHeaderTags,
-} from '../../Constants';
-import Utils from '../../utils/Utils';
+} from '../Constants';
+import Utils from '../utils/Utils';
 import * as url from 'url';
-import ThundraLogger from '../../ThundraLogger';
-import HttpError from '../../error/HttpError';
-import ThundraSpan from '../../opentracing/Span';
-import ThundraChaosError from '../../error/ThundraChaosError';
-import ExecutionContextManager from '../../context/ExecutionContextManager';
+import ThundraLogger from '../ThundraLogger';
+import HttpError from '../error/HttpError';
+import ThundraSpan from '../opentracing/Span';
+import ThundraChaosError from '../error/ThundraChaosError';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
