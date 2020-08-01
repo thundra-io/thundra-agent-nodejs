@@ -2,12 +2,12 @@ import Integration from './Integration';
 import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
-} from '../../Constants';
-import ThundraLogger from '../../ThundraLogger';
-import ThundraSpan from '../../opentracing/Span';
-import Utils from '../../utils/Utils';
-import ThundraChaosError from '../../error/ThundraChaosError';
-import ExecutionContextManager from '../../context/ExecutionContextManager';
+} from '../Constants';
+import ThundraLogger from '../ThundraLogger';
+import ThundraSpan from '../opentracing/Span';
+import Utils from '../utils/Utils';
+import ThundraChaosError from '../error/ThundraChaosError';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 
 const has = require('lodash.has');
 const shimmer = require('shimmer');

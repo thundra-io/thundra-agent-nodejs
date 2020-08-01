@@ -1,6 +1,6 @@
 import AWS from './utils/aws.integration.utils';
 import ThundraTracer from '../../dist/opentracing/Tracer';
-import { AWSIntegration } from '../../dist/plugins/integrations/AWSIntegration';
+import { AWSIntegration } from '../../dist/integrations/AWSIntegration';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 

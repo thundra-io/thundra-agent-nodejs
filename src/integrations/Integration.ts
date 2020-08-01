@@ -1,4 +1,4 @@
-import ThundraTracer from '../../opentracing/Tracer';
+import ThundraTracer from '../opentracing/Tracer';
 
 interface Integration {
     config: any;

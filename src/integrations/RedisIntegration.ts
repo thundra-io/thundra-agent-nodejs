@@ -2,13 +2,13 @@ import Integration from './Integration';
 import {
     SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames,
     ClassNames, DBTypes, DBTags, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-} from '../../Constants';
+} from '../Constants';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
-import ThundraLogger from '../../ThundraLogger';
-import ThundraSpan from '../../opentracing/Span';
-import Utils from '../../utils/Utils';
-import ThundraChaosError from '../../error/ThundraChaosError';
-import ExecutionContextManager from '../../context/ExecutionContextManager';
+import ThundraLogger from '../ThundraLogger';
+import ThundraSpan from '../opentracing/Span';
+import Utils from '../utils/Utils';
+import ThundraChaosError from '../error/ThundraChaosError';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');

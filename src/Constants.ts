@@ -2,15 +2,15 @@
  * Defines all global constants here
  */
 
-import HttpIntegration from './plugins/integrations/HttpIntegration';
-import PostgreIntegration from './plugins/integrations/PostgreIntegration';
-import MySQL2Integration from './plugins/integrations/MySQL2Integration';
-import MySQLIntegration from './plugins/integrations/MySQLIntegration';
-import RedisIntegration from './plugins/integrations/RedisIntegration';
-import MongoDBIntegration from './plugins/integrations/MongoDBIntegration';
-import IORedisIntegration from './plugins/integrations/IORedisIntegration';
-import {AWSIntegration} from './plugins/integrations/AWSIntegration';
-import ESIntegration from './plugins/integrations/ESIntegration';
+import HttpIntegration from './integrations/HttpIntegration';
+import PostgreIntegration from './integrations/PostgreIntegration';
+import MySQL2Integration from './integrations/MySQL2Integration';
+import MySQLIntegration from './integrations/MySQLIntegration';
+import RedisIntegration from './integrations/RedisIntegration';
+import MongoDBIntegration from './integrations/MongoDBIntegration';
+import IORedisIntegration from './integrations/IORedisIntegration';
+import {AWSIntegration} from './integrations/AWSIntegration';
+import ESIntegration from './integrations/ESIntegration';
 import FilteringSpanListener from './opentracing/listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './opentracing/listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './opentracing/listeners/LatencyInjectorSpanListener';
