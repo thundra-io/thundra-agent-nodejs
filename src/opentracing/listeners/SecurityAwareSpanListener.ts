@@ -6,7 +6,12 @@ import InvocationSupport from '../../plugins/support/InvocationSupport';
 
 const get = require('lodash.get');
 
+/**
+ * {@link ThundraSpanListener} implementation which detect security issues
+ * according to given configurations
+ */
 class SecurityAwareSpanListener implements ThundraSpanListener {
+
     private block: boolean;
     private whitelist: Operation[];
     private blacklist: Operation[];
@@ -25,10 +30,16 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanInitialized(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (!this.isExternalOperation(span)) {
             return false;
@@ -57,19 +68,25 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanFinished(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     failOnError(): boolean {
         return true;
     }
 
-    isExternalOperation(span: ThundraSpan): boolean {
+    private isExternalOperation(span: ThundraSpan): boolean {
         return span.getTag(SpanTags.TOPOLOGY_VERTEX) === true;
     }
 
-    handleSecurityIssue(span: ThundraSpan) {
+    private handleSecurityIssue(span: ThundraSpan) {
         if (this.block) {
             const error = new SecurityError('Operation was blocked due to security configuration');
             span.setErrorTag(error);
@@ -83,16 +100,20 @@ class SecurityAwareSpanListener implements ThundraSpanListener {
             InvocationSupport.setAgentTag(SecurityTags.VIOLATED, true);
         }
     }
+
 }
 
 class SecurityError extends ThundraChaosError {
+
     constructor(message: string) {
         super(message);
         this.name = 'SecurityError';
     }
+
 }
 
 class Operation {
+
     private className: string;
     private operationName: string;
     private tags: any;
@@ -132,6 +153,7 @@ class Operation {
 
         return matched;
     }
+
 }
 
 export default SecurityAwareSpanListener;
