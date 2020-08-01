@@ -4,7 +4,15 @@ import Utils from '../../plugins/utils/Utils';
 
 const get = require('lodash.get');
 
+/**
+ * {@link ThundraSpanListener} implementation which adds delay
+ * on start or finish of the span.
+ *
+ * This span listener implementation is generally useful for injecting errors
+ * while testing applications to create chaotic environment.
+ */
 class LatencyInjectorSpanListener implements ThundraSpanListener {
+
     private readonly DEFAULT_DELAY = 100;
     private readonly DEFAULT_INJECT_ON_FINISH: boolean = true;
     private readonly DEFAULT_RANDOMIZE_DELAY: boolean = false;
@@ -19,10 +27,16 @@ class LatencyInjectorSpanListener implements ThundraSpanListener {
         this.randomizeDelay = get(opt, 'randomizeDelay', this.DEFAULT_RANDOMIZE_DELAY);
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanInitialized(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
             if (callback && typeof callback === 'function' && !this.injectOnFinish) {
@@ -38,6 +52,9 @@ class LatencyInjectorSpanListener implements ThundraSpanListener {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanFinished(span: ThundraSpan, me?: any, callback?: () => any, args?: any[]): boolean {
         if (callback && typeof callback === 'function' && this.injectOnFinish) {
             const sleep = this.randomizeDelay ? Utils.getRandomInt(this.delay) : this.delay;
@@ -51,13 +68,13 @@ class LatencyInjectorSpanListener implements ThundraSpanListener {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     failOnError() {
         return false;
     }
 
-    invokesCallback(): boolean {
-        return true;
-    }
 }
 
 export default LatencyInjectorSpanListener;
