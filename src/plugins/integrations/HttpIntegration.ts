@@ -7,9 +7,9 @@ import {
 import Utils from '../utils/Utils';
 import * as url from 'url';
 import ThundraLogger from '../../ThundraLogger';
-import HttpError from '../error/HttpError';
+import HttpError from '../../error/HttpError';
 import ThundraSpan from '../../opentracing/Span';
-import ThundraChaosError from '../error/ThundraChaosError';
+import ThundraChaosError from '../../error/ThundraChaosError';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');

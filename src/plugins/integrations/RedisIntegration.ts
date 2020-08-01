@@ -7,7 +7,7 @@ import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import Utils from '../utils/Utils';
-import ThundraChaosError from '../error/ThundraChaosError';
+import ThundraChaosError from '../../error/ThundraChaosError';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
