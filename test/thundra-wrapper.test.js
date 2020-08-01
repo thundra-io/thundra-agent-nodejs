@@ -2,8 +2,8 @@ import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
 import ConfigProvider from '../dist/config/ConfigProvider';
 import ConfigNames from '../dist/config/ConfigNames';
 import { createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext, createMockPromise } from './mocks/mocks';
-import HttpError from '../dist/plugins/error/HttpError';
-import TimeoutError from '../dist/plugins/error/TimeoutError';
+import HttpError from '../dist/error/HttpError';
+import TimeoutError from '../dist/error/TimeoutError';
 import ExecutionContext from '../dist/context/ExecutionContext';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
 

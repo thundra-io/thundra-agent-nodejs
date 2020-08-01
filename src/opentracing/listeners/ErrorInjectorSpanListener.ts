@@ -1,6 +1,6 @@
 import ThundraSpanListener from './ThundraSpanListener';
 import ThundraSpan from '../Span';
-import ThundraChaosError from '../../plugins/error/ThundraChaosError';
+import ThundraChaosError from '../../error/ThundraChaosError';
 
 const get = require('lodash.get');
 

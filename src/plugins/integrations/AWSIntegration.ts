@@ -13,7 +13,7 @@ import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
 import * as opentracing from 'opentracing';
-import ThundraChaosError from '../error/ThundraChaosError';
+import ThundraChaosError from '../../error/ThundraChaosError';
 import AWSOperationTypesConfig from './AWSOperationTypes';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';

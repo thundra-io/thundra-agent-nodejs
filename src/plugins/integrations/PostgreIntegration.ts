@@ -6,7 +6,7 @@ import {
 import Utils from '../utils/Utils';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../../opentracing/Span';
-import ThundraChaosError from '../error/ThundraChaosError';
+import ThundraChaosError from '../../error/ThundraChaosError';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');

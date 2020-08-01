@@ -7,7 +7,7 @@ import {
     DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags,
     LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,
 } from '../../Constants';
-import ThundraChaosError from '../error/ThundraChaosError';
+import ThundraChaosError from '../../error/ThundraChaosError';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
