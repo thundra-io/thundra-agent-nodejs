@@ -2,7 +2,11 @@ import SpanFilterer from './SpanFilterer';
 import ThundraSpan from '../Span';
 import SpanFilter from './SpanFilter';
 
+/**
+ * Standard/default implementation of {@link SpanFilterer}
+ */
 class StandardSpanFilterer implements SpanFilterer {
+
     private spanFilters: SpanFilter[];
     private all: boolean;
 
@@ -11,6 +15,9 @@ class StandardSpanFilterer implements SpanFilterer {
         this.spanFilters = spanFilters ? spanFilters : [];
     }
 
+    /**
+     * @inheritDoc
+     */
     accept(span: ThundraSpan): boolean {
         if (!this.spanFilters || this.spanFilters.length === 0) {
             return true;
@@ -35,6 +42,7 @@ class StandardSpanFilterer implements SpanFilterer {
     clearFilters(): void {
         this.spanFilters = [];
     }
+
 }
 
 export default StandardSpanFilterer;
