@@ -32,22 +32,22 @@ class Instrumenter {
     }
 
     /**
-     * Unhooks itself from module load cycle
-     */
-    unhookModuleCompile() {
-        Module.prototype._compile = this.origCompile;
-    }
-
-    /**
      * Hooks itself into module load cycle to instrument specified/configured modules/methods
      */
     hookModuleCompile() {
-        this.origCompile = Module.prototype._compile;
+        const compile = Module.prototype._compile;
+
+        if (compile._thundra) {
+            // If already hooked into compile phase, don't hook again
+            return;
+        }
+
+        this.origCompile = compile;
 
         const self = this;
         self.setGlobalFunction();
 
-        Module.prototype._compile = function (content: any, filename: any) {
+        const thundraCompile = function (content: any, filename: any) {
             const relPath = path.relative(process.cwd(), filename);
             let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPERATOR);
             relPathWithDots = relPathWithDots.replace('.js', '');
@@ -72,6 +72,23 @@ class Instrumenter {
             }
             self.origCompile.call(this, content, filename);
         };
+        Object.defineProperty(thundraCompile, '_thundra', {
+            value: true,
+            writable: false,
+        });
+        Module.prototype._compile = thundraCompile;
+    }
+
+    /**
+     * Unhooks itself from module load cycle
+     */
+    unhookModuleCompile() {
+        // `origCompile` is set only if it is already wrapped by Thundra compiler.
+        // If it is not set, this means that Thundra is not hooked,
+        // so there is nothing to do for unhook
+        if (this.origCompile) {
+            Module.prototype._compile = this.origCompile;
+        }
     }
 
     private setGlobalFunction() {
