@@ -10,7 +10,12 @@ import StandardSpanFilterer from './StandardSpanFilterer';
 
 const get = require('lodash.get');
 
+/**
+ * {@link ThundraSpanListener} implementation which filters span to notify
+ * according to given {@link SpanFilter}s
+ */
 class FilteringSpanListener implements ThundraSpanListener {
+
     private listener: ThundraSpanListener;
     private spanFilterer: SpanFilterer;
     private all: boolean;
@@ -30,10 +35,16 @@ class FilteringSpanListener implements ThundraSpanListener {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanStarted(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanInitialized(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (this.spanFilterer && this.spanFilterer.accept(span)) {
             return this.listener.onSpanInitialized(span, me, callback, args, callbackAlreadyCalled);
@@ -42,6 +53,9 @@ class FilteringSpanListener implements ThundraSpanListener {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanFinished(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (this.spanFilterer && this.spanFilterer.accept(span)) {
             return this.listener.onSpanFinished(span, me, callback, args, callbackAlreadyCalled);
@@ -50,6 +64,9 @@ class FilteringSpanListener implements ThundraSpanListener {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     failOnError(): boolean {
         return this.listener.failOnError();
     }
@@ -83,6 +100,7 @@ class FilteringSpanListener implements ThundraSpanListener {
 
         return spanFilters;
     }
+
 }
 
 export default FilteringSpanListener;
