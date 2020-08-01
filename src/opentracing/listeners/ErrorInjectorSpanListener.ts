@@ -4,7 +4,15 @@ import ThundraChaosError from '../../plugins/error/ThundraChaosError';
 
 const get = require('lodash.get');
 
+/**
+ * {@link ThundraSpanListener} implementation which throws specified/given error
+ * on start or finish of the span.
+ *
+ * This span listener implementation is generally useful for injecting errors
+ * while testing applications to create chaotic environment.
+ */
 class ErrorInjectorSpanListener implements ThundraSpanListener {
+
     private readonly DEFAULT_ERROR_MESSAGE: string = 'Error injected by Thundra!';
     private readonly DEFAULT_INJECT_COUNT_FREQ: number = 1;
     private readonly DEFAULT_INJECT_ON_FINISH: boolean = false;
@@ -24,10 +32,16 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
         this.counter = 0;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanStarted(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanInitialized(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callback && !this.injectOnFinish) {
             if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
@@ -44,6 +58,9 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanFinished(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callback && this.injectOnFinish) {
             if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
@@ -60,6 +77,9 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     failOnError() {
         return true;
     }
@@ -88,6 +108,7 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
 
         this.counter++;
     }
+
 }
 
 export default ErrorInjectorSpanListener;
