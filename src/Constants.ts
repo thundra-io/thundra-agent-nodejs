@@ -201,6 +201,7 @@ export const LineByLineTags = {
     SOURCE: 'method.source',
     START_LINE: 'method.startLine',
     NEXT_SPAN_IDS: 'nextSpanIds',
+    LINES_OVERFLOW: 'method.linesOverflow',
 };
 
 export const MongoDBCommandTypes = {

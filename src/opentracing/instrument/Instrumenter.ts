@@ -15,6 +15,7 @@ const get = require('lodash.get');
 const stringify = require('json-stringify-safe');
 
 const TRACE_DEF_SEPERATOR: string = '.';
+const MAX_LINES: number = 100;
 
 /**
  * Instruments specified/configured modules/method during load time
@@ -200,12 +201,16 @@ class Instrumenter {
                     error,
                 };
 
-                let currentLines = methodSpan.getTag(LineByLineTags.LINES);
+                let currentLines: any[] = methodSpan.getTag(LineByLineTags.LINES);
                 if (!currentLines) {
                     currentLines = [];
+                    methodSpan.setTag(LineByLineTags.LINES, currentLines);
                 }
-
-                methodSpan.setTag(LineByLineTags.LINES, [...currentLines, methodLineTag]);
+                if (currentLines.length < MAX_LINES) {
+                    currentLines.push(methodLineTag);
+                } else if (currentLines.length === MAX_LINES) {
+                    methodSpan.setTag(LineByLineTags.LINES_OVERFLOW, true);
+                }
             } catch (ex) {
                 // Ignore
             }
