@@ -3,7 +3,12 @@ import ThundraSpan from '../Span';
 
 const get = require('lodash.get');
 
+/**
+ * {@link ThundraSpanListener} implementation which injects given tags
+ * on start or finish of the span
+ */
 class TagInjectorSpanListener implements ThundraSpanListener {
+
     private tags: any;
 
     constructor(config: any = {}) {
@@ -18,10 +23,16 @@ class TagInjectorSpanListener implements ThundraSpanListener {
         return this.tags;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanStarted(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanInitialized(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         const existingTags = get(span, 'tags', {});
         const newTags = {...existingTags, ...this.tags};
@@ -31,13 +42,20 @@ class TagInjectorSpanListener implements ThundraSpanListener {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     onSpanFinished(span: ThundraSpan, me: any, callback: () => any, args: any[], callbackAlreadyCalled?: boolean): boolean {
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     failOnError() {
         return false;
     }
+
 }
 
 export default TagInjectorSpanListener;
