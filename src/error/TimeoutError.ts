@@ -1,4 +1,8 @@
+/**
+ * Represents timeout errors (for ex. AWS Lambda invocation timeout)
+ */
 class TimeoutError extends Error {
+
     constructor(message: string) {
         super();
         this.message = message;
@@ -6,6 +10,7 @@ class TimeoutError extends Error {
         Error.captureStackTrace(this, TimeoutError);
         Object.setPrototypeOf(this, TimeoutError.prototype);
     }
+
 }
 
 export default TimeoutError;
