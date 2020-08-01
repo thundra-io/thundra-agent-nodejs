@@ -1,7 +1,11 @@
 import ThundraSpan from '../Span';
 import SpanFilter from './SpanFilter';
 
+/**
+ * Standard/default implementation of {@link SpanFilter}
+ */
 class StandardSpanFilter implements SpanFilter {
+
     private $domainName: string;
     private $className: string;
     private $operationName: string;
@@ -64,6 +68,9 @@ class StandardSpanFilter implements SpanFilter {
         this.$tags[key] = value;
     }
 
+    /**
+     * @inheritDoc
+     */
     accept(span: ThundraSpan): boolean {
         let accepted = true;
 
