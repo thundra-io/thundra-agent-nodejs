@@ -8,12 +8,13 @@ import { ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Cons
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
+import Utils from '../../utils/Utils';
 
 const Module = require('module');
 const path = require('path');
 const get = require('lodash.get');
-const stringify = require('json-stringify-safe');
 const sizeof = require('object-sizeof');
+const copy = require('fast-copy');
 
 const TRACE_DEF_SEPARATOR: string = '.';
 const MAX_LINES: number = 100;
@@ -120,30 +121,45 @@ class Instrumenter {
         if (!this.checkValueSize(value)) {
             return '<skipped: value too big>';
         }
-        let valueJson: string = null;
         try {
-            valueJson = stringify(value);
-            if (valueJson && valueJson.length > MAX_VAR_VALUE_SIZE) {
-                return '<skipped: value too big>';
-            }
-            return JSON.parse(valueJson);
+            // Create deep copy to take snapshot of the value.
+            // So later modifications on the real value/object
+            // will not be reflected to the taken snapshot here.
+            return copy(value);
         } catch (e1) {
-            if (ThundraLogger.isDebugEnabled()) {
-                ThundraLogger.debug('Unable to clone value');
-                ThundraLogger.debug(e1);
-            }
-            if (valueJson) {
-                return valueJson;
+            ThundraLogger.debug('Unable to clone value');
+            ThundraLogger.debug(e1);
+            try {
+                const valueJson = Utils.serializeJSON(value);
+                if (valueJson) {
+                    if (valueJson.length <= MAX_VAR_VALUE_SIZE) {
+                        return valueJson;
+                    } else {
+                        ThundraLogger.debug('Unable to serialize value to JSON as it is too big');
+                    }
+                } else {
+                    ThundraLogger.debug('Unable to serialize value to JSON as no JSON could produced');
+                }
+            } catch (e2) {
+                ThundraLogger.debug('Unable to serialize value to JSON');
+                ThundraLogger.debug(e2);
             }
             try {
-                return value.toString();
-            } catch (e2) {
-                if (ThundraLogger.isDebugEnabled()) {
-                    ThundraLogger.debug('Unable to call "toString()" of value');
-                    ThundraLogger.debug(e2);
+                const valueStr = value.toString();
+                if (valueStr) {
+                    if (valueStr.length <= MAX_VAR_VALUE_SIZE) {
+                        return valueStr;
+                    } else {
+                        ThundraLogger.debug('Unable to use "toString()" of value as it is too big');
+                    }
+                } else {
+                    ThundraLogger.debug('Unable to use "toString()" of value as no string could be produced');
                 }
-                return '<unable to serialize value>';
+            } catch (e3) {
+                ThundraLogger.debug('Unable to use "toString()" of value');
+                ThundraLogger.debug(e3);
             }
+            return '<unable to serialize value>';
         }
     }
 

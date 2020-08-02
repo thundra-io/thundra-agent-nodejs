@@ -171,9 +171,9 @@ class Reporter {
                     if (response.statusCode !== 200) {
                         // First, check whether or debug is enabled.
                         // If not no need to convert reports into JSON string to pass to "debug" function
-                        // because "JSON.stringify" is not cheap operation.
+                        // because serialization is not cheap operation.
                         if (ThundraLogger.isDebugEnabled()) {
-                            ThundraLogger.debug(JSON.stringify(batch));
+                            ThundraLogger.debug(Utils.serializeJSON(batch));
                         }
                         return reject({
                             status: response.statusCode,
@@ -195,7 +195,7 @@ class Reporter {
                 return reject(error);
             });
             try {
-                request.write(JSON.stringify(batch));
+                request.write(Utils.serializeJSON(batch));
                 request.end();
             } catch (error) {
                 ThundraLogger.error('Cannot serialize report data. ' + error);
@@ -206,7 +206,8 @@ class Reporter {
     private writeBatchToCW(batch: any[]): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                const jsonStringReport = '\n' + JSON.stringify(batch).replace(/\r?\n|\r/g, '') + '\n';
+                const json = Utils.serializeJSON(batch);
+                const jsonStringReport = '\n' + json.replace(/\r?\n|\r/g, '') + '\n';
                 process.stdout.write(jsonStringReport);
                 return resolve();
             } catch (error) {

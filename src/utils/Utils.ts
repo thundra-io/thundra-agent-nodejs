@@ -568,6 +568,23 @@ class Utils {
         return newAppInfo;
     }
 
+    static serializeJSON(data: any): string {
+        return JSON.stringify(data, Utils.getCircularReplacer());
+    }
+
+    private static getCircularReplacer(): (key: string, value: any) => any {
+        const seen: WeakSet<any> = new WeakSet<any>();
+        return (key: string, value: any) => {
+            if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) {
+                    return;
+                }
+                seen.add(value);
+            }
+            return value;
+        };
+    }
+
 }
 
 export default Utils;
