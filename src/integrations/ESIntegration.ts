@@ -15,9 +15,14 @@ const shimmer = require('shimmer');
 const MODULE_NAME = 'elasticsearch';
 const MODULE_VERSION = '>=10.5';
 
+/**
+ * {@link Integration} implementation for Elasticsearch integration
+ * through {@code elasticsearch} library
+ */
 class ESIntegration implements Integration {
+
     config: any;
-    instrumentContext: any;
+    private instrumentContext: any;
 
     constructor(config: any) {
         this.config = config || {};
@@ -32,7 +37,7 @@ class ESIntegration implements Integration {
             this.config);
     }
 
-    static hostSelect(me: any): Promise<any> {
+    private static hostSelect(me: any): Promise<any> {
         const defaultHost = {
             host: 'unknown',
             port: 0,
@@ -52,19 +57,9 @@ class ESIntegration implements Integration {
         });
     }
 
-    getNormalizedPath(path: string): string {
-        try {
-            const depth = this.config.esPathDepth;
-            if (depth <= 0) {
-                return '';
-            }
-            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
-            return normalizedPath;
-        } catch (error) {
-            return path;
-        }
-    }
-
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any, config: any) {
         const integration = this;
 
@@ -164,15 +159,36 @@ class ESIntegration implements Integration {
         }
     }
 
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
     doUnwrap(lib: any) {
         shimmer.unwrap(lib.Transport.prototype, 'request');
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap() {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
     }
+
+    private getNormalizedPath(path: string): string {
+        try {
+            const depth = this.config.esPathDepth;
+            if (depth <= 0) {
+                return '';
+            }
+            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
+            return normalizedPath;
+        } catch (error) {
+            return path;
+        }
+    }
+
 }
 
 export default ESIntegration;
