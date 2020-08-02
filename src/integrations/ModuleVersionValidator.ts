@@ -1,13 +1,23 @@
 const semver = require('semver');
 import * as fs from 'fs';
 
+/**
+ * Checks and validates module versions
+ */
 class ModuleVersionValidator {
-    moduleMap: Map<string, string>;
+
+    private moduleMap: Map<string, string>;
 
     constructor() {
         this.moduleMap = new Map<string, string>();
     }
 
+    /**
+     * Checks whether given module version is in valid ranges
+     * @param basedir module base directory
+     * @param versions valid version expression
+     * @return {boolean} {@code true} if module version is valid, {@code false} otherwise
+     */
     validateModuleVersion(basedir: string, versions: string): boolean {
         try {
             if (basedir) {
@@ -25,6 +35,7 @@ class ModuleVersionValidator {
             return false;
         }
     }
+
 }
 
 export default ModuleVersionValidator;
