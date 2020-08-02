@@ -28,12 +28,17 @@ const get = require('lodash.get');
 const MODULE_NAME = 'aws-sdk';
 const MODULE_VERSION = '2.x';
 
+/**
+ * {@link Integration} implementation for AWS integration
+ * through {@code aws-sdk} library
+ */
 export class AWSIntegration implements Integration {
-    static AWSOperationTypes: any = undefined;
+
+    private static AWSOperationTypes: any = undefined;
 
     config: any;
-    wrappedFuncs: any;
-    instrumentContext: any;
+    private wrappedFuncs: any;
+    private instrumentContext: any;
 
     constructor(config: any) {
         this.wrappedFuncs = {};
@@ -84,7 +89,7 @@ export class AWSIntegration implements Integration {
         return '';
     }
 
-    static parseAWSOperationTypes() {
+    private static parseAWSOperationTypes() {
         if (AWSIntegration.AWSOperationTypes) {
             return;
         }
@@ -103,7 +108,7 @@ export class AWSIntegration implements Integration {
         }
     }
 
-    static serviceFactory(serviceName: string): any {
+    private static serviceFactory(serviceName: string): any {
         switch (serviceName) {
             case 'sqs':
                 return AWSSQSIntegration;
@@ -130,14 +135,14 @@ export class AWSIntegration implements Integration {
         }
     }
 
-    static getServiceFromReq(request: any): any {
+    private static getServiceFromReq(request: any): any {
         const serviceEndpoint = get(request, 'service.config.endpoint', '');
         const serviceName = Utils.getServiceName(serviceEndpoint as string);
 
         return AWSIntegration.serviceFactory(serviceName);
     }
 
-    static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
+    private static injectTraceLink(span: ThundraSpan, req: any, config: any): void {
         try {
             if (span.getTag(SpanTags.TRACE_LINKS) || !req) {
                 return;
@@ -154,18 +159,21 @@ export class AWSIntegration implements Integration {
         }
     }
 
-    static createSpan(tracer: any, request: any, config: any): ThundraSpan {
+    private static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const service = AWSIntegration.getServiceFromReq(request);
 
         return service.createSpan(tracer, request, config);
     }
 
-    static processResponse(span: ThundraSpan, request: any, config: any): void {
+    private static processResponse(span: ThundraSpan, request: any, config: any): void {
         const service = AWSIntegration.getServiceFromReq(request);
 
         service.processResponse(span, request, config);
     }
 
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any, config: any) {
         AWSIntegration.parseAWSOperationTypes();
 
@@ -265,10 +273,10 @@ export class AWSIntegration implements Integration {
         }
     }
 
-    getOriginalFunction(wrappedFunctionName: string) {
-        return get(this, `wrappedFuncs.${wrappedFunctionName}`);
-    }
-
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
     doUnwrap(lib: any) {
         if (has(lib, 'Request.prototype.send') && has(lib, 'Request.prototype.promise')) {
             shimmer.unwrap(lib.Request.prototype, 'send');
@@ -276,15 +284,57 @@ export class AWSIntegration implements Integration {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap() {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
     }
 
+    private getOriginalFunction(wrappedFunctionName: string) {
+        return get(this, `wrappedFuncs.${wrappedFunctionName}`);
+    }
+
+}
+
+export class AWSServiceIntegration {
+
+    public static createSpan(tracer: any, request: any, config: any) {
+        const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
+        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.AWSSERVICE);
+        const serviceEndpoint = request.service.config.endpoint;
+        const serviceName = Utils.getServiceName(serviceEndpoint as string);
+
+        const parentSpan = tracer.getActiveSpan();
+        const activeSpan = tracer._startSpan(AWS_SERVICE_REQUEST, {
+            childOf: parentSpan,
+            domainName: DomainNames.AWS,
+            className: ClassNames.AWSSERVICE,
+            disableActiveStart: true,
+            tags: {
+                [SpanTags.OPERATION_TYPE]: operationType,
+                [AwsSDKTags.SERVICE_NAME]: serviceName,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
+            },
+        });
+
+        return activeSpan;
+    }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        return [];
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        return;
+    }
+
 }
 
 export class AWSAthenaIntegration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const dbName: string = get(request, 'params.Database',
@@ -369,9 +419,11 @@ export class AWSAthenaIntegration {
             span.setTag(AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS, [response.data.NamedQueryId]);
         }
     }
+
 }
 
 export class AWSLambdaIntegration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.LAMBDA);
@@ -438,7 +490,7 @@ export class AWSLambdaIntegration {
         return traceLinks;
     }
 
-    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+    public  static processResponse(span: ThundraSpan, request: any, config: any): void {
         return;
     }
 
@@ -447,9 +499,11 @@ export class AWSLambdaIntegration {
         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, custom);
         return custom;
     }
+
 }
 
 export class AWSSNSIntegration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SNS);
@@ -534,9 +588,11 @@ export class AWSSNSIntegration {
     public static processResponse(span: ThundraSpan, request: any, config: any): void {
         return;
     }
+
 }
 
 export class AWSSQSIntegration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SQS);
@@ -617,9 +673,11 @@ export class AWSSQSIntegration {
     public static processResponse(span: ThundraSpan, request: any, config: any): void {
         return;
     }
+
 }
 
 export class AWSFirehoseIntegration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.FIREHOSE);
@@ -700,9 +758,11 @@ export class AWSFirehoseIntegration {
         }
         return [];
     }
+
 }
 
 export class AWSKinesisIntegration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.KINESIS);
@@ -763,9 +823,11 @@ export class AWSKinesisIntegration {
     public static processResponse(span: ThundraSpan, request: any, config: any): void {
         return;
     }
+
 }
 
 export class AWSDynamoDBIntegration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const tableName = Utils.getDynamoDBTableName(request);
@@ -908,9 +970,11 @@ export class AWSDynamoDBIntegration {
     private static injectDynamoDBTraceLinkOnDelete(requestParams: any): void {
         requestParams.ReturnValues = 'ALL_OLD';
     }
+
 }
 
 export class AWSS3Integration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.S3);
@@ -953,12 +1017,14 @@ export class AWSS3Integration {
         return traceLinks;
     }
 
-    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+    static processResponse(span: ThundraSpan, request: any, config: any): void {
         return;
     }
+
 }
 
 export class AWSEventBridgeIntegration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.EVENTBRIDGE);
@@ -1023,41 +1089,11 @@ export class AWSEventBridgeIntegration {
     public static processResponse(span: ThundraSpan, request: any, config: any): void {
         return;
     }
-}
 
-export class AWSServiceIntegration {
-    public static createSpan(tracer: any, request: any, config: any) {
-        const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
-        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.AWSSERVICE);
-        const serviceEndpoint = request.service.config.endpoint;
-        const serviceName = Utils.getServiceName(serviceEndpoint as string);
-
-        const parentSpan = tracer.getActiveSpan();
-        const activeSpan = tracer._startSpan(AWS_SERVICE_REQUEST, {
-            childOf: parentSpan,
-            domainName: DomainNames.AWS,
-            className: ClassNames.AWSSERVICE,
-            disableActiveStart: true,
-            tags: {
-                [SpanTags.OPERATION_TYPE]: operationType,
-                [AwsSDKTags.SERVICE_NAME]: serviceName,
-                [AwsSDKTags.REQUEST_NAME]: operationName,
-            },
-        });
-
-        return activeSpan;
-    }
-
-    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
-        return [];
-    }
-
-    public static processResponse(span: ThundraSpan, request: any, config: any): void {
-        return;
-    }
 }
 
 export class AWSSESIntegration {
+
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SES);
@@ -1112,4 +1148,5 @@ export class AWSSESIntegration {
     public static processResponse(span: ThundraSpan, request: any, config: any): void {
         return;
     }
+
 }
