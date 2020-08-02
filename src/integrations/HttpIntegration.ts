@@ -16,14 +16,20 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const semver = require('semver');
 
-const thundraEndpointPattern = /^api[-\w]*\.thundra\.io$/;
+const thundraCollectorEndpointPattern1 = /^api[-\w]*\.thundra\.io$/;
+const thundraCollectorEndpointPattern2 = /^([\w-]+\.)?collector\.thundra\.io$/;
 
 const MODULE_NAME_HTTP = 'http';
 const MODULE_NAME_HTTPS = 'https';
 
+/**
+ * {@link Integration} implementation for HTTP integration
+ * through {@code http} and {@code https} modules
+ */
 class HttpIntegration implements Integration {
+
     config: any;
-    instrumentContext: any;
+    private instrumentContext: any;
 
     constructor(config: any) {
         this.config = config || {};
@@ -44,7 +50,8 @@ class HttpIntegration implements Integration {
             return true;
         }
 
-        if (thundraEndpointPattern.test(host) ||
+        if (thundraCollectorEndpointPattern1.test(host) ||
+            thundraCollectorEndpointPattern2.test(host) ||
             host === 'serverless.com' ||
             host.indexOf('amazonaws.com') !== -1) {
             return false;
@@ -53,19 +60,9 @@ class HttpIntegration implements Integration {
         return true;
     }
 
-    getNormalizedPath(path: string): string {
-        try {
-            const depth = this.config.httpPathDepth;
-            if (depth <= 0) {
-                return '';
-            }
-            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
-            return normalizedPath;
-        } catch (error) {
-            return path;
-        }
-    }
-
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any, config: any, moduleName: string): void {
         const nodeVersion = process.version;
         const plugin = this;
@@ -217,6 +214,10 @@ class HttpIntegration implements Integration {
         }
     }
 
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
     doUnwrap(lib: any, moduleName: string) {
         const nodeVersion = process.version;
 
@@ -237,11 +238,28 @@ class HttpIntegration implements Integration {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap(): void {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
     }
+
+    private getNormalizedPath(path: string): string {
+        try {
+            const depth = this.config.httpPathDepth;
+            if (depth <= 0) {
+                return '';
+            }
+            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
+            return normalizedPath;
+        } catch (error) {
+            return path;
+        }
+    }
+
 }
 
 export default HttpIntegration;
