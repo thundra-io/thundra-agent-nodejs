@@ -18,7 +18,7 @@ const copy = require('fast-copy');
 
 const TRACE_DEF_SEPARATOR: string = '.';
 const MAX_LINES: number = 100;
-const MAX_VAR_VALUE_SIZE: number = 1024; // 1KB
+const MAX_VAR_VALUE_SIZE: number = 8192; // 8KB
 
 /**
  * Instruments specified/configured modules/method during load time
