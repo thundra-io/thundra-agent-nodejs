@@ -13,9 +13,11 @@ const Module = require('module');
 const path = require('path');
 const get = require('lodash.get');
 const stringify = require('json-stringify-safe');
+const sizeof = require('object-sizeof');
 
 const TRACE_DEF_SEPARATOR: string = '.';
 const MAX_LINES: number = 100;
+const MAX_VAR_VALUE_SIZE: number = 1024; // 1KB
 
 /**
  * Instruments specified/configured modules/method during load time
@@ -92,6 +94,17 @@ class Instrumenter {
         }
     }
 
+    private checkValueSize(value: any): boolean {
+        try {
+            const valueSize = sizeof(value);
+            return valueSize <= MAX_VAR_VALUE_SIZE;
+        } catch (e) {
+            ThundraLogger.debug('Unable to check value size');
+            ThundraLogger.debug(e);
+            return true;
+        }
+    }
+
     private packValue(value: any) {
         // `==` is used on purpose (instead of `===`) as it covers both undefined and null values
         if (value == null) {
@@ -104,9 +117,15 @@ class Instrumenter {
         if (value instanceof Map || value instanceof Set) {
             value = [...value];
         }
-        let valueJson = null;
+        if (!this.checkValueSize(value)) {
+            return '<skipped: value too big>';
+        }
+        let valueJson: string = null;
         try {
             valueJson = stringify(value);
+            if (valueJson && valueJson.length > MAX_VAR_VALUE_SIZE) {
+                return '<skipped: value too big>';
+            }
             return JSON.parse(valueJson);
         } catch (e1) {
             if (ThundraLogger.isDebugEnabled()) {
