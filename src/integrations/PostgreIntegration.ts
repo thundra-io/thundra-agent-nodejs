@@ -15,9 +15,14 @@ const has = require('lodash.has');
 const MODULE_NAME = 'pg';
 const MODULE_VERSION = '6.x || 7.x || 8.x';
 
+/**
+ * {@link Integration} implementation for Postgre integration
+ * through {@code pg} library
+ */
 class PostgreIntegration implements Integration {
+
     config: any;
-    instrumentContext: any;
+    private instrumentContext: any;
 
     constructor(config: any) {
         this.config = config || {};
@@ -32,29 +37,9 @@ class PostgreIntegration implements Integration {
             this.config);
     }
 
-    getStatement(args: any[]) {
-        let text;
-        let values;
-
-        if (typeof args[0] === 'string') {
-            text = args[0];
-        } else if (typeof args[0] === 'object') {
-            text = args[0].text;
-        }
-
-        if (args[1] instanceof Array) {
-            values = args[1];
-        } else if (typeof args[0] === 'object') {
-            values = args[0].values;
-        }
-
-        if (values) {
-            text = Utils.replaceArgs(text, values);
-        }
-
-        return text;
-    }
-
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any, config: any) {
         const integration = this;
         function wrapper(query: any) {
@@ -162,15 +147,46 @@ class PostgreIntegration implements Integration {
         }
     }
 
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
     doUnwrap(lib: any) {
         shimmer.unwrap(lib.Client.prototype, 'query');
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap() {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
     }
+
+    private getStatement(args: any[]) {
+        let text;
+        let values;
+
+        if (typeof args[0] === 'string') {
+            text = args[0];
+        } else if (typeof args[0] === 'object') {
+            text = args[0].text;
+        }
+
+        if (args[1] instanceof Array) {
+            values = args[1];
+        } else if (typeof args[0] === 'object') {
+            values = args[0].values;
+        }
+
+        if (values) {
+            text = Utils.replaceArgs(text, values);
+        }
+
+        return text;
+    }
+
 }
 
 export default PostgreIntegration;
