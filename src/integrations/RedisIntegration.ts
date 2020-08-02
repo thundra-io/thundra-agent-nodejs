@@ -16,9 +16,14 @@ const has = require('lodash.has');
 const MODULE_NAME = 'redis';
 const MODULE_VERSION = '>=2.6';
 
+/**
+ * {@link Integration} implementation for Redis integration
+ * through {@code redis} library
+ */
 class RedisIntegration implements Integration {
+
     config: any;
-    instrumentContext: any;
+    private instrumentContext: any;
 
     constructor(config: any) {
         this.config = config || {};
@@ -33,6 +38,9 @@ class RedisIntegration implements Integration {
             this.config);
     }
 
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any, config: any) {
         const integration = this;
         function wrapper(internalSendCommand: any) {
@@ -121,15 +129,23 @@ class RedisIntegration implements Integration {
         }
     }
 
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
     doUnwrap(lib: any) {
         shimmer.unwrap(lib.RedisClient.prototype, 'internal_send_command');
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap() {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
     }
+
 }
 
 export default RedisIntegration;
