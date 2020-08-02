@@ -16,7 +16,7 @@ const userHandler = thundra.loadUserHandler();
 const wrappedUserHandler = lambdaWrapper(userHandler);
 
 /**
- *
+ * Wraps the user handler with Thundra handler
  * @param event the AWS Lambda invocation the event
  * @param context the AWS Lambda invocation context
  * @param callback the AWS Lambda invocation callback
