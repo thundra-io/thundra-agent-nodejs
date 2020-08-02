@@ -14,7 +14,7 @@ const path = require('path');
 const get = require('lodash.get');
 const stringify = require('json-stringify-safe');
 
-const TRACE_DEF_SEPERATOR: string = '.';
+const TRACE_DEF_SEPARATOR: string = '.';
 const MAX_LINES: number = 100;
 
 /**
@@ -50,7 +50,7 @@ class Instrumenter {
 
         const thundraCompile = function (content: any, filename: any) {
             const relPath = path.relative(process.cwd(), filename);
-            let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPERATOR);
+            let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPARATOR);
             relPathWithDots = relPathWithDots.replace('.js', '');
 
             const sci = self.sourceCodeInstrumenter;
@@ -92,7 +92,44 @@ class Instrumenter {
         }
     }
 
+    private packValue(value: any) {
+        // `==` is used on purpose (instead of `===`) as it covers both undefined and null values
+        if (value == null) {
+            return null;
+        }
+        const valueType = typeof value;
+        if (valueType === 'function') {
+            return value.toString();
+        }
+        if (value instanceof Map || value instanceof Set) {
+            value = [...value];
+        }
+        let valueJson = null;
+        try {
+            valueJson = stringify(value);
+            return JSON.parse(valueJson);
+        } catch (e1) {
+            if (ThundraLogger.isDebugEnabled()) {
+                ThundraLogger.debug('Unable to clone value');
+                ThundraLogger.debug(e1);
+            }
+            if (valueJson) {
+                return valueJson;
+            }
+            try {
+                return value.toString();
+            } catch (e2) {
+                if (ThundraLogger.isDebugEnabled()) {
+                    ThundraLogger.debug('Unable to call "toString()" of value');
+                    ThundraLogger.debug(e2);
+                }
+                return '<unable to serialize value>';
+            }
+        }
+    }
+
     private setGlobalFunction() {
+        const me = this;
         global.__thundraTraceEntry__ = function (args: any) {
             const { tracer } = ExecutionContextManager.get();
             if (!tracer) {
@@ -104,12 +141,10 @@ class Instrumenter {
 
                 if (args.args) {
                     for (let i = 0; i < args.args.length; i++) {
-                        const argType = typeof args.args[i];
-                        let argValue = JSON.parse(stringify(args.args[i]));
-                        if (argType === 'function') {
-                            argValue = argValue.toString();
-                        }
-                        spanArguments.push(new Argument(args.argNames[i], argType, argValue));
+                        const argValue = args.args[i];
+                        const argType = typeof argValue;
+                        const packedArgValue = me.packValue(argValue);
+                        spanArguments.push(new Argument(args.argNames[i], argType, packedArgValue));
                     }
                 }
 
@@ -122,6 +157,7 @@ class Instrumenter {
                     span,
                 };
             } catch (ex) {
+                ThundraLogger.error(ex);
                 try {
                     tracer.finishSpan();
                 } catch (ex2) {
@@ -159,28 +195,13 @@ class Instrumenter {
                 if (varNames.length === varValues.length) {
                     for (let i = 0; i < varNames.length; i++) {
                         const varName = varNames[i];
-                        let varValue = varValues[i];
-
-                        if (varValue instanceof Map || varValue instanceof Set) {
-                            varValue = [...varValue];
-                        }
-
-                        let processedVarValue = varValue ? varValue.toString() : null;
-                        try {
-                            // Cycle aware stringify operation
-                            processedVarValue = stringify(varValue);
-                            try {
-                                processedVarValue = JSON.parse(processedVarValue);
-                            } catch (e) {
-                                // Ignore
-                            }
-                        } catch (e) {
-                            // Ignore
-                        }
+                        const varValue = varValues[i];
+                        const varType = typeof varValue;
+                        const packedVarValue = me.packValue(varValue);
                         const localVar: any = {
                             name: varName,
-                            value: processedVarValue,
-                            type: typeof varValue,
+                            value: packedVarValue,
+                            type: varType,
                         };
                         localVars.push(localVar);
                     }
@@ -212,7 +233,7 @@ class Instrumenter {
                     methodSpan.setTag(LineByLineTags.LINES_OVERFLOW, true);
                 }
             } catch (ex) {
-                // Ignore
+                ThundraLogger.error(ex);
             }
         };
 
@@ -232,14 +253,17 @@ class Instrumenter {
                 const span = (entryData && entryData.span) ? entryData.span : tracer.getActiveSpan();
                 if (!args.exception) {
                     if (args.returnValue) {
-                        const returnValue = JSON.parse(stringify(args.returnValue));
-                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, returnValue));
+                        const returnValue = args.returnValue;
+                        const returnType = typeof returnValue;
+                        const packedReturnValue = me.packValue(returnValue);
+                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(returnType, packedReturnValue));
                     }
                 } else {
                     span.setErrorTag(args.exceptionValue);
                 }
                 span.finish();
             } catch (ex) {
+                ThundraLogger.error(ex);
                 try {
                     tracer.finishSpan();
                 } catch (ex2) {
