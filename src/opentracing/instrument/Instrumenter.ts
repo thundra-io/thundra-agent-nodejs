@@ -93,7 +93,8 @@ class Instrumenter {
     }
 
     private packValue(value: any) {
-        if (!value) {
+        // `==` is used on purpose (instead of `===`) as it covers both undefined and null values
+        if (value == null) {
             return null;
         }
         const valueType = typeof value;
