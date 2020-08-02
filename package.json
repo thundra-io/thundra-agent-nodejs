@@ -87,7 +87,6 @@
   "dependencies": {
     "@thundra/instrumenter": "^1.2.0",
     "@thundra/warmup": "1.0.0",
-    "opentracing": "0.14.1",
     "json-stringify-safe": "^5.0.1",
     "koalas": "^1.0.2",
     "lodash.flatten": "^4.4.0",
@@ -96,6 +95,8 @@
     "lodash.trim": "^4.5.1",
     "md5": "^2.2.1",
     "module-details-from-path": "^1.0.3",
+    "object-sizeof": "^1.6.1",
+    "opentracing": "0.14.1",
     "require-in-the-middle": "^3.1.0",
     "semver": "^5.5.0",
     "shimmer": "^1.2.0",
