@@ -16,9 +16,14 @@ const MODULE_NAME = 'mysql';
 const FILE_NAME = 'lib/Connection';
 const MODULE_VERSION = '>=2';
 
+/**
+ * {@link Integration} implementation for MySQL integration
+ * through {@code mysql} library
+ */
 class MySQLIntegration implements Integration {
+
     config: any;
-    instrumentContext: any;
+    private instrumentContext: any;
 
     constructor(config: any) {
         this.config = config || {};
@@ -35,6 +40,9 @@ class MySQLIntegration implements Integration {
             FILE_NAME);
     }
 
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any, config: any) {
         const integration = this;
 
@@ -126,15 +134,23 @@ class MySQLIntegration implements Integration {
         }
     }
 
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
     doUnwrap(lib: any) {
         shimmer.unwrap(lib.prototype, 'query');
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap() {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
     }
+
 }
 
 export default MySQLIntegration;
