@@ -15,11 +15,16 @@ const get = require('lodash.get');
 const MODULE_NAME = 'mongodb';
 const MODULE_VERSION = '>=1';
 
+/**
+ * {@link Integration} implementation for MongoDB integration
+ * through {@code mongodb} library
+ */
 class MongoDBIntegration implements Integration {
+
     config: any;
-    instrumentContext: any;
-    listener: any;
-    spans: any;
+    private instrumentContext: any;
+    private listener: any;
+    private spans: any;
 
     constructor(config: any) {
         this.config = config || {};
@@ -35,6 +40,10 @@ class MongoDBIntegration implements Integration {
             this.config);
     }
 
+    /**
+     * Called on the start of MongoDB command
+     * @param event the event
+     */
     onStarted(event: any) {
         let span: ThundraSpan;
         try {
@@ -108,6 +117,10 @@ class MongoDBIntegration implements Integration {
         }
     }
 
+    /**
+     * Called on the success of MongoDB command
+     * @param event the event
+     */
     onSucceeded(event: any) {
         const span: ThundraSpan = get(this.spans, event.requestId, null);
         if (span === null) {
@@ -122,6 +135,10 @@ class MongoDBIntegration implements Integration {
         }
     }
 
+    /**
+     * Called on the fail of MongoDB command
+     * @param event the event
+     */
     onFailed(event: any) {
         const span: ThundraSpan = get(this.spans, event.requestId, null);
         if (span === null) {
@@ -137,6 +154,9 @@ class MongoDBIntegration implements Integration {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any) {
         if (lib) {
             this.listener = lib.instrument();
@@ -146,15 +166,23 @@ class MongoDBIntegration implements Integration {
         }
     }
 
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
     doUnwrap(lib: any) {
         return;
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap() {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
     }
+
 }
 
 export default MongoDBIntegration;
