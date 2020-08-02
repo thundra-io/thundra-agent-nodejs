@@ -17,9 +17,14 @@ const get = require('lodash.get');
 const MODULE_NAME = 'ioredis';
 const MODULE_VERSION = '>=2';
 
+/**
+ * {@link Integration} implementation for Redis integration
+ * through {@code ioredis} library
+ */
 class IORedisIntegration implements Integration {
+
     config: any;
-    instrumentContext: any;
+    private instrumentContext: any;
 
     constructor(config: any) {
         this.config = config || {};
@@ -34,6 +39,9 @@ class IORedisIntegration implements Integration {
             this.config);
     }
 
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any, config: any) {
         const plugin = this;
         function wrapper(original: Function) {
@@ -109,17 +117,24 @@ class IORedisIntegration implements Integration {
         }
     }
 
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
     doUnwrap(lib: any) {
         shimmer.unwrap(lib.prototype, 'sendCommand');
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap() {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
     }
 
-    patchEnd(span: ThundraSpan, resultHandler?: Function): () => Promise<{}> {
+    private patchEnd(span: ThundraSpan, resultHandler?: Function): () => Promise<{}> {
         return function (this: any, err?: Error) {
             if (err instanceof Error) {
                 span.setErrorTag(err);
@@ -130,6 +145,7 @@ class IORedisIntegration implements Integration {
             }
         };
     }
+
 }
 
 export default IORedisIntegration;
