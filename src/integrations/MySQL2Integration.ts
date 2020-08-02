@@ -16,9 +16,14 @@ const MODULE_NAME = 'mysql2';
 const FILE_NAME = 'lib/connection';
 const MODULE_VERSION = '>=1.5';
 
+/**
+ * {@link Integration} implementation for MySQL integration
+ * through {@code mysql2} library
+ */
 class MySQL2Integration implements Integration {
+
     config: any;
-    instrumentContext: any;
+    private instrumentContext: any;
 
     constructor(config: any) {
         this.config = config || {};
@@ -35,8 +40,10 @@ class MySQL2Integration implements Integration {
             FILE_NAME);
     }
 
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any, config: any) {
-        const integration = this;
         function wrapper(query: any) {
             let span: ThundraSpan;
 
@@ -125,15 +132,23 @@ class MySQL2Integration implements Integration {
         }
     }
 
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
     doUnwrap(lib: any) {
         shimmer.unwrap(lib.prototype, 'query');
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap() {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
     }
+
 }
 
 export default MySQL2Integration;
