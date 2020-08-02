@@ -10,6 +10,7 @@ import Utils from './utils/Utils';
 import { EnvVariableKeys } from './Constants';
 import InvocationSupport from './plugins/support/InvocationSupport';
 import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
+import support from './plugins/support';
 import ConfigNames from './config/ConfigNames';
 import { loadHandler } from './wrappers/lambda/lambdaRuntimeSupport';
 import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
@@ -106,4 +107,5 @@ Object.assign(module.exports, {
     tracer,
     InvocationSupport,
     InvocationTraceSupport,
+    ...support,
 });
