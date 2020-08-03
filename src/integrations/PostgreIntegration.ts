@@ -164,6 +164,13 @@ class PostgreIntegration implements Integration {
         }
     }
 
+    private replaceArgs(statement: string, values: any[]): string {
+        const args = Array.prototype.slice.call(values);
+        const replacer = (value: string) => args[parseInt(value.substr(1), 10) - 1];
+
+        return statement.replace(/(\$\d+)/gm, replacer);
+    }
+
     private getStatement(args: any[]) {
         let text;
         let values;
@@ -181,7 +188,7 @@ class PostgreIntegration implements Integration {
         }
 
         if (values) {
-            text = Utils.replaceArgs(text, values);
+            text = this.replaceArgs(text, values);
         }
 
         return text;

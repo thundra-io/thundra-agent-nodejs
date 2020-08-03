@@ -40,7 +40,7 @@ class LatencyInjectorSpanListener implements ThundraSpanListener {
     onSpanInitialized(span: ThundraSpan, me?: any, callback?: () => any, args?: any[], callbackAlreadyCalled?: boolean): boolean {
         if (callbackAlreadyCalled === undefined || callbackAlreadyCalled === false) {
             if (callback && typeof callback === 'function' && !this.injectOnFinish) {
-                const sleep = this.randomizeDelay ? Utils.getRandomInt(this.delay) : this.delay;
+                const sleep = this.randomizeDelay ? Utils.getRandomNumber(this.delay) : this.delay;
                 Utils.sleep(sleep).then(() => {
                     span.finishTime = Date.now();
                     callback.apply(me, args);
@@ -57,7 +57,7 @@ class LatencyInjectorSpanListener implements ThundraSpanListener {
      */
     onSpanFinished(span: ThundraSpan, me?: any, callback?: () => any, args?: any[]): boolean {
         if (callback && typeof callback === 'function' && this.injectOnFinish) {
-            const sleep = this.randomizeDelay ? Utils.getRandomInt(this.delay) : this.delay;
+            const sleep = this.randomizeDelay ? Utils.getRandomNumber(this.delay) : this.delay;
             Utils.sleep(sleep).then(() => {
                 span.finishTime = Date.now();
                 callback.apply(me, args);

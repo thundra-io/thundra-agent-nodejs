@@ -2,13 +2,15 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import {COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint} from './Constants';
+import { COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint } from './Constants';
 import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
 import BaseMonitoringData from './plugins/data/base/BaseMonitoringData';
 import MonitoringDataType from './plugins/data/base/MonitoringDataType';
 import ConfigNames from './config/ConfigNames';
 import ConfigProvider from './config/ConfigProvider';
+import CompositeMonitoringData from './plugins/data/composite/CompositeMonitoringData';
+import MonitorDataType from './plugins/data/base/MonitoringDataType';
 
 const httpAgent = new http.Agent({
     keepAlive: true,
@@ -114,10 +116,10 @@ class Reporter {
         if (!invocationReport) {
             return [];
         }
-        const initialCompositeData = Utils.initCompositeMonitoringData(invocationReport.data);
+        const initialCompositeData = this.initCompositeMonitoringData(invocationReport.data);
 
         for (let i = 0; i < batchCount; i++) {
-            const compositeData = Utils.initCompositeMonitoringData(initialCompositeData);
+            const compositeData = this.initCompositeMonitoringData(initialCompositeData);
             const batch: any[] = [];
             for (let j = 1; j < this.MAX_MONITOR_DATA_BATCH_SIZE; j++) {
                 const report = reports.shift();
@@ -125,7 +127,7 @@ class Reporter {
                     break;
                 }
 
-                batch.push(Utils.stripCommonFields(report.data as BaseMonitoringData));
+                batch.push(this.stripCommonFields(report.data as BaseMonitoringData));
             }
 
             compositeData.allMonitoringData = batch;
@@ -134,6 +136,41 @@ class Reporter {
         }
 
         return batchedReports;
+    }
+
+    private initCompositeMonitoringData(data: BaseMonitoringData): CompositeMonitoringData {
+        const monitoringData = Utils.createMonitoringData(MonitorDataType.COMPOSITE);
+
+        monitoringData.id = Utils.generateId();
+        monitoringData.agentVersion = data.agentVersion;
+        monitoringData.dataModelVersion = data.dataModelVersion;
+        monitoringData.applicationId = data.applicationId;
+        monitoringData.applicationDomainName = data.applicationDomainName;
+        monitoringData.applicationClassName = data.applicationClassName;
+        monitoringData.applicationName = data.applicationName;
+        monitoringData.applicationVersion = data.applicationVersion;
+        monitoringData.applicationStage = data.applicationStage;
+        monitoringData.applicationRuntime = data.applicationRuntime;
+        monitoringData.applicationRuntimeVersion = data.applicationRuntimeVersion;
+        monitoringData.applicationTags = data.applicationTags;
+
+        return monitoringData as CompositeMonitoringData;
+    }
+
+    private stripCommonFields(monitoringData: BaseMonitoringData) {
+        monitoringData.agentVersion = undefined;
+        monitoringData.dataModelVersion = undefined;
+        monitoringData.applicationId = undefined;
+        monitoringData.applicationClassName = undefined;
+        monitoringData.applicationDomainName = undefined;
+        monitoringData.applicationName = undefined;
+        monitoringData.applicationVersion = undefined;
+        monitoringData.applicationStage = undefined;
+        monitoringData.applicationRuntime = undefined;
+        monitoringData.applicationRuntimeVersion = undefined;
+        monitoringData.applicationTags = undefined;
+
+        return monitoringData;
     }
 
     private sendBatchedReports(batchedReports: any[]) {
