@@ -6,5 +6,6 @@
     "dist/plugins/data/base/*.js", "dist/plugins/data/invocation/*.js", "dist/plugins/data/metric/*.js",
     "dist/plugins/config/*.js", "dist/plugins/data/trace/*.js", "dist/plugins/error/*.js",
     "dist/plugins/listeners/*.js", "dist/plugins/support/*.js", "index.js", "dist/plugins/integrations/*.js"
-  ]
+  ],
+  "testURL": "http://localhost/"
 }
