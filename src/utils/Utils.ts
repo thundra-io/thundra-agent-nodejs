@@ -1,4 +1,4 @@
-import {readFile} from 'fs';
+import { readFile } from 'fs';
 import * as os from 'os';
 import {
     DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
@@ -20,8 +20,10 @@ import LogData from '../plugins/data/log/LogData';
 import ThundraLogger from '../ThundraLogger';
 import CompositeMonitoringData from '../plugins/data/composite/CompositeMonitoringData';
 import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
-import {ApplicationManager} from '../application/ApplicationManager';
+import { ApplicationManager } from '../application/ApplicationManager';
 import { ApplicationInfo } from '../application/ApplicationInfo';
+import ThundraSpanListener from '../opentracing/listeners/ThundraSpanListener';
+import PluginContext from '../plugins/PluginContext';
 
 const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
@@ -35,12 +37,27 @@ const customReq = typeof __non_webpack_require__ !== 'undefined'
     : require;
 const thundraWrapped = '__thundra_wrapped';
 
+/**
+ * Common/global utilities
+ */
 class Utils {
 
+    private constructor() {
+    }
+
+    /**
+     * Generates id in UUID format.
+     * @return {string} generated id
+     */
     static generateId(): string {
         return uuidv4();
     }
 
+    /**
+     * Generates monitoring data
+     * @param data the monitoring data itself
+     * @param {string} apiKey the Thundra API key
+     */
     static generateReport(data: any, apiKey: string) {
         return {
             data,
@@ -50,22 +67,45 @@ class Utils {
         };
     }
 
-    static getEnvVar(key: string, defaultValue?: any): any {
-        return process.env[key] ? process.env[key] : defaultValue;
+    /**
+     * Gets the environment variable
+     * @param {string} name the name of the environment variable
+     * @param defaultValue default value for the environment variable
+     */
+    static getEnvVar(name: string, defaultValue?: any): any {
+        return process.env[name] ? process.env[name] : defaultValue;
     }
 
-    static getNumericEnvVar(key: string, defaultValue?: number): number {
-        return parseInt(Utils.getEnvVar(key, defaultValue), 10);
+    /**
+     * Gets the environment variable as number
+     * @param {string} name the name of the environment variable
+     * @param defaultValue default value for the environment variable
+     */
+    static getNumericEnvVar(name: string, defaultValue?: number): number {
+        return parseInt(Utils.getEnvVar(name, defaultValue), 10);
     }
 
-    static setEnvVar(key: string, value: any): void {
-        process.env[key] = value;
+    /**
+     * Sets the environment variable
+     * @param {string} name the name of the environment variable
+     * @param value the value of the environment variable
+     */
+    static setEnvVar(name: string, value: any): void {
+        process.env[name] = value;
     }
 
-    static deleteEnvVar(key: string): void {
-        delete process.env[key];
+    /**
+     * Deletes/removes the environment variable
+     * @param name the name of the environment variable
+     */
+    static deleteEnvVar(name: string): void {
+        delete process.env[name];
     }
 
+    /**
+     * Measures and gets the CPU usage metrics
+     * @return the CPU usage metrics
+     */
     static getCpuUsage() {
         const cpus: os.CpuInfo[] = os.cpus();
         const procCpuUsage: NodeJS.CpuUsage = process.cpuUsage();
@@ -85,7 +125,14 @@ class Utils {
         };
     }
 
-    static getCpuLoad(start: any, end: any, clockTick: any) {
+    /**
+     * Measures and gets the CPU load metrics
+     * @param start CPU usage metrics on start
+     * @param end CPU usage metrics on end
+     * @param {number} clockTick the number of CPU clock ticks per second
+     * @return the CPU load metrics
+     */
+    static getCpuLoad(start: any, end: any, clockTick: number) {
         const sysCpuTotalDif = (end.sysCpuTotal - start.sysCpuTotal);
         let procCpuLoad = ((end.procCpuUsed - start.procCpuUsed) / clockTick) / sysCpuTotalDif;
         let sysCpuLoad = (end.sysCpuUsed - start.sysCpuUsed) / sysCpuTotalDif;
@@ -97,14 +144,77 @@ class Utils {
         };
     }
 
+    /**
+     * Reads metrics of current process metrics
+     * @return {Promise} the {@link Promise} to get metrics of current process
+     */
+    static readProcMetricPromise() {
+        return new Promise((resolve, reject) => {
+            readFile(PROC_STAT_PATH, (err, file) => {
+                const procStatData = {
+                    threadCount: 0,
+                };
+
+                if (err) {
+                    ThundraLogger.error(`Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0.`);
+                } else {
+                    const procStatArray = file.toString().split(' ');
+                    procStatData.threadCount = parseInt(procStatArray[19], 0);
+                }
+
+                return resolve(procStatData);
+            });
+        });
+    }
+
+    /**
+     * Reads IO metrics of current process
+     * @return {Promise} the {@link Promise} to get IO metrics of current process
+     */
+    static readProcIoPromise() {
+        return new Promise((resolve, reject) => {
+            readFile(PROC_IO_PATH, (err, file) => {
+                const procIoData = {
+                    readBytes: 0,
+                    writeBytes: 0,
+                };
+
+                if (err) {
+                    ThundraLogger.error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
+                } else {
+                    const procIoArray = file.toString().split('\n');
+                    procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
+                    procIoData.writeBytes = parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1), 0);
+                }
+
+                return resolve(procIoData);
+            });
+        });
+    }
+
+    /**
+     * Checks whether the given value is {@link string} or not
+     * @param value the value to be checked
+     * @return {@code true} if the given value is {@link string}, {@code false} otherwise
+     */
     static isString(value: any): boolean {
         return typeof value === 'string' || value instanceof String;
     }
 
+    /**
+     * Capitalizes the given {@link string} value
+     * @param {string} value the {@link string} value to be capitalized
+     * @return {string} the capitalized {@link string} value
+     */
     static capitalize(value: string): string {
         return value.charAt(0).toUpperCase() + value.slice(1);
     }
 
+    /**
+     * Parses/processes given error to generate new error
+     * @param err the error to be parsed
+     * @return the generated error
+     */
     static parseError(err: any) {
         const error: any = {errorMessage: '', errorType: 'Unknown Error', stack: null, code: 0};
         if (err instanceof Error) {
@@ -132,67 +242,11 @@ class Utils {
         return error;
     }
 
-    static readProcMetricPromise() {
-        return new Promise((resolve, reject) => {
-            readFile(PROC_STAT_PATH, (err, file) => {
-                const procStatData = {
-                    threadCount: 0,
-                };
-
-                if (err) {
-                    ThundraLogger.error(`Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0.`);
-                } else {
-                    const procStatArray = file.toString().split(' ');
-                    procStatData.threadCount = parseInt(procStatArray[19], 0);
-                }
-
-                return resolve(procStatData);
-            });
-        });
-    }
-
-    static readProcIoPromise() {
-        return new Promise((resolve, reject) => {
-            readFile(PROC_IO_PATH, (err, file) => {
-                const procIoData = {
-                    readBytes: 0,
-                    writeBytes: 0,
-                };
-
-                if (err) {
-                    ThundraLogger.error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
-                } else {
-                    const procIoArray = file.toString().split('\n');
-                    procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
-                    procIoData.writeBytes = parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1), 0);
-                }
-
-                return resolve(procIoData);
-            });
-        });
-    }
-
-    static readProcNetworkIoSync(procId: number) {
-        return new Promise((resolve, reject) => {
-            readFile(PROC_IO_PATH, (err, file) => {
-                const procIoData = {
-                    readBytes: 0,
-                    writeBytes: 0,
-                };
-
-                if (err) {
-                    ThundraLogger.error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
-                } else {
-                    const procIoArray = file.toString().split('\n');
-                    procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
-                    procIoData.writeBytes = parseInt(procIoArray[5].substr(procIoArray[5].indexOf(' ') + 1), 0);
-                }
-
-                return resolve(procIoData);
-            });
-        });
-    }
-
+    /**
+     * Gets parent {@link ThundraSpanContext} by following given references
+     * @param references the references to follow
+     * @return {ThundraSpanContext} the parent {@link ThundraSpanContext}
+     */
     static getParentContext(references: any): ThundraSpanContext {
         let parent: ThundraSpanContext = null;
         if (references) {
@@ -222,42 +276,12 @@ class Utils {
         return parent;
     }
 
-    static replaceArgs(statement: string, values: any[]): string {
-        const args = Array.prototype.slice.call(values);
-        const replacer = (value: string) => args[parseInt(value.substr(1), 10) - 1];
-
-        return statement.replace(/(\$\d+)/gm, replacer);
-    }
-
-    static getDynamoDBTableName(request: any): string {
-        let tableName;
-
-        if (request.params && request.params.TableName) {
-            tableName = request.params.TableName;
-        }
-
-        if (request.params && request.params.RequestItems) {
-            tableName = Object.keys(request.params.RequestItems).join(',');
-        }
-
-        return tableName;
-    }
-
-    static getQueueName(url: any): string {
-        return url ? url.split('/').pop() : null;
-    }
-
-    static getTopicName(topicArn: any): string {
-        return topicArn ? topicArn.split(':').pop() : '';
-    }
-
-    static getServiceName(endpoint: string): string {
-        if (!endpoint) {
-            return '';
-        }
-        return endpoint.split('.')[0];
-    }
-
+    /**
+     * Tries to require given module by its name and paths
+     * @param {string} name the module name
+     * @param {string[]} paths the paths to be looked for module
+     * @return the required module
+     */
     static tryRequire(name: string, paths?: string[]): any {
         try {
             let resolvedPath;
@@ -272,45 +296,17 @@ class Utils {
         }
     }
 
-    static getModuleInfo(name: string, paths?: string[]): any {
-        try {
-            let modulePath;
-            if (paths !== undefined) {
-                modulePath = customReq.resolve(name, {paths});
-            } else {
-                modulePath = customReq.resolve(name);
-            }
-
-            return parse(modulePath);
-        } catch (err) {
-            return {};
-        }
-    }
-
-    static doInstrument(lib: any, libs: any[], basedir: string, moduleName: string,
-                        version: string, wrapper: any, config?: any): any {
-        let isValid = false;
-        if (version) {
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
-            if (!isValidVersion) {
-                ThundraLogger.error(
-                    `Invalid module version for ${moduleName} integration. Supported version is ${version}`);
-            } else {
-                isValid = true;
-            }
-        } else {
-            isValid = true;
-        }
-        if (isValid) {
-            if (!lib[thundraWrapped]) {
-                wrapper(lib, config, moduleName);
-                lib[thundraWrapped] = true;
-                libs.push(lib);
-            }
-        }
-    }
-
+    /**
+     * Instruments given module by its name
+     * @param {string[]} moduleNames the modules names to instrument
+     * @param {string} version the version of the library
+     * @param wrapper the wrapper to instrument
+     * @param unwrapper the unwrapper to un-instrument
+     * @param config the config to be passed to wrapper and unwrapper
+     * @param {string[]} paths the paths to be looked for module to instrument
+     * @param {string} fileName the name of the file in module to instrument
+     * @return the context to manage instrumentation cycle (for ex. un-instrument)
+     */
     static instrument(moduleNames: string[], version: string, wrapper: any,
                       unwrapper?: any, config?: any, paths?: string[], fileName?: string): any {
         const libs: any[] = [];
@@ -352,7 +348,13 @@ class Utils {
         };
     }
 
-    static initMonitoringData(pluginContext: any, type: MonitoringDataType): BaseMonitoringData {
+    /**
+     * Creates and initializes monitoring data according to given {@link MonitoringDataType}
+     * @param {PluginContext} pluginContext the {@link PluginContext} to be used for initializing monitoring data
+     * @param {MonitoringDataType} type the type of the monitoring data
+     * @return {BaseMonitoringData} the created and initialized monitoring data
+     */
+    static initMonitoringData(pluginContext: PluginContext, type: MonitoringDataType): BaseMonitoringData {
         const monitoringData = this.createMonitoringData(type);
 
         const applicationInfo = ApplicationManager.getApplicationInfo();
@@ -377,25 +379,11 @@ class Utils {
         return monitoringData;
     }
 
-    static initCompositeMonitoringData(data: BaseMonitoringData): CompositeMonitoringData {
-        const monitoringData = this.createMonitoringData(MonitorDataType.COMPOSITE);
-
-        monitoringData.id = Utils.generateId();
-        monitoringData.agentVersion = data.agentVersion;
-        monitoringData.dataModelVersion = data.dataModelVersion;
-        monitoringData.applicationId = data.applicationId;
-        monitoringData.applicationDomainName = data.applicationDomainName;
-        monitoringData.applicationClassName = data.applicationClassName;
-        monitoringData.applicationName = data.applicationName;
-        monitoringData.applicationVersion = data.applicationVersion;
-        monitoringData.applicationStage = data.applicationStage;
-        monitoringData.applicationRuntime = data.applicationRuntime;
-        monitoringData.applicationRuntimeVersion = data.applicationRuntimeVersion;
-        monitoringData.applicationTags = data.applicationTags;
-
-        return monitoringData as CompositeMonitoringData;
-    }
-
+    /**
+     * Creates monitoring data according to given {@link MonitoringDataType}
+     * @param {MonitoringDataType} type the type of the monitoring data
+     * @return {BaseMonitoringData} the created monitoring data
+     */
     static createMonitoringData(type: MonitoringDataType): BaseMonitoringData {
         let monitoringData: BaseMonitoringData;
 
@@ -419,16 +407,30 @@ class Utils {
         return monitoringData;
     }
 
+    /**
+     * Returns {@link Promise} to sleep as given time
+     * @param {number} milliseconds the duration in milliseconds to sleep
+     * @return {Promise} the {@link Promise} to await for sleeping as given time
+     */
     static sleep(milliseconds: number): Promise<number> {
         return new Promise((resolve) => setTimeout(resolve, milliseconds));
     }
 
-    static getRandomInt(bound: number): number {
+    /**
+     * Generates random number
+     * @param {number} bound upper bound for generated number
+     * @return {number} the generated random number
+     */
+    static getRandomNumber(bound: number): number {
         return 1 + Math.floor(Math.random() * bound);
     }
 
+    /**
+     * Detects and creates {@link ThundraSpanListener}s from configurations
+     * @return {ThundraSpanListener[]} the {@link ThundraSpanListener}s
+     */
     static createSpanListeners(): any[] {
-        const listeners: any[] = [];
+        const listeners: ThundraSpanListener[] = [];
         for (const key of ConfigProvider.names()) {
             if (key.startsWith(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG)) {
                 try {
@@ -455,29 +457,10 @@ class Utils {
         return listeners;
     }
 
-    static decodeSpanListenerConfig(encoded: string) {
-        const buffer = Buffer.from(encoded, 'base64');
-        const spanListenerConfig = zlib.unzipSync(buffer).toString();
-
-        return spanListenerConfig;
-    }
-
-    static stripCommonFields(monitoringData: BaseMonitoringData) {
-        monitoringData.agentVersion = undefined;
-        monitoringData.dataModelVersion = undefined;
-        monitoringData.applicationId = undefined;
-        monitoringData.applicationClassName = undefined;
-        monitoringData.applicationDomainName = undefined;
-        monitoringData.applicationName = undefined;
-        monitoringData.applicationVersion = undefined;
-        monitoringData.applicationStage = undefined;
-        monitoringData.applicationRuntime = undefined;
-        monitoringData.applicationRuntimeVersion = undefined;
-        monitoringData.applicationTags = undefined;
-
-        return monitoringData;
-    }
-
+    /**
+     * Gets the AWS X-Ray trace info
+     * @return the AWS X-Ray trace info
+     */
     static getXRayTraceInfo() {
         let traceID: string = '';
         let segmentID: string = '';
@@ -504,24 +487,11 @@ class Utils {
         };
     }
 
-    static normalizeFunctionName(fullName: string) {
-        const parts = fullName.split(':');
-
-        if (parts.length === 0 || parts.length === 1) { // funcName
-            return {name: fullName};
-        } else if (parts.length === 2) { // funcName:qualifier
-            return {name: parts[0], qualifier: parts[1]};
-        } else if (parts.length === 3) { // accountId:function:funcName
-            return {name: parts[2]};
-        } else if (parts.length === 4) { // accountId:function:funcName:qualifier
-            return {name: parts[2], qualifier: parts[3]};
-        } else if (parts.length === 7) { // arn:aws:lambda:region:accountId:function:funcName
-            return {name: parts[6]};
-        } else if (parts.length === 8) { // arn:aws:lambda:region:accountId:function:funcName:qualifier
-            return {name: parts[6], qualifier: parts[7]};
-        }
-    }
-
+    /**
+     * Checks whether the given response is a valid HTTP response
+     * @param response the response to be checked
+     * @return {boolean} {@code true} if the given response is a valid HTTP response, {@code false} otherwise
+     */
     static isValidHTTPResponse(response: any) {
         if (!response) {
             return false;
@@ -529,6 +499,10 @@ class Utils {
         return response.statusCode && typeof response.statusCode === 'number';
     }
 
+    /**
+     * Detects and gets application tags from configurations
+     * @return the application tags
+     */
     static getApplicationTags(): any {
         const applicationTags: any = {};
         for (const key of ConfigProvider.names()) {
@@ -553,6 +527,12 @@ class Utils {
         return applicationTags;
     }
 
+    /**
+     * Merges given updates into given {@link ApplicationInfo}
+     * @param updates the updates to merge into given {@link ApplicationInfo}
+     * @param {ApplicationInfo} applicationInfo the {@link ApplicationInfo} to be merged into
+     * @return {ApplicationInfo} the final {@link ApplicationInfo} after merge
+     */
     static mergeApplicationInfo(updates: any = {}, applicationInfo: ApplicationInfo) {
         const newAppInfo: ApplicationInfo = {...applicationInfo};
         newAppInfo.applicationId = updates.applicationId || applicationInfo.applicationId;
@@ -568,8 +548,59 @@ class Utils {
         return newAppInfo;
     }
 
+    /**
+     * Serializes given data as JSON
+     * @param data the data to be serialized as JSON
+     * @return {string} the generated JSON
+     */
     static serializeJSON(data: any): string {
         return JSON.stringify(data, Utils.getCircularReplacer());
+    }
+
+    private static getModuleInfo(name: string, paths?: string[]): any {
+        try {
+            let modulePath;
+            if (paths !== undefined) {
+                modulePath = customReq.resolve(name, {paths});
+            } else {
+                modulePath = customReq.resolve(name);
+            }
+
+            return parse(modulePath);
+        } catch (err) {
+            return {};
+        }
+    }
+
+    private static doInstrument(lib: any, libs: any[], basedir: string, moduleName: string,
+                                version: string, wrapper: any, config?: any): any {
+        let isValid = false;
+        if (version) {
+            const moduleValidator = new ModuleVersionValidator();
+            const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
+            if (!isValidVersion) {
+                ThundraLogger.error(
+                    `Invalid module version for ${moduleName} integration. Supported version is ${version}`);
+            } else {
+                isValid = true;
+            }
+        } else {
+            isValid = true;
+        }
+        if (isValid) {
+            if (!lib[thundraWrapped]) {
+                wrapper(lib, config, moduleName);
+                lib[thundraWrapped] = true;
+                libs.push(lib);
+            }
+        }
+    }
+
+    private static decodeSpanListenerConfig(encoded: string) {
+        const buffer = Buffer.from(encoded, 'base64');
+        const spanListenerConfig = zlib.unzipSync(buffer).toString();
+
+        return spanListenerConfig;
     }
 
     private static getCircularReplacer(): (key: string, value: any) => any {

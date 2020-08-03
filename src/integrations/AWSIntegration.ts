@@ -89,6 +89,13 @@ export class AWSIntegration implements Integration {
         return '';
     }
 
+    static getServiceName(endpoint: string): string {
+        if (!endpoint) {
+            return '';
+        }
+        return endpoint.split('.')[0];
+    }
+
     private static parseAWSOperationTypes() {
         if (AWSIntegration.AWSOperationTypes) {
             return;
@@ -137,7 +144,7 @@ export class AWSIntegration implements Integration {
 
     private static getServiceFromReq(request: any): any {
         const serviceEndpoint = get(request, 'service.config.endpoint', '');
-        const serviceName = Utils.getServiceName(serviceEndpoint as string);
+        const serviceName = AWSIntegration.getServiceName(serviceEndpoint as string);
 
         return AWSIntegration.serviceFactory(serviceName);
     }
@@ -305,7 +312,7 @@ export class AWSServiceIntegration {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.AWSSERVICE);
         const serviceEndpoint = request.service.config.endpoint;
-        const serviceName = Utils.getServiceName(serviceEndpoint as string);
+        const serviceName = AWSIntegration.getServiceName(serviceEndpoint as string);
 
         const parentSpan = tracer.getActiveSpan();
         const activeSpan = tracer._startSpan(AWS_SERVICE_REQUEST, {
@@ -427,7 +434,7 @@ export class AWSLambdaIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.LAMBDA);
-        const normalizedFunctionName = Utils.normalizeFunctionName(
+        const normalizedFunctionName = AWSLambdaIntegration.normalizeFunctionName(
             get(request, 'params.FunctionName', AWS_SERVICE_REQUEST));
         const spanName = normalizedFunctionName.name;
         const parentSpan = tracer.getActiveSpan();
@@ -498,6 +505,24 @@ export class AWSLambdaIntegration {
         const custom: any = {};
         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, custom);
         return custom;
+    }
+
+    private static normalizeFunctionName(fullName: string) {
+        const parts = fullName.split(':');
+
+        if (parts.length === 0 || parts.length === 1) { // funcName
+            return {name: fullName};
+        } else if (parts.length === 2) { // funcName:qualifier
+            return {name: parts[0], qualifier: parts[1]};
+        } else if (parts.length === 3) { // accountId:function:funcName
+            return {name: parts[2]};
+        } else if (parts.length === 4) { // accountId:function:funcName:qualifier
+            return {name: parts[2], qualifier: parts[3]};
+        } else if (parts.length === 7) { // arn:aws:lambda:region:accountId:function:funcName
+            return {name: parts[6]};
+        } else if (parts.length === 8) { // arn:aws:lambda:region:accountId:function:funcName:qualifier
+            return {name: parts[6], qualifier: parts[7]};
+        }
     }
 
 }
@@ -596,7 +621,7 @@ export class AWSSQSIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.SQS);
-        let queueName = Utils.getQueueName(request.params.QueueUrl);
+        let queueName = AWSSQSIntegration.getQueueName(request.params.QueueUrl);
         queueName = queueName ? queueName.substring(queueName.lastIndexOf('/') + 1) : queueName;
 
         const parentSpan = tracer.getActiveSpan();
@@ -672,6 +697,10 @@ export class AWSSQSIntegration {
 
     public static processResponse(span: ThundraSpan, request: any, config: any): void {
         return;
+    }
+
+    private static getQueueName(url: any): string {
+        return url ? url.split('/').pop() : null;
     }
 
 }
@@ -830,7 +859,7 @@ export class AWSDynamoDBIntegration {
 
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
-        const tableName = Utils.getDynamoDBTableName(request);
+        const tableName = AWSDynamoDBIntegration.getDynamoDBTableName(request);
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.DYNAMODB);
         const serviceEndpoint = request.service.config.endpoint;
 
@@ -878,7 +907,7 @@ export class AWSDynamoDBIntegration {
         const operationName = request.operation;
         const response = request.response;
         const params = Object.assign({}, request.params);
-        const tableName = Utils.getDynamoDBTableName(request);
+        const tableName = AWSDynamoDBIntegration.getDynamoDBTableName(request);
 
         let traceLinks: any[] = [];
         let timestamp: number;
@@ -916,6 +945,20 @@ export class AWSDynamoDBIntegration {
             return [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
         }
         return [];
+    }
+
+    private static getDynamoDBTableName(request: any): string {
+        let tableName;
+
+        if (request.params && request.params.TableName) {
+            tableName = request.params.TableName;
+        }
+
+        if (request.params && request.params.RequestItems) {
+            tableName = Object.keys(request.params.RequestItems).join(',');
+        }
+
+        return tableName;
     }
 
     private static serializeAttributes(attributes: any): string {
