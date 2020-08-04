@@ -8,7 +8,7 @@ import Utils from '../utils/Utils';
  * {@link ApplicationInfoProvider} implementation which provides {@link ApplicationInfo}
  * based on underlying platform and configuration.
  */
-export default class GlobalApplicationInfoProvider implements ApplicationInfoProvider {
+export class GlobalApplicationInfoProvider implements ApplicationInfoProvider {
 
     private applicationInfoProvider: ApplicationInfoProvider;
     private applicationInfo: ApplicationInfo;

@@ -1,13 +1,11 @@
 import ConfigProvider from '../../dist/config/ConfigProvider';
 import ConfigNames from '../../dist/config/ConfigNames';
+import { ApplicationManager } from '../../dist/application/ApplicationManager';
+import Utils from '../../dist/utils/Utils';
 
 import TestUtils from '../utils';
 
-import {ApplicationManager} from '../../dist/application/ApplicationManager';
-import {LambdaApplicationInfoProvider} from '../../dist/wrappers/lambda/LambdaApplicationInfoProvider';
-import Utils from '../../dist/utils/Utils';
-
-ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
+ApplicationManager.setApplicationInfoProvider(null);
 
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();

@@ -1,6 +1,6 @@
 import { ApplicationInfoProvider } from './ApplicationInfoProvider';
 import { ApplicationInfo } from './ApplicationInfo';
-import GlobalApplicationInfoProvider from './GlobalApplicationInfoProvider';
+import { GlobalApplicationInfoProvider } from './GlobalApplicationInfoProvider';
 
 /**
  * Mediator class for application level stuff.

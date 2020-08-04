@@ -1,15 +1,14 @@
 import ConfigProvider from '../../dist/config/ConfigProvider';
 import ConfigNames from '../../dist/config/ConfigNames';
 import LogPlugin from '../../dist/plugins/Log';
-import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
-import {ApplicationManager} from '../../dist/application/ApplicationManager';
-import {LambdaApplicationInfoProvider} from '../../dist/wrappers/lambda/LambdaApplicationInfoProvider';
-
-ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
-
-import TestUtils from '../utils';
+import { ApplicationManager } from '../../dist/application/ApplicationManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
+
+import TestUtils from '../utils';
+import { createMockPluginContext } from '../mocks/mocks';
+
+ApplicationManager.setApplicationInfoProvider(null);
 
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();

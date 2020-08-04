@@ -1,11 +1,11 @@
 import LogPlugin from '../../dist/plugins/Log';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
-import { createMockPluginContext } from '../mocks/mocks';
 import {ApplicationManager} from '../../dist/application/ApplicationManager';
-import {LambdaApplicationInfoProvider} from '../../dist/wrappers/lambda/LambdaApplicationInfoProvider';
 
-ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
+import { createMockPluginContext } from '../mocks/mocks';
+
+ApplicationManager.setApplicationInfoProvider(null);
 
 describe('log', () => {
     describe('constructor', () => {
