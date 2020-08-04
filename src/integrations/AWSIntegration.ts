@@ -6,7 +6,7 @@ import {
     AwsStepFunctionsTags, SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_LINK_KEY,
+    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY,
 } from '../Constants';
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
@@ -683,7 +683,7 @@ export class AWSStepFunctionsIntegration {
                 const parsedInput = JSON.parse(originalInput);
                 const traceLink = Utils.generateId();
 
-                parsedInput[THUNDRA_TRACE_LINK_KEY] = { trace_link: traceLink, step: 0 };
+                parsedInput[THUNDRA_TRACE_KEY] = { trace_link: traceLink, step: 0 };
 
                 span.setTag(AwsStepFunctionsTags.EXECUTION_INPUT, originalInput);
 

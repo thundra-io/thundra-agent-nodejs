@@ -1,6 +1,6 @@
 import ThundraSpan from '../../opentracing/Span';
 import { SpanTags, DomainNames, ClassNames, ZeitTags,
-    ZeitConstants, NetlifyConstants, EnvVariableKeys, THUNDRA_TRACE_LINK_KEY } from '../../Constants';
+    ZeitConstants, NetlifyConstants, EnvVariableKeys, THUNDRA_TRACE_KEY } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../../opentracing/SpanContext';
@@ -28,8 +28,8 @@ class LambdaEventUtils {
      */
     static extractTraceLinkFromEvent(originalEvent: any) {
         try {
-            if (THUNDRA_TRACE_LINK_KEY in originalEvent) {
-                InvocationTraceSupport.addIncomingTraceLink(originalEvent[THUNDRA_TRACE_LINK_KEY].trace_link);
+            if (THUNDRA_TRACE_KEY in originalEvent) {
+                InvocationTraceSupport.addIncomingTraceLink(originalEvent[THUNDRA_TRACE_KEY].trace_link);
             }
         } catch (e) { /* pass */ }
     }
