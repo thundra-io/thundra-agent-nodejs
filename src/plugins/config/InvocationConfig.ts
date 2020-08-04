@@ -1,10 +1,14 @@
 import BasePluginConfig from './BasePluginConfig';
 
+/**
+ * Configures invocation plugin/support
+ */
 class InvocationConfig extends BasePluginConfig {
+
     constructor(options: any) {
-        options = options ? options : {};
         super(true);
     }
+
 }
 
 export default InvocationConfig;
