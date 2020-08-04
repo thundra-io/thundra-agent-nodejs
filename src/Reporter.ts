@@ -72,7 +72,6 @@ class Reporter {
                                 reject(err2);
                             });
                     } else {
-                        ThundraLogger.error(err);
                         reject(err);
                     }
                 });
@@ -185,7 +184,7 @@ class Reporter {
                 if (currentMinute > this.latestReportingLimitedMinute) {
                     reportPromises.push(this.request(batch));
                 } else {
-                    ThundraLogger.error(`Skipped sending monitoring data temporarily as it hits the limit`);
+                    ThundraLogger.debug('Skipped sending monitoring data temporarily as it hits the limit');
                 }
             }
         });
@@ -206,6 +205,20 @@ class Reporter {
                         this.latestReportingLimitedMinute = Math.floor(Date.now() / 1000);
                     }
                     if (response.statusCode !== 200) {
+                        // Unauthorized request (for ex. API key is not present or invalid)
+                        if (response.statusCode === 401) {
+                            let responseMessage = null;
+                            try {
+                                const responseJson = JSON.parse(responseData);
+                                responseMessage = responseJson.message;
+                            } catch (e) {
+                                // Ignore
+                            }
+                            if (!responseMessage) {
+                                responseMessage = 'No API key is present or invalid API key';
+                            }
+                            ThundraLogger.error(`Unable to report because of unauthorized request: ${responseMessage}`);
+                        }
                         // First, check whether or debug is enabled.
                         // If not no need to convert reports into JSON string to pass to "debug" function
                         // because serialization is not cheap operation.
@@ -235,7 +248,7 @@ class Reporter {
                 request.write(Utils.serializeJSON(batch));
                 request.end();
             } catch (error) {
-                ThundraLogger.error('Cannot serialize report data. ' + error);
+                ThundraLogger.error(`Cannot serialize report data: ${error}`);
             }
         });
     }
@@ -248,7 +261,7 @@ class Reporter {
                 process.stdout.write(jsonStringReport);
                 return resolve();
             } catch (error) {
-                ThundraLogger.error('Cannot write report data to CW. ' + error);
+                ThundraLogger.error(`Cannot write report data to CW: ${error}`);
                 return reject(error);
             }
         });
