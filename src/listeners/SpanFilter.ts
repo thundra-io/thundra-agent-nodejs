@@ -1,9 +1,9 @@
-import ThundraSpan from '../Span';
+import ThundraSpan from '../opentracing/Span';
 
 /**
- * Applies {@link SpanFilter}s to {@link ThundraSpan} to decided whether it should be filtered
+ * Decides whether {@link ThundraSpan} should be filtered
  */
-interface SpanFilterer {
+interface SpanFilter {
 
     /**
      * Decides whether the given {@link ThundraSpan} should be filtered
@@ -14,4 +14,4 @@ interface SpanFilterer {
 
 }
 
-export default SpanFilterer;
+export default SpanFilter;

@@ -1,9 +1,8 @@
-import ThundraTracer from '../../../dist/opentracing/Tracer';
-import ConfigProvider from '../../../dist/config/ConfigProvider';
-import ConfigNames from '../../..//dist/config/ConfigNames';
-import Utils from '../../../dist/utils/Utils';
+import ConfigProvider from '../../dist/config/ConfigProvider';
+import ConfigNames from '../../dist/config/ConfigNames';
+import Utils from '../../dist/utils/Utils';
 
-import TestUtils from '../../utils.js';
+import TestUtils from '../utils.js';
 
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();

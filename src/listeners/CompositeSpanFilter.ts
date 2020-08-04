@@ -1,4 +1,4 @@
-import ThundraSpan from '../Span';
+import ThundraSpan from '../opentracing/Span';
 import SpanFilter from './SpanFilter';
 
 const get = require('lodash.get');

@@ -1,4 +1,4 @@
-import ThundraSpan from '../Span';
+import ThundraSpan from '../opentracing/Span';
 
 /**
  * Interface for implementations which are notified
