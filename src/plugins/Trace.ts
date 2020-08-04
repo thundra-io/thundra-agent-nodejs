@@ -16,12 +16,16 @@ import GlobalTracer from '../opentracing/GlobalTracer';
 
 const get = require('lodash.get');
 
+/**
+ * The trace plugin for trace support
+ */
 export default class Trace {
+
+    pluginOrder: number = 1;
+    pluginContext: PluginContext;
     hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
             'after-invocation': (execContext: ExecutionContext) => void; };
     config: TraceConfig;
-    pluginOrder: number = 1;
-    pluginContext: PluginContext;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
     listeners: any[];
@@ -40,34 +44,19 @@ export default class Trace {
         opentracing.initGlobalTracer(new GlobalTracer());
     }
 
-    initIntegrations(): void {
-        if (!(this.config.disableInstrumentation || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE))) {
-            this.integrationsMap = new Map<string, Integration>();
-
-            for (const key of Object.keys(INTEGRATIONS)) {
-                const clazz = INTEGRATIONS[key];
-                if (clazz) {
-                    if (!this.integrationsMap.get(key)) {
-                        if (!this.config.isIntegrationDisabled(key)) {
-                            const instance = new clazz(this.config);
-                            this.integrationsMap.set(key, instance);
-                        }
-                    }
-                }
-            }
-
-            this.instrumenter = new Instrumenter(this.config);
-            this.instrumenter.hookModuleCompile();
-        }
-    }
-
+    /**
+     * Sets the the {@link PluginContext}
+     * @param {PluginContext} pluginContext the {@link PluginContext}
+     */
     setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
     }
 
+    /**
+     * Called before invocation
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     */
     beforeInvocation = (execContext: ExecutionContext) => {
-        this.destroy();
-
         const { executor } = this.pluginContext;
         const { tracer } = execContext;
 
@@ -78,6 +67,10 @@ export default class Trace {
         }
     }
 
+    /**
+     * Called after invocation
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     */
     afterInvocation = (execContext: ExecutionContext) => {
         const { apiKey, executor } = this.pluginContext;
         const { tracer, rootSpan } = execContext;
@@ -105,11 +98,37 @@ export default class Trace {
                 }
             }
         }
-
-        this.destroy();
     }
 
-    buildSpanData(span: ThundraSpan, execContext: any): SpanData {
+    /**
+     * Destroys plugin
+     */
+    destroy(): void {
+        // pass
+    }
+
+    private initIntegrations(): void {
+        if (!(this.config.disableInstrumentation || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE))) {
+            this.integrationsMap = new Map<string, Integration>();
+
+            for (const key of Object.keys(INTEGRATIONS)) {
+                const clazz = INTEGRATIONS[key];
+                if (clazz) {
+                    if (!this.integrationsMap.get(key)) {
+                        if (!this.config.isIntegrationDisabled(key)) {
+                            const instance = new clazz(this.config);
+                            this.integrationsMap.set(key, instance);
+                        }
+                    }
+                }
+            }
+
+            this.instrumenter = new Instrumenter(this.config);
+            this.instrumenter.hookModuleCompile();
+        }
+    }
+
+    private buildSpanData(span: ThundraSpan, execContext: any): SpanData {
         const spanData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.SPAN) as SpanData;
 
         spanData.id = span.spanContext.spanId;
@@ -130,15 +149,4 @@ export default class Trace {
         return spanData;
     }
 
-    destroy(): void {
-        /*
-        if (this.config && !(this.config.disableInstrumentation)) {
-            this.tracer.destroy();
-            if (typeof this.instrumenter.unhookModuleCompile === 'function') {
-                this.instrumenter.unhookModuleCompile();
-            }
-        }
-        this.triggerClassName = undefined;
-        */
-    }
 }
