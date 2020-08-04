@@ -1,3 +1,7 @@
+/**
+ * Module entry point for publicly supported APIs
+ */
+
 import LogConfig from './LogConfig';
 import ThundraConfig from './ThundraConfig';
 import TraceConfig from './TraceConfig';
