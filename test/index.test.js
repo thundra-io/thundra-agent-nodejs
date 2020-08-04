@@ -1,6 +1,6 @@
 const Thundra = require('../dist/index');
-import LambdaHandlerWrapper from '../dist/lambda/LambdaHandlerWrapper';
-import Utils from '../dist/plugins/utils/Utils.js';
+import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
+import Utils from '../dist/utils/Utils.js';
 import ConfigProvider from '../dist/config/ConfigProvider';
 import ConfigNames from '../dist/config/ConfigNames';
 import { EnvVariableKeys } from '../dist/Constants';

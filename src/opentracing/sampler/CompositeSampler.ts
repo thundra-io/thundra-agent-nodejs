@@ -1,6 +1,12 @@
 import Sampler from './Sampler';
 
+/**
+ * {@link Sampler} implementation which composes
+ * multiple {@link Sampler}s by specified
+ * {@link SamplerCompositionOperator}.
+ */
 class CompositeSampler implements Sampler<any> {
+
     private samplers: Array<Sampler<any>>;
     private operator: SamplerCompositionOperator;
 
@@ -9,6 +15,9 @@ class CompositeSampler implements Sampler<any> {
         this.operator = operator === undefined ? SamplerCompositionOperator.OR : operator;
     }
 
+    /**
+     * @inheritDoc
+     */
     isSampled(arg?: any): boolean {
         if (this.operator === SamplerCompositionOperator.AND) {
             let isSampled: boolean = true;
@@ -24,6 +33,7 @@ class CompositeSampler implements Sampler<any> {
             return isSampled;
         }
     }
+
 }
 
 export enum SamplerCompositionOperator {

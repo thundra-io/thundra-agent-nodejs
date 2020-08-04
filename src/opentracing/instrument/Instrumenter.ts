@@ -8,20 +8,25 @@ import { ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Cons
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
+import Utils from '../../utils/Utils';
 
 const Module = require('module');
 const path = require('path');
 const get = require('lodash.get');
-const stringify = require('json-stringify-safe');
+const sizeof = require('object-sizeof');
+const copy = require('fast-copy');
 
-const TRACE_DEF_SEPERATOR: string = '.';
+const TRACE_DEF_SEPARATOR: string = '.';
+const MAX_LINES: number = 100;
+const MAX_VAR_VALUE_SIZE: number = 8192; // 8KB
 
-/*
-    Most of the code is derived from njsTrace : https://github.com/ValYouW/njsTrace
-*/
+/**
+ * Instruments specified/configured modules/method during load time
+ */
 class Instrumenter {
-    origCompile: any;
-    sourceCodeInstrumenter: ThundraSourceCodeInstrumenter;
+
+    private origCompile: any;
+    private sourceCodeInstrumenter: ThundraSourceCodeInstrumenter;
 
     constructor(traceConfig: TraceConfig) {
         const traceableConfigs = get(traceConfig, 'traceableConfigs');
@@ -30,19 +35,25 @@ class Instrumenter {
         this.sourceCodeInstrumenter = new ThundraSourceCodeInstrumenter(traceableConfigs, traceableConfigPrefix);
     }
 
-    unhookModuleCompile() {
-        Module.prototype._compile = this.origCompile;
-    }
-
+    /**
+     * Hooks itself into module load cycle to instrument specified/configured modules/methods
+     */
     hookModuleCompile() {
-        this.origCompile = Module.prototype._compile;
+        const compile = Module.prototype._compile;
+
+        if (compile._thundra) {
+            // If already hooked into compile phase, don't hook again
+            return;
+        }
+
+        this.origCompile = compile;
 
         const self = this;
         self.setGlobalFunction();
 
-        Module.prototype._compile = function (content: any, filename: any) {
+        const thundraCompile = function (content: any, filename: any) {
             const relPath = path.relative(process.cwd(), filename);
-            let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPERATOR);
+            let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPARATOR);
             relPathWithDots = relPathWithDots.replace('.js', '');
 
             const sci = self.sourceCodeInstrumenter;
@@ -65,23 +76,110 @@ class Instrumenter {
             }
             self.origCompile.call(this, content, filename);
         };
+        Object.defineProperty(thundraCompile, '_thundra', {
+            value: true,
+            writable: false,
+        });
+        Module.prototype._compile = thundraCompile;
     }
 
-    setGlobalFunction() {
+    /**
+     * Unhooks itself from module load cycle
+     */
+    unhookModuleCompile() {
+        // `origCompile` is set only if it is already wrapped by Thundra compiler.
+        // If it is not set, this means that Thundra is not hooked,
+        // so there is nothing to do for unhook
+        if (this.origCompile) {
+            Module.prototype._compile = this.origCompile;
+        }
+    }
+
+    private checkValueSize(value: any): boolean {
+        try {
+            const valueSize = sizeof(value);
+            return valueSize <= MAX_VAR_VALUE_SIZE;
+        } catch (e) {
+            ThundraLogger.debug('Unable to check value size');
+            ThundraLogger.debug(e);
+            return true;
+        }
+    }
+
+    private packValue(value: any) {
+        // `==` is used on purpose (instead of `===`) as it covers both undefined and null values
+        if (value == null) {
+            return null;
+        }
+        const valueType = typeof value;
+        if (valueType === 'function') {
+            return value.toString();
+        }
+        if (value instanceof Map || value instanceof Set) {
+            value = [...value];
+        }
+        if (!this.checkValueSize(value)) {
+            return '<skipped: value too big>';
+        }
+        try {
+            // Create deep copy to take snapshot of the value.
+            // So later modifications on the real value/object
+            // will not be reflected to the taken snapshot here.
+            return copy(value);
+        } catch (e1) {
+            ThundraLogger.debug('Unable to clone value');
+            ThundraLogger.debug(e1);
+            try {
+                const valueJson = Utils.serializeJSON(value);
+                if (valueJson) {
+                    if (valueJson.length <= MAX_VAR_VALUE_SIZE) {
+                        return valueJson;
+                    } else {
+                        ThundraLogger.debug('Unable to serialize value to JSON as it is too big');
+                    }
+                } else {
+                    ThundraLogger.debug('Unable to serialize value to JSON as no JSON could produced');
+                }
+            } catch (e2) {
+                ThundraLogger.debug('Unable to serialize value to JSON');
+                ThundraLogger.debug(e2);
+            }
+            try {
+                const valueStr = value.toString();
+                if (valueStr) {
+                    if (valueStr.length <= MAX_VAR_VALUE_SIZE) {
+                        return valueStr;
+                    } else {
+                        ThundraLogger.debug('Unable to use "toString()" of value as it is too big');
+                    }
+                } else {
+                    ThundraLogger.debug('Unable to use "toString()" of value as no string could be produced');
+                }
+            } catch (e3) {
+                ThundraLogger.debug('Unable to use "toString()" of value');
+                ThundraLogger.debug(e3);
+            }
+            return '<unable to serialize value>';
+        }
+    }
+
+    private setGlobalFunction() {
+        const me = this;
         global.__thundraTraceEntry__ = function (args: any) {
             const { tracer } = ExecutionContextManager.get();
+            if (!tracer) {
+                return;
+            }
             try {
                 const span = tracer.startSpan(args.path + '.' + args.name) as ThundraSpan;
                 const spanArguments: Argument[] = [];
 
                 if (args.args) {
                     for (let i = 0; i < args.args.length; i++) {
-                        const argType = typeof args.args[i];
-                        let argValue = JSON.parse(stringify(args.args[i]));
-                        if (argType === 'function') {
-                            argValue = argValue.toString();
-                        }
-                        spanArguments.push(new Argument(args.argNames[i], argType, argValue));
+                        const argValue = args.args[i];
+                        const argType = typeof argValue;
+                        const packedArgValue = me.packValue(argValue);
+                        spanArguments.push(new Argument(args.argNames[i], argType, packedArgValue));
                     }
                 }
 
@@ -94,7 +192,12 @@ class Instrumenter {
                     span,
                 };
             } catch (ex) {
-                tracer.finishSpan();
+                ThundraLogger.error(ex);
+                try {
+                    tracer.finishSpan();
+                } catch (ex2) {
+                    // Ignore
+                }
             }
         };
 
@@ -127,28 +230,13 @@ class Instrumenter {
                 if (varNames.length === varValues.length) {
                     for (let i = 0; i < varNames.length; i++) {
                         const varName = varNames[i];
-                        let varValue = varValues[i];
-
-                        if (varValue instanceof Map || varValue instanceof Set) {
-                            varValue = [...varValue];
-                        }
-
-                        let processedVarValue = varValue ? varValue.toString() : null;
-                        try {
-                            // Cycle aware stringify operation
-                            processedVarValue = stringify(varValue);
-                            try {
-                                processedVarValue = JSON.parse(processedVarValue);
-                            } catch (e) {
-                                // Ignore
-                            }
-                        } catch (e) {
-                            // Ignore
-                        }
+                        const varValue = varValues[i];
+                        const varType = typeof varValue;
+                        const packedVarValue = me.packValue(varValue);
                         const localVar: any = {
                             name: varName,
-                            value: processedVarValue,
-                            type: typeof varValue,
+                            value: packedVarValue,
+                            type: varType,
                         };
                         localVars.push(localVar);
                     }
@@ -169,19 +257,26 @@ class Instrumenter {
                     error,
                 };
 
-                let currentLines = methodSpan.getTag(LineByLineTags.LINES);
+                let currentLines: any[] = methodSpan.getTag(LineByLineTags.LINES);
                 if (!currentLines) {
                     currentLines = [];
+                    methodSpan.setTag(LineByLineTags.LINES, currentLines);
                 }
-
-                methodSpan.setTag(LineByLineTags.LINES, [...currentLines, methodLineTag]);
+                if (currentLines.length < MAX_LINES) {
+                    currentLines.push(methodLineTag);
+                } else if (currentLines.length === MAX_LINES) {
+                    methodSpan.setTag(LineByLineTags.LINES_OVERFLOW, true);
+                }
             } catch (ex) {
-                // Ignore
+                ThundraLogger.error(ex);
             }
         };
 
         global.__thundraTraceExit__ = function (args: any) {
             const { tracer } = ExecutionContextManager.get();
+            if (!tracer) {
+                return;
+            }
             try {
                 const entryData = args.entryData;
                 if (entryData.latestLineSpan) {
@@ -193,18 +288,26 @@ class Instrumenter {
                 const span = (entryData && entryData.span) ? entryData.span : tracer.getActiveSpan();
                 if (!args.exception) {
                     if (args.returnValue) {
-                        const returnValue = JSON.parse(stringify(args.returnValue));
-                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(typeof args.returnValue, returnValue));
+                        const returnValue = args.returnValue;
+                        const returnType = typeof returnValue;
+                        const packedReturnValue = me.packValue(returnValue);
+                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(returnType, packedReturnValue));
                     }
                 } else {
                     span.setErrorTag(args.exceptionValue);
                 }
                 span.finish();
             } catch (ex) {
-                tracer.finishSpan();
+                ThundraLogger.error(ex);
+                try {
+                    tracer.finishSpan();
+                } catch (ex2) {
+                    // Ignore
+                }
             }
         };
     }
+
 }
 
 export default Instrumenter;

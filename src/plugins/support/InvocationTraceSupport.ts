@@ -5,7 +5,19 @@ import { SpanTags } from '../../Constants';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 const flatten = require('lodash.flatten');
 
+/**
+ * Provides/supports API for invocation tracing related operations
+ */
 class InvocationTraceSupport {
+
+    private constructor() {
+    }
+
+    /**
+     * Gets {@link Resource}s in the current invocation
+     * @param {string} rootSpanId id of the root span
+     * @return {Resource[]} the {@link Resource}s in the current invocation
+     */
     static getResources(rootSpanId: string = ''): Resource[] {
         try {
             const { tracer } = ExecutionContextManager.get();
@@ -15,7 +27,7 @@ class InvocationTraceSupport {
             }
 
             const resourcesMap: Map<string, Resource> = new Map<string, Resource>();
-            const spans = tracer.recorder.getSpanList().
+            const spans = tracer.getSpanList().
                             filter((span: ThundraSpan) => span.getTag(SpanTags.TOPOLOGY_VERTEX)).
                             filter((span: ThundraSpan) => span.spanContext.spanId !== rootSpanId);
 
@@ -50,7 +62,104 @@ class InvocationTraceSupport {
         }
     }
 
-    static generateResourceIdFromSpan(span: ThundraSpan, resourceName?: string): string {
+    /**
+     * Gets the active {@link ThundraSpan} for the current invocation
+     * @return {ThundraSpan} the active {@link ThundraSpan} for the current invocation
+     */
+    static getActiveSpan(): ThundraSpan {
+        const { tracer } = ExecutionContextManager.get();
+
+        if (!tracer) {
+            return undefined;
+        }
+
+        return tracer.getActiveSpan();
+    }
+
+    /**
+     * Adds the incoming trace link for the invocation
+     * @param {string} traceLink the incoming trace link to be added
+     */
+    static addIncomingTraceLink(traceLink: string): void {
+        const { incomingTraceLinks } = ExecutionContextManager.get();
+        if (incomingTraceLinks) {
+            incomingTraceLinks.push(traceLink);
+        }
+    }
+
+    /**
+     * Adds the incoming trace links for the invocation
+     * @param {string[]} traceLinks the incoming trace links to be added
+     */
+    static addIncomingTraceLinks(traceLinks: string[]): void {
+        const { incomingTraceLinks } = ExecutionContextManager.get();
+        if (incomingTraceLinks) {
+            incomingTraceLinks.push(...traceLinks);
+        }
+    }
+
+    /**
+     * Gets the incoming trace links for the invocation
+     * @return {string[]} the incoming trace links
+     */
+    static getIncomingTraceLinks(): string[] {
+        const { incomingTraceLinks } = ExecutionContextManager.get();
+        if (!incomingTraceLinks) {
+            return [];
+        }
+        return [...new Set(incomingTraceLinks)].filter((e) => e);
+    }
+
+    /**
+     * Adds the outgoing trace link for the invocation
+     * @param {string} traceLink the outgoing trace link to be added
+     */
+    static addOutgoingTraceLink(traceLink: string): void {
+        const { outgoingTraceLinks } = ExecutionContextManager.get();
+        if (outgoingTraceLinks) {
+            outgoingTraceLinks.push(traceLink);
+        }
+    }
+
+    /**
+     * Adds the outgoing trace links for the invocation
+     * @param {string[]} traceLinks the outgoing trace links to be added
+     */
+    static addOutgoingTraceLinks(traceLinks: string[]): void {
+        const { outgoingTraceLinks } = ExecutionContextManager.get();
+        if (outgoingTraceLinks) {
+            outgoingTraceLinks.push(...traceLinks);
+        }
+    }
+
+    /**
+     * Gets the outgoing trace links for the invocation
+     * @return {string[]} the outgoing trace links
+     */
+    static getOutgoingTraceLinks(): string[] {
+        const { tracer, outgoingTraceLinks } = ExecutionContextManager.get();
+
+        if (!tracer) {
+            return [];
+        }
+
+        try {
+            const spans = tracer.getSpanList();
+            const traceLinks = flatten(
+                spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
+                    .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
+            );
+            if (outgoingTraceLinks) {
+                traceLinks.push(...outgoingTraceLinks);
+            }
+            return [...new Set<string>(traceLinks)];
+        } catch (e) {
+            ThundraLogger.error(
+                `Error while getting the outgoing trace links for invocation. ${e}`);
+        }
+    }
+
+    private static generateResourceIdFromSpan(span: ThundraSpan, resourceName?: string): string {
         if (span.className && span.operationName) {
             if (!resourceName) {
                 resourceName = span.operationName;
@@ -63,65 +172,6 @@ class InvocationTraceSupport {
         }
     }
 
-    static addIncomingTraceLink(traceLink: string): void {
-        const { incomingTraceLinks } = ExecutionContextManager.get();
-        incomingTraceLinks.push(traceLink);
-    }
-
-    static addIncomingTraceLinks(traceLinks: any[]): void {
-        const { incomingTraceLinks } = ExecutionContextManager.get();
-        incomingTraceLinks.push(...traceLinks);
-    }
-
-    static getIncomingTraceLinks(): any[] {
-        const { incomingTraceLinks } = ExecutionContextManager.get();
-        return [...new Set(incomingTraceLinks)].filter((e) => e);
-    }
-
-    static addOutgoingTraceLink(traceLink: string): void {
-        const { outgoingTraceLinks } = ExecutionContextManager.get();
-        outgoingTraceLinks.push(traceLink);
-    }
-
-    static addOutgoingTraceLinks(traceLinks: any[]): void {
-        const { outgoingTraceLinks } = ExecutionContextManager.get();
-        outgoingTraceLinks.push(...traceLinks);
-    }
-
-    static getActiveSpan(): ThundraSpan {
-        const { tracer } = ExecutionContextManager.get();
-
-        if (!tracer) {
-            return undefined;
-        }
-
-        return tracer.getActiveSpan();
-    }
-
-    static getOutgoingTraceLinks(): any[] {
-        const { tracer, outgoingTraceLinks } = ExecutionContextManager.get();
-
-        if (!tracer) {
-            return undefined;
-        }
-
-        try {
-            const spans = tracer.recorder.getSpanList();
-            const traceLinks = flatten(
-                spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
-                    .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
-            );
-            traceLinks.push(...outgoingTraceLinks);
-            return [...new Set(traceLinks)];
-        } catch (e) {
-            ThundraLogger.error(
-                `Error while getting the outgoing trace links for invocation. ${e}`);
-        }
-    }
-
-    static clear(): void {
-        // pass
-    }
 }
 
 export default InvocationTraceSupport;

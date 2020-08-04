@@ -1,13 +1,13 @@
-import Utils from './utils/Utils';
+import Utils from '../utils/Utils';
 import TraceConfig from './config/TraceConfig';
 import MonitoringDataType from './data/base/MonitoringDataType';
 import ThundraSpan from '../opentracing/Span';
 import SpanData from './data/trace/SpanData';
 import PluginContext from './PluginContext';
 import { INTEGRATIONS } from '../Constants';
-import { initGlobalTracer } from 'opentracing';
+import * as opentracing from 'opentracing';
 import ThundraLogger from '../ThundraLogger';
-import Integration from './integrations/Integration';
+import Integration from '../integrations/Integration';
 import Instrumenter from '../opentracing/instrument/Instrumenter';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
@@ -37,7 +37,7 @@ export default class Trace {
 
         this.initIntegrations();
 
-        initGlobalTracer(new GlobalTracer());
+        opentracing.initGlobalTracer(new GlobalTracer());
     }
 
     initIntegrations(): void {

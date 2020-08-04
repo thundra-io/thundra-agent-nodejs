@@ -1,4 +1,4 @@
-import {LambdaContextProvider} from '../../dist/lambda/LambdaContextProvider';
+import {LambdaContextProvider} from '../../dist/wrappers/lambda/LambdaContextProvider';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 

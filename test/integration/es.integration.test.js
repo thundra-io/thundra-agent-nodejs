@@ -1,4 +1,4 @@
-import ESIntegrations from '../../dist/plugins/integrations/ESIntegration';
+import ESIntegrations from '../../dist/integrations/ESIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import ES from './utils/es.integration.utils';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';

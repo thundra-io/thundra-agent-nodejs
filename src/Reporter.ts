@@ -2,13 +2,15 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import {COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint} from './Constants';
-import Utils from './plugins/utils/Utils';
+import { COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint } from './Constants';
+import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
 import BaseMonitoringData from './plugins/data/base/BaseMonitoringData';
 import MonitoringDataType from './plugins/data/base/MonitoringDataType';
 import ConfigNames from './config/ConfigNames';
 import ConfigProvider from './config/ConfigProvider';
+import CompositeMonitoringData from './plugins/data/composite/CompositeMonitoringData';
+import MonitorDataType from './plugins/data/base/MonitoringDataType';
 
 const httpAgent = new http.Agent({
     keepAlive: true,
@@ -18,11 +20,15 @@ const httpsAgent = new https.Agent({
     keepAlive: true,
 });
 
+/**
+ * Reports given telemetry data to given/configured Thundra collector endpoint
+ */
 class Reporter {
+
     private readonly MAX_MONITOR_DATA_BATCH_SIZE: number = 100;
+
     private useHttps: boolean;
     private requestOptions: http.RequestOptions;
-    private connectionRetryCount: number;
     private latestReportingLimitedMinute: number;
     private URL: url.UrlWithStringQuery;
     private apiKey: string;
@@ -34,11 +40,46 @@ class Reporter {
         this.apiKey = apiKey;
         this.useHttps = (u ? u.protocol : this.URL.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
-        this.connectionRetryCount = 0;
         this.latestReportingLimitedMinute = -1;
     }
 
-    createRequestOptions(u?: url.URL): http.RequestOptions {
+    /**
+     * Reports given data
+     * @param reports data to be reported
+     * @return {Promise} the promise to track the result of reporting
+     */
+    sendReports(reports: any[]): Promise<void> {
+        let batchedReports: any = [];
+        try {
+            batchedReports = this.getCompositeBatchedReports(reports);
+        } catch (err) {
+            ThundraLogger.error(`Cannot create batch request will send no report. ${err}`);
+        }
+
+        return new Promise<void>((resolve, reject) => {
+            this.sendBatchedReports(batchedReports)
+                .then(() => {
+                    resolve();
+                })
+                .catch((err: any) => {
+                    if (err.code === 'ECONNRESET') {
+                        ThundraLogger.debug('Connection reset by server. Will send monitoring data again.');
+                        this.sendBatchedReports(batchedReports)
+                            .then(() => {
+                                resolve();
+                            })
+                            .catch((err2: any) => {
+                                reject(err2);
+                            });
+                    } else {
+                        ThundraLogger.error(err);
+                        reject(err);
+                    }
+                });
+        });
+    }
+
+    private createRequestOptions(u?: url.URL): http.RequestOptions {
         const path = COMPOSITE_MONITORING_DATA_PATH;
 
         return {
@@ -66,7 +107,7 @@ class Reporter {
         };
     }
 
-    getCompositeBatchedReports(reports: any[]): any[] {
+    private getCompositeBatchedReports(reports: any[]): any[] {
         reports = reports.slice(0);
 
         const batchedReports: any[] = [];
@@ -75,10 +116,10 @@ class Reporter {
         if (!invocationReport) {
             return [];
         }
-        const initialCompositeData = Utils.initCompositeMonitoringData(invocationReport.data);
+        const initialCompositeData = this.initCompositeMonitoringData(invocationReport.data);
 
         for (let i = 0; i < batchCount; i++) {
-            const compositeData = Utils.initCompositeMonitoringData(initialCompositeData);
+            const compositeData = this.initCompositeMonitoringData(initialCompositeData);
             const batch: any[] = [];
             for (let j = 1; j < this.MAX_MONITOR_DATA_BATCH_SIZE; j++) {
                 const report = reports.shift();
@@ -86,7 +127,7 @@ class Reporter {
                     break;
                 }
 
-                batch.push(Utils.stripCommonFields(report.data as BaseMonitoringData));
+                batch.push(this.stripCommonFields(report.data as BaseMonitoringData));
             }
 
             compositeData.allMonitoringData = batch;
@@ -97,14 +138,42 @@ class Reporter {
         return batchedReports;
     }
 
-    async sendReports(reports: any[]): Promise<void> {
-        let batchedReports = [];
-        try {
-            batchedReports = this.getCompositeBatchedReports(reports);
-        } catch (err) {
-            ThundraLogger.error(`Cannot create batch request will send no report. ${err}`);
-        }
+    private initCompositeMonitoringData(data: BaseMonitoringData): CompositeMonitoringData {
+        const monitoringData = Utils.createMonitoringData(MonitorDataType.COMPOSITE);
 
+        monitoringData.id = Utils.generateId();
+        monitoringData.agentVersion = data.agentVersion;
+        monitoringData.dataModelVersion = data.dataModelVersion;
+        monitoringData.applicationId = data.applicationId;
+        monitoringData.applicationDomainName = data.applicationDomainName;
+        monitoringData.applicationClassName = data.applicationClassName;
+        monitoringData.applicationName = data.applicationName;
+        monitoringData.applicationVersion = data.applicationVersion;
+        monitoringData.applicationStage = data.applicationStage;
+        monitoringData.applicationRuntime = data.applicationRuntime;
+        monitoringData.applicationRuntimeVersion = data.applicationRuntimeVersion;
+        monitoringData.applicationTags = data.applicationTags;
+
+        return monitoringData as CompositeMonitoringData;
+    }
+
+    private stripCommonFields(monitoringData: BaseMonitoringData) {
+        monitoringData.agentVersion = undefined;
+        monitoringData.dataModelVersion = undefined;
+        monitoringData.applicationId = undefined;
+        monitoringData.applicationClassName = undefined;
+        monitoringData.applicationDomainName = undefined;
+        monitoringData.applicationName = undefined;
+        monitoringData.applicationVersion = undefined;
+        monitoringData.applicationStage = undefined;
+        monitoringData.applicationRuntime = undefined;
+        monitoringData.applicationRuntimeVersion = undefined;
+        monitoringData.applicationTags = undefined;
+
+        return monitoringData;
+    }
+
+    private sendBatchedReports(batchedReports: any[]) {
         const isAsync = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE);
 
         const reportPromises: any[] = [];
@@ -121,22 +190,10 @@ class Reporter {
             }
         });
 
-        await Promise.all(reportPromises).catch(async (err) => {
-            if (this.connectionRetryCount === 0 && err.code === 'ECONNRESET') {
-                ThundraLogger.debug(
-                    'Keep Alive connection reset by server. Will send monitoring data again.');
-                this.connectionRetryCount++;
-                await this.sendReports(reports);
-                this.connectionRetryCount = 0;
-                return;
-            }
-            ThundraLogger.error(err);
-        });
-
-        this.connectionRetryCount = 0;
+        return Promise.all(reportPromises);
     }
 
-    request(batch: any[]): Promise<any> {
+    private request(batch: any[]): Promise<any> {
         return new Promise((resolve, reject) => {
             let request: http.ClientRequest;
             const responseHandler = (response: http.IncomingMessage) => {
@@ -151,9 +208,9 @@ class Reporter {
                     if (response.statusCode !== 200) {
                         // First, check whether or debug is enabled.
                         // If not no need to convert reports into JSON string to pass to "debug" function
-                        // because "JSON.stringify" is not cheap operation.
+                        // because serialization is not cheap operation.
                         if (ThundraLogger.isDebugEnabled()) {
-                            ThundraLogger.debug(JSON.stringify(batch));
+                            ThundraLogger.debug(Utils.serializeJSON(batch));
                         }
                         return reject({
                             status: response.statusCode,
@@ -175,7 +232,7 @@ class Reporter {
                 return reject(error);
             });
             try {
-                request.write(JSON.stringify(batch));
+                request.write(Utils.serializeJSON(batch));
                 request.end();
             } catch (error) {
                 ThundraLogger.error('Cannot serialize report data. ' + error);
@@ -183,10 +240,11 @@ class Reporter {
         });
     }
 
-    writeBatchToCW(batch: any[]): Promise<any> {
+    private writeBatchToCW(batch: any[]): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                const jsonStringReport = '\n' + JSON.stringify(batch).replace(/\r?\n|\r/g, '') + '\n';
+                const json = Utils.serializeJSON(batch);
+                const jsonStringReport = '\n' + json.replace(/\r?\n|\r/g, '') + '\n';
                 process.stdout.write(jsonStringReport);
                 return resolve();
             } catch (error) {
@@ -195,6 +253,7 @@ class Reporter {
             }
         });
     }
+
 }
 
 export default Reporter;

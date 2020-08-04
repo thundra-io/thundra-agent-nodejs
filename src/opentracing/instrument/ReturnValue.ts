@@ -1,4 +1,8 @@
+/**
+ * Represents return value with its type and actual value of a method call
+ */
 class ReturnValue {
+
     type: string;
     value: any;
 
@@ -6,6 +10,7 @@ class ReturnValue {
         this.type = type;
         this.value = value;
     }
+
 }
 
 export default ReturnValue;

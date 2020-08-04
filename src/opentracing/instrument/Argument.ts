@@ -1,4 +1,8 @@
+/**
+ * Represents argument with its name, type and actual value in a method call
+ */
 class Argument {
+
     name: string;
     type: string;
     value: any;
@@ -8,6 +12,7 @@ class Argument {
         this.type = type;
         this.value = value;
     }
+
 }
 
 export default Argument;

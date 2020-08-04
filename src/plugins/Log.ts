@@ -1,4 +1,4 @@
-import Utils from './utils/Utils';
+import Utils from '../utils/Utils';
 import LogConfig from './config/LogConfig';
 import LogData from './data/log/LogData';
 import PluginContext from './PluginContext';

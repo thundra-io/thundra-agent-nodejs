@@ -1,3 +1,8 @@
+/**
+ * Provides {@link ExecutionContext} based on Node.js runtime's {@link asyncHooks} support
+ * by linking parent and child contexts.
+ */
+
 import ExecutionContext from './ExecutionContext';
 
 const asyncHooks = require('async_hooks');

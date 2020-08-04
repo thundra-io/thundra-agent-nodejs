@@ -2,8 +2,8 @@ import { Tracer } from 'opentracing';
 import * as opentracing from 'opentracing';
 import ThundraSpan, { SpanEvent } from './Span';
 import ThundraRecorder from './Recorder';
-import Utils from '../plugins/utils/Utils';
-import ThundraSpanListener from '../plugins/listeners/ThundraSpanListener';
+import Utils from '../utils/Utils';
+import ThundraSpanListener from './listeners/ThundraSpanListener';
 import TextMapPropagator from './propagation/TextMap';
 import HttpPropagator from './propagation/Http';
 import BinaryPropagator from './propagation/Binary';
@@ -11,15 +11,16 @@ import ThundraLogger from '../ThundraLogger';
 import ThundraSpanContext from './SpanContext';
 import { LineByLineTags } from '../Constants';
 
+/**
+ * Thundra's {@link Tracer} implementation
+ */
 class ThundraTracer extends Tracer {
-    static instance: ThundraTracer;
 
-    tags: any;
-    recorder: ThundraRecorder;
-    activeSpans: Map<string, ThundraSpan>;
-    transactionId: string;
-    propagators: any;
-
+    private tags: any;
+    private recorder: ThundraRecorder;
+    private activeSpans: Map<string, ThundraSpan>;
+    private transactionId: string;
+    private propagators: any;
     private invokeCallback = true;
 
     constructor(config: any = {}) {
@@ -36,49 +37,104 @@ class ThundraTracer extends Tracer {
         };
     }
 
+    /**
+     * Gets the active transaction id
+     * @return {string} the active transaction id
+     */
+    getTransactionId(): string {
+        return this.transactionId;
+    }
+
+    /**
+     * Sets the active transaction id
+     * @param {string} transactionId the transaction id to be set as active
+     */
+    setTransactionId(transactionId: string) {
+        this.transactionId = transactionId;
+    }
+
+    /**
+     * Gets the active {@link ThundraSpan}
+     * @return {ThundraSpan} the active {@link ThundraSpan}
+     */
     getActiveSpan(): ThundraSpan {
         return this.recorder.getActiveSpan();
     }
 
+    /**
+     * Gets the active {@link ThundraSpan}
+     * @param span the active {@link ThundraSpan} to be set
+     */
     setActiveSpan(span: ThundraSpan) {
         this.recorder.setActiveSpan(span);
     }
 
+    /**
+     * Removes the active {@link ThundraSpan}
+     * @return {ThundraSpan} the removed active {@link ThundraSpan}
+     */
     removeActiveSpan(): ThundraSpan {
         return this.recorder.removeActiveSpan();
     }
 
+    /**
+     * Finishes the active {@link ThundraSpan}
+     */
     finishSpan(): void {
         if (this.getActiveSpan()) {
             this.getActiveSpan().finish();
         }
     }
 
+    /**
+     * Gets the {@link ThundraRecorder}
+     * @return {ThundraRecorder} the {@link ThundraRecorder}
+     */
     getRecorder(): ThundraRecorder {
         return this.recorder;
     }
 
-    destroy(): void {
-        this.recorder.destroy();
-        this.activeSpans.clear();
+    /**
+     * Gets the recorded {@link ThundraSpan}s
+     * @record {ThundraSpan[]} the recorded {@link ThundraSpan}s
+     */
+    getSpanList(): ThundraSpan[] {
+        return this.recorder.getSpanList();
     }
 
+    /**
+     * Adds/registers the given {@link ThundraSpanListener}
+     * @param {ThundraSpanListener} listener the {@link ThundraSpanListener} to be added/registered
+     */
     addSpanListener(listener: ThundraSpanListener) {
         if (!listener) {
             throw new Error('No listener provided.');
         }
 
-        if (this.shouldInvokeCallback()) {
-            this.recorder.addSpanListener(listener);
-        } else {
-            throw new Error('There can be only one Span Listener which is responsible for invoking span callback');
-        }
+        this.recorder.addSpanListener(listener);
     }
 
+    /**
+     * Sets/registers the given {@link ThundraSpanListener}s
+     * @param {ThundraSpanListener[]} listeners the {@link ThundraSpanListener}s to be added/registered
+     */
     setSpanListeners(listeners: ThundraSpanListener[]) {
         this.recorder.setSpanListeners(listeners);
     }
 
+    /**
+     * Destroys the tracer
+     */
+    destroy(): void {
+        this.recorder.destroy();
+        this.activeSpans.clear();
+    }
+
+    /**
+     * Wraps the given function and traces its call/execution
+     * @param {string} spanName name of the span
+     * @param func the function to be wrapped and traces
+     */
     wrapper<T extends (...args: any[]) => any>(spanName: string, func: T): T {
         const activeSpan = this.getActiveSpan();
         const span: ThundraSpan = this.startSpan(spanName, { childOf: activeSpan }) as ThundraSpan;
@@ -195,13 +251,6 @@ class ThundraTracer extends Tracer {
         return true;
     }
 
-    shouldInvokeCallback(): boolean {
-        return this.invokeCallback;
-    }
-
-    disableInvokeCallback(): void {
-        this.invokeCallback = false;
-    }
 }
 
 export default ThundraTracer;

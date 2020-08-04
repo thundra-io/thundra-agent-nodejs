@@ -3,11 +3,17 @@ import InvocationData from '../plugins/data/invocation/InvocationData';
 import ThundraSpan from '../opentracing/Span';
 import LogData from '../plugins/data/log/LogData';
 
+/**
+ * Represents the scope of execution (request, invocation, etc ...)
+ * and holds scope specific data.
+ */
 export default class ExecutionContext {
+
     startTimestamp: number;
     finishTimestamp: number;
     tracer: ThundraTracer;
     reports: any[];
+    triggerClassName: string;
     transactionId: string;
     spanId: string;
     traceId: string;
@@ -48,7 +54,12 @@ export default class ExecutionContext {
         this.metrics = opts.metric || {};
     }
 
+    /**
+     * Adds data to be reported
+     * @param data data to be reported
+     */
     report(data: any) {
         this.reports = [...this.reports, data];
     }
+
 }

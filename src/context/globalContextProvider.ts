@@ -1,3 +1,7 @@
+/**
+ * Provides global {@link ExecutionContext}.
+ */
+
 import ExecutionContext from './ExecutionContext';
 
 let globalContext: ExecutionContext;

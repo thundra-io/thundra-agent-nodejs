@@ -1,6 +1,6 @@
 import ConfigProvider from '../dist/config/ConfigProvider';
 import ConfigNames from '../dist/config/ConfigNames';
-import Utils from '../dist/plugins/utils/Utils';
+import Utils from '../dist/utils/Utils';
 import { createMockContext } from './mocks/mocks';
 import { SecurityTags, ClassNames } from '../dist/Constants';
 import AWSCalls from './integration/utils/aws.integration.utils';
@@ -9,9 +9,9 @@ import ESCalls from './integration/utils/es.integration.utils';
 import RedisCalls from './integration/utils/redis.integration.utils';
 import MySQLCalls from './integration/utils/mysql.integration.utils';
 import MongoCalls from './integration/utils/mongodb.integration.utils';
-import LambdaHandlerWrapper from '../dist/lambda/LambdaHandlerWrapper';
+import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
 import Recorder from '../dist/opentracing/Recorder';
-import { AWSIntegration } from '../dist/plugins/integrations/AWSIntegration';
+import { AWSIntegration } from '../dist/integrations/AWSIntegration';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
 
 import TestUtils from './utils.js';

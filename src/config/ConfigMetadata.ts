@@ -1,3 +1,7 @@
+/**
+ * Provides metadata for configurations like type, default value, etc ...
+ */
+
 import ConfigNames from './ConfigNames';
 
 export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any }} = {

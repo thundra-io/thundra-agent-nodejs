@@ -1,117 +1,224 @@
 import ThundraLogger from '../../ThundraLogger';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 
+/**
+ * Provides/supports API for invocation related operations
+ */
 class InvocationSupport {
-    static setAgentTag(key: string, value: any): void {
+
+    private constructor() {
+    }
+
+    /**
+     * Sets the agent tag
+     * @param {string} name the agent tag name
+     * @param value the agent tag value
+     */
+    static setAgentTag(name: string, value: any): void {
         const { tags } = ExecutionContextManager.get();
-        try {
-            tags[key] = value;
-        } catch (e) {
-            ThundraLogger.error(e);
+        if (tags) {
+            try {
+                tags[name] = value;
+            } catch (e) {
+                ThundraLogger.error(e);
+            }
         }
     }
 
-    static getAgentTag(key: string): any {
+    /**
+     * Sets the agent tags
+     * @param tags the agent tags to be set
+     */
+    static setAgentTags(tagsToSet: {[name: string]: any }): void {
         const { tags } = ExecutionContextManager.get();
-
-        return tags[key];
+        if (tags) {
+            try {
+                Object.keys(tagsToSet).forEach((name) => {
+                    tags[name] = tagsToSet[name];
+                });
+            } catch (e) {
+                ThundraLogger.error(e);
+            }
+        }
     }
 
+    /**
+     * Gets the agent tag
+     * @param {string} name the agent tag name
+     * @return the tag value
+     */
+    static getAgentTag(name: string): any {
+        const { tags } = ExecutionContextManager.get();
+        if (tags) {
+            return tags[name];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the agent tags
+     * @return the agent tags
+     */
     static getAgentTags(): any {
         const { tags } = ExecutionContextManager.get();
 
         return tags;
     }
 
-    static setAgentTags(keyValuePairs: {[key: string]: any }): void {
+    /**
+     * Removes the agent tag
+     * @param {string} name the agent tag name
+     */
+    static removeAgentTag(name: string): void {
         const { tags } = ExecutionContextManager.get();
-
-        try {
-            Object.keys(keyValuePairs).forEach((key) => {
-                tags[key] = keyValuePairs[key];
-            });
-        } catch (e) {
-            ThundraLogger.error(e);
+        if (tags) {
+            try {
+                if (tags[name]) {
+                    delete tags[name];
+                }
+            } catch (e) {
+                ThundraLogger.error(e);
+            }
         }
     }
 
+    /**
+     * Removes the agent tags
+     */
     static removeAgentTags(): void {
         const execContext = ExecutionContextManager.get();
-        execContext.tags = {};
-    }
-
-    static setTag(key: string, value: any): void {
-        const { userTags } = ExecutionContextManager.get();
-
-        try {
-            userTags[key] = value;
-        } catch (e) {
-            ThundraLogger.error(e);
+        if (execContext) {
+            execContext.tags = {};
         }
     }
 
-    static getTag(key: string): any {
+    /**
+     * Sets the tag
+     * @param {string} name the tag name
+     * @param value the tag value
+     */
+    static setTag(name: string, value: any): void {
         const { userTags } = ExecutionContextManager.get();
-
-        return userTags[key];
+        if (userTags) {
+            try {
+                userTags[name] = value;
+            } catch (e) {
+                ThundraLogger.error(e);
+            }
+        }
     }
 
+    /**
+     * Sets the tags
+     * @param tags the tags to be set
+     */
+    static setTags(tagsToSet: {[name: string]: any }): void {
+        const { userTags } = ExecutionContextManager.get();
+        if (userTags) {
+            try {
+                Object.keys(tagsToSet).forEach((name) => {
+                    userTags[name] = tagsToSet[name];
+                });
+            } catch (e) {
+                ThundraLogger.error(e);
+            }
+        }
+    }
+
+    /**
+     * Gets the tag
+     * @param {string} name the tag name
+     * @return the tag value
+     */
+    static getTag(name: string): any {
+        const { userTags } = ExecutionContextManager.get();
+        if (userTags) {
+            return userTags[name];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the tags
+     * @return the tags
+     */
     static getTags() {
         const { userTags } = ExecutionContextManager.get();
 
         return userTags;
     }
 
-    static removeTag(key: string): void {
+    /**
+     * Removes the tag
+     * @param {string} name the tag name
+     */
+    static removeTag(name: string): void {
         const { userTags } = ExecutionContextManager.get();
-
-        try {
-            if (userTags[key]) {
-                delete userTags[key];
+        if (userTags) {
+            try {
+                if (userTags[name]) {
+                    delete userTags[name];
+                }
+            } catch (e) {
+                ThundraLogger.error(e);
             }
-        } catch (e) {
-            ThundraLogger.error(e);
         }
     }
 
-    static setTags(keyValuePairs: {[key: string]: any }): void {
-        const { userTags } = ExecutionContextManager.get();
-
-        try {
-            Object.keys(keyValuePairs).forEach((key) => {
-                userTags[key] = keyValuePairs[key];
-            });
-        } catch (e) {
-            ThundraLogger.error(e);
-        }
-    }
-
+    /**
+     * Removes the tags
+     */
     static removeTags(): void {
         const execContext = ExecutionContextManager.get();
-        execContext.userTags = {};
+        if (execContext) {
+            execContext.userTags = {};
+        }
     }
 
+    /**
+     * Checks whether invocation has error
+     * @return {boolean} {@code true} if invocation has error, {@code false} otherwise
+     */
     static hasError(): boolean {
         const { error, userError } = ExecutionContextManager.get();
 
         return (error || userError) ? true : false;
     }
 
+    /**
+     * Sets the {@link Error} to the invocation
+     * @param {Error} error the {@link Error} to be set
+     */
     static setError(error: any): void {
         if (error instanceof Error) {
             const execContext = ExecutionContextManager.get();
-            execContext.userError = error;
+            if (execContext) {
+                execContext.userError = error;
+            }
         }
     }
 
+    /**
+     * Gets the {@link Error} to the invocation
+     * @return {Error} the {@link Error} of the invocation
+     */
     static getError(): Error {
         const execContext = ExecutionContextManager.get();
-        return execContext.userError;
+        if (execContext) {
+            return execContext.userError;
+        }
     }
 
+    /**
+     * Clears the invocation error
+     */
     static clearError(): void {
         const execContext = ExecutionContextManager.get();
-        execContext.userError = null;
+        if (execContext) {
+            execContext.userError = null;
+        }
     }
 
 }

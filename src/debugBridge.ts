@@ -1,3 +1,8 @@
+/**
+ * Connects Node.js {@code Inspector} at application side here and
+ * Debugger at user/developer side over Thundra Debug Broker.
+ */
+
 const net = require('net');
 const WebSocket = require('ws');
 const { DEBUGGER_PORT, BROKER_HOST, BROKER_PORT,
@@ -36,7 +41,7 @@ debuggerSocket.on('data', (data: Buffer) => {
     brokerSocket.send(data);
 });
 debuggerSocket.on('end', () => {
-    log('debuggerSocket: disconnected from the main lambda process');
+    log('debuggerSocket: disconnected from the main process');
     if (brokerSocket.readyState === WebSocket.OPEN) {
         brokerSocket.close(CLOSING_CODES.NORMAL, 'Normal');
     }
@@ -61,7 +66,7 @@ brokerSocket.on('message', (data: Buffer) => {
         firstMessage = false;
         process.send('brokerConnect');
         debuggerSocket.connect({ port: DEBUGGER_PORT }, () => {
-            log('debuggerSocket: connection established with main lambda process');
+            log('debuggerSocket: connection established with main process');
         });
     }
 

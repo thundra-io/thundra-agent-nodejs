@@ -1,5 +1,5 @@
-import MySQL2Integration from '../../dist/plugins/integrations/MySQL2Integration';
-import MySQLIntegration from '../../dist/plugins/integrations/MySQLIntegration';
+import MySQL2Integration from '../../dist/integrations/MySQL2Integration';
+import MySQLIntegration from '../../dist/integrations/MySQLIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import mysql from './utils/mysql.integration.utils';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';

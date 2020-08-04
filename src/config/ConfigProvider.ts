@@ -9,7 +9,10 @@ const get = require('lodash.get');
 class ConfigProvider {
 
     public static thundraConfig: ThundraConfig;
-    private static configs: {[key: string]: any} = {};
+    private static readonly configs: {[key: string]: any} = {};
+
+    private constructor() {
+    }
 
     static init(options?: any): void {
         ConfigProvider.clear();

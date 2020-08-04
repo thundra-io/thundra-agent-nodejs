@@ -1,4 +1,4 @@
-import IORedisIntegration from '../../dist/plugins/integrations/IORedisIntegration';
+import IORedisIntegration from '../../dist/integrations/IORedisIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import Redis from './utils/redis.integration.utils';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';

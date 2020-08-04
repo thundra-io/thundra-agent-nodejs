@@ -3,6 +3,8 @@ const { terser } = require('rollup-plugin-terser');
 const resolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
 const json = require('rollup-plugin-json');
+const replace = require('rollup-plugin-re');
+
 
 module.exports = [
     {
@@ -32,9 +34,11 @@ module.exports = [
                     beautify: false,
                 },
             }),
-            commonjs({
-                namedExports: {
-                    'opentracing': ['initGlobalTracer'],
+            commonjs(),
+            replace({
+                exclude: 'node_modules/**',
+                replaces: {
+                    'import * as opentracing from \'opentracing\';': 'import opentracing from \'opentracing\';',
                 }
             })
         ]

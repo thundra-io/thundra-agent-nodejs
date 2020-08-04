@@ -1,3 +1,7 @@
+/**
+ * Module entry point for samplers
+ */
+
 import CompositeSampler from './CompositeSampler';
 import CountAwareSampler from './CountAwareSampler';
 import DurationAwareSampler from './DurationAwareSampler';
