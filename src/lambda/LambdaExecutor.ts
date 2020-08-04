@@ -16,6 +16,8 @@ import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import TraceConfig from '../plugins/config/TraceConfig';
 import { LambdaContextProvider } from './LambdaContextProvider';
 import { LambdaPlatformUtils } from './LambdaPlatformUtils';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
 
 const get = require('lodash.get');
 
@@ -189,7 +191,11 @@ export function finishInvocation(pluginContext: PluginContext, execContext: any)
     invocationData.setTags(InvocationSupport.getAgentTags());
     invocationData.setUserTags(InvocationSupport.getTags());
 
-    const { startTimestamp, finishTimestamp, spanId, response } = execContext;
+    const { startTimestamp, finishTimestamp, spanId, response, platformData } = execContext;
+    const { originalEvent } = platformData;
+
+    // Inject step functions trace links
+    injectStepFunctionInfo(originalEvent, response);
 
     invocationData.finishTimestamp = finishTimestamp;
     invocationData.duration = finishTimestamp - startTimestamp;
@@ -316,4 +322,29 @@ function getResponse(response: any, config: TraceConfig): any {
     }
 
     return response;
+}
+
+function injectStepFunctionInfo(request: any, response: any): any {
+    try {
+        const isStepFunction = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_AWS_STEPFUNCTIONS);
+
+        if (isStepFunction) {
+            const traceLinkKey = '_thundra';
+            const traceLink = Utils.generateId();
+            let step = 0;
+
+            if (traceLinkKey in request) {
+                step = request[traceLinkKey].step;
+            }
+
+            response[traceLinkKey] = {
+                trace_link: traceLink,
+                step: step + 1,
+            };
+
+            InvocationTraceSupport.addOutgoingTraceLink(traceLink);
+        }
+    } catch (error) {
+        ThundraLogger.error('Failed to inject step function trace links: ' + error);
+    }
 }

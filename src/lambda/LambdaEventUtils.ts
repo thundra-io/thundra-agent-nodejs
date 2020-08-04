@@ -23,7 +23,7 @@ class LambdaEventUtils {
         try {
             const traceLinkKey = '_thundra';
             if (traceLinkKey in originalEvent) {
-                InvocationTraceSupport.addIncomingTraceLinks(originalEvent[traceLinkKey].trace_link);
+                InvocationTraceSupport.addIncomingTraceLink(originalEvent[traceLinkKey].trace_link);
             }
         } catch (e) { /* pass */ }
     }
