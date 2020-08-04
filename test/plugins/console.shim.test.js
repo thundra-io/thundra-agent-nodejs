@@ -1,11 +1,11 @@
 import LogPlugin from '../../dist/plugins/Log';
-import { createMockPluginContext, createMockBeforeInvocationData } from '../mocks/mocks';
-import {ApplicationManager} from '../../dist/application/ApplicationManager';
-import {LambdaApplicationInfoProvider} from '../../dist/wrappers/lambda/LambdaApplicationInfoProvider';
+import { ApplicationManager } from '../../dist/application/ApplicationManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 
-ApplicationManager.setApplicationInfoProvider(new LambdaApplicationInfoProvider());
+import { createMockPluginContext } from '../mocks/mocks';
+
+ApplicationManager.setApplicationInfoProvider(null);
 
 describe('log plugin shim console', () => {
     it('should capture console.log statements', () => {  

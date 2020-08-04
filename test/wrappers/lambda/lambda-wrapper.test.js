@@ -1,13 +1,13 @@
-import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
-import ConfigProvider from '../dist/config/ConfigProvider';
-import ConfigNames from '../dist/config/ConfigNames';
-import { createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext, createMockPromise } from './mocks/mocks';
-import HttpError from '../dist/error/HttpError';
-import TimeoutError from '../dist/error/TimeoutError';
-import ExecutionContext from '../dist/context/ExecutionContext';
-import ExecutionContextManager from '../dist/context/ExecutionContextManager';
+import LambdaHandlerWrapper from '../../../dist/wrappers/lambda/LambdaHandlerWrapper';
+import ConfigProvider from '../../../dist/config/ConfigProvider';
+import ConfigNames from '../../../dist/config/ConfigNames';
+import HttpError from '../../../dist/error/HttpError';
+import TimeoutError from '../../../dist/error/TimeoutError';
+import ExecutionContext from '../../../dist/context/ExecutionContext';
+import ExecutionContextManager from '../../../dist/context/ExecutionContextManager';
 
-import TestUtils from './utils.js';
+import TestUtils from '../../utils.js';
+import { createMockContext, createMockReporterInstance, createMockPlugin, createMockPluginContext, createMockPromise } from '../../mocks/mocks';
 
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();
@@ -19,7 +19,7 @@ const pluginContext = createMockPluginContext();
 jest.useFakeTimers();
 jest.setTimeout(10000);
 
-describe('thundra wrapper', () => {
+describe('lambda wrapper', () => {
 
     const originalThis = this;
     const originalEvent = { key1: 'value2', key2: 'value2' };
