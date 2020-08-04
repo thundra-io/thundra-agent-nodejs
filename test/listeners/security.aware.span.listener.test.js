@@ -1,6 +1,6 @@
-import SecurityAwareSpanListener from '../../../dist/opentracing/listeners/SecurityAwareSpanListener';
-import ThundraSpan from '../../../dist/opentracing/Span';
-import { SecurityTags, SpanTags } from '../../../dist/Constants';
+import SecurityAwareSpanListener from '../../dist/opentracing/listeners/SecurityAwareSpanListener';
+import ThundraSpan from '../../dist/opentracing/Span';
+import { SecurityTags, SpanTags } from '../../dist/Constants';
 
 describe('security aware span listener', () => {
     const securityErrorType = 'SecurityError';

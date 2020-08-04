@@ -1,5 +1,5 @@
-import LatencyInjectorSpanListener from '../../../dist/opentracing/listeners/LatencyInjectorSpanListener';
-import ThundraSpan from '../../../dist/opentracing/Span';
+import LatencyInjectorSpanListener from '../../dist/opentracing/listeners/LatencyInjectorSpanListener';
+import ThundraSpan from '../../dist/opentracing/Span';
 
 describe('latency injector span listener', () => {
     it('should init default configurations if empty opt provided', () => {

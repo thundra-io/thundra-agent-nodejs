@@ -1,8 +1,8 @@
-import FilteringSpanListener from '../../../dist/opentracing/listeners/FilteringSpanListener';
-import ErrorInjectorSpanListener from '../../../dist/opentracing/listeners/ErrorInjectorSpanListener';
-import StandardSpanFilterer from '../../../dist/opentracing/listeners/StandardSpanFilterer';
-import StandardSpanFilter from '../../../dist/opentracing/listeners/StandardSpanFilter';
-import ThundraSpan from '../../../dist/opentracing/Span';
+import FilteringSpanListener from '../../dist/opentracing/listeners/FilteringSpanListener';
+import ErrorInjectorSpanListener from '../../dist/opentracing/listeners/ErrorInjectorSpanListener';
+import StandardSpanFilterer from '../../dist/opentracing/listeners/StandardSpanFilterer';
+import StandardSpanFilter from '../../dist/opentracing/listeners/StandardSpanFilter';
+import ThundraSpan from '../../dist/opentracing/Span';
 
 describe('filtering span listener', () => {
     it('should call function callback if filter matches and not call if it does not', () => {

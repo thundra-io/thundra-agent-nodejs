@@ -1,5 +1,5 @@
-import ErrorInjectorSpanListener from '../../../dist/opentracing/listeners/ErrorInjectorSpanListener';
-import ThundraTracer from '../../../dist/opentracing/Tracer';
+import ErrorInjectorSpanListener from '../../dist/opentracing/listeners/ErrorInjectorSpanListener';
+import ThundraTracer from '../../dist/opentracing/Tracer';
 
 describe('error injector span listener', () => {
     const tracer = new ThundraTracer({});

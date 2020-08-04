@@ -1,5 +1,5 @@
 import SpanFilterer from './SpanFilterer';
-import ThundraSpan from '../Span';
+import ThundraSpan from '../opentracing/Span';
 import SpanFilter from './SpanFilter';
 
 /**

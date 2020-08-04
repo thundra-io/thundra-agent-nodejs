@@ -1,7 +1,7 @@
 import ThundraSpan, { SpanEvent } from './Span';
 import Stack from './utils/Stack';
 import ThundraLogger from '../ThundraLogger';
-import ThundraSpanListener from './listeners/ThundraSpanListener';
+import ThundraSpanListener from '../listeners/ThundraSpanListener';
 
 /**
  * Records/holds created/started {@link ThundraSpan}s by {@link ThundraTracer}.

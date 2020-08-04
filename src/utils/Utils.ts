@@ -22,7 +22,7 @@ import CompositeMonitoringData from '../plugins/data/composite/CompositeMonitori
 import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
 import { ApplicationManager } from '../application/ApplicationManager';
 import { ApplicationInfo } from '../application/ApplicationInfo';
-import ThundraSpanListener from '../opentracing/listeners/ThundraSpanListener';
+import ThundraSpanListener from '../listeners/ThundraSpanListener';
 import PluginContext from '../plugins/PluginContext';
 
 const parse = require('module-details-from-path');

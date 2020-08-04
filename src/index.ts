@@ -4,7 +4,7 @@
 
 import ConfigProvider from './config/ConfigProvider';
 import config from './plugins/config';
-import listeners from './opentracing/listeners';
+import listeners from './listeners';
 import samplers from './samplers';
 import Utils from './utils/Utils';
 import { EnvVariableKeys } from './Constants';

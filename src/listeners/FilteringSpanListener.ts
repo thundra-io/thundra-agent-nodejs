@@ -1,7 +1,7 @@
 import ThundraSpanListener from './ThundraSpanListener';
-import ThundraSpan from '../Span';
-import { LISTENERS } from '../../Constants';
-import ThundraLogger from '../../ThundraLogger';
+import ThundraSpan from '../opentracing/Span';
+import { LISTENERS } from '../Constants';
+import ThundraLogger from '../ThundraLogger';
 import SpanFilter from './SpanFilter';
 import SpanFilterer from './SpanFilterer';
 import StandardSpanFilter from './StandardSpanFilter';
