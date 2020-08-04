@@ -308,8 +308,9 @@ function injectStepFunctionInfo(request: any, response: any): any {
             const traceLink = Utils.generateId();
             let step = 0;
 
-            if (THUNDRA_TRACE_KEY in request) {
-                step = request[THUNDRA_TRACE_KEY].step;
+            const incomingStep = get(request, `${THUNDRA_TRACE_KEY}.step`);
+            if (incomingStep) {
+                step = incomingStep;
             }
 
             if (typeof response === 'object' && response !== null) {

@@ -680,12 +680,12 @@ export class AWSStepFunctionsIntegration {
             const originalInput = get(request, 'params.input');
 
             if (originalInput) {
+                span.setTag(AwsStepFunctionsTags.EXECUTION_INPUT, originalInput);
+
                 const parsedInput = JSON.parse(originalInput);
                 const traceLink = Utils.generateId();
 
                 parsedInput[THUNDRA_TRACE_KEY] = { trace_link: traceLink, step: 0 };
-
-                span.setTag(AwsStepFunctionsTags.EXECUTION_INPUT, originalInput);
 
                 request.params.input = JSON.stringify(parsedInput);
 

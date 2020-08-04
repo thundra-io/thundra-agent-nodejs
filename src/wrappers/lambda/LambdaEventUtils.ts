@@ -28,8 +28,9 @@ class LambdaEventUtils {
      */
     static extractTraceLinkFromEvent(originalEvent: any) {
         try {
-            if (THUNDRA_TRACE_KEY in originalEvent) {
-                InvocationTraceSupport.addIncomingTraceLink(originalEvent[THUNDRA_TRACE_KEY].trace_link);
+            const incomingTraceLink = get(originalEvent, `${THUNDRA_TRACE_KEY}.trace_link`);
+            if (incomingTraceLink) {
+                InvocationTraceSupport.addIncomingTraceLink(incomingTraceLink);
             }
         } catch (e) { /* pass */ }
     }
