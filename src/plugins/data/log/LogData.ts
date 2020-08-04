@@ -2,7 +2,11 @@ import BaseMonitoringData from '../base/BaseMonitoringData';
 import MonitorDataType from '../base/MonitoringDataType';
 import Utils from '../../../utils/Utils';
 
+/**
+ * Represents log data
+ */
 class LogData extends BaseMonitoringData {
+
     traceId: string;
     transactionId: string;
     spanId: string;
@@ -17,7 +21,15 @@ class LogData extends BaseMonitoringData {
         super(MonitorDataType.LOG);
     }
 
-    initWithLogDataValues(data: LogData, spanId: string, transactionId: string, traceId: string, logInfo: any) {
+    /**
+     * Initializes with given values
+     * @param {LogData} data the base {@link LogData} to be initialize from
+     * @param {string} traceId the associated trace id
+     * @param {string} transactionId the associated transaction id
+     * @param {string} spanId the associated span id
+     * @param logInfo log specific information
+     */
+    initWithLogDataValues(data: LogData, traceId: string, transactionId: string, spanId: string, logInfo: any) {
         this.initWithBaseMonitoringDataValues(data);
         this.id = Utils.generateId();
         this.traceId = traceId;
@@ -30,6 +42,7 @@ class LogData extends BaseMonitoringData {
         this.logContextName = logInfo.logContextName;
         this.tags = {};
     }
+
 }
 
 export default LogData;
