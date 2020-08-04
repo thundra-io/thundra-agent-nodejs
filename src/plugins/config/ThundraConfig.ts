@@ -8,6 +8,9 @@ import LogConfig from './LogConfig';
 const get = require('lodash.get');
 const koalas = require('koalas');
 
+/**
+ * Configures Thundra agent
+ */
 class ThundraConfig {
 
     static configUpdates: any = {};
@@ -49,11 +52,18 @@ class ThundraConfig {
         this.invocationConfig = new InvocationConfig(options.invocationConfig);
     }
 
+    /**
+     * Updates configuration by options
+     * @param options the options to update configuration
+     */
     static updateConfig(options: any) {
         const configUpdates = ThundraConfig.configUpdates;
         ThundraConfig.configUpdates = { ...configUpdates, ...options };
     }
 
+    /**
+     * Refreshes config
+     */
     refreshConfig() {
         // No extraKeys, no need to update the initialConfig
         if (Object.keys(ThundraConfig.configUpdates).length === 0) {
