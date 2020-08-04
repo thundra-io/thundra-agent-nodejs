@@ -1,19 +1,20 @@
-
 import Utils from '../utils/Utils';
 import InvocationConfig from './config/InvocationConfig';
 import PluginContext from './PluginContext';
-import InvocationSupport from './support/InvocationSupport';
-import InvocationTraceSupport from './support/InvocationTraceSupport';
 import ExecutionContext from '../context/ExecutionContext';
 
+/**
+ * The invocation plugin
+ */
 export default class Invocation {
+
     pluginOrder: number = 2;
     pluginContext: PluginContext;
     options: InvocationConfig;
     hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
              'after-invocation': (execContext: ExecutionContext) => void; };
 
-    constructor(options?: any) {
+    constructor(options?: InvocationConfig) {
         this.hooks = {
             'before-invocation': this.beforeInvocation,
             'after-invocation': this.afterInvocation,
@@ -21,10 +22,18 @@ export default class Invocation {
         this.options = options;
     }
 
+    /**
+     * Sets the the {@link PluginContext}
+     * @param {PluginContext} pluginContext the {@link PluginContext}
+     */
     setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
     }
 
+    /**
+     * Called before invocation
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     */
     beforeInvocation = (execContext: ExecutionContext) => {
         const { executor } = this.pluginContext;
 
@@ -33,6 +42,10 @@ export default class Invocation {
         }
     }
 
+    /**
+     * Called after invocation
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     */
     afterInvocation = (execContext: ExecutionContext) => {
         const { executor } = this.pluginContext;
 
@@ -48,7 +61,11 @@ export default class Invocation {
         this.destroy();
     }
 
+    /**
+     * Destroys plugin
+     */
     destroy(): void {
         // pass
     }
+
 }
