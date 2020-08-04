@@ -48,7 +48,7 @@ export default class Trace {
                 const clazz = INTEGRATIONS[key];
                 if (clazz) {
                     if (!this.integrationsMap.get(key)) {
-                        if (!this.config.isConfigDisabled(key)) {
+                        if (!this.config.isIntegrationDisabled(key)) {
                             const instance = new clazz(this.config);
                             this.integrationsMap.set(key, instance);
                         }

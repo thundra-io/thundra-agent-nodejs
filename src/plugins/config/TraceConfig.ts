@@ -10,6 +10,9 @@ import Sampler from '../../opentracing/sampler/Sampler';
 import ThundraTracer from '../../opentracing/Tracer';
 const get = require('lodash.get');
 
+/**
+ * Configures trace plugin/support
+ */
 class TraceConfig extends BasePluginConfig {
 
     disableRequest: boolean;
@@ -183,16 +186,12 @@ class TraceConfig extends BasePluginConfig {
         }
     }
 
-    parseIntegrationsConfig(value: string): IntegrationConfig[] {
-        const args = value.split(',');
-        const configs: IntegrationConfig[] = [];
-        for (const arg of args) {
-            configs.push(new IntegrationConfig(arg.trim(), {enabled: false}));
-        }
-        return configs;
-    }
-
-    isConfigDisabled(name: string) {
+    /**
+     * Checks whether given integration is disabled
+     * @param {string} name the integration name
+     * @return {boolean} {@code true} if integration is disabled, {@code false} otherwise
+     */
+    isIntegrationDisabled(name: string) {
         let disabled = false;
         for (const config of this.disabledIntegrations) {
             if (config.name === name && !config.enabled) {
@@ -202,11 +201,24 @@ class TraceConfig extends BasePluginConfig {
         return disabled;
     }
 
+    /**
+     * Updates configuration by options
+     * @param options the options to update configuration
+     */
     updateConfig(options: any) {
         this.maskRequest = get(options, 'traceConfig.maskRequest', this.maskRequest);
         this.maskResponse = get(options, 'traceConfig.maskResponse', this.maskResponse);
         this.runSamplerOnEachSpan = get(options, 'traceConfig.runCustomSamplerOnEachSpan', this.runSamplerOnEachSpan);
         this.sampler = get(options, 'traceConfig.sampler', this.sampler);
+    }
+
+    private parseIntegrationsConfig(value: string): IntegrationConfig[] {
+        const args = value.split(',');
+        const configs: IntegrationConfig[] = [];
+        for (const arg of args) {
+            configs.push(new IntegrationConfig(arg.trim(), {enabled: false}));
+        }
+        return configs;
     }
 
 }
