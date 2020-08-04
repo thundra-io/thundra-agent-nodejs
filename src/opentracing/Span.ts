@@ -43,7 +43,7 @@ class ThundraSpan extends Span {
         this.className = fields.className;
         this.domainName = fields.domainName;
         this.order = fields.order;
-        this.resourceTraceLinks = fields.resourceTraceLinks || [];
+        this.resourceTraceLinks = fields.resourceTraceLinks || null;
     }
 
     /**
