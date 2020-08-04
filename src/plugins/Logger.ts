@@ -4,7 +4,11 @@ import LogManager from './LogManager';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 
+/**
+ * Thundra's logger implementation
+ */
 class Logger {
+
     options: any;
     loggerName: any;
     logLevel: any;
@@ -25,6 +29,11 @@ class Logger {
         };
     }
 
+    /**
+     * Reports the given log
+     * @param level the log level
+     * @param args the log arguments
+     */
     reportLog(level: any, args: any) {
         const logInfo = {
             logMessage: util.format.apply(util, args),
@@ -36,30 +45,58 @@ class Logger {
         LogManager.reportLog(logInfo);
     }
 
+    /**
+     * Logs in {@code TRACE} level
+     * @param args the log arguments
+     */
     trace(...args: any[]) {
         this.reportLog('TRACE', args);
     }
 
+    /**
+     * Logs in {@code DEBUG} level
+     * @param args the log arguments
+     */
     debug(...args: any[]) {
         this.reportLog('DEBUG', args);
     }
 
+    /**
+     * Logs in {@code INFO} level
+     * @param args the log arguments
+     */
     info(...args: any[]) {
         this.reportLog('INFO', args);
     }
 
+    /**
+     * Logs in {@code WARN} level
+     * @param args the log arguments
+     */
     warn(...args: any[]) {
         this.reportLog('WARN', args);
     }
 
+    /**
+     * Logs in {@code ERROR} level
+     * @param args the log arguments
+     */
     error(...args: any[]) {
         this.reportLog('ERROR', args);
     }
 
+    /**
+     * Logs in {@code FATAL} level
+     * @param args the log arguments
+     */
     fatal(...args: any[]) {
         this.reportLog('FATAL', args);
     }
 
+    /**
+     * Logs directly by given arguments
+     * @param args the log arguments
+     */
     log(...args: any[]) {
         if (args.length === 0) {
             throw new Error('[ThundraLogger] no arguments provided');
@@ -94,9 +131,13 @@ class Logger {
         }
     }
 
-    destroy() {
+    /**
+     * Destroys plugin
+     */
+    destroy(): void {
         // pass
     }
+
 }
 
 export default Logger;
