@@ -13,6 +13,7 @@ class Resource {
     resourceAvgDuration: number;
     resourceBlockedCount: number;
     resourceViolatedCount: number;
+    resourceTraceLinks: any[];
 
     constructor(opt: any = {}) {
         this.resourceType = opt.resourceType;
@@ -26,6 +27,7 @@ class Resource {
         this.resourceAvgDuration = opt.resourceAvgDuration;
         this.resourceBlockedCount = opt.resourceBlockedCount || 0;
         this.resourceViolatedCount = opt.resourceViolatedCount || 0;
+        this.resourceTraceLinks = opt.resourceTraceLinks || [];
     }
 
     public init(span: ThundraSpan) {
@@ -44,6 +46,7 @@ class Resource {
         this.resourceAvgDuration = span.getDuration();
         this.resourceBlockedCount = span.getTag(SecurityTags.BLOCKED) ? 1 : 0;
         this.resourceViolatedCount = span.getTag(SecurityTags.VIOLATED) ? 1 : 0;
+        this.resourceTraceLinks.push(...span.resourceTraceLinks);
     }
 
     public merge(resource: Resource): void {
@@ -68,6 +71,7 @@ class Resource {
             }
             this.resourceBlockedCount += resource.resourceBlockedCount;
             this.resourceViolatedCount += resource.resourceViolatedCount;
+            this.resourceTraceLinks.push(...resource.resourceTraceLinks);
         }
     }
 

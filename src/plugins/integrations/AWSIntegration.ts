@@ -610,6 +610,7 @@ export class AWSStepFunctionsIntegration {
                 request.params.input = JSON.stringify(parsedInput);
 
                 span.setTag(SpanTags.TRACE_LINKS, [traceLink]);
+                span.resourceTraceLinks = [traceLink];
             }
         } catch (error) {/* pass */ }
     }

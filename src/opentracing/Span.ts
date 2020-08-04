@@ -17,6 +17,7 @@ class ThundraSpan extends Span {
   className: string;
   domainName: string;
   order: number;
+  resourceTraceLinks: any[];
 
   constructor(tracer: any, fields: any) {
     super();
@@ -38,6 +39,7 @@ class ThundraSpan extends Span {
     this.className = fields.className;
     this.domainName = fields.domainName;
     this.order = fields.order;
+    this.resourceTraceLinks = fields.resourceTraceLinks || [];
   }
 
   getOperationName(): string {
@@ -138,7 +140,7 @@ class ThundraSpan extends Span {
 
     this.finishTime = finishTime;
     if (this.spanContext.sampled) {
-      this.parentTracer._record(this, {disableActiveSpanHandling: false});
+      this.parentTracer._record(this, { disableActiveSpanHandling: false });
     }
   }
 
@@ -154,11 +156,11 @@ class ThundraSpan extends Span {
 
     this.finishTime = finishTime;
     if (this.spanContext.sampled) {
-      this.parentTracer._record(this, {disableActiveSpanHandling: true});
+      this.parentTracer._record(this, { disableActiveSpanHandling: true });
     }
   }
 
-  closeWithCallback(me: any, callback: () => any, args: any[] , finishTime: number = Date.now()) {
+  closeWithCallback(me: any, callback: () => any, args: any[], finishTime: number = Date.now()) {
     if (this.finishTime !== 0) {
       ThundraLogger.debug('Span is already closed.');
       return;
@@ -166,7 +168,7 @@ class ThundraSpan extends Span {
 
     this.finishTime = finishTime;
     if (this.spanContext.sampled) {
-      this.parentTracer._record(this, {disableActiveSpanHandling: true, me, callback, args});
+      this.parentTracer._record(this, { disableActiveSpanHandling: true, me, callback, args });
     }
   }
 
