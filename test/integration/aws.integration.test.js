@@ -276,6 +276,24 @@ describe('AWS integration', () => {
             expect(span.finishTime).toBeTruthy();
         });
     });
+    
+    test('should instrument AWS stepfn_start_execution calls', () => {
+        return AWS.stepfn(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('FooStateMachine');
+
+            expect(span.className).toBe('AWS-StepFunctions');
+            expect(span.domainName).toBe('AWS');
+
+            expect(span.tags['aws.request.name']).toBe('startExecution');
+            expect(span.tags['aws.sqs.queue.name']).not.toBeTruthy();
+            expect(span.tags['operation.type']).toBe('EXECUTE');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trace.links']).toBeTruthy();
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
 
 
     test('should instrument AWS SNS publish to topic calls ', () => {

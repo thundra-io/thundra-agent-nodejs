@@ -1,9 +1,9 @@
 module.exports.dynamo = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
-        const ddb = new AWS.DynamoDB({apiVersion: '2012-10-08', dynamoDbCrc32: false});
+        AWS.config.update({ region: 'us-west-2' });
+        const ddb = new AWS.DynamoDB({ apiVersion: '2012-10-08', dynamoDbCrc32: false });
         const params = {
-            Item: {'id': {S: '1'}},
+            Item: { 'id': { S: '1' } },
             TableName: 'test-table',
         };
         ddb.putItem(params, function (err, data) {
@@ -16,9 +16,28 @@ module.exports.dynamo = (AWS) => {
     });
 };
 
+module.exports.stepfn = (AWS) => {
+    return new Promise((resolve) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const stepfn = new AWS.StepFunctions();
+        const params = {
+            stateMachineArn: 'arn:aws:states:us-west-2:123123123123:stateMachine:FooStateMachine',
+            input: '{}',
+            name: 'exec_name'
+        };
+        stepfn.startExecution(params, function (err, data) {
+            if (err) {
+                // Resolve even though there is an error.
+                return resolve(err);
+            }
+            return resolve(data);
+        });
+    });
+}
+
 module.exports.s3GetObject = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2', maxRetries: 0});
+        AWS.config.update({ region: 'us-west-2', maxRetries: 0 });
         const s3 = new AWS.S3();
         var getParams = {
             Bucket: 'test',
@@ -37,7 +56,7 @@ module.exports.s3GetObject = (AWS) => {
 
 module.exports.s3ListBuckets = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const s3 = new AWS.S3();
         var params = {};
 
@@ -53,7 +72,7 @@ module.exports.s3ListBuckets = (AWS) => {
 
 module.exports.lambda = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const lambda = new AWS.Lambda();
         const params = {
             FunctionName: 'Test',
@@ -73,7 +92,7 @@ module.exports.lambda = (AWS) => {
 
 module.exports.lambdaGetAccountSettings = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const lambda = new AWS.Lambda();
 
         lambda.getAccountSettings().promise().then((data) => {
@@ -87,7 +106,7 @@ module.exports.lambdaGetAccountSettings = (AWS) => {
 
 module.exports.sqs = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const sqs = new AWS.SQS();
         const params = {
             MessageBody: 'Hello Thundra!',
@@ -107,7 +126,7 @@ module.exports.sqs = (AWS) => {
 
 module.exports.sqs_list_queue = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const sqs = new AWS.SQS();
         const params = {};
         sqs.listQueues(params, function (err, data) {
@@ -122,8 +141,8 @@ module.exports.sqs_list_queue = (AWS) => {
 
 module.exports.sns_topic = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
-        const sns = new AWS.SNS({apiVersion: '2010-03-31'});
+        AWS.config.update({ region: 'us-west-2' });
+        const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
         const params = {
             Message: 'Hello Thundra!',
             TopicArn: 'TEST_TOPIC'
@@ -141,8 +160,8 @@ module.exports.sns_topic = (AWS) => {
 
 module.exports.sns_target = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
-        const sns = new AWS.SNS({apiVersion: '2010-03-31'});
+        AWS.config.update({ region: 'us-west-2' });
+        const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
         const params = {
             Message: 'Hello Thundra!',
             TargetArn: 'TEST_TARGET'
@@ -160,8 +179,8 @@ module.exports.sns_target = (AWS) => {
 
 module.exports.sns_sms = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
-        const sns = new AWS.SNS({apiVersion: '2010-03-31'});
+        AWS.config.update({ region: 'us-west-2' });
+        const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
         const params = {
             Message: 'Hello Thundra!',
             PhoneNumber: '+901234567890'
@@ -179,8 +198,8 @@ module.exports.sns_sms = (AWS) => {
 
 module.exports.sns_checkIfPhoneNumberIsOptedOut = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
-        const sns = new AWS.SNS({apiVersion: '2010-03-31'});
+        AWS.config.update({ region: 'us-west-2' });
+        const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
         const params = {
             phoneNumber: 'STRING_VALUE' /* required */
         };
@@ -197,8 +216,8 @@ module.exports.sns_checkIfPhoneNumberIsOptedOut = (AWS) => {
 
 module.exports.kinesis = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
-        const kinesis = new AWS.Kinesis({apiVersion: '2013-12-02'});
+        AWS.config.update({ region: 'us-west-2' });
+        const kinesis = new AWS.Kinesis({ apiVersion: '2013-12-02' });
         const params = {
             Data: 'STRING_VALUE',
             PartitionKey: 'STRING_VALUE',
@@ -219,8 +238,8 @@ module.exports.kinesis = (AWS) => {
 
 module.exports.firehose = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
-        const firehose = new AWS.Firehose({apiVersion: '2015-08-04'});
+        AWS.config.update({ region: 'us-west-2' });
+        const firehose = new AWS.Firehose({ apiVersion: '2015-08-04' });
         const params = {
             DeliveryStreamName: 'STRING_VALUE',
             Record: {
@@ -240,8 +259,8 @@ module.exports.firehose = (AWS) => {
 
 module.exports.kms = (AWS) => {
     return new Promise((resolve) => {
-        AWS.config.update({region: 'us-west-2'});
-        const kms = new AWS.KMS({apiVersion: '2015-08-04'});
+        AWS.config.update({ region: 'us-west-2' });
+        const kms = new AWS.KMS({ apiVersion: '2015-08-04' });
         var params = {
             BypassPolicyLockoutSafetyCheck: true || false,
             CustomKeyStoreId: 'STRING_VALUE',
@@ -264,7 +283,7 @@ module.exports.kms = (AWS) => {
 
 module.exports.s3_with_promise = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const s3 = new AWS.S3();
         var params = {
             Bucket: 'bucket',
@@ -283,7 +302,7 @@ module.exports.s3_with_promise = (AWS) => {
 
 module.exports.athenaStartQueryExec = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const athena = new AWS.Athena();
         var params = {
             QueryString: 'sample-query',
@@ -306,7 +325,7 @@ module.exports.athenaStartQueryExec = (AWS) => {
 
 module.exports.athenaStopQueryExec = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const athena = new AWS.Athena();
         var params = {
             QueryExecutionId: 'sample-query-execution-id',
@@ -323,7 +342,7 @@ module.exports.athenaStopQueryExec = (AWS) => {
 
 module.exports.athenaBatchGetNamedQuery = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const athena = new AWS.Athena();
         var params = {
             NamedQueryIds: ['sample-id-1', 'sample-id-2'],
@@ -340,7 +359,7 @@ module.exports.athenaBatchGetNamedQuery = (AWS) => {
 
 module.exports.athenaBatchGetQueryExec = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const athena = new AWS.Athena();
         var params = {
             QueryExecutionIds: ['sample-id-1', 'sample-id-2'],
@@ -357,7 +376,7 @@ module.exports.athenaBatchGetQueryExec = (AWS) => {
 
 module.exports.athenaCreateNamedQuery = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const athena = new AWS.Athena();
         var params = {
             QueryString: 'sample-query',
@@ -376,7 +395,7 @@ module.exports.athenaCreateNamedQuery = (AWS) => {
 
 module.exports.eventBridgePutEvent = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const eventBridge = new AWS.EventBridge();
 
         var params = {
@@ -418,7 +437,7 @@ module.exports.eventBridgePutEvent = (AWS) => {
 
 module.exports.eventBridgePutEventDifferentBus = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const eventBridge = new AWS.EventBridge();
 
         var params = {
@@ -459,7 +478,7 @@ module.exports.eventBridgePutEventDifferentBus = (AWS) => {
 
 module.exports.eventBridgeListEventBuses = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const eventBridge = new AWS.EventBridge();
         eventBridge.listEventBuses({}, (err, data) => {
             if (err) {
@@ -472,7 +491,7 @@ module.exports.eventBridgeListEventBuses = (AWS) => {
 
 module.exports.sesSendEmail = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const ses = new AWS.SES();
         ses.sendEmail({
             Source: 'demo@thundra.io',
@@ -492,7 +511,7 @@ module.exports.sesSendEmail = (AWS) => {
 
 module.exports.sesSendRawEmail = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const ses = new AWS.SES();
         ses.sendRawEmail({
             Source: 'demo@thundra.io',
@@ -508,7 +527,7 @@ module.exports.sesSendRawEmail = (AWS) => {
 
 module.exports.sesSendTemplatedEmail = (AWS) => {
     return new Promise((resolve, reject) => {
-        AWS.config.update({region: 'us-west-2'});
+        AWS.config.update({ region: 'us-west-2' });
         const ses = new AWS.SES();
         ses.sendTemplatedEmail({
             Source: 'demo@thundra.io',
