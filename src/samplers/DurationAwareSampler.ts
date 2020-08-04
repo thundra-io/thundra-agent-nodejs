@@ -1,5 +1,5 @@
 import Sampler from './Sampler';
-import ThundraSpan from '../Span';
+import ThundraSpan from '../opentracing/Span';
 
 /**
  * {@link Sampler} implementation which samples {@link ThundraSpan}s

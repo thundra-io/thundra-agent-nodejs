@@ -6,7 +6,7 @@ import ConfigNames from '../../config/ConfigNames';
 import ThundraLogger from '../../ThundraLogger';
 import Integration from '../../integrations/Integration';
 import Instrumenter from '../../opentracing/instrument/Instrumenter';
-import Sampler from '../../opentracing/sampler/Sampler';
+import Sampler from '../../samplers/Sampler';
 import ThundraTracer from '../../opentracing/Tracer';
 const get = require('lodash.get');
 

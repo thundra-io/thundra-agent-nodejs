@@ -1,10 +1,9 @@
-import DurationAwareSampler from '../../dist/opentracing/sampler/DurationAwareSampler';
-import ErrorAwareSampler from '../../dist/opentracing/sampler/ErrorAwareSampler';
-import TimeAwareSampler from '../../dist/opentracing/sampler/TimeAwareSampler';
-import CountAwareSampler from '../../dist/opentracing/sampler/CountAwareSampler';
-import CompositeSampler from '../../dist/opentracing/sampler/CompositeSampler';
-import { SamplerCompositionOperator } from '../../dist/opentracing/sampler/CompositeSampler';
-import InvocationSupport from '../../dist/plugins/support/InvocationSupport';
+import DurationAwareSampler from '../../dist/samplers/DurationAwareSampler';
+import ErrorAwareSampler from '../../dist/samplers/ErrorAwareSampler';
+import TimeAwareSampler from '../../dist/samplers/TimeAwareSampler';
+import CountAwareSampler from '../../dist/samplers/CountAwareSampler';
+import CompositeSampler from '../../dist/samplers/CompositeSampler';
+import { SamplerCompositionOperator } from '../../dist/samplers/CompositeSampler';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 

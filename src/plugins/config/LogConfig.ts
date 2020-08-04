@@ -1,5 +1,5 @@
 import BasePluginConfig from './BasePluginConfig';
-import Sampler from '../../opentracing/sampler/Sampler';
+import Sampler from '../../samplers/Sampler';
 const get = require('lodash.get');
 
 /**
