@@ -3,14 +3,18 @@ import MonitorDataType from '../base/MonitoringDataType';
 import ThundraLogger from '../../../ThundraLogger';
 import Resource from './Resource';
 
+/**
+ * Represents the invocation data
+ */
 class InvocationData extends BaseMonitoringData {
+
     traceId: string;
     transactionId: string;
     spanId: string;
     applicationPlatform: string;
     applicationRegion: string;
     startTimestamp: number;
-    finishTimestamp: number ;
+    finishTimestamp: number;
     duration: number;
     erroneous: boolean;
     errorType: string;
@@ -27,31 +31,44 @@ class InvocationData extends BaseMonitoringData {
         super(MonitorDataType.INVOCATION);
     }
 
-    setTags(keyValuePairs: {[key: string]: any }): void {
+    /**
+     * Sets tags to the invocation
+     * @param tags the tags to be set
+     */
+    setTags(tags: {[name: string]: any }): void {
         try {
-            Object.keys(keyValuePairs).forEach((key) => {
-                this.tags[key] = keyValuePairs[key];
+            Object.keys(tags).forEach((name) => {
+                this.tags[name] = tags[name];
             });
         } catch (e) {
             ThundraLogger.error(e);
         }
     }
 
-    setUserTags(keyValuePairs: {[key: string]: any }): void {
+    /**
+     * Sets user tags to the invocation
+     * @param userTags the tags to be set
+     */
+    setUserTags(userTags: {[name: string]: any }): void {
         try {
-            Object.keys(keyValuePairs).forEach((key) => {
-                this.userTags[key] = keyValuePairs[key];
+            Object.keys(userTags).forEach((name) => {
+                this.userTags[name] = userTags[name];
             });
         } catch (e) {
             ThundraLogger.error(e);
         }
     }
 
+    /**
+     * Sets error to the invocation
+     * @param error the error to be set
+     */
     setError(error: any): void {
         this.erroneous = true;
         this.errorType = error.errorType;
         this.errorMessage = error.errorMessage;
     }
+
 }
 
 export default InvocationData;
