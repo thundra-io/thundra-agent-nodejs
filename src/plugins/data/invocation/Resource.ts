@@ -17,6 +17,7 @@ class Resource {
     resourceAvgDuration: number;
     resourceBlockedCount: number;
     resourceViolatedCount: number;
+    resourceTraceLinks: any[];
 
     constructor(opt: any = {}) {
         this.resourceType = opt.resourceType;
@@ -30,6 +31,7 @@ class Resource {
         this.resourceAvgDuration = opt.resourceAvgDuration;
         this.resourceBlockedCount = opt.resourceBlockedCount || 0;
         this.resourceViolatedCount = opt.resourceViolatedCount || 0;
+        this.resourceTraceLinks = opt.resourceTraceLinks || null;
     }
 
     /**
@@ -52,6 +54,9 @@ class Resource {
         this.resourceAvgDuration = span.getDuration();
         this.resourceBlockedCount = span.getTag(SecurityTags.BLOCKED) ? 1 : 0;
         this.resourceViolatedCount = span.getTag(SecurityTags.VIOLATED) ? 1 : 0;
+        if (span.resourceTraceLinks) {
+            this.resourceTraceLinks = [...new Set(span.resourceTraceLinks)].filter((e) => e);
+        }
     }
 
     /**
@@ -80,6 +85,16 @@ class Resource {
             }
             this.resourceBlockedCount += resource.resourceBlockedCount;
             this.resourceViolatedCount += resource.resourceViolatedCount;
+
+            if (resource.resourceTraceLinks) {
+                let links = [...resource.resourceTraceLinks];
+
+                if (this.resourceTraceLinks) {
+                    links = [...links, ...this.resourceTraceLinks];
+                }
+
+                this.resourceTraceLinks = [...new Set(links)].filter((e) => e);
+            }
         }
     }
 

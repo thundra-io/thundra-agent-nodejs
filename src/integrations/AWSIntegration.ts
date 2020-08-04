@@ -3,10 +3,10 @@ import ThundraTracer from '../opentracing/Tracer';
 import {
     AwsSDKTags, AwsSQSTags, AwsSNSTags, SpanTags, AwsDynamoTags,
     AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
-    SpanTypes, ClassNames, DomainNames,
+    AwsStepFunctionsTags, SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags,
+    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY,
 } from '../Constants';
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
@@ -137,6 +137,8 @@ export class AWSIntegration implements Integration {
                 return AWSEventBridgeIntegration;
             case 'email':
                 return AWSSESIntegration;
+            case 'states':
+                return AWSStepFunctionsIntegration;
             default:
                 return AWSServiceIntegration;
         }
@@ -616,6 +618,84 @@ export class AWSSNSIntegration {
 
 }
 
+export class AWSStepFunctionsIntegration {
+    public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
+        const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
+        const operationType = AWSIntegration.getOperationType(operationName, ClassNames.STEPFUNCTIONS);
+
+        const spanName = AWSStepFunctionsIntegration.getStateMachineName(request) || AWS_SERVICE_REQUEST;
+        const parentSpan = tracer.getActiveSpan();
+        const activeSpan = tracer._startSpan(spanName, {
+            childOf: parentSpan,
+            domainName: DomainNames.AWS,
+            className: ClassNames.STEPFUNCTIONS,
+            disableActiveStart: true,
+            tags: {
+                [SpanTags.OPERATION_TYPE]: operationType,
+                [SpanTags.SPAN_TYPE]: SpanTypes.AWS_STEPFUNCTIONS,
+                [AwsSDKTags.REQUEST_NAME]: operationName,
+            },
+        });
+
+        AWSStepFunctionsIntegration.createStepFunctionTraceLink(request, activeSpan);
+
+        const stateMachineARN = get(request, 'params.stateMachineArn', '');
+        const executionName = get(request, 'params.name', '');
+
+        activeSpan.setTag(AwsStepFunctionsTags.STATE_MACHINE_ARN, stateMachineARN);
+        activeSpan.setTag(AwsStepFunctionsTags.EXECUTION_NAME, executionName);
+        activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
+        activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
+        activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
+
+        return activeSpan;
+    }
+
+    public static createTraceLinks(span: ThundraSpan, request: any, config: any): any[] {
+        return [];
+    }
+
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
+        const executionARN = get(request, 'response.data.executionArn', '');
+        const startDate = get(request, 'response.data.startDate');
+
+        span.setTag(AwsStepFunctionsTags.EXECUTION_ARN, executionARN);
+
+        if (startDate) {
+            span.setTag(AwsStepFunctionsTags.EXECUTION_START_DATE, startDate);
+        }
+    }
+
+    private static getStateMachineName(request: any): string {
+        const stateMachineARN = get(request, 'params.stateMachineArn');
+        if (!stateMachineARN) {
+            return undefined;
+        }
+        const stateMachineARNParts = stateMachineARN.split(':');
+        return stateMachineARNParts[stateMachineARNParts.length - 1];
+    }
+
+    private static createStepFunctionTraceLink(request: any, span: ThundraSpan): void {
+        try {
+            const originalInput = get(request, 'params.input');
+
+            if (originalInput) {
+                span.setTag(AwsStepFunctionsTags.EXECUTION_INPUT, originalInput);
+
+                const parsedInput = JSON.parse(originalInput);
+                const traceLink = Utils.generateId();
+
+                parsedInput[THUNDRA_TRACE_KEY] = { trace_link: traceLink, step: 0 };
+
+                request.params.input = JSON.stringify(parsedInput);
+
+                span.setTag(SpanTags.TRACE_LINKS, [traceLink]);
+                span.resourceTraceLinks = [traceLink];
+            }
+        } catch (error) {/* pass */ }
+    }
+}
+
 export class AWSSQSIntegration {
 
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
@@ -938,8 +1018,8 @@ export class AWSDynamoDBIntegration {
         return;
     }
 
-    public static generateDynamoTraceLinks(attributes: any, operationType: string, tableName: string, region: string,
-                                           timestamp: number): any[] {
+    public static generateDynamoTraceLinks(attributes: any, operationType: string,
+                                           tableName: string, region: string, timestamp: number): any[] {
         if (attributes) {
             const attrHash = md5(AWSDynamoDBIntegration.serializeAttributes(attributes));
             return [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);

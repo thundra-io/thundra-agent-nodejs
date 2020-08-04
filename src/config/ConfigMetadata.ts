@@ -168,6 +168,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_LAMBDA_AWS_STEPFUNCTIONS]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_MASK]: {
         type: 'boolean',
         defaultValue: false,

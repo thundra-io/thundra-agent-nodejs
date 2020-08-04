@@ -1,5 +1,6 @@
 import ThundraSpan from '../../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants, EnvVariableKeys } from '../../Constants';
+import { SpanTags, DomainNames, ClassNames, ZeitTags,
+    ZeitConstants, NetlifyConstants, EnvVariableKeys, THUNDRA_TRACE_KEY } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../../opentracing/SpanContext';
@@ -20,6 +21,18 @@ class LambdaEventUtils {
     private static readonly LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
 
     private constructor() {
+    }
+    /**
+     * Checks if a propagated trace link exists in the incoming event
+     * @param originalEvent the original AWS Lambda invocation event
+     */
+    static extractTraceLinkFromEvent(originalEvent: any) {
+        try {
+            const incomingTraceLink = get(originalEvent, `${THUNDRA_TRACE_KEY}.trace_link`);
+            if (incomingTraceLink) {
+                InvocationTraceSupport.addIncomingTraceLink(incomingTraceLink);
+            }
+        } catch (e) { /* pass */ }
     }
 
     /**
@@ -62,7 +75,7 @@ class LambdaEventUtils {
             return LambdaEventType.Netlify;
         } else if (originalContext.clientContext) {
             return LambdaEventType.Lambda;
-        } else if (originalEvent['detail-type'] && originalEvent.detail &&  originalEvent.version
+        } else if (originalEvent['detail-type'] && originalEvent.detail && originalEvent.version
             && Array.isArray(originalEvent.resources)) {
             return LambdaEventType.EventBridge;
         } else if (originalEvent.Action && originalEvent.body) {
@@ -117,8 +130,8 @@ class LambdaEventUtils {
         const className = ClassNames.FIREHOSE;
         const streamARN = originalEvent.deliveryStreamArn;
         const streamName = streamARN.substring(streamARN.indexOf('/') + 1);
-        const region = originalEvent.region || '';
-        const records  = originalEvent.records || [];
+        const region = originalEvent.region || '';
+        const records = originalEvent.records || [];
         const traceLinks: any[] = [];
 
         for (const record of records) {

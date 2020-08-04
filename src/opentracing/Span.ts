@@ -21,6 +21,7 @@ class ThundraSpan extends Span {
     className: string;
     domainName: string;
     order: number;
+    resourceTraceLinks: any[];
 
     constructor(tracer: any, fields: any) {
         super();
@@ -42,6 +43,7 @@ class ThundraSpan extends Span {
         this.className = fields.className;
         this.domainName = fields.domainName;
         this.order = fields.order;
+        this.resourceTraceLinks = fields.resourceTraceLinks || null;
     }
 
     /**

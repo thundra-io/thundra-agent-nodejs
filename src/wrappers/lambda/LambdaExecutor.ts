@@ -4,7 +4,8 @@
 
 import Utils from '../../utils/Utils';
 import ThundraSpanContext from '../../opentracing/SpanContext';
-import { DomainNames, ClassNames, TriggerHeaderTags, LAMBDA_FUNCTION_PLATFORM, HttpTags } from '../../Constants';
+import { DomainNames, ClassNames, TriggerHeaderTags,
+    LAMBDA_FUNCTION_PLATFORM, HttpTags, THUNDRA_TRACE_KEY } from '../../Constants';
 import ThundraTracer from '../../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
 import * as opentracing from 'opentracing';
@@ -21,6 +22,8 @@ import TraceConfig from '../../plugins/config/TraceConfig';
 import { LambdaContextProvider } from './LambdaContextProvider';
 import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 import ExecutionContext from '../../context/ExecutionContext';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 
 const get = require('lodash.get');
 
@@ -214,7 +217,11 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
     invocationData.setTags(InvocationSupport.getAgentTags());
     invocationData.setUserTags(InvocationSupport.getTags());
 
-    const { startTimestamp, finishTimestamp, spanId, response } = execContext;
+    const { startTimestamp, finishTimestamp, spanId, response, platformData } = execContext;
+    const { originalEvent } = platformData;
+
+    // Inject step functions trace links
+    injectStepFunctionInfo(originalEvent, response);
 
     invocationData.finishTimestamp = finishTimestamp;
     invocationData.duration = finishTimestamp - startTimestamp;
@@ -252,6 +259,7 @@ function processAPIGWResponse(response: any, originalEvent: any): void {
 
 function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent: any, originalContext: any): string {
     try {
+        LambdaEventUtils.extractTraceLinkFromEvent(originalEvent);
         const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
 
         if (lambdaEventType === LambdaEventType.Kinesis) {
@@ -289,6 +297,33 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent:
         }
     } catch (error) {
         ThundraLogger.error('Cannot inject trigger tags. ' + error);
+    }
+}
+
+function injectStepFunctionInfo(request: any, response: any): any {
+    try {
+        const isStepFunction = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_AWS_STEPFUNCTIONS);
+
+        if (isStepFunction) {
+            const traceLink = Utils.generateId();
+            let step = 0;
+
+            const incomingStep = get(request, `${THUNDRA_TRACE_KEY}.step`);
+            if (incomingStep) {
+                step = incomingStep;
+            }
+
+            if (typeof response === 'object' && response !== null) {
+                response[THUNDRA_TRACE_KEY] = {
+                    trace_link: traceLink,
+                    step: step + 1,
+                };
+            }
+
+            InvocationTraceSupport.addOutgoingTraceLink(traceLink);
+        }
+    } catch (error) {
+        ThundraLogger.error('Failed to inject step function trace links: ' + error);
     }
 }
 

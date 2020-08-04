@@ -151,6 +151,7 @@ export const ClassNames = {
     ZEIT: 'ZEIT',
     NETLIFY: 'Netlify',
     SES: 'AWS-SES',
+    STEPFUNCTIONS: 'AWS-StepFunctions',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -463,6 +464,14 @@ export const AwsSESTags = {
     DESTINATION: 'aws.ses.mail.destination',
 };
 
+export const AwsStepFunctionsTags = {
+    STATE_MACHINE_ARN: 'aws.sf.state_machine.arn',
+    EXECUTION_NAME: 'aws.sf.execution.name',
+    EXECUTION_INPUT: 'aws.sf.execution.input',
+    EXECUTION_ARN: 'aws.sf.execution.arn',
+    EXECUTION_START_DATE: 'aws.sf.execution.start_date',
+};
+
 export const SpanTags = {
     SPAN_TYPE: 'span.type',
     OPERATION_TYPE: 'operation.type',
@@ -493,6 +502,7 @@ export const SpanTypes = {
     AWS_ATHENA: 'AWS-Athena',
     AWS_EVENTBRIDGE: 'AWS-EventBridge',
     AWS_SES: 'AWS-SES',
+    AWS_STEPFUNCTIONS: 'AWS-StepFunctions',
 };
 
 export const INTEGRATIONS: any = {
@@ -671,3 +681,5 @@ export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: {[key: number]: string} = {
     401: `Authentication is failed, check your Thundra debugger authentication token.`,
     409: `Another session with the same session name exists, connection closed.`,
 };
+
+export const THUNDRA_TRACE_KEY = '_thundra';
