@@ -1,6 +1,10 @@
 import MetricData from './MetricData';
 
+/**
+ * Represents memory metrics (for ex. memory usage)
+ */
 class MemoryMetric extends MetricData {
+
     readonly metricName: string = 'MemoryMetric';
     metrics: {
         'app.maxMemory': number;
@@ -15,6 +19,7 @@ class MemoryMetric extends MetricData {
     constructor() {
         super();
     }
+
 }
 
 export default MemoryMetric;

@@ -1,6 +1,10 @@
 import MonitorDataType from './MonitoringDataType';
 
-class BaseMonitoringData {
+/**
+ * Base class for all monitoring data types (invocation, span, metric, log, ...)
+ */
+abstract class BaseMonitoringData {
+
     id: string;
     type: MonitorDataType;
     agentVersion: string;
@@ -16,12 +20,12 @@ class BaseMonitoringData {
     applicationRuntimeVersion: string;
     applicationTags: any;
 
-    constructor(type: MonitorDataType) {
+    protected constructor(type: MonitorDataType) {
         this.type = type;
         this.applicationTags = {};
     }
 
-    initWithBaseMonitoringDataValues(data: BaseMonitoringData): void {
+    protected initWithBaseMonitoringDataValues(data: BaseMonitoringData): void {
         this.agentVersion = data.agentVersion;
         this.dataModelVersion = data.dataModelVersion;
         this.applicationId = data.applicationId;
@@ -34,6 +38,7 @@ class BaseMonitoringData {
         this.applicationRuntimeVersion = data.applicationRuntimeVersion;
         this.applicationTags = Object.assign({}, data.applicationTags);
     }
+
 }
 
 export default BaseMonitoringData;

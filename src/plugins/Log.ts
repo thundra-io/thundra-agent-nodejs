@@ -87,7 +87,7 @@ class Log {
         const activeSpan = InvocationTraceSupport.getActiveSpan();
         const spanId = activeSpan ? activeSpan.spanContext.spanId : '';
         const { traceId, transactionId } = execContext;
-        logData.initWithLogDataValues(this.baseLogData, spanId, transactionId, traceId, logInfo);
+        logData.initWithLogDataValues(this.baseLogData, traceId, transactionId, spanId, logInfo);
         execContext.logs.push(logData);
     }
 

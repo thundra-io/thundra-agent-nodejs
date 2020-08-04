@@ -1,7 +1,11 @@
 import MetricData from './MetricData';
 
+/**
+ * Represents IO metrics (for ex. disk IO)
+ */
 class IOMetric extends MetricData {
-    metricName: string = 'IOMetric';
+
+    readonly metricName: string = 'IOMetric';
     metrics: {
         'sys.diskReadBytes': number,
         'sys.diskWriteBytes': number,
@@ -10,6 +14,7 @@ class IOMetric extends MetricData {
     constructor() {
         super();
     }
+
 }
 
 export default IOMetric;

@@ -1,7 +1,11 @@
 import ThundraSpan from '../../../opentracing/Span';
 import { SpanTags, SecurityTags } from '../../../Constants';
 
+/**
+ * Represents resource (for ex. database query, API request, AWS service call, etc ...) with its metrics
+ */
 class Resource {
+
     resourceType: string;
     resourceName: string;
     resourceOperation: string;
@@ -30,6 +34,10 @@ class Resource {
         this.resourceTraceLinks = opt.resourceTraceLinks || [];
     }
 
+    /**
+     * Initializes from given {@link ThundraSpan}
+     * @param {ThundraSpan} span the {@link ThundraSpan} to be initialized from
+     */
     public init(span: ThundraSpan) {
         this.resourceType = span.className;
         this.resourceName = span.operationName;
@@ -49,6 +57,10 @@ class Resource {
         this.resourceTraceLinks = [...new Set(span.resourceTraceLinks)].filter((e) => e);
     }
 
+    /**
+     * Merges itself with given {@link Resource}
+     * @param {Resource} resource the {@link Resource} to be merged into this one
+     */
     public merge(resource: Resource): void {
         if (this.resourceType === resource.resourceType &&
             this.resourceName === resource.resourceName &&
@@ -75,9 +87,14 @@ class Resource {
         }
     }
 
+    /**
+     * Generates id of the resource
+     * @return {string} generated id of the resource
+     */
     public generateId(): string {
         return `${this.resourceType.toUpperCase()}\$${this.resourceName}\$${this.resourceOperation}`;
     }
+
 }
 
 export default Resource;

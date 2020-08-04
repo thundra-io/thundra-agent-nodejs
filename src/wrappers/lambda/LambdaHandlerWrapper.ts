@@ -423,7 +423,12 @@ class LambdaHandlerWrapper {
                 this.reported = true;
                 this.destroyTimeoutHandler();
 
-                await this.executeAfterInvocationAndReport();
+                try {
+                    await this.executeAfterInvocationAndReport();
+                } catch (e) {
+                    ThundraLogger.debug('Failed to report');
+                    ThundraLogger.debug(e);
+                }
 
                 if (typeof callback === 'function') {
                     callback();
