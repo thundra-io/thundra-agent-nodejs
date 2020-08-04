@@ -23,7 +23,7 @@ module.exports.stepfn = (AWS) => {
         const params = {
             stateMachineArn: 'arn:aws:states:us-west-2:123123123123:stateMachine:FooStateMachine',
             input: '{}',
-            name: 'exec_name'
+            name: 'execName'
         };
         stepfn.startExecution(params, function (err, data) {
             if (err) {

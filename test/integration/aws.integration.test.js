@@ -3,6 +3,7 @@ import { AWSIntegration } from '../../dist/integrations/AWSIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
+import { AwsStepFunctionsTags } from '../../dist/Constants';
 
 const md5 = require('md5');
 const sdk = require('aws-sdk');
@@ -287,7 +288,10 @@ describe('AWS integration', () => {
             expect(span.domainName).toBe('AWS');
 
             expect(span.tags['aws.request.name']).toBe('startExecution');
-            expect(span.tags['aws.sqs.queue.name']).not.toBeTruthy();
+            expect(span.tags[AwsStepFunctionsTags.EXECUTION_NAME]).toBe('execName');
+            expect(span.tags[AwsStepFunctionsTags.EXECUTION_INPUT]).toBe('{}');
+            expect(span.tags[AwsStepFunctionsTags.STATE_MACHINE_ARN])
+                .toBe('arn:aws:states:us-west-2:123123123123:stateMachine:FooStateMachine');
             expect(span.tags['operation.type']).toBe('EXECUTE');
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trace.links']).toBeTruthy();
