@@ -16,12 +16,16 @@ import ExecutionContext from '../context/ExecutionContext';
 
 const get = require('lodash.get');
 
-class Log {
-    enabled: boolean;
-    hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
-             'after-invocation': (execContext: ExecutionContext) => void; };
+/**
+ * The log plugin for log support
+ */
+export default class Log {
+
     pluginOrder: number = 4;
     pluginContext: PluginContext;
+    hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
+             'after-invocation': (execContext: ExecutionContext) => void; };
+    enabled: boolean;
     consoleReference: any = console;
     config: LogConfig;
     logLevelFilter: number = 0;
@@ -45,15 +49,27 @@ class Log {
         }
     }
 
+    /**
+     * Sets the the {@link PluginContext}
+     * @param {PluginContext} pluginContext the {@link PluginContext}
+     */
     setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
         this.baseLogData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.LOG) as LogData;
     }
 
+    /**
+     * Called before invocation
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     */
     beforeInvocation = (execContext: ExecutionContext) => {
         execContext.captureLog = true;
     }
 
+    /**
+     * Called after invocation
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     */
     afterInvocation = (execContext: ExecutionContext) => {
         const sampler = get(this.config, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled();
@@ -79,7 +95,14 @@ class Log {
         execContext.captureLog = false;
     }
 
-    reportLog(logInfo: any, execContext: ExecutionContext): void {
+    /**
+     * Destroys plugin
+     */
+    destroy(): void {
+        // pass
+    }
+
+    private reportLog(logInfo: any, execContext: ExecutionContext): void {
         if (!this.enabled) {
             return;
         }
@@ -91,7 +114,7 @@ class Log {
         execContext.logs.push(logData);
     }
 
-    shimConsole(): void {
+    private shimConsole(): void {
         ConsoleShimmedMethods.forEach((method) => {
             if (this.consoleReference[method]) {
                 const logLevelName = method.toUpperCase() === 'LOG' ? 'INFO' : method.toUpperCase();
@@ -124,16 +147,4 @@ class Log {
         });
     }
 
-    enable(): void {
-        this.enabled = true;
-    }
-
-    disable(): void {
-        this.enabled = false;
-    }
-
-    // tslint:disable-next-line:no-empty
-    destroy(): void {}
 }
-
-export default Log;
