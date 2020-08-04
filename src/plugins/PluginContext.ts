@@ -1,6 +1,10 @@
 import { ApplicationInfo } from '../application/ApplicationInfo';
 
+/**
+ * Global context to be used and between shared by plugins
+ */
 class PluginContext {
+
     applicationInfo: ApplicationInfo;
     requestCount: number;
     apiKey: string;
