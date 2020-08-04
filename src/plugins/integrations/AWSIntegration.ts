@@ -576,8 +576,8 @@ export class AWSStepFunctionsIntegration {
     }
 
     public static processResponse(span: ThundraSpan, request: any, config: any): void {
-        const executionARN = get(request, 'response.executionArn', '');
-        const startDate = get(request, 'response.startDate');
+        const executionARN = get(request, 'response.data.executionArn', '');
+        const startDate = get(request, 'response.data.startDate');
 
         span.setTag(AwsStepFunctionsTags.EXECUTION_ARN, executionARN);
 

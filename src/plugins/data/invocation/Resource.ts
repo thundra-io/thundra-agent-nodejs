@@ -46,7 +46,7 @@ class Resource {
         this.resourceAvgDuration = span.getDuration();
         this.resourceBlockedCount = span.getTag(SecurityTags.BLOCKED) ? 1 : 0;
         this.resourceViolatedCount = span.getTag(SecurityTags.VIOLATED) ? 1 : 0;
-        this.resourceTraceLinks.push(...span.resourceTraceLinks);
+        this.resourceTraceLinks = [...new Set(span.resourceTraceLinks)].filter((e) => e);
     }
 
     public merge(resource: Resource): void {
@@ -71,7 +71,7 @@ class Resource {
             }
             this.resourceBlockedCount += resource.resourceBlockedCount;
             this.resourceViolatedCount += resource.resourceViolatedCount;
-            this.resourceTraceLinks.push(...resource.resourceTraceLinks);
+            this.resourceTraceLinks = [...new Set([...this.resourceTraceLinks, ...resource.resourceTraceLinks])].filter((e) => e);
         }
     }
 
