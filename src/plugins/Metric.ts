@@ -14,13 +14,17 @@ import ExecutionContext from '../context/ExecutionContext';
 
 const get = require('lodash.get');
 
+/**
+ * The log plugin for metric support
+ */
 export default class Metric {
+
+    pluginOrder: number = 2;
+    pluginContext: PluginContext;
     hooks: { 'before-invocation': (execContext: ExecutionContext) => Promise<void>;
             'after-invocation': (execContext: ExecutionContext) => Promise<void>; };
     config: MetricConfig;
     baseMetricData: MetricData;
-    pluginOrder: number = 2;
-    pluginContext: PluginContext;
     clockTick: number;
 
     constructor(config: MetricConfig) {
@@ -32,11 +36,19 @@ export default class Metric {
         this.clockTick = parseInt(execSync('getconf CLK_TCK').toString(), 0);
     }
 
+    /**
+     * Sets the the {@link PluginContext}
+     * @param {PluginContext} pluginContext the {@link PluginContext}
+     */
     setPluginContext = (pluginContext: PluginContext) => {
         this.pluginContext = pluginContext;
         this.baseMetricData = Utils.initMonitoringData(this.pluginContext, MonitoringDataType.METRIC) as MetricData;
     }
 
+    /**
+     * Called before invocation
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     */
     beforeInvocation = async (execContext: ExecutionContext) => {
         const sampler = get(this.config, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled();
@@ -53,6 +65,10 @@ export default class Metric {
         }
     }
 
+    /**
+     * Called after invocation
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     */
     afterInvocation = async (execContext: ExecutionContext) => {
         const { metrics } = execContext;
         if (metrics.sampled) {
@@ -69,7 +85,14 @@ export default class Metric {
         }
     }
 
-    addThreadMetricReport = async (execContext: ExecutionContext, apiKey: string) => {
+    /**
+     * Destroys plugin
+     */
+    destroy(): void {
+        // pass
+    }
+
+    private addThreadMetricReport = async (execContext: ExecutionContext, apiKey: string) => {
         const { metrics } = execContext;
         const { spanId, traceId, transactionId } = execContext;
         const { threadCount } = metrics.initialProcMetric;
@@ -87,7 +110,7 @@ export default class Metric {
         execContext.report(threadMetricReport);
     }
 
-    addMemoryMetricReport = async (execContext: ExecutionContext, apiKey: string, maxMemory: number) => {
+    private addMemoryMetricReport = async (execContext: ExecutionContext, apiKey: string, maxMemory: number) => {
         const { spanId, traceId, transactionId } = execContext;
         const { rss, heapUsed, external } = process.memoryUsage();
         const totalMemory = os.totalmem();
@@ -112,7 +135,7 @@ export default class Metric {
         execContext.report(memoryMetricReport);
     }
 
-    addCpuMetricReport = async (execContext: ExecutionContext, apiKey: string) => {
+    private addCpuMetricReport = async (execContext: ExecutionContext, apiKey: string) => {
         const { metrics, spanId, traceId, transactionId } = execContext;
         const endCpuUsage = Utils.getCpuUsage();
         const cpuLoad = Utils.getCpuLoad(metrics.startCpuUsage, endCpuUsage, this.clockTick);
@@ -131,7 +154,7 @@ export default class Metric {
         execContext.report(cpuMetricReport);
     }
 
-    addIoMetricReport = async (execContext: ExecutionContext, apiKey: string) => {
+    private addIoMetricReport = async (execContext: ExecutionContext, apiKey: string) => {
         const { metrics, spanId, traceId, transactionId } = execContext;
         const startProcIo = metrics.initialProcIo;
         const endProcIo: any = await Utils.readProcIoPromise();
@@ -149,4 +172,5 @@ export default class Metric {
         const ioMetricReport = Utils.generateReport(ioMetric, apiKey);
         execContext.report(ioMetricReport);
     }
+
 }
