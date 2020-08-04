@@ -1,6 +1,6 @@
 import Sampler from './Sampler';
-import ConfigProvider from '../../config/ConfigProvider';
-import ConfigNames from '../../config/ConfigNames';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
 
 const koalas = require('koalas');
 

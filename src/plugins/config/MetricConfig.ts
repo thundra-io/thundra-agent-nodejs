@@ -1,8 +1,8 @@
 import BasePluginConfig from './BasePluginConfig';
-import Sampler from '../../opentracing/sampler/Sampler';
-import CountAwareSampler from '../../opentracing/sampler/CountAwareSampler';
-import TimeAwareSampler from '../../opentracing/sampler/TimeAwareSampler';
-import CompositeSampler from '../../opentracing/sampler/CompositeSampler';
+import Sampler from '../../samplers/Sampler';
+import CountAwareSampler from '../../samplers/CountAwareSampler';
+import TimeAwareSampler from '../../samplers/TimeAwareSampler';
+import CompositeSampler from '../../samplers/CompositeSampler';
 
 const get = require('lodash.get');
 

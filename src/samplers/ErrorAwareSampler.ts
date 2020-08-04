@@ -1,4 +1,4 @@
-import InvocationSupport from '../../plugins/support/InvocationSupport';
+import InvocationSupport from '../plugins/support/InvocationSupport';
 import Sampler from './Sampler';
 
 /**
