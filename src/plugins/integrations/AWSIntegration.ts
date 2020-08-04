@@ -6,7 +6,7 @@ import {
     AwsStepFunctionsTags, SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
     LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags,
+    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_LINK_KEY,
 } from '../../Constants';
 import Utils from '../utils/Utils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
@@ -596,21 +596,22 @@ export class AWSStepFunctionsIntegration {
     }
 
     private static createStepFunctionTraceLink(request: any, span: ThundraSpan): void {
-        const originalInput = get(request, 'params.input');
+        try {
+            const originalInput = get(request, 'params.input');
 
-        if (originalInput) {
-            const parsedInput = JSON.parse(originalInput);
-            const traceLink = Utils.generateId();
-            const traceLinkKey = '_thundra';
+            if (originalInput) {
+                const parsedInput = JSON.parse(originalInput);
+                const traceLink = Utils.generateId();
 
-            parsedInput[traceLinkKey] = { trace_link: traceLink, step: 0 };
+                parsedInput[THUNDRA_TRACE_LINK_KEY] = { trace_link: traceLink, step: 0 };
 
-            span.setTag(AwsStepFunctionsTags.EXECUTION_INPUT, originalInput);
+                span.setTag(AwsStepFunctionsTags.EXECUTION_INPUT, originalInput);
 
-            request.params.input = JSON.stringify(parsedInput);
+                request.params.input = JSON.stringify(parsedInput);
 
-            span.setTag(SpanTags.TRACE_LINKS, [traceLink]);
-        }
+                span.setTag(SpanTags.TRACE_LINKS, [traceLink]);
+            }
+        } catch (error) {/* pass */ }
     }
 }
 

@@ -1,6 +1,7 @@
 import Utils from '../plugins/utils/Utils';
 import ThundraSpanContext from '../opentracing/SpanContext';
-import { DomainNames, ClassNames, TriggerHeaderTags, LAMBDA_FUNCTION_PLATFORM, HttpTags } from '../Constants';
+import { DomainNames, ClassNames, TriggerHeaderTags,
+         LAMBDA_FUNCTION_PLATFORM, HttpTags, THUNDRA_TRACE_LINK_KEY } from '../Constants';
 import ThundraTracer from '../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
 import * as opentracing from 'opentracing';
@@ -329,18 +330,19 @@ function injectStepFunctionInfo(request: any, response: any): any {
         const isStepFunction = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_AWS_STEPFUNCTIONS);
 
         if (isStepFunction) {
-            const traceLinkKey = '_thundra';
             const traceLink = Utils.generateId();
             let step = 0;
 
-            if (traceLinkKey in request) {
-                step = request[traceLinkKey].step;
+            if (THUNDRA_TRACE_LINK_KEY in request) {
+                step = request[THUNDRA_TRACE_LINK_KEY].step;
             }
 
-            response[traceLinkKey] = {
-                trace_link: traceLink,
-                step: step + 1,
-            };
+            if (typeof response === 'object' && response !== null) {
+                response[THUNDRA_TRACE_LINK_KEY] = {
+                    trace_link: traceLink,
+                    step: step + 1,
+                };
+            }
 
             InvocationTraceSupport.addOutgoingTraceLink(traceLink);
         }

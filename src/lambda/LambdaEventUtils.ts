@@ -1,5 +1,6 @@
 import ThundraSpan from '../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants, NetlifyConstants, EnvVariableKeys } from '../Constants';
+import { SpanTags, DomainNames, ClassNames, ZeitTags, ZeitConstants,
+         NetlifyConstants, EnvVariableKeys, THUNDRA_TRACE_LINK_KEY } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../opentracing/SpanContext';
@@ -9,7 +10,6 @@ import InvocationSupport from '../plugins/support/InvocationSupport';
 import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../plugins/integrations/AWSIntegration';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import Utils from '../plugins/utils/Utils';
-import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 
 const get = require('lodash.get');
 
@@ -21,9 +21,8 @@ class LambdaEventUtils {
 
     static extractTraceLinkFromEvent(originalEvent: any) {
         try {
-            const traceLinkKey = '_thundra';
-            if (traceLinkKey in originalEvent) {
-                InvocationTraceSupport.addIncomingTraceLink(originalEvent[traceLinkKey].trace_link);
+            if (THUNDRA_TRACE_LINK_KEY in originalEvent) {
+                InvocationTraceSupport.addIncomingTraceLink(originalEvent[THUNDRA_TRACE_LINK_KEY].trace_link);
             }
         } catch (e) { /* pass */ }
     }

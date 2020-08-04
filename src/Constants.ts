@@ -675,3 +675,5 @@ export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: {[key: number]: string} = {
     401: `Authentication is failed, check your Thundra debugger authentication token.`,
     409: `Another session with the same session name exists, connection closed.`,
 };
+
+export const THUNDRA_TRACE_LINK_KEY = '_thundra';
