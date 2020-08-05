@@ -1,11 +1,15 @@
 import Utils from '../../utils/Utils';
-import { LAMBDA_FUNCTION_PLATFORM, HttpTags, DomainNames, ClassNames } from '../../Constants';
+import { HttpTags, DomainNames, ClassNames } from '../../Constants';
 import PluginContext from '../../plugins/PluginContext';
 import MonitoringDataType from '../../plugins/data/base/MonitoringDataType';
 import InvocationData from '../../plugins/data/invocation/InvocationData';
 import TimeoutError from '../../error/TimeoutError';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
+import ThundraSpanContext from '../../opentracing/SpanContext';
+import * as opentracing from 'opentracing';
+
+const get = require('lodash.get');
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     const invocationData = Utils.initMonitoringData(pluginContext,
@@ -72,11 +76,15 @@ export function finishInvocation(pluginContext: PluginContext, execContext: any)
 }
 
 export function startTrace(pluginContext: PluginContext, execContext: any) {
-    const { tracer } = execContext;
+    const { tracer, request } = execContext;
+    const propagatedSpanContext: ThundraSpanContext =
+        tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers);
 
-    execContext.traceId = Utils.generateId();
+    execContext.traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
 
     execContext.rootSpan = tracer._startSpan('express-root-span', {
+        propagated: propagatedSpanContext ? true : false,
+        parentContext: propagatedSpanContext,
         rootTraceId: execContext.traceId,
         domainName: DomainNames.API,
         className: ClassNames.EXPRESS,

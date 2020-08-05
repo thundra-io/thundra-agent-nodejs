@@ -17,8 +17,12 @@ import * as asyncContextProvider from '../context/asyncContextProvider';
 const get = require('lodash.get');
 
 export default class WrapperUtils {
-    static beforeRequest(plugins: any[]) {
+    static beforeRequest(request: any, plugins: any[]) {
         const context = ExecutionContextManager.get();
+
+        // Put current request into the execution context
+        context.request = request;
+
         for (const plugin of plugins) {
             plugin.beforeInvocation(context);
         }

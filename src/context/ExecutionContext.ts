@@ -26,6 +26,7 @@ export default class ExecutionContext {
     userError: any;
     platformData: any;
     response: any;
+    request: any;
     incomingTraceLinks: any[];
     outgoingTraceLinks: any[];
     captureLog: boolean;
@@ -47,6 +48,7 @@ export default class ExecutionContext {
         this.userError = opts.userError || null;
         this.platformData = opts.platformData || {};
         this.response = opts.response || {};
+        this.request = opts.request || {};
         this.incomingTraceLinks = opts.incomingTraceLinks || [];
         this.outgoingTraceLinks = opts.outgoingTraceLinks || [];
         this.captureLog = opts.captureLog || true;

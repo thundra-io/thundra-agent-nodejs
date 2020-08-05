@@ -26,7 +26,7 @@ export function expressMW() {
         WrapperUtils.createExecContext,
         () => {
             try {
-                WrapperUtils.beforeRequest(plugins);
+                WrapperUtils.beforeRequest(req, plugins);
                 res.once('finish', () => {
                     WrapperUtils.afterRequest(plugins, reporter);
                 });
