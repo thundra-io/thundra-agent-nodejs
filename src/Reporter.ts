@@ -49,29 +49,38 @@ class Reporter {
      * @return {Promise} the promise to track the result of reporting
      */
     sendReports(reports: any[]): Promise<void> {
+        ThundraLogger.debug('<Reporter> Sending reports ... ');
         let batchedReports: any = [];
         try {
             batchedReports = this.getCompositeBatchedReports(reports);
         } catch (err) {
-            ThundraLogger.error(`Cannot create batch request will send no report. ${err}`);
+            ThundraLogger.error('<Reporter> Cannot create batch request will send no report:', err);
         }
 
         return new Promise<void>((resolve, reject) => {
             this.sendBatchedReports(batchedReports)
                 .then(() => {
+                    ThundraLogger.debug('<Reporter> Sent reports successfully');
                     resolve();
                 })
                 .catch((err: any) => {
                     if (err.code === 'ECONNRESET') {
-                        ThundraLogger.debug('Connection reset by server. Will send monitoring data again.');
+                        ThundraLogger.debug('<Reporter> Connection reset by server. Will send monitoring data again.');
                         this.sendBatchedReports(batchedReports)
                             .then(() => {
+                                ThundraLogger.debug('<Reporter> Sent reports successfully on retry');
                                 resolve();
                             })
                             .catch((err2: any) => {
+                                if (ThundraLogger.isDebugEnabled()) {
+                                    ThundraLogger.debug('<Reporter> Failed to send reports on retry:', err2);
+                                }
                                 reject(err2);
                             });
                     } else {
+                        if (ThundraLogger.isDebugEnabled()) {
+                            ThundraLogger.debug('<Reporter> Failed to send reports:', err);
+                        }
                         reject(err);
                     }
                 });
@@ -107,12 +116,14 @@ class Reporter {
     }
 
     private getCompositeBatchedReports(reports: any[]): any[] {
+        ThundraLogger.debug('<Reporter> Generating batched reports ...');
         reports = reports.slice(0);
 
         const batchedReports: any[] = [];
         const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
         const invocationReport = reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
         if (!invocationReport) {
+            ThundraLogger.debug('<Reporter> No invocation data could be found in the reports');
             return [];
         }
         const initialCompositeData = this.initCompositeMonitoringData(invocationReport.data);
@@ -173,6 +184,7 @@ class Reporter {
     }
 
     private sendBatchedReports(batchedReports: any[]) {
+        ThundraLogger.debug('<Reporter> Sending batched reports ...');
         const isAsync = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE);
 
         const reportPromises: any[] = [];
@@ -201,6 +213,11 @@ class Reporter {
                     responseData += chunk;
                 });
                 response.on('end', () => {
+                    if (ThundraLogger.isDebugEnabled()) {
+                        ThundraLogger.debug(
+                            `<Reporter> Received response from collector (status code: ${response.statusCode}): \
+                            ${responseData}`);
+                    }
                     if (response.statusCode === 429) {
                         this.latestReportingLimitedMinute = Math.floor(Date.now() / 1000);
                     }
@@ -217,7 +234,8 @@ class Reporter {
                             if (!responseMessage) {
                                 responseMessage = 'No API key is present or invalid API key';
                             }
-                            ThundraLogger.error(`Unable to report because of unauthorized request: ${responseMessage}`);
+                            ThundraLogger.error(
+                                `<Reporter> Unable to report because of unauthorized request: ${responseMessage}`);
                         }
                         // First, check whether or debug is enabled.
                         // If not no need to convert reports into JSON string to pass to "debug" function
@@ -242,13 +260,20 @@ class Reporter {
                 : request = http.request(this.requestOptions, responseHandler);
 
             request.on('error', (error: any) => {
+                if (ThundraLogger.isDebugEnabled()) {
+                    ThundraLogger.debug('<Reporter> Request sent to collector has failed:', error);
+                }
                 return reject(error);
             });
             try {
-                request.write(Utils.serializeJSON(batch));
+                const json = Utils.serializeJSON(batch);
+                if (ThundraLogger.isDebugEnabled()) {
+                    ThundraLogger.debug(`<Reporter> Sending data to collector at ${this.requestOptions.hostname}: ${json}`);
+                }
+                request.write(json);
                 request.end();
             } catch (error) {
-                ThundraLogger.error(`Cannot serialize report data: ${error}`);
+                ThundraLogger.error('<Reporter> Cannot serialize report data:', error);
             }
         });
     }
@@ -257,11 +282,16 @@ class Reporter {
         return new Promise((resolve, reject) => {
             try {
                 const json = Utils.serializeJSON(batch);
+                if (ThundraLogger.isDebugEnabled()) {
+                    ThundraLogger.debug(`<Reporter> Writing data to CloudWatch: ${json}`);
+                }
                 const jsonStringReport = '\n' + json.replace(/\r?\n|\r/g, '') + '\n';
                 process.stdout.write(jsonStringReport);
                 return resolve();
             } catch (error) {
-                ThundraLogger.error(`Cannot write report data to CW: ${error}`);
+                if (ThundraLogger.isDebugEnabled()) {
+                    ThundraLogger.debug('<Reporter> Cannot write report data to CloudWatch:', error);
+                }
                 return reject(error);
             }
         });

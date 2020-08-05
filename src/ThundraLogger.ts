@@ -20,28 +20,31 @@ class ThundraLogger {
 
     /**
      * Logs given message if debug level logging is enabled
-     * @param {string} message the message to be logged
+     * @param message the message to be logged
+     * @param optionalParams the optional parameters to be logged
      */
-    static debug(message: any) {
+    static debug(message: any, ...optionalParams: any[]) {
         if (ThundraLogger.isDebugEnabled()) {
-            console.log(message);
+            console.log('[THUNDRA]', message, ...optionalParams);
         }
     }
 
     /**
      * Logs given message
-     * @param {string} message the message to be logged
+     * @param message the message to be logged
+     * @param optionalParams the optional parameters to be logged
      */
-    static info(message: any) {
-        console.log(message);
+    static info(message: any, ...optionalParams: any[]) {
+        console.log('[THUNDRA]', message, ...optionalParams);
     }
 
     /**
      * Logs given error
-     * @param {Error} error the error to be logger
+     * @param error the error to be logged
+     * @param optionalParams the optional parameters to be logged
      */
-    static error(error: any) {
-        console.error(error);
+    static error(error: any, ...optionalParams: any[]) {
+        console.error('[THUNDRA]', error, ...optionalParams);
     }
 
 }
