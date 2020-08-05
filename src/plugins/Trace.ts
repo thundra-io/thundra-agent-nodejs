@@ -57,6 +57,10 @@ export default class Trace {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     beforeInvocation = (execContext: ExecutionContext) => {
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Trace> Before invocation of transaction', execContext.transactionId);
+        }
+
         const { executor } = this.pluginContext;
         const { tracer } = execContext;
 
@@ -72,6 +76,10 @@ export default class Trace {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     afterInvocation = (execContext: ExecutionContext) => {
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Trace> After invocation of transaction', execContext.transactionId);
+        }
+
         const { apiKey, executor } = this.pluginContext;
         const { tracer, rootSpan } = execContext;
 
@@ -82,6 +90,10 @@ export default class Trace {
         const spanList = tracer.getRecorder().getSpanList();
         const isSampled = get(this.config, 'sampler.isSampled', () => true);
         const sampled = isSampled(rootSpan);
+
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Trace> Checked sampling of transaction', execContext.transactionId, ':', sampled);
+        }
 
         if (sampled) {
             for (const span of spanList) {
@@ -94,6 +106,9 @@ export default class Trace {
 
                     const spanData = this.buildSpanData(span, execContext);
                     const spanReportData = Utils.generateReport(spanData, apiKey);
+                    if (ThundraLogger.isDebugEnabled()) {
+                        ThundraLogger.debug('<Trace> Reporting span:', spanReportData);
+                    }
                     execContext.report(spanReportData);
                 }
             }
