@@ -36,6 +36,7 @@ const customReq = typeof __non_webpack_require__ !== 'undefined'
     ? __non_webpack_require__
     : require;
 const thundraWrapped = '__thundra_wrapped';
+const globalAppID = uuidv4();
 
 /**
  * Common/global utilities
@@ -535,15 +536,17 @@ class Utils {
      */
     static mergeApplicationInfo(updates: any = {}, applicationInfo: ApplicationInfo) {
         const newAppInfo: ApplicationInfo = {...applicationInfo};
-        newAppInfo.applicationId = updates.applicationId || applicationInfo.applicationId;
-        newAppInfo.applicationInstanceId = updates.applicationInstanceId || applicationInfo.applicationInstanceId;
-        newAppInfo.applicationName = updates.applicationName || applicationInfo.applicationName;
-        newAppInfo.applicationClassName = updates.applicationClassName || applicationInfo.applicationClassName;
-        newAppInfo.applicationDomainName = updates.applicationDomainName || applicationInfo.applicationDomainName;
-        newAppInfo.applicationRegion = updates.applicationRegion || applicationInfo.applicationRegion;
-        newAppInfo.applicationStage = updates.applicationStage || applicationInfo.applicationStage;
-        newAppInfo.applicationVersion = updates.applicationVersion || applicationInfo.applicationVersion;
+        newAppInfo.applicationInstanceId = updates.applicationInstanceId || applicationInfo.applicationInstanceId || globalAppID;
+        newAppInfo.applicationName = updates.applicationName || applicationInfo.applicationName || 'thundra-app';
+        newAppInfo.applicationClassName = updates.applicationClassName || applicationInfo.applicationClassName || '';
+        newAppInfo.applicationDomainName = updates.applicationDomainName || applicationInfo.applicationDomainName || '';
+        newAppInfo.applicationRegion = updates.applicationRegion || applicationInfo.applicationRegion || '';
+        newAppInfo.applicationStage = updates.applicationStage || applicationInfo.applicationStage || '';
+        newAppInfo.applicationVersion = updates.applicationVersion || applicationInfo.applicationVersion || '';
         newAppInfo.applicationTags = updates.applicationTags || applicationInfo.applicationTags;
+
+        const defaultAppID = `node:${newAppInfo.applicationClassName}:${newAppInfo.applicationRegion}:${newAppInfo.applicationName}`;
+        newAppInfo.applicationId = updates.applicationId || applicationInfo.applicationId || defaultAppID;
 
         return newAppInfo;
     }

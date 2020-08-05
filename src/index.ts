@@ -13,6 +13,7 @@ import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
 import support from './plugins/support';
 import ConfigNames from './config/ConfigNames';
 import { loadHandler } from './wrappers/lambda/lambdaRuntimeSupport';
+import { expressMW } from './wrappers/express/ExpressWrapper';
 import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
@@ -105,6 +106,7 @@ Object.assign(module.exports, {
     createLambdaWrapper,
     lambdaWrapper,
     tracer,
+    expressMW,
     InvocationSupport,
     InvocationTraceSupport,
     ...support,

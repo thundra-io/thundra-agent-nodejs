@@ -152,6 +152,7 @@ export const ClassNames = {
     NETLIFY: 'Netlify',
     SES: 'AWS-SES',
     STEPFUNCTIONS: 'AWS-StepFunctions',
+    EXPRESS: 'EXPRESS',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
