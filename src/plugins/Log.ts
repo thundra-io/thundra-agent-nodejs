@@ -128,6 +128,12 @@ export default class Log {
         // pass
     }
 
+    /**
+     * Reports log
+     * @param logInfo the log data to be reported
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     * @param {boolean} fromConsole indicates whether the log is reported from shimmed console method
+     */
     reportLog(logInfo: any, execContext: ExecutionContext, fromConsole: boolean = false): void {
         if (!this.enabled) {
             if (this.debugEnabled) {
@@ -186,10 +192,8 @@ export default class Log {
                             this.reportLog(logInfo, execContext, true);
                         } else {
                             if (this.debugEnabled) {
-                                const logMessage = util.format.apply(util, args);
                                 ThundraLogger.debug('<Log> Skipped log from console because log level', logLevel,
-                                    'is lower than global log level threshold', this.logLevelFilter, ':',
-                                    logMessage);
+                                    'is lower than global log level threshold', this.logLevelFilter, ':', ...args);
                             }
                         }
                     }
