@@ -2,6 +2,7 @@ import Utils from '../utils/Utils';
 import InvocationConfig from './config/InvocationConfig';
 import PluginContext from './PluginContext';
 import ExecutionContext from '../context/ExecutionContext';
+import ThundraLogger from '../ThundraLogger';
 
 /**
  * The invocation plugin
@@ -35,6 +36,9 @@ export default class Invocation {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     beforeInvocation = (execContext: ExecutionContext) => {
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Invocation> Before invocation of transaction', execContext.transactionId);
+        }
         const { executor } = this.pluginContext;
 
         if (executor) {
@@ -47,6 +51,9 @@ export default class Invocation {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     afterInvocation = (execContext: ExecutionContext) => {
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Invocation> After invocation of transaction', execContext.transactionId);
+        }
         const { executor } = this.pluginContext;
 
         if (executor) {
@@ -55,10 +62,12 @@ export default class Invocation {
 
         const { invocationData } = execContext;
         const { apiKey } = this.pluginContext;
-        const reportData = Utils.generateReport(invocationData, apiKey);
+        const invocation = Utils.generateReport(invocationData, apiKey);
 
-        execContext.report(reportData);
-        this.destroy();
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Invocation> Reporting invocation:', invocation);
+        }
+        execContext.report(invocation);
     }
 
     /**

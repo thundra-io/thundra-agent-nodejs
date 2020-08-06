@@ -30,6 +30,7 @@ export default class Log {
     config: LogConfig;
     logLevelFilter: number = 0;
     baseLogData: LogData;
+    debugEnabled: boolean;
 
     constructor(options?: LogConfig) {
         LogManager.addListener(this);
@@ -43,6 +44,8 @@ export default class Log {
 
         const levelConfig = ConfigProvider.get<string>(ConfigNames.THUNDRA_LOG_LOGLEVEL);
         this.logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
+
+        this.debugEnabled = ThundraLogger.isDebugEnabled();
 
         if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_CONSOLE_DISABLE)) {
             this.shimConsole();
@@ -63,6 +66,10 @@ export default class Log {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     beforeInvocation = (execContext: ExecutionContext) => {
+        if (this.debugEnabled) {
+            ThundraLogger.debug('<Log> Before invocation of transaction', execContext.transactionId);
+        }
+
         execContext.captureLog = true;
     }
 
@@ -71,25 +78,44 @@ export default class Log {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     afterInvocation = (execContext: ExecutionContext) => {
+        if (this.debugEnabled) {
+            ThundraLogger.debug('<Log> After invocation of transaction', execContext.transactionId);
+        }
+
         const sampler = get(this.config, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled();
         const { logs } = execContext;
+
+        if (this.debugEnabled) {
+            ThundraLogger.debug('<Log> Checked sampling of transaction', execContext.transactionId, ':', sampled);
+        }
+
         if (logs && sampled) {
             for (const log of logs) {
                 const { apiKey } = this.pluginContext;
                 const logReportData = Utils.generateReport(log, apiKey);
                 // If lambda fails skip log filtering
                 if (InvocationSupport.hasError()) {
+                    ThundraLogger.debug('<Log> Reporting log because invocation is erroneous:', logReportData);
                     execContext.report(logReportData);
                     continue;
                 }
 
                 if (logLevels[log.logLevel] >= this.logLevelFilter) {
+                    if (this.debugEnabled) {
+                        ThundraLogger.debug('<Log> Reporting log:', logReportData);
+                    }
                     execContext.report(logReportData);
+                } else {
+                    if (this.debugEnabled) {
+                        ThundraLogger.debug('<Log> Skipped log because log level', log.logLevel,
+                            'is lower than global log level threshold', this.logLevelFilter, ':',
+                            logReportData);
+                    }
                 }
             }
         } else {
-            ThundraLogger.debug('Skipping reporting logs due to sampling.');
+            ThundraLogger.debug('<Log> Skipping reporting logs due to sampling.');
         }
 
         execContext.captureLog = false;
@@ -102,8 +128,23 @@ export default class Log {
         // pass
     }
 
-    private reportLog(logInfo: any, execContext: ExecutionContext): void {
+    /**
+     * Reports log
+     * @param logInfo the log data to be reported
+     * @param {ExecutionContext} execContext the {@link ExecutionContext}
+     * @param {boolean} fromConsole indicates whether the log is reported from shimmed console method
+     */
+    reportLog(logInfo: any, execContext: ExecutionContext, fromConsole: boolean = false): void {
         if (!this.enabled) {
+            if (this.debugEnabled) {
+                ThundraLogger.debug('<Log> Skipping reporting log because logging is disabled:', logInfo);
+            }
+            return;
+        }
+        if (!execContext) {
+            execContext = ExecutionContextManager.get();
+        }
+        if (!execContext) {
             return;
         }
         const logData = new LogData();
@@ -112,11 +153,22 @@ export default class Log {
         const { traceId, transactionId } = execContext;
         logData.initWithLogDataValues(this.baseLogData, traceId, transactionId, spanId, logInfo);
         execContext.logs.push(logData);
+        if (this.debugEnabled) {
+            if (fromConsole) {
+                ThundraLogger.debug('<Log> Captured log from console:', logData);
+            } else {
+                ThundraLogger.debug('<Log> Captured log:', logData);
+            }
+        }
     }
 
     private shimConsole(): void {
         ConsoleShimmedMethods.forEach((method) => {
-            if (this.consoleReference[method]) {
+            const consoleMethod = this.consoleReference[method];
+            // If console method is valid and it is not patched by Thundra
+            if (consoleMethod && !consoleMethod._thundra) {
+                ThundraLogger.debug('<Log> Shimming console method:', method);
+
                 const logLevelName = method.toUpperCase() === 'LOG' ? 'INFO' : method.toUpperCase();
                 const logLevel = logLevels[logLevelName] ? logLevels[logLevelName] : 0;
                 const originalConsoleMethod = this.consoleReference[method].bind(console);
@@ -126,9 +178,8 @@ export default class Log {
                     Object.defineProperty(console, `original_${method}`, descriptor);
                 }
 
-                this.consoleReference[method] = (...args: any[]) => {
+                const thundraConsoleMethod = (...args: any[]) => {
                     const execContext = ExecutionContextManager.get();
-
                     if (execContext && execContext.captureLog) {
                         if (logLevel >= this.logLevelFilter) {
                             const logInfo = {
@@ -138,11 +189,22 @@ export default class Log {
                                 logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
                                 logTimestamp: Date.now(),
                             };
-                            this.reportLog(logInfo, execContext);
+                            this.reportLog(logInfo, execContext, true);
+                        } else {
+                            if (this.debugEnabled) {
+                                ThundraLogger.debug('<Log> Skipped log from console because log level', logLevel,
+                                    'is lower than global log level threshold', this.logLevelFilter, ':', ...args);
+                            }
                         }
                     }
                     originalConsoleMethod.apply(console, args);
                 };
+                // Mark Thundra console method to prevent double patching
+                Object.defineProperty(thundraConsoleMethod, '_thundra', {
+                    value: true,
+                    writable: false,
+                });
+                this.consoleReference[method] = thundraConsoleMethod;
             }
         });
     }
