@@ -50,11 +50,19 @@ export default class Metric {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     beforeInvocation = async (execContext: ExecutionContext) => {
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Metric> Before invocation of transaction', execContext.transactionId);
+        }
+
         const sampler = get(this.config, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled();
 
         const { metrics } = execContext;
         metrics.sampled = sampled;
+
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Metric> Checked sampling of transaction', execContext.transactionId, ':', sampled);
+        }
 
         if (sampled) {
             const [procMetric, procIo] = await Promise.all([Utils.readProcMetricPromise(), Utils.readProcIoPromise()]);
@@ -70,6 +78,10 @@ export default class Metric {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     afterInvocation = async (execContext: ExecutionContext) => {
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Metric> After invocation of transaction', execContext.transactionId);
+        }
+
         const { metrics } = execContext;
         if (metrics.sampled) {
             const { apiKey, maxMemory } = this.pluginContext;
@@ -80,7 +92,7 @@ export default class Metric {
                 this.addCpuMetricReport(execContext, apiKey),
                 this.addIoMetricReport(execContext, apiKey),
             ]).catch((err: Error) => {
-                ThundraLogger.error('Cannot obtain metric data :' + err);
+                ThundraLogger.error('<Metric> Cannot obtain metric data:', err);
             });
         }
     }
@@ -107,6 +119,11 @@ export default class Metric {
         };
 
         const threadMetricReport = Utils.generateReport(threadMetric, apiKey);
+
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Metric> Reporting thread metric:', threadMetricReport);
+        }
+
         execContext.report(threadMetricReport);
     }
 
@@ -132,6 +149,11 @@ export default class Metric {
         };
 
         const memoryMetricReport = Utils.generateReport(memoryMetric, apiKey);
+
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Metric> Reporting memory metric:', memoryMetricReport);
+        }
+
         execContext.report(memoryMetricReport);
     }
 
@@ -151,6 +173,11 @@ export default class Metric {
         };
 
         const cpuMetricReport = Utils.generateReport(cpuMetric, apiKey);
+
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Metric> Reporting CPU metric:', cpuMetricReport);
+        }
+
         execContext.report(cpuMetricReport);
     }
 
@@ -170,6 +197,11 @@ export default class Metric {
         };
 
         const ioMetricReport = Utils.generateReport(ioMetric, apiKey);
+
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug('<Metric> Reporting IO metric:', ioMetricReport);
+        }
+
         execContext.report(ioMetricReport);
     }
 
