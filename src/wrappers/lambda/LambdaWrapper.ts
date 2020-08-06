@@ -22,6 +22,7 @@ import ExecutionContextManager from '../../context/ExecutionContextManager';
 import ThundraTracer from '../../opentracing/Tracer';
 import ExecutionContext from '../../context/ExecutionContext';
 import { LambdaPlatformUtils } from './LambdaPlatformUtils';
+import ThundraLogger from '../../ThundraLogger';
 
 const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
@@ -36,9 +37,13 @@ interface WrappedFunction extends Function {
  * @return the wrapper function
  */
 export function createWrapper(): (f: Function) => WrappedFunction {
+    ThundraLogger.debug('<LambdaWrapper> Creating Lambda wrapper ...');
+
     const config = ConfigProvider.thundraConfig;
 
     if (config.disableThundra) {
+        ThundraLogger.debug(
+            '<LambdaWrapper> Thundra disabled, so skipped wrapping and returning original function');
         return (originalFunc) => originalFunc;
     }
     if (!(config.apiKey)) {
@@ -72,13 +77,19 @@ function createWrapperWithPlugins(config: ThundraConfig,
                                   pluginContext: PluginContext): (f: Function) => WrappedFunction {
     return (originalFunc: any) => {
         if (isWrapped(originalFunc)) {
+            ThundraLogger.debug(
+                '<LambdaWrapper> Already wrapped by Lambda wrapper, \
+                so skipped wrapping original function:', originalFunc.name);
             return originalFunc;
         }
 
         const wrappedHandler = createWrappedHandler(pluginContext, originalFunc, plugins, config);
+        ThundraLogger.debug('<LambdaWrapper> Wrapped with Lambda wrapper:', originalFunc.name);
 
         if (config.warmupAware) {
             const warmupWrapper = ThundraWarmup(() => pluginContext.requestCount++);
+            ThundraLogger.debug(
+                '<LambdaWrapper> Wrapped with warmup aware wrapper for detecting warmup requests');
             return warmupWrapper(wrappedHandler);
         }
 
@@ -139,10 +150,14 @@ function createExecContext(): ExecutionContext {
 
     tracer.setTransactionId(transactionId);
 
-    return new ExecutionContext({
+    const execContext: ExecutionContext = new ExecutionContext({
         tracer,
         transactionId,
     });
+    if (ThundraLogger.isDebugEnabled()) {
+        ThundraLogger.debug('<LambdaWrapper> Created execution context:', execContext.summary());
+    }
+    return execContext;
 }
 
 /**
@@ -158,7 +173,9 @@ function createPluginContext(config: ThundraConfig, applicationInfo: Application
         timeoutMargin: config.timeoutMargin,
         executor: LambdaExecutor,
     });
-
+    if (ThundraLogger.isDebugEnabled()) {
+        ThundraLogger.debug('<LambdaWrapper> Created plugin context:', pluginContext.summary());
+    }
     return pluginContext;
 }
 
@@ -177,20 +194,22 @@ function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any
     }
 
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && config.traceConfig.enabled) {
-        const tracePlugin = new TracePlugin(config.traceConfig);
-        plugins.push(tracePlugin);
+        plugins.push(new TracePlugin(config.traceConfig));
+        ThundraLogger.debug('<LambdaWrapper> Created and registered trace plugin');
     }
 
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_METRIC_DISABLE) && config.metricConfig.enabled) {
         plugins.push(new MetricPlugin(config.metricConfig));
+        ThundraLogger.debug('<LambdaWrapper> Created and registered metric plugin');
     }
 
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
         plugins.push(new LogPlugin(config.logConfig));
+        ThundraLogger.debug('<LambdaWrapper> Created and registered log plugin');
     }
 
-    const invocationPlugin = new InvocationPlugin(config.invocationConfig);
-    plugins.push(invocationPlugin);
+    plugins.push(new InvocationPlugin(config.invocationConfig));
+    ThundraLogger.debug('<LambdaWrapper> Created and registered invocation plugin');
 
     // Set plugin context for plugins
     plugins.forEach((plugin: any) => { plugin.setPluginContext(pluginContext); });

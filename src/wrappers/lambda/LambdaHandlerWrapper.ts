@@ -16,6 +16,7 @@ import {readFileSync} from 'fs';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
+import ExecutionContext from '../../context/ExecutionContext';
 
 const path = require('path');
 
@@ -76,16 +77,23 @@ class LambdaHandlerWrapper {
             ...context,
             done: (error: any, result: any) => {
                 return this.report(error, result, () => {
+                    ThundraLogger.debug(
+                        '<LambdaHandlerWrapper> Calling "done" over original Lambda context with',
+                        'error:', error, 'and result:', result);
                     this.originalContext.done(error, result);
                 });
             },
             succeed: (result: any) => {
                 return this.report(null, result, () => {
+                    ThundraLogger.debug(
+                        '<LambdaHandlerWrapper> Calling "succeed" over original Lambda context with result:', result);
                     this.originalContext.succeed(result);
                 });
             },
             fail: (error: any) => {
                 return this.report(error, null, () => {
+                    ThundraLogger.debug(
+                        '<LambdaHandlerWrapper> Calling "fail" over original Lambda context with error:', error);
                     this.originalContext.fail(error);
                 });
             },
@@ -111,6 +119,8 @@ class LambdaHandlerWrapper {
      * @return {Promise} the {@link Promise} to track the invocation
      */
     async invoke() {
+        ThundraLogger.debug('<LambdaHandlerWrapper> Invoking wrapper ...');
+
         this.config.refreshConfig();
 
         await this.startDebuggerProxyIfAvailable();
@@ -133,12 +143,23 @@ class LambdaHandlerWrapper {
                     this.pluginContext.requestCount += 1;
                     this.timeout = this.setupTimeoutHandler();
                     try {
+                        if (ThundraLogger.isDebugEnabled()) {
+                            ThundraLogger.debug(
+                                '<LambdaHandlerWrapper> Calling original function with the following arguments:', {
+                                    event: this.originalEvent,
+                                    context: this.wrappedContext,
+                                });
+                        }
                         const result = this.originalFunction.call(
                             this.originalThis,
                             this.originalEvent,
                             this.wrappedContext,
                             this.wrappedCallback,
                         );
+                        if (ThundraLogger.isDebugEnabled()) {
+                            ThundraLogger.debug(
+                                '<LambdaHandlerWrapper> Received result of original function call:', result);
+                        }
                         if (result && result.then !== undefined && typeof result.then === 'function') {
                             result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
                         }
@@ -147,7 +168,16 @@ class LambdaHandlerWrapper {
                     }
                 })
                 .catch((error) => {
-                    ThundraLogger.error(error);
+                    ThundraLogger.error(
+                        '<LambdaHandlerWrapper> Error occurred while executing "before-invocation" hooks:', error);
+                    if (ThundraLogger.isDebugEnabled()) {
+                        ThundraLogger.debug(
+                            '<LambdaHandlerWrapper> Since Lambda wrapper failed, \
+                            calling original function directly with the following arguments:', {
+                                event: this.originalEvent,
+                                context: this.originalContext,
+                            });
+                    }
                     // There is an error on "before-invocation" phase
                     // So skip Thundra wrapping and call original function directly
                     const result = this.originalFunction.call(
@@ -156,6 +186,10 @@ class LambdaHandlerWrapper {
                         this.originalContext,
                         this.originalCallback,
                     );
+                    if (ThundraLogger.isDebugEnabled()) {
+                        ThundraLogger.debug(
+                            '<LambdaHandlerWrapper> Received result of direct original function call:', result);
+                    }
                     resolve(result);
                 });
         });
@@ -170,7 +204,6 @@ class LambdaHandlerWrapper {
     private shouldInitDebugger(): boolean {
         const authToken = ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN);
         const debuggerEnable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, null);
-
         if (debuggerEnable != null) {
             return debuggerEnable && authToken !== undefined;
         } else {
@@ -180,6 +213,9 @@ class LambdaHandlerWrapper {
 
     private invokeCallback(error: any, result: any): void {
         if (typeof this.originalCallback === 'function') {
+            ThundraLogger.debug(
+                '<LambdaHandlerWrapper> Calling original Lambda callback with',
+                'error:', error, 'and result:', result);
             this.originalCallback(error, result);
         }
     }
@@ -187,8 +223,10 @@ class LambdaHandlerWrapper {
     private onFinish(error: any, result: any): void {
         this.finishDebuggerProxyIfAvailable();
         if (error && this.reject) {
+            ThundraLogger.debug('<LambdaHandlerWrapper> Rejecting returned promise with error:', error);
             this.reject(error);
         } else if (this.resolve) {
+            ThundraLogger.debug('<LambdaHandlerWrapper> Resolving returned promise with result:', result);
             this.resolve(result);
         }
     }
@@ -221,6 +259,14 @@ class LambdaHandlerWrapper {
             if (brokerHost.startsWith(BROKER_WS_PROTOCOL) || brokerHost.startsWith(BROKER_WSS_PROTOCOL)) {
                 // If WebSocket protocol is already included in the broker address, do not add protocol string
                 brokerProtocol = '';
+            }
+
+            if (ThundraLogger.isDebugEnabled()) {
+                ThundraLogger.debug('<LambdaHandlerWrapper> Initializing debugger with the following configurations:', {
+                    debuggerPort, debuggerMaxWaitTime, debuggerIOWaitTime,
+                    brokerProtocol, brokerHost, brokerPort,
+                    sessionName, authToken, debuggerLogsEnabled,
+                });
             }
 
             if (brokerPort === -1) {
@@ -262,7 +308,7 @@ class LambdaHandlerWrapper {
         let prevRchar = 0;
         let prevWchar = 0;
         let initCompleted = false;
-        ThundraLogger.info('Waiting for debugger to handshake ...');
+        ThundraLogger.info('<LambdaHandlerWrapper> Waiting for debugger to handshake ...');
 
         const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -270,36 +316,56 @@ class LambdaHandlerWrapper {
         while ((Date.now() - startTime) < this.debuggerMaxWaitTime) {
             try {
                 const debuggerIoMetrics = this.getDebuggerProxyIOMetrics();
+                if (ThundraLogger.isDebugEnabled()) {
+                    ThundraLogger.debug(
+                        '<LambdaHandlerWrapper> Got debugger proxy process IO metrics:', debuggerIoMetrics);
+                }
                 if (!debuggerIoMetrics) {
                     await sleep(this.debuggerIOWaitTime);
+                    ThundraLogger.debug(
+                        '<LambdaHandlerWrapper> No IO metrics was able to detected for debugger proxy process, \
+                        finished waiting for handshake');
                     break;
+                }
+                if (ThundraLogger.isDebugEnabled()) {
+                    ThundraLogger.debug('<LambdaHandlerWrapper> Checking debugger proxy process IO metrics:', {
+                        prevRchar, prevWchar,
+                        rchar: debuggerIoMetrics.rchar, wchar: debuggerIoMetrics.wchar,
+                    });
                 }
                 if (prevRchar !== 0 && prevWchar !== 0 &&
                     debuggerIoMetrics.rchar === prevRchar && debuggerIoMetrics.wchar === prevWchar) {
+                    ThundraLogger.debug(
+                        '<LambdaHandlerWrapper> Debugger proxy process is idle since latest check, \
+                        finished waiting for handshake');
                     initCompleted = true;
                     break;
                 }
                 prevRchar = debuggerIoMetrics.rchar;
                 prevWchar = debuggerIoMetrics.wchar;
             } catch (e) {
-                ThundraLogger.error(e);
+                ThundraLogger.error(
+                    '<LambdaHandlerWrapper> Error occurred while waiting debugger handshake to complete:', e);
                 break;
             }
             await sleep(this.debuggerIOWaitTime);
         }
         if (initCompleted) {
-            ThundraLogger.info('Completed debugger handshake');
+            ThundraLogger.info('<LambdaHandlerWrapper> Completed debugger handshake');
         } else {
-            ThundraLogger.error('Couldn\'t complete debugger handshake in ' + this.debuggerMaxWaitTime + ' milliseconds.');
+            ThundraLogger.error(
+                '<LambdaHandlerWrapper> Couldn\'t complete debugger handshake in ' + this.debuggerMaxWaitTime + ' milliseconds.');
         }
     }
 
     private async startDebuggerProxyIfAvailable() {
+        ThundraLogger.debug('<LambdaHandlerWrapper> Start debugger proxy if available');
         if (this.debuggerProxy) {
             this.finishDebuggerProxyIfAvailable();
         }
         if (this.fork && this.inspector) {
             try {
+                ThundraLogger.debug('<LambdaHandlerWrapper> Forking debugger proxy process');
                 this.debuggerProxy = this.fork(
                     path.join(__dirname, DEBUG_BRIDGE_FILE_NAME),
                     [],
@@ -317,6 +383,8 @@ class LambdaHandlerWrapper {
                         },
                     },
                 );
+
+                ThundraLogger.debug('<LambdaHandlerWrapper> Opening inspector');
                 this.inspector.open(this.debuggerPort, 'localhost', false);
 
                 const waitForBrokerConnection = () => new Promise((resolve) => {
@@ -337,15 +405,18 @@ class LambdaHandlerWrapper {
 
                         // If errMessage is undefined replace it with the raw incoming message
                         errMessage = errMessage || mes;
-                        ThundraLogger.error('Thundra Debugger: ' + errMessage);
+                        ThundraLogger.error(
+                            '<LambdaHandlerWrapper> Received error message from Thundra Debugger:', errMessage);
 
                         return resolve(true);
                     });
                 });
 
+                ThundraLogger.debug('<LambdaHandlerWrapper> Waiting for broker connection ...');
                 const brokerHasErr = await waitForBrokerConnection();
 
                 if (brokerHasErr) {
+                    ThundraLogger.debug('<LambdaHandlerWrapper> Failed waiting for broker connection');
                     this.finishDebuggerProxyIfAvailable();
                     return;
                 }
@@ -353,34 +424,45 @@ class LambdaHandlerWrapper {
                 await this.waitForDebugger();
             } catch (e) {
                 this.debuggerProxy = null;
-                ThundraLogger.error(e);
+                ThundraLogger.error('<LambdaHandlerWrapper> Error occurred while starting debugger proxy:', e);
             }
         }
     }
 
     private finishDebuggerProxyIfAvailable(): void {
+        ThundraLogger.debug('<LambdaHandlerWrapper> Finish debugger proxy if available');
         try {
             if (this.inspector) {
+                ThundraLogger.debug('<LambdaHandlerWrapper> Closing inspector');
                 this.inspector.close();
                 this.inspector = null;
             }
         } catch (e) {
-            ThundraLogger.error(e);
+            ThundraLogger.error(
+                '<LambdaHandlerWrapper> Error occurred while finishing debugger proxy:', e);
         }
         if (this.debuggerProxy) {
             try {
                 if (!this.debuggerProxy.killed) {
+                    ThundraLogger.debug('<LambdaHandlerWrapper> Killing debugger proxy process');
                     this.debuggerProxy.kill();
                 }
             } catch (e) {
-                ThundraLogger.error(e);
+                ThundraLogger.error(
+                    '<LambdaHandlerWrapper> Error occurred while killing debugger proxy process:', e);
             } finally {
                 this.debuggerProxy = null;
             }
         }
     }
 
-    private async executeHook(hook: any, data: any, reverse: boolean) {
+    private async executeHook(hook: string, execContext: ExecutionContext, reverse: boolean) {
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug(
+                '<LambdaHandlerWrapper> Executing hook', hook,
+                'with execution context:', execContext.summary());
+        }
+
         this.plugins.sort((p1: any, p2: any) => p1.pluginOrder > p2.pluginOrder ? 1 : -1);
 
         if (reverse) {
@@ -390,13 +472,15 @@ class LambdaHandlerWrapper {
         await Promise.all(
             this.plugins.map((plugin: any) => {
                 if (plugin.hooks && plugin.hooks[hook]) {
-                    return plugin.hooks[hook](data);
+                    return plugin.hooks[hook](execContext);
                 }
             }),
         );
     }
 
     private async executeAfterInvocationAndReport() {
+        ThundraLogger.debug('<LambdaHandlerWrapper> Execute after invocation and report');
+
         if (this.config.disableMonitoring) {
             return;
         }
@@ -406,17 +490,22 @@ class LambdaHandlerWrapper {
         execContext.finishTimestamp = Date.now();
 
         await this.executeHook('after-invocation', execContext, true);
+
+        ThundraLogger.debug('<LambdaHandlerWrapper> Sending reports');
+
         await this.reporter.sendReports(execContext.reports);
     }
 
     private async report(error: any, result: any, callback: any) {
         if (!this.reported) {
+            ThundraLogger.debug('<LambdaHandlerWrapper> Reporting with error:', error, 'and result:', result);
             try {
                 const execContext = ExecutionContextManager.get();
                 execContext.response = result;
                 execContext.error = error;
 
                 if (this.isHTTPErrorResponse(result)) {
+                    ThundraLogger.debug('<LambdaHandlerWrapper> Detected HTTP error from result:', result);
                     execContext.error = new HttpError('Lambda returned with error response.');
                 }
 
@@ -426,8 +515,7 @@ class LambdaHandlerWrapper {
                 try {
                     await this.executeAfterInvocationAndReport();
                 } catch (e) {
-                    ThundraLogger.debug('Failed to report');
-                    ThundraLogger.debug(e);
+                    ThundraLogger.debug('<LambdaHandlerWrapper> Failed to report:', e);
                 }
 
                 if (typeof callback === 'function') {
@@ -436,6 +524,8 @@ class LambdaHandlerWrapper {
             } finally {
                 this.onFinish(error, result);
             }
+        } else {
+            ThundraLogger.debug('<LambdaHandlerWrapper> Skipped reporting as it is already reported');
         }
     }
 
@@ -454,16 +544,16 @@ class LambdaHandlerWrapper {
     }
 
     private destroyTimeoutHandler() {
-        ThundraLogger.debug('Destroying timeout handler');
+        ThundraLogger.debug('<LambdaHandlerWrapper> Destroying timeout handler');
         if (this.timeout) {
-            ThundraLogger.debug('Clearing timeout handler');
+            ThundraLogger.debug('<LambdaHandlerWrapper> Clearing timeout handler');
             clearTimeout(this.timeout);
             this.timeout = null;
         }
     }
 
     private setupTimeoutHandler(): NodeJS.Timer | undefined {
-        ThundraLogger.debug('Setting up timeout handler');
+        ThundraLogger.debug('<LambdaHandlerWrapper> Setting up timeout handler');
 
         this.destroyTimeoutHandler();
 
@@ -480,21 +570,24 @@ class LambdaHandlerWrapper {
 
         const endTime = Math.min(configEndTime, maxEndTime);
 
+        ThundraLogger.debug(`<LambdaHandlerWrapper> Setting timeout to ${endTime} milliseconds later`);
+
         return setTimeout(() => {
-            ThundraLogger.debug('Detected timeout');
+            ThundraLogger.debug('<LambdaHandlerWrapper> Detected timeout');
             if (this.debuggerProxy) {
                 // Debugger proxy exists, let it know about the timeout
                 try {
                     if (!this.debuggerProxy.killed) {
+                        ThundraLogger.debug('<LambdaHandlerWrapper> Killing debugger proxy process on timeout');
                         this.debuggerProxy.kill('SIGHUP');
                     }
                 } catch (e) {
-                    ThundraLogger.error(e);
+                    ThundraLogger.error('<LambdaHandlerWrapper> Error occurred while killing debugger proxy:', e);
                 } finally {
                     this.debuggerProxy = null;
                 }
             }
-            ThundraLogger.debug('Reporting timeout error');
+            ThundraLogger.debug('<LambdaHandlerWrapper> Reporting timeout error');
             this.report(new TimeoutError('Lambda is timed out.'), null, null);
         }, endTime);
     }
