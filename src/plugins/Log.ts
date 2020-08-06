@@ -66,9 +66,7 @@ export default class Log {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     beforeInvocation = (execContext: ExecutionContext) => {
-        if (this.debugEnabled) {
-            ThundraLogger.debug('<Log> Before invocation of transaction', execContext.transactionId);
-        }
+        ThundraLogger.debug('<Log> Before invocation of transaction', execContext.transactionId);
 
         execContext.captureLog = true;
     }
@@ -78,17 +76,13 @@ export default class Log {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     afterInvocation = (execContext: ExecutionContext) => {
-        if (this.debugEnabled) {
-            ThundraLogger.debug('<Log> After invocation of transaction', execContext.transactionId);
-        }
+        ThundraLogger.debug('<Log> After invocation of transaction', execContext.transactionId);
 
         const sampler = get(this.config, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled();
         const { logs } = execContext;
 
-        if (this.debugEnabled) {
-            ThundraLogger.debug('<Log> Checked sampling of transaction', execContext.transactionId, ':', sampled);
-        }
+        ThundraLogger.debug('<Log> Checked sampling of transaction', execContext.transactionId, ':', sampled);
 
         if (logs && sampled) {
             for (const log of logs) {
