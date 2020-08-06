@@ -100,7 +100,7 @@ export default class Trace {
                 if (span) {
                     if (this.config.runSamplerOnEachSpan && !isSampled(span)) {
                         ThundraLogger.debug(
-                            `Filtering span with name ${span.getOperationName()} due to custom sampling configuration`);
+                            `<Trace> Filtering span with name ${span.getOperationName()} due to custom sampling configuration`);
                         continue;
                     }
 
