@@ -34,6 +34,12 @@ const get = require('lodash.get');
  * @param {TraceConfig} config the {@link TraceConfig}
  */
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext, config: TraceConfig) {
+    const debugEnabled: boolean = ThundraLogger.isDebugEnabled();
+
+    if (debugEnabled) {
+        ThundraLogger.debug('<LambdaExecutor> Start trace of transaction', execContext.transactionId);
+    }
+
     const { platformData, tracer } = execContext;
     const { originalEvent, originalContext } = platformData;
 
@@ -42,12 +48,24 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         originalContext.awsRequestId = Utils.generateId();
     }
 
+    const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
+    if (debugEnabled) {
+        ThundraLogger.debug(
+            '<LambdaExecutor> Detected invocation event type of transaction',
+            execContext.transactionId, ':', LambdaEventType[lambdaEventType]);
+    }
+
     const propagatedSpanContext: ThundraSpanContext =
-        extractSpanContext(tracer, originalEvent, originalContext) as ThundraSpanContext;
+        extractSpanContext(tracer, lambdaEventType, originalEvent, originalContext) as ThundraSpanContext;
+
+    if (debugEnabled) {
+        ThundraLogger.debug(
+            '<LambdaExecutor> Extracted span context of transaction',
+            execContext.transactionId, ':', propagatedSpanContext);
+    }
 
     if (propagatedSpanContext) {
         execContext.traceId = propagatedSpanContext.traceId;
-
         execContext.rootSpan = tracer._startSpan(originalContext.functionName, {
             propagated: true,
             parentContext: propagatedSpanContext,
@@ -57,7 +75,6 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         });
     } else {
         execContext.traceId = Utils.generateId();
-
         execContext.rootSpan = tracer._startSpan(originalContext.functionName, {
             rootTraceId: execContext.traceId,
             domainName: DomainNames.API,
@@ -67,7 +84,15 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 
     execContext.spanId = execContext.rootSpan.spanContext.spanId;
     execContext.rootSpan.startTime = execContext.startTimestamp;
-    execContext.triggerClassName = injectTriggerTags(execContext.rootSpan, pluginContext, originalEvent, originalContext);
+    execContext.triggerClassName =
+        injectTriggerTags(execContext.rootSpan, pluginContext, execContext,
+                          lambdaEventType, originalEvent, originalContext);
+
+    if (debugEnabled) {
+        ThundraLogger.debug(
+            '<LambdaExecutor> Injected trigger tags of transaction', execContext.transactionId,
+            'for trigger type:', execContext.triggerClassName);
+    }
 
     execContext.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
     execContext.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
@@ -78,7 +103,14 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     execContext.rootSpan.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
     execContext.rootSpan.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
     execContext.rootSpan.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
-    execContext.rootSpan.tags['aws.lambda.invocation.request'] = getRequest(originalEvent, execContext.triggerClassName, config);
+
+    const request = getRequest(originalEvent, execContext.triggerClassName, config);
+    if (debugEnabled) {
+        ThundraLogger.debug(
+            '<LambdaExecutor> Captured invocation request of transaction',
+            execContext.transactionId, ':', request);
+    }
+    execContext.rootSpan.tags['aws.lambda.invocation.request'] = request;
 }
 
 /**
@@ -88,6 +120,11 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
  * @param {TraceConfig} config the {@link TraceConfig}
  */
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext, config: TraceConfig) {
+    const debugEnabled: boolean = ThundraLogger.isDebugEnabled();
+    if (debugEnabled) {
+        ThundraLogger.debug('<LambdaExecutor> Finish trace of transaction', execContext.transactionId);
+    }
+
     let { response, error } = execContext;
     const { rootSpan, userError, triggerClassName, platformData, finishTimestamp } = execContext;
     const { originalEvent } = platformData;
@@ -116,7 +153,13 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
         processAPIGWResponse(response, originalEvent);
     }
 
-    rootSpan.tags['aws.lambda.invocation.response'] = getResponse(response, config);
+    const resp = getResponse(response, config);
+    if (debugEnabled) {
+        ThundraLogger.debug(
+            '<LambdaExecutor> Captured invocation response of transaction',
+            execContext.transactionId, ':', resp);
+    }
+    rootSpan.tags['aws.lambda.invocation.response'] = resp;
 
     rootSpan.finish();
     rootSpan.finishTime = finishTimestamp;
@@ -128,6 +171,10 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
  * @param {ExecutionContext} execContext the {@link ExecutionContext}
  */
 export function startInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
+    if (ThundraLogger.isDebugEnabled()) {
+        ThundraLogger.debug('<LambdaExecutor> Start invocation of transaction', execContext.transactionId);
+    }
+
     const invocationData = Utils.initMonitoringData(pluginContext, MonitoringDataType.INVOCATION) as InvocationData;
 
     invocationData.applicationPlatform = LAMBDA_FUNCTION_PLATFORM; // TODO: get from platform
@@ -153,6 +200,10 @@ export function startInvocation(pluginContext: PluginContext, execContext: Execu
 }
 
 function setInvocationTags(invocationData: any, pluginContext: PluginContext, execContext: ExecutionContext) {
+    if (ThundraLogger.isDebugEnabled()) {
+        ThundraLogger.debug('<LambdaExecutor> Setting invocation tags of transaction', execContext.transactionId);
+    }
+
     const originalContext = LambdaContextProvider.getContext();
 
     invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;
@@ -188,6 +239,10 @@ function setInvocationTags(invocationData: any, pluginContext: PluginContext, ex
  * @param {ExecutionContext} execContext the {@link ExecutionContext}
  */
 export function finishInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
+    if (ThundraLogger.isDebugEnabled()) {
+        ThundraLogger.debug('<LambdaExecutor> Finish invocation of transaction', execContext.transactionId);
+    }
+
     let { error } = execContext;
     const { invocationData, userError } = execContext;
 
@@ -221,7 +276,7 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
     const { originalEvent } = platformData;
 
     // Inject step functions trace links
-    injectStepFunctionInfo(originalEvent, response);
+    injectStepFunctionInfo(originalEvent, response, execContext);
 
     invocationData.finishTimestamp = finishTimestamp;
     invocationData.duration = finishTimestamp - startTimestamp;
@@ -234,8 +289,8 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
     }
 }
 
-function extractSpanContext(tracer: ThundraTracer, originalEvent: any, originalContext: any): opentracing.SpanContext {
-    const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
+function extractSpanContext(tracer: ThundraTracer, lambdaEventType: LambdaEventType,
+                            originalEvent: any, originalContext: any): opentracing.SpanContext {
     if (lambdaEventType === LambdaEventType.Lambda) {
         return tracer.extract(opentracing.FORMAT_TEXT_MAP, originalContext.clientContext.custom);
     } else if (lambdaEventType === LambdaEventType.APIGatewayProxy && originalEvent.headers) {
@@ -257,11 +312,10 @@ function processAPIGWResponse(response: any, originalEvent: any): void {
     }
 }
 
-function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent: any, originalContext: any): string {
+function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, execContext: ExecutionContext,
+                           lambdaEventType: LambdaEventType, originalEvent: any, originalContext: any): string {
     try {
         LambdaEventUtils.extractTraceLinkFromEvent(originalEvent);
-        const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
-
         if (lambdaEventType === LambdaEventType.Kinesis) {
             return LambdaEventUtils.injectTriggerTagsForKinesis(span, originalEvent);
         } else if (lambdaEventType === LambdaEventType.FireHose) {
@@ -296,14 +350,18 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: any, originalEvent:
             return LambdaEventUtils.injectTriggerTagsForCommon(span, originalEvent, originalContext);
         }
     } catch (error) {
-        ThundraLogger.error('Cannot inject trigger tags. ' + error);
+        ThundraLogger.error('<LambdaExecutor> Cannot inject trigger tags:', error);
     }
 }
 
-function injectStepFunctionInfo(request: any, response: any): any {
+function injectStepFunctionInfo(request: any, response: any, execContext: ExecutionContext): any {
     try {
         const isStepFunction = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_AWS_STEPFUNCTIONS);
-
+        if (ThundraLogger.isDebugEnabled()) {
+            ThundraLogger.debug(
+                '<LambdaExecutor> Checked whether AWS StepFunctions support is enabled for transaction',
+                execContext.transactionId, ':', isStepFunction);
+        }
         if (isStepFunction) {
             const traceLink = Utils.generateId();
             let step = 0;
@@ -314,16 +372,29 @@ function injectStepFunctionInfo(request: any, response: any): any {
             }
 
             if (typeof response === 'object' && response !== null) {
-                response[THUNDRA_TRACE_KEY] = {
+                const thundraTraceKey = {
                     trace_link: traceLink,
                     step: step + 1,
                 };
+                if (ThundraLogger.isDebugEnabled()) {
+                    ThundraLogger.debug(
+                        '<LambdaExecutor> Injected Thundra trace key for transaction',
+                        execContext.transactionId, ':', thundraTraceKey);
+                }
+                response[THUNDRA_TRACE_KEY] = thundraTraceKey;
+            } else {
+                if (ThundraLogger.isDebugEnabled()) {
+                    ThundraLogger.debug(
+                        '<LambdaExecutor> Since response is not object, \
+                        skipped Thundra trace key injection for transaction',
+                        execContext.transactionId);
+                }
             }
 
             InvocationTraceSupport.addOutgoingTraceLink(traceLink);
         }
     } catch (error) {
-        ThundraLogger.error('Failed to inject step function trace links: ' + error);
+        ThundraLogger.error('<LambdaExecutor> Failed to inject step function trace links:', error);
     }
 }
 
@@ -338,7 +409,7 @@ function getRequest(originalEvent: any, triggerClassName: string, config: TraceC
             const eventCopy = JSON.parse(JSON.stringify(originalEvent));
             return config.maskRequest.call({}, eventCopy);
         } catch (error) {
-            ThundraLogger.error('Failed to mask request: ' + error);
+            ThundraLogger.error('<LambdaExecutor> Failed to mask request:', error);
         }
     }
 
@@ -372,7 +443,7 @@ function getResponse(response: any, config: TraceConfig): any {
             const responseCopy = JSON.parse(JSON.stringify(response));
             return config.maskResponse.call({}, responseCopy);
         } catch (error) {
-            ThundraLogger.error('Failed to mask response: ' + error);
+            ThundraLogger.error('<LambdaExecutor> Failed to mask response:', error);
         }
     }
 
