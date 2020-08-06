@@ -34,11 +34,7 @@ const get = require('lodash.get');
  * @param {TraceConfig} config the {@link TraceConfig}
  */
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext, config: TraceConfig) {
-    const debugEnabled: boolean = ThundraLogger.isDebugEnabled();
-
-    if (debugEnabled) {
-        ThundraLogger.debug('<LambdaExecutor> Start trace of transaction', execContext.transactionId);
-    }
+    ThundraLogger.debug('<LambdaExecutor> Start trace of transaction', execContext.transactionId);
 
     const { platformData, tracer } = execContext;
     const { originalEvent, originalContext } = platformData;
@@ -49,20 +45,16 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     }
 
     const lambdaEventType = LambdaEventUtils.getLambdaEventType(originalEvent, originalContext);
-    if (debugEnabled) {
-        ThundraLogger.debug(
-            '<LambdaExecutor> Detected invocation event type of transaction',
-            execContext.transactionId, ':', LambdaEventType[lambdaEventType]);
-    }
+    ThundraLogger.debug(
+        '<LambdaExecutor> Detected invocation event type of transaction',
+        execContext.transactionId, ':', LambdaEventType[lambdaEventType]);
 
     const propagatedSpanContext: ThundraSpanContext =
         extractSpanContext(tracer, lambdaEventType, originalEvent, originalContext) as ThundraSpanContext;
 
-    if (debugEnabled) {
-        ThundraLogger.debug(
-            '<LambdaExecutor> Extracted span context of transaction',
-            execContext.transactionId, ':', propagatedSpanContext);
-    }
+    ThundraLogger.debug(
+        '<LambdaExecutor> Extracted span context of transaction',
+        execContext.transactionId, ':', propagatedSpanContext);
 
     if (propagatedSpanContext) {
         execContext.traceId = propagatedSpanContext.traceId;
@@ -88,11 +80,9 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         injectTriggerTags(execContext.rootSpan, pluginContext, execContext,
                           lambdaEventType, originalEvent, originalContext);
 
-    if (debugEnabled) {
-        ThundraLogger.debug(
-            '<LambdaExecutor> Injected trigger tags of transaction', execContext.transactionId,
-            'for trigger type:', execContext.triggerClassName);
-    }
+    ThundraLogger.debug(
+        '<LambdaExecutor> Injected trigger tags of transaction', execContext.transactionId,
+        'for trigger type:', execContext.triggerClassName);
 
     execContext.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
     execContext.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
@@ -105,11 +95,9 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     execContext.rootSpan.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
 
     const request = getRequest(originalEvent, execContext.triggerClassName, config);
-    if (debugEnabled) {
-        ThundraLogger.debug(
-            '<LambdaExecutor> Captured invocation request of transaction',
-            execContext.transactionId, ':', request);
-    }
+    ThundraLogger.debug(
+        '<LambdaExecutor> Captured invocation request of transaction',
+        execContext.transactionId, ':', request);
     execContext.rootSpan.tags['aws.lambda.invocation.request'] = request;
 }
 
@@ -120,10 +108,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
  * @param {TraceConfig} config the {@link TraceConfig}
  */
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext, config: TraceConfig) {
-    const debugEnabled: boolean = ThundraLogger.isDebugEnabled();
-    if (debugEnabled) {
-        ThundraLogger.debug('<LambdaExecutor> Finish trace of transaction', execContext.transactionId);
-    }
+    ThundraLogger.debug('<LambdaExecutor> Finish trace of transaction', execContext.transactionId);
 
     let { response, error } = execContext;
     const { rootSpan, userError, triggerClassName, platformData, finishTimestamp } = execContext;
@@ -154,11 +139,9 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
     }
 
     const resp = getResponse(response, config);
-    if (debugEnabled) {
-        ThundraLogger.debug(
-            '<LambdaExecutor> Captured invocation response of transaction',
-            execContext.transactionId, ':', resp);
-    }
+    ThundraLogger.debug(
+        '<LambdaExecutor> Captured invocation response of transaction',
+        execContext.transactionId, ':', resp);
     rootSpan.tags['aws.lambda.invocation.response'] = resp;
 
     rootSpan.finish();
@@ -171,9 +154,7 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
  * @param {ExecutionContext} execContext the {@link ExecutionContext}
  */
 export function startInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
-    if (ThundraLogger.isDebugEnabled()) {
-        ThundraLogger.debug('<LambdaExecutor> Start invocation of transaction', execContext.transactionId);
-    }
+    ThundraLogger.debug('<LambdaExecutor> Start invocation of transaction', execContext.transactionId);
 
     const invocationData = Utils.initMonitoringData(pluginContext, MonitoringDataType.INVOCATION) as InvocationData;
 
@@ -200,9 +181,7 @@ export function startInvocation(pluginContext: PluginContext, execContext: Execu
 }
 
 function setInvocationTags(invocationData: any, pluginContext: PluginContext, execContext: ExecutionContext) {
-    if (ThundraLogger.isDebugEnabled()) {
-        ThundraLogger.debug('<LambdaExecutor> Setting invocation tags of transaction', execContext.transactionId);
-    }
+    ThundraLogger.debug('<LambdaExecutor> Setting invocation tags of transaction', execContext.transactionId);
 
     const originalContext = LambdaContextProvider.getContext();
 
@@ -239,9 +218,7 @@ function setInvocationTags(invocationData: any, pluginContext: PluginContext, ex
  * @param {ExecutionContext} execContext the {@link ExecutionContext}
  */
 export function finishInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
-    if (ThundraLogger.isDebugEnabled()) {
-        ThundraLogger.debug('<LambdaExecutor> Finish invocation of transaction', execContext.transactionId);
-    }
+    ThundraLogger.debug('<LambdaExecutor> Finish invocation of transaction', execContext.transactionId);
 
     let { error } = execContext;
     const { invocationData, userError } = execContext;
@@ -357,11 +334,9 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, exec
 function injectStepFunctionInfo(request: any, response: any, execContext: ExecutionContext): any {
     try {
         const isStepFunction = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_AWS_STEPFUNCTIONS);
-        if (ThundraLogger.isDebugEnabled()) {
-            ThundraLogger.debug(
-                '<LambdaExecutor> Checked whether AWS StepFunctions support is enabled for transaction',
-                execContext.transactionId, ':', isStepFunction);
-        }
+        ThundraLogger.debug(
+            '<LambdaExecutor> Checked whether AWS StepFunctions support is enabled for transaction',
+            execContext.transactionId, ':', isStepFunction);
         if (isStepFunction) {
             const traceLink = Utils.generateId();
             let step = 0;
@@ -376,19 +351,15 @@ function injectStepFunctionInfo(request: any, response: any, execContext: Execut
                     trace_link: traceLink,
                     step: step + 1,
                 };
-                if (ThundraLogger.isDebugEnabled()) {
-                    ThundraLogger.debug(
-                        '<LambdaExecutor> Injected Thundra trace key for transaction',
-                        execContext.transactionId, ':', thundraTraceKey);
-                }
+                ThundraLogger.debug(
+                    '<LambdaExecutor> Injected Thundra trace key for transaction',
+                    execContext.transactionId, ':', thundraTraceKey);
                 response[THUNDRA_TRACE_KEY] = thundraTraceKey;
             } else {
-                if (ThundraLogger.isDebugEnabled()) {
-                    ThundraLogger.debug(
-                        '<LambdaExecutor> Since response is not object, \
-                        skipped Thundra trace key injection for transaction',
-                        execContext.transactionId);
-                }
+                ThundraLogger.debug(
+                    '<LambdaExecutor> Since response is not object, \
+                    skipped Thundra trace key injection for transaction',
+                    execContext.transactionId);
             }
 
             InvocationTraceSupport.addOutgoingTraceLink(traceLink);
