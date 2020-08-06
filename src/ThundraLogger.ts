@@ -6,6 +6,16 @@ import ConfigNames from './config/ConfigNames';
  */
 class ThundraLogger {
 
+    /*
+     Get references of the original console methods
+     as they will be patched by Thundra Log plugin if logging is enabled.
+     So we don't want to capture our internal logs in that case.
+     */
+
+    private static readonly consoleDebug: Function = ThundraLogger.getConsoleMethod('debug');
+    private static readonly consoleInfo: Function = ThundraLogger.getConsoleMethod('info');
+    private static readonly consoleError: Function = ThundraLogger.getConsoleMethod('error');
+
     private constructor() {
     }
 
@@ -25,7 +35,7 @@ class ThundraLogger {
      */
     static debug(message: any, ...optionalParams: any[]) {
         if (ThundraLogger.isDebugEnabled()) {
-            console.log('[THUNDRA]', message, ...optionalParams);
+            this.consoleDebug.apply(console, ['[THUNDRA]', message, ...optionalParams]);
         }
     }
 
@@ -35,7 +45,7 @@ class ThundraLogger {
      * @param optionalParams the optional parameters to be logged
      */
     static info(message: any, ...optionalParams: any[]) {
-        console.log('[THUNDRA]', message, ...optionalParams);
+        this.consoleInfo.apply(console, ['[THUNDRA]', message, ...optionalParams]);
     }
 
     /**
@@ -44,7 +54,21 @@ class ThundraLogger {
      * @param optionalParams the optional parameters to be logged
      */
     static error(error: any, ...optionalParams: any[]) {
-        console.error('[THUNDRA]', error, ...optionalParams);
+        this.consoleError.apply(console, ['[THUNDRA]', error, ...optionalParams]);
+    }
+
+    private static getConsoleMethod(methodName: string): Function {
+        const consoleReference: any = console;
+        const originalMethodName = `original_${methodName}`;
+        const consoleMethod: Function = consoleReference[methodName];
+        const consoleOriginalMethod: Function = consoleReference[originalMethodName];
+        // If console method is shimmed by Thundra, original method is kept there with different name.
+        // So if the original one is there, return it. Otherwise, return the found one.
+        if (consoleOriginalMethod) {
+            return consoleOriginalMethod;
+        } else {
+            return consoleMethod;
+        }
     }
 
 }
