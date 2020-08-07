@@ -552,6 +552,23 @@ class Utils {
         return newAppInfo;
     }
 
+    static copyProperties(src: any, srcProps: any[], dest: any, destProps: any[]) {
+        if (!src || !dest || typeof src !== 'object') {
+            return;
+        }
+
+        if (srcProps.length !== destProps.length) {
+            return;
+        }
+
+        for (let i = 0; i < srcProps.length; i++) {
+            const srcProp = srcProps[i];
+            const destProp = destProps[i];
+
+            dest[destProp] = src[srcProp];
+        }
+    }
+
     /**
      * Serializes given data as JSON
      * @param data the data to be serialized as JSON
@@ -619,7 +636,6 @@ class Utils {
             return value;
         };
     }
-
 }
 
 export default Utils;

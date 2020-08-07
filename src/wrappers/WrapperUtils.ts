@@ -28,9 +28,11 @@ export default class WrapperUtils {
         }
     }
 
-    static async afterRequest(plugins: any[], reporter: Reporter) {
+    static async afterRequest(response: any, plugins: any[], reporter: Reporter) {
         const context = ExecutionContextManager.get();
+
         context.finishTimestamp = Date.now();
+        context.response = response;
 
         for (const plugin of plugins) {
             plugin.afterInvocation(context);

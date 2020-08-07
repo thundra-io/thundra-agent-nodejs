@@ -27,7 +27,7 @@ export function runWithContext(createExecContext: Function, fn: Function) {
         contexts[asyncHooks.executionAsyncId()] = execContext;
     }
 
-    return fn();
+    return fn.call(execContext);
 }
 
 export function get(): any {

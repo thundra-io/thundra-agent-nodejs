@@ -8,6 +8,8 @@ import InvocationSupport from '../../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import * as opentracing from 'opentracing';
+import ThundraSpan from '../../opentracing/Span';
+import ExecutionContext from '../../context/ExecutionContext';
 
 const get = require('lodash.get');
 
@@ -75,28 +77,52 @@ export function finishInvocation(pluginContext: PluginContext, execContext: any)
     }
 }
 
-export function startTrace(pluginContext: PluginContext, execContext: any) {
+export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
     const { tracer, request } = execContext;
     const propagatedSpanContext: ThundraSpanContext =
-        tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers);
+        tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
 
-    execContext.traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
+    const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
 
-    execContext.rootSpan = tracer._startSpan('express-root-span', {
+    const rootSpan = tracer._startSpan('express-root-span', {
         propagated: propagatedSpanContext ? true : false,
         parentContext: propagatedSpanContext,
-        rootTraceId: execContext.traceId,
+        rootTraceId: traceId,
         domainName: DomainNames.API,
         className: ClassNames.EXPRESS,
     });
 
+    execContext.traceId = traceId;
+    execContext.rootSpan = rootSpan;
     execContext.spanId = execContext.rootSpan.spanContext.spanId;
     execContext.rootSpan.startTime = execContext.startTimestamp;
+
+    // Put initial root span tags
+    Utils.copyProperties(
+        request,
+        [
+            'method',
+            'query',
+            'hostname',
+            'path',
+            'body',
+        ],
+        rootSpan.tags,
+        [
+            HttpTags.HTTP_METHOD,
+            HttpTags.QUERY_PARAMS,
+            HttpTags.HTTP_HOST,
+            HttpTags.HTTP_PATH,
+            HttpTags.BODY,
+        ],
+    );
 }
 
 export function finishTrace(pluginContext: PluginContext, execContext: any) {
-    const { rootSpan, finishTimestamp } = execContext;
+    const { rootSpan, finishTimestamp, response } = execContext;
 
     rootSpan.finish();
     rootSpan.finishTime = finishTimestamp;
+
+    Utils.copyProperties(response, ['statusCode'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
 }
