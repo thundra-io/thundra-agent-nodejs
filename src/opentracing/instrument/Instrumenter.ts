@@ -9,6 +9,7 @@ import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import Utils from '../../utils/Utils';
+import { SpanOptions } from 'opentracing/lib/tracer';
 
 const Module = require('module');
 const path = require('path');
@@ -42,9 +43,12 @@ class Instrumenter {
         const compile = Module.prototype._compile;
 
         if (compile._thundra) {
+            ThundraLogger.debug('<Instrumenter> Already wrapped, skipped hooking module compile');
             // If already hooked into compile phase, don't hook again
             return;
         }
+
+        ThundraLogger.debug('<Instrumenter> Hooking module compile ...');
 
         this.origCompile = compile;
 
@@ -59,6 +63,7 @@ class Instrumenter {
             const sci = self.sourceCodeInstrumenter;
 
             if (sci.shouldTraceFile(relPathWithDots)) {
+                ThundraLogger.debug('<Instrumenter> Instrumenting file', filename, 'at', relPath);
                 let wrapped = true;
                 if (Module.wrapper.length === 2) {
                     content = Module.wrapper[0] + '\n' + content + Module.wrapper[1];
@@ -70,10 +75,13 @@ class Instrumenter {
                     if (Module.wrapper.length === 2) {
                         content = content.substring(Module.wrapper[0].length, content.length - Module.wrapper[1].length);
                     }
-                } catch (ex) {
-                    ThundraLogger.error(ex);
+                    ThundraLogger.debug('<Instrumenter> Instrumented file', filename, 'at', relPath, ':', content);
+                } catch (e) {
+                    ThundraLogger.error(
+                        '<Instrumenter> Error occurred while instrumenting file', filename, 'at', relPath, ':', e);
                 }
             }
+
             self.origCompile.call(this, content, filename);
         };
         Object.defineProperty(thundraCompile, '_thundra', {
@@ -91,7 +99,10 @@ class Instrumenter {
         // If it is not set, this means that Thundra is not hooked,
         // so there is nothing to do for unhook
         if (this.origCompile) {
+            ThundraLogger.debug('<Instrumenter> Unhooking module compile');
             Module.prototype._compile = this.origCompile;
+        } else {
+            ThundraLogger.debug('<Instrumenter> Not wrapped, skipped unhooking module compile');
         }
     }
 
@@ -100,8 +111,7 @@ class Instrumenter {
             const valueSize = sizeof(value);
             return valueSize <= MAX_VAR_VALUE_SIZE;
         } catch (e) {
-            ThundraLogger.debug('Unable to check value size');
-            ThundraLogger.debug(e);
+            ThundraLogger.debug('<Instrumenter> Unable to check value size:', e);
             return true;
         }
     }
@@ -127,22 +137,20 @@ class Instrumenter {
             // will not be reflected to the taken snapshot here.
             return copy(value);
         } catch (e1) {
-            ThundraLogger.debug('Unable to clone value');
-            ThundraLogger.debug(e1);
+            ThundraLogger.debug('<Instrumenter> Unable to clone value:', e1);
             try {
                 const valueJson = Utils.serializeJSON(value);
                 if (valueJson) {
                     if (valueJson.length <= MAX_VAR_VALUE_SIZE) {
                         return valueJson;
                     } else {
-                        ThundraLogger.debug('Unable to serialize value to JSON as it is too big');
+                        ThundraLogger.debug('<Instrumenter> Unable to serialize value to JSON as it is too big');
                     }
                 } else {
-                    ThundraLogger.debug('Unable to serialize value to JSON as no JSON could produced');
+                    ThundraLogger.debug('<Instrumenter> Unable to serialize value to JSON as no JSON could produced');
                 }
             } catch (e2) {
-                ThundraLogger.debug('Unable to serialize value to JSON');
-                ThundraLogger.debug(e2);
+                ThundraLogger.debug('<Instrumenter> Unable to serialize value to JSON:', e2);
             }
             try {
                 const valueStr = value.toString();
@@ -150,14 +158,13 @@ class Instrumenter {
                     if (valueStr.length <= MAX_VAR_VALUE_SIZE) {
                         return valueStr;
                     } else {
-                        ThundraLogger.debug('Unable to use "toString()" of value as it is too big');
+                        ThundraLogger.debug('<Instrumenter> Unable to use "toString()" of value as it is too big');
                     }
                 } else {
-                    ThundraLogger.debug('Unable to use "toString()" of value as no string could be produced');
+                    ThundraLogger.debug('<Instrumenter> Unable to use "toString()" of value as no string could be produced');
                 }
             } catch (e3) {
-                ThundraLogger.debug('Unable to use "toString()" of value');
-                ThundraLogger.debug(e3);
+                ThundraLogger.debug('<Instrumenter> Unable to use "toString()" of value:', e3);
             }
             return '<unable to serialize value>';
         }
@@ -170,8 +177,17 @@ class Instrumenter {
             if (!tracer) {
                 return;
             }
+            let methodName = null;
             try {
-                const span = tracer.startSpan(args.path + '.' + args.name) as ThundraSpan;
+                methodName = args.path + '.' + args.name;
+                const span = tracer.startSpan(
+                    methodName,
+                    {
+                        className: 'Method',
+                    } as SpanOptions) as ThundraSpan;
+
+                ThundraLogger.debug('<Instrumenter> On trace entry of method', methodName);
+
                 const spanArguments: Argument[] = [];
 
                 if (args.args) {
@@ -183,7 +199,6 @@ class Instrumenter {
                     }
                 }
 
-                span.className = 'Method';
                 span.setTag(ARGS_TAG_NAME, spanArguments);
                 span.setTag(LineByLineTags.SOURCE, args.source);
                 span.setTag(LineByLineTags.START_LINE, args.startLine);
@@ -191,17 +206,22 @@ class Instrumenter {
                 return {
                     span,
                 };
-            } catch (ex) {
-                ThundraLogger.error(ex);
+            } catch (e1) {
+                ThundraLogger.error(
+                    '<Instrumenter> Error occurred on trace entry of method',
+                    methodName, ':', e1);
                 try {
                     tracer.finishSpan();
-                } catch (ex2) {
-                    // Ignore
+                } catch (e2) {
+                    ThundraLogger.error(
+                        '<Instrumenter> Unable to finish span on trace entry of method',
+                        methodName, 'on error:', e2);
                 }
             }
         };
 
         global.__thundraTraceLine__ = function (args: any) {
+            let methodName = null;
             try {
                 const entryData = args.entryData;
                 const methodSpan = entryData.span;
@@ -213,6 +233,10 @@ class Instrumenter {
                 const localVarValues = args.localVarValues;
                 const argNames = args.argNames;
                 const argValues = args.argValues;
+
+                methodName = methodSpan.getOperationName();
+
+                ThundraLogger.debug('<Instrumenter> On trace line', line, 'of method', methodName);
 
                 if (argNames) {
                     varNames.push(...argNames);
@@ -265,14 +289,18 @@ class Instrumenter {
                 if (currentLines.length < MAX_LINES) {
                     currentLines.push(methodLineTag);
                 } else if (currentLines.length === MAX_LINES) {
+                    ThundraLogger.debug(
+                        '<Instrumenter> Hit max line count', MAX_LINES, 'on trace line of method', methodName);
                     methodSpan.setTag(LineByLineTags.LINES_OVERFLOW, true);
                 }
-            } catch (ex) {
-                ThundraLogger.error(ex);
+            } catch (e) {
+                ThundraLogger.error(
+                    '<Instrumenter> Error occurred on trace line of method', methodName, ':', e);
             }
         };
 
         global.__thundraTraceExit__ = function (args: any) {
+            let methodName = null;
             const { tracer } = ExecutionContextManager.get();
             if (!tracer) {
                 return;
@@ -286,6 +314,10 @@ class Instrumenter {
                     entryData.latestLineSpan.finish();
                 }
                 const span = (entryData && entryData.span) ? entryData.span : tracer.getActiveSpan();
+                methodName = span.getOperationName();
+
+                ThundraLogger.debug('<Instrumenter> On trace exit of method:', methodName);
+
                 if (!args.exception) {
                     if (args.returnValue) {
                         const returnValue = args.returnValue;
@@ -297,12 +329,16 @@ class Instrumenter {
                     span.setErrorTag(args.exceptionValue);
                 }
                 span.finish();
-            } catch (ex) {
-                ThundraLogger.error(ex);
+            } catch (e1) {
+                ThundraLogger.error(
+                    '<Instrumenter> Error occurred on trace exit of method',
+                    methodName, ':', e1);
                 try {
                     tracer.finishSpan();
-                } catch (ex2) {
-                    // Ignore
+                } catch (e2) {
+                    ThundraLogger.error(
+                        '<Instrumenter> Unable to finish span on trace exit of method',
+                        methodName, 'on error:', e2);
                 }
             }
         };
