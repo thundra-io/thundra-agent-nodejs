@@ -180,6 +180,7 @@ export default class WrapperUtils {
             tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
 
         const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
+        const incomingSpanID = get(propagatedSpanContext, 'spanId');
 
         const rootSpan = tracer._startSpan(rootSpanName, {
             propagated: propagatedSpanContext ? true : false,
@@ -188,6 +189,10 @@ export default class WrapperUtils {
             domainName: DomainNames.API,
             className: ClassNames.EXPRESS,
         });
+
+        if (incomingSpanID) {
+            InvocationTraceSupport.addIncomingTraceLink(incomingSpanID);
+        }
 
         execContext.traceId = traceId;
         execContext.rootSpan = rootSpan;

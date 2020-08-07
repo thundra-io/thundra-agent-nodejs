@@ -4,13 +4,11 @@ import { ApplicationManager } from '../../application/ApplicationManager';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import * as ExpressExecutor from './ExpressExecutor';
 import WrapperUtils from '../WrapperUtils';
-import ExecutionContext from '../../context/ExecutionContext';
 
 const get = require('lodash.get');
 
 export function expressMW() {
     ApplicationManager.setApplicationInfoProvider().update({
-        applicationName: 'express-test-app',
         applicationClassName: 'Express',
         applicationDomainName: 'API',
     });
