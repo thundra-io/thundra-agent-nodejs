@@ -72,15 +72,11 @@ class Reporter {
                                 resolve();
                             })
                             .catch((err2: any) => {
-                                if (ThundraLogger.isDebugEnabled()) {
-                                    ThundraLogger.debug('<Reporter> Failed to send reports on retry:', err2);
-                                }
+                                ThundraLogger.debug('<Reporter> Failed to send reports on retry:', err2);
                                 reject(err2);
                             });
                     } else {
-                        if (ThundraLogger.isDebugEnabled()) {
-                            ThundraLogger.debug('<Reporter> Failed to send reports:', err);
-                        }
+                        ThundraLogger.debug('<Reporter> Failed to send reports:', err);
                         reject(err);
                     }
                 });
@@ -196,7 +192,7 @@ class Reporter {
                 if (currentMinute > this.latestReportingLimitedMinute) {
                     reportPromises.push(this.request(batch));
                 } else {
-                    ThundraLogger.debug('Skipped sending monitoring data temporarily as it hits the limit');
+                    ThundraLogger.debug('<Reporter> Skipped sending monitoring data temporarily as it hits the limit');
                 }
             }
         });
@@ -213,11 +209,9 @@ class Reporter {
                     responseData += chunk;
                 });
                 response.on('end', () => {
-                    if (ThundraLogger.isDebugEnabled()) {
-                        ThundraLogger.debug(
-                            `<Reporter> Received response from collector (status code: ${response.statusCode}): \
+                    ThundraLogger.debug(
+                        `<Reporter> Received response from collector (status code: ${response.statusCode}): \
                             ${responseData}`);
-                    }
                     if (response.statusCode === 429) {
                         this.latestReportingLimitedMinute = Math.floor(Date.now() / 1000);
                     }
@@ -237,12 +231,6 @@ class Reporter {
                             ThundraLogger.error(
                                 `<Reporter> Unable to report because of unauthorized request: ${responseMessage}`);
                         }
-                        // First, check whether or debug is enabled.
-                        // If not no need to convert reports into JSON string to pass to "debug" function
-                        // because serialization is not cheap operation.
-                        if (ThundraLogger.isDebugEnabled()) {
-                            ThundraLogger.debug(Utils.serializeJSON(batch));
-                        }
                         return reject({
                             status: response.statusCode,
                             data: responseData,
@@ -260,16 +248,12 @@ class Reporter {
                 : request = http.request(this.requestOptions, responseHandler);
 
             request.on('error', (error: any) => {
-                if (ThundraLogger.isDebugEnabled()) {
-                    ThundraLogger.debug('<Reporter> Request sent to collector has failed:', error);
-                }
+                ThundraLogger.debug('<Reporter> Request sent to collector has failed:', error);
                 return reject(error);
             });
             try {
                 const json = Utils.serializeJSON(batch);
-                if (ThundraLogger.isDebugEnabled()) {
-                    ThundraLogger.debug(`<Reporter> Sending data to collector at ${this.requestOptions.hostname}: ${json}`);
-                }
+                ThundraLogger.debug(`<Reporter> Sending data to collector at ${this.requestOptions.hostname}: ${json}`);
                 request.write(json);
                 request.end();
             } catch (error) {
@@ -282,16 +266,12 @@ class Reporter {
         return new Promise((resolve, reject) => {
             try {
                 const json = Utils.serializeJSON(batch);
-                if (ThundraLogger.isDebugEnabled()) {
-                    ThundraLogger.debug(`<Reporter> Writing data to CloudWatch: ${json}`);
-                }
+                ThundraLogger.debug(`<Reporter> Writing data to CloudWatch: ${json}`);
                 const jsonStringReport = '\n' + json.replace(/\r?\n|\r/g, '') + '\n';
                 process.stdout.write(jsonStringReport);
                 return resolve();
             } catch (error) {
-                if (ThundraLogger.isDebugEnabled()) {
-                    ThundraLogger.debug('<Reporter> Cannot write report data to CloudWatch:', error);
-                }
+                ThundraLogger.debug('<Reporter> Cannot write report data to CloudWatch:', error);
                 return reject(error);
             }
         });
