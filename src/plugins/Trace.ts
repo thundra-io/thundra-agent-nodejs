@@ -130,6 +130,8 @@ export default class Trace {
                         if (!this.config.isIntegrationDisabled(key)) {
                             const instance = new clazz(this.config);
                             this.integrationsMap.set(key, instance);
+                        } else {
+                            ThundraLogger.debug(`<Trace> Disabled integration ${key}`);
                         }
                     }
                 }
