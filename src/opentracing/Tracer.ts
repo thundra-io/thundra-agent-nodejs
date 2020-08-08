@@ -232,7 +232,7 @@ class ThundraTracer extends Tracer {
         try {
             this.propagators[format].inject(spanContext, carrier);
         } catch (e) {
-            ThundraLogger.error(e);
+            ThundraLogger.error('<Tracer> Error occurred while injecting carrier into span context:', e);
         }
 
         return this;
@@ -242,7 +242,7 @@ class ThundraTracer extends Tracer {
         try {
             return this.propagators[format].extract(carrier);
         } catch (e) {
-            ThundraLogger.error(e);
+            ThundraLogger.error('<Tracer> Error occurred while extracting span context from carrier:', e);
             return null;
         }
     }
