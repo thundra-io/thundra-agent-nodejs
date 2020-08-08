@@ -156,7 +156,8 @@ class Utils {
                 };
 
                 if (err) {
-                    ThundraLogger.error(`Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0.`);
+                    ThundraLogger.error(
+                        `<Utils> Cannot read ${PROC_STAT_PATH} file. Setting Thread Metrics to 0:`, err);
                 } else {
                     const procStatArray = file.toString().split(' ');
                     procStatData.threadCount = parseInt(procStatArray[19], 0);
@@ -180,7 +181,7 @@ class Utils {
                 };
 
                 if (err) {
-                    ThundraLogger.error(`Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0.`);
+                    ThundraLogger.error(`<Utils> Cannot read ${PROC_IO_PATH} file. Setting Metrics to 0:`, err);
                 } else {
                     const procIoArray = file.toString().split('\n');
                     procIoData.readBytes = parseInt(procIoArray[4].substr(procIoArray[4].indexOf(' ') + 1), 0);
@@ -252,13 +253,13 @@ class Utils {
         if (references) {
             for (const ref of references) {
                 if (!(ref instanceof Reference)) {
-                    ThundraLogger.error(`Expected ${ref} to be an instance of opentracing.Reference`);
+                    ThundraLogger.error(`<Utils> Expected ${ref} to be an instance of opentracing.Reference`);
                     break;
                 }
                 const spanContext = ref.referencedContext();
 
                 if (!(spanContext instanceof ThundraSpanContext)) {
-                    ThundraLogger.error(`Expected ${spanContext} to be an instance of SpanContext`);
+                    ThundraLogger.error(`<Utils> Expected ${spanContext} to be an instance of ThundraSpanContext`);
                     break;
                 }
 
@@ -292,7 +293,8 @@ class Utils {
             }
             return customReq(resolvedPath);
             // tslint:disable-next-line:no-empty
-        } catch (err) {
+        } catch (e) {
+            ThundraLogger.debug(`<Utils> Couldn't require module ${name} in the paths ${paths}:`, e);
         }
     }
 
@@ -317,7 +319,7 @@ class Utils {
                 if (version) {
                     const {basedir} = Utils.getModuleInfo(moduleName);
                     if (!basedir) {
-                        ThundraLogger.error(`Base directory is not found for the package ${moduleName}`);
+                        ThundraLogger.error(`<Utils> Base directory is not found for the package ${moduleName}`);
                         return;
                     }
                     Utils.doInstrument(requiredLib, libs, basedir, moduleName, version, wrapper, config);
@@ -447,9 +449,8 @@ class Utils {
                     const listenerInstance = new listenerClass(listenerConfig);
 
                     listeners.push(listenerInstance);
-                } catch (ex) {
-                    ThundraLogger.error(
-                        `Cannot parse span listener def ${key} with reason: ${ex.message}`);
+                } catch (e) {
+                    ThundraLogger.error(`<Utils> Cannot parse span listener definition of ${key}:`, e);
                 }
             }
         }
@@ -519,8 +520,8 @@ class Utils {
                     } else {
                         applicationTags[propsKey] = parseFloat(propsValue);
                     }
-                } catch (ex) {
-                    ThundraLogger.error(`Cannot parse application tag ${key}`);
+                } catch (e) {
+                    ThundraLogger.error(`<Utils> Cannot parse application tag ${key}:`, e);
                 }
             }
         }
@@ -565,9 +566,9 @@ class Utils {
             } else {
                 modulePath = customReq.resolve(name);
             }
-
             return parse(modulePath);
-        } catch (err) {
+        } catch (e) {
+            ThundraLogger.debug(`<Utils> Couldn't get info of module ${name} in the paths ${paths}:`, e);
             return {};
         }
     }
@@ -580,7 +581,7 @@ class Utils {
             const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
             if (!isValidVersion) {
                 ThundraLogger.error(
-                    `Invalid module version for ${moduleName} integration. Supported version is ${version}`);
+                    `<Utils> Invalid module version for ${moduleName} integration. Supported version is ${version}`);
             } else {
                 isValid = true;
             }
