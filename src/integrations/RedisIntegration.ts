@@ -44,6 +44,7 @@ class RedisIntegration implements Integration {
      */
     wrap(lib: any, config: any) {
         ThundraLogger.debug('<RedisIntegration> Wrap');
+
         function wrapper(internalSendCommand: any) {
             return function internalSendCommandWrapper(options: any) {
                 ThundraLogger.debug('<RedisIntegration> Tracing Redis command:', options);
