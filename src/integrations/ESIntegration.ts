@@ -50,7 +50,7 @@ class ESIntegration implements Integration {
             }
             me.connectionPool.select((err: any, data: any) => {
                 if (err) {
-                    ThundraLogger.error(`Could not get host information. ${err}`);
+                    ThundraLogger.error('<ESIntegration> Could not get host information:', err);
                     return resolve(defaultHost);
                 }
                 return resolve(data.host);
@@ -163,7 +163,6 @@ class ESIntegration implements Integration {
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        ThundraLogger.error(error);
                         return request.call(this, params, cb);
                     }
                 }
