@@ -1,8 +1,7 @@
 import Integration from './Integration';
 import {
     DBTags, SpanTags, DomainNames, DBTypes, MongoDBTags, MongoDBCommandTypes,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
-    DefaultMongoCommandSizeLimit,
+    ClassNames, DefaultMongoCommandSizeLimit,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -27,6 +26,8 @@ class MongoDBIntegration implements Integration {
     private spans: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<MongoDBIntegration> Activating MongoDB integration');
+
         this.config = config || {};
         this.spans = {};
         this.instrumentContext = Utils.instrument(
@@ -47,11 +48,15 @@ class MongoDBIntegration implements Integration {
     onStarted(event: any) {
         let span: ThundraSpan;
         try {
+            ThundraLogger.debug('<MongoDBIntegration> Tracing MongoDB command:', event);
+
             const { tracer } = ExecutionContextManager.get();
 
             if (!tracer) {
+                ThundraLogger.debug('<MongoDBIntegration> Skipped tracing request as no tracer is available');
                 return;
             }
+
             let hostPort: string[];
             const parentSpan = tracer.getActiveSpan();
             const commandName: string = get(event, 'commandName', '');
@@ -80,6 +85,8 @@ class MongoDBIntegration implements Integration {
                 maskedCommand = JSON.stringify(event.command).substr(0, DefaultMongoCommandSizeLimit);
             }
 
+            ThundraLogger.debug(`<MongoDBIntegration> Starting MongoDB span with name ${dbName}`);
+
             span = tracer._startSpan(dbName, {
                 childOf: parentSpan,
                 domainName: DomainNames.DB,
@@ -96,8 +103,6 @@ class MongoDBIntegration implements Integration {
                     [MongoDBTags.MONGODB_COMMAND]: maskedCommand,
                     [SpanTags.OPERATION_TYPE]: operationType,
                     [SpanTags.TOPOLOGY_VERTEX]: true,
-                    [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
-                    [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
                 },
             });
 
@@ -105,14 +110,16 @@ class MongoDBIntegration implements Integration {
 
             this.spans[event.requestId] = span;
         } catch (error) {
+            ThundraLogger.error('<MongoDBIntegration> Error occurred while tracing MongoDB command:', error);
+
             if (span) {
+                ThundraLogger.debug(
+                    `<MongoDBIntegration> Because of error, closing MongoDB span with name ${span.getOperationName()}`);
                 span.close();
             }
 
             if (error instanceof ThundraChaosError) {
                 throw error;
-            } else {
-                ThundraLogger.error(error);
             }
         }
     }
@@ -129,9 +136,11 @@ class MongoDBIntegration implements Integration {
         delete this.spans[event.requestId];
 
         try {
+            ThundraLogger.debug(`<MongoDBIntegration> Closing MongoDB span with name ${span.getOperationName()}`);
             span.close();
         } catch (error) {
-            ThundraLogger.error(error);
+            ThundraLogger.error(
+                `<MongoDBIntegration> Error occurred while closing MongoDB span with name ${span.getOperationName()}:`, error);
         }
     }
 
@@ -148,9 +157,11 @@ class MongoDBIntegration implements Integration {
 
         try {
             span.setErrorTag(event.failure);
+            ThundraLogger.debug(`<MongoDBIntegration> Closing MongoDB span with name ${span.getOperationName()}`);
             span.close();
         } catch (error) {
-            ThundraLogger.error(error);
+            ThundraLogger.error(
+                `<MongoDBIntegration> Error occurred while closing MongoDB span with name ${span.getOperationName()}:`, error);
         }
     }
 
@@ -158,10 +169,15 @@ class MongoDBIntegration implements Integration {
      * @inheritDoc
      */
     wrap(lib: any) {
+        ThundraLogger.debug('<MongoDBIntegration> Wrap');
+
         if (lib) {
             this.listener = lib.instrument();
+            ThundraLogger.debug('<MongoDBIntegration> Registering to "started" event');
             this.listener.on('started', (this.onStarted.bind(this)));
+            ThundraLogger.debug('<MongoDBIntegration> Registering to "succeeded" event');
             this.listener.on('succeeded', this.onSucceeded.bind(this));
+            ThundraLogger.debug('<MongoDBIntegration> Registering to "failed" event');
             this.listener.on('failed', this.onFailed.bind(this));
         }
     }
@@ -171,6 +187,8 @@ class MongoDBIntegration implements Integration {
      * @param lib the library to be unwrapped
      */
     doUnwrap(lib: any) {
+        ThundraLogger.debug('<MongoDBIntegration> Do unwrap');
+
         return;
     }
 
@@ -178,6 +196,8 @@ class MongoDBIntegration implements Integration {
      * @inheritDoc
      */
     unwrap() {
+        ThundraLogger.debug('<MongoDBIntegration> Unwrap');
+
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
