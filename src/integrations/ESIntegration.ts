@@ -1,7 +1,6 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
+    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags, ClassNames,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -25,6 +24,8 @@ class ESIntegration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<ESIntegration> Wrap');
+
         this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
@@ -61,6 +62,8 @@ class ESIntegration implements Integration {
      * @inheritDoc
      */
     wrap(lib: any, config: any) {
+        ThundraLogger.debug('<ESIntegration> Wrap');
+
         const integration = this;
 
         function wrapRequest(request: any) {
@@ -68,9 +71,12 @@ class ESIntegration implements Integration {
 
             return async function requestWithTrace(params: any, cb: any) {
                 try {
+                    ThundraLogger.debug('<ESIntegration> Tracing Elasticsearch request:', params);
+
                     const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
+                        ThundraLogger.debug('<ESIntegration> Skipped tracing request as no tracer is available');
                         return request.call(this, params, cb);
                     }
 
@@ -78,6 +84,9 @@ class ESIntegration implements Integration {
                     const parentSpan = tracer.getActiveSpan();
                     const host = await ESIntegration.hostSelect(me);
                     const normalizedPath = integration.getNormalizedPath(params.path);
+
+                    ThundraLogger.debug(`<ESIntegration> Starting Elasticsearch span with name ${normalizedPath}`);
+
                     span = tracer._startSpan(normalizedPath, {
                         childOf: parentSpan,
                         domainName: DomainNames.DB,
@@ -91,8 +100,6 @@ class ESIntegration implements Integration {
                         [DBTags.DB_PORT]: host ? host.port : undefined,
                         [DBTags.DB_TYPE]: DBTypes.ELASTICSEARCH,
                         [SpanTags.TOPOLOGY_VERTEX]: true,
-                        [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
-                        [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
                         [ESTags.ES_URI]: params.path,
                         [ESTags.ES_NORMALIZED_URI]: normalizedPath,
                         [ESTags.ES_METHOD]: params.method,
@@ -120,7 +127,8 @@ class ESIntegration implements Integration {
                         if (err) {
                             span.setErrorTag(err);
                         }
-
+                        ThundraLogger.debug(
+                            `<ESIntegration> Closing Elasticsearch span with name ${span.getOperationName()}`);
                         span.closeWithCallback(me, originalCallback, [err, res]);
                     };
 
@@ -130,9 +138,13 @@ class ESIntegration implements Integration {
                         const promise = request.apply(this, arguments);
 
                         promise.then(() => {
+                            ThundraLogger.debug(
+                                `<ESIntegration> Closing Elasticsearch span with name ${span.getOperationName()}`);
                             span.finish();
                         }).catch((err: any) => {
                             span.setErrorTag(err);
+                            ThundraLogger.debug(
+                                `<ESIntegration> Closing Elasticsearch span with name ${span.getOperationName()}`);
                             span.finish();
                         });
 
@@ -140,7 +152,11 @@ class ESIntegration implements Integration {
                     }
 
                 } catch (error) {
+                    ThundraLogger.error('<ESIntegration> Error occurred while tracing Elasticsearch request:', error);
+
                     if (span) {
+                        ThundraLogger.debug(
+                            `<ESIntegration> Because of error, closing Elasticsearch span with name ${span.getOperationName()}`);
                         span.close();
                     }
 
@@ -155,6 +171,8 @@ class ESIntegration implements Integration {
         }
 
         if (has(lib, 'Transport.prototype.request')) {
+            ThundraLogger.debug('<ESIntegration> Wrapping "elasticsearch.request"');
+
             shimmer.wrap(lib.Transport.prototype, 'request', wrapRequest);
         }
     }
@@ -164,6 +182,10 @@ class ESIntegration implements Integration {
      * @param lib the library to be unwrapped
      */
     doUnwrap(lib: any) {
+        ThundraLogger.debug('<ESIntegration> Do unwrap');
+
+        ThundraLogger.debug('<ESIntegration> Unwrapping "elasticsearch.request"');
+
         shimmer.unwrap(lib.Transport.prototype, 'request');
     }
 
@@ -171,6 +193,8 @@ class ESIntegration implements Integration {
      * @inheritDoc
      */
     unwrap() {
+        ThundraLogger.debug('<ESIntegration> Unwrap');
+
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
