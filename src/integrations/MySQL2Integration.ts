@@ -52,12 +52,12 @@ class MySQL2Integration implements Integration {
 
             return function queryWrapper(sql: any, values: any, cb: any) {
                 try {
-                    ThundraLogger.debug('<MySQL2Integration> Tracing MySQL request:', sql);
+                    ThundraLogger.debug('<MySQL2Integration> Tracing MySQL query:', sql);
 
                     const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
-                        ThundraLogger.debug('<MySQL2Integration> Skipped tracing request as no tracer is available');
+                        ThundraLogger.debug('<MySQL2Integration> Skipped tracing query as no tracer is available');
                         return query.call(this, sql, values, cb);
                     }
 

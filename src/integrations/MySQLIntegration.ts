@@ -52,12 +52,12 @@ class MySQLIntegration implements Integration {
 
             return function queryWrapper(sql: any, values: any, cb: any) {
                 try {
-                    ThundraLogger.debug('<MySQLIntegration> Tracing MySQL request:', sql);
+                    ThundraLogger.debug('<MySQLIntegration> Tracing MySQL query:', sql);
 
                     const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
-                        ThundraLogger.debug('<MySQLIntegration> Skipped tracing request as no tracer is available');
+                        ThundraLogger.debug('<MySQLIntegration> Skipped tracing query as no tracer is available');
                         return query.call(this, sql, values, cb);
                     }
 

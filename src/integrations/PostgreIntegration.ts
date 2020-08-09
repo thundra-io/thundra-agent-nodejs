@@ -1,7 +1,6 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes,
-    SQLQueryOperationTypes, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
+    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes,
 } from '../Constants';
 import Utils from '../utils/Utils';
 import ThundraLogger from '../ThundraLogger';
@@ -25,6 +24,8 @@ class PostgreIntegration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<PostgreIntegration> Activating Postgre integration');
+
         this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
@@ -46,9 +47,12 @@ class PostgreIntegration implements Integration {
             return function queryWrapper() {
                 let span: ThundraSpan;
                 try {
+                    ThundraLogger.debug('<PostgreIntegration> Tracing Postgre query:', query);
+
                     const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
+                        ThundraLogger.debug('<PostgreIntegration> Skipped tracing query as no tracer is available');
                         return query.apply(this, arguments);
                     }
 
@@ -56,6 +60,8 @@ class PostgreIntegration implements Integration {
 
                     const params = this.connectionParameters;
                     const me = this;
+
+                    ThundraLogger.debug(`<PostgreIntegration> Starting Postgre span with name ${params.database}`);
 
                     span = tracer._startSpan(params.database, {
                         childOf: parentSpan,
@@ -73,8 +79,6 @@ class PostgreIntegration implements Integration {
                             [DBTags.DB_PORT]: params.port,
                             [DBTags.DB_TYPE]: DBTypes.PG,
                             [SpanTags.TOPOLOGY_VERTEX]: true,
-                            [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
-                            [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
                         });
                     }
 
@@ -109,6 +113,7 @@ class PostgreIntegration implements Integration {
                             if (err) {
                                 span.setErrorTag(err);
                             }
+                            ThundraLogger.debug(`<PostgreIntegration> Closing Postgre span with name ${span.getOperationName()}`);
                             span.closeWithCallback(me, originalCallback, [err, res]);
                         };
                         newArgs[callbackIndex] = wrappedCallback;
@@ -118,9 +123,11 @@ class PostgreIntegration implements Integration {
 
                     if (result && typeof result.then === 'function') {
                         result.then(function (value: any) {
+                            ThundraLogger.debug(`<PostgreIntegration> Closing Postgre span with name ${span.getOperationName()}`);
                             span.close();
                             return value;
                         }).catch(function (error: any) {
+                            ThundraLogger.debug(`<PostgreIntegration> Closing Postgre span with name ${span.getOperationName()}`);
                             span.close();
                             return error;
                         });
@@ -128,14 +135,17 @@ class PostgreIntegration implements Integration {
 
                     return result;
                 } catch (error) {
+                    ThundraLogger.error('<PostgreIntegration> Error occurred while tracing Postgre query:', error);
+
                     if (span) {
+                        ThundraLogger.debug(
+                            `<PostgreIntegration> Because of error, closing Postgre span with name ${span.getOperationName()}`);
                         span.close();
                     }
 
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        ThundraLogger.error(error);
                         query.apply(this, arguments);
                     }
                 }
@@ -143,6 +153,8 @@ class PostgreIntegration implements Integration {
         }
 
         if (has(lib, 'Client.prototype.query')) {
+            ThundraLogger.debug('<PostgreIntegration> Wrapping "pg.query"');
+
             shimmer.wrap(lib.Client.prototype, 'query', wrapper);
         }
     }
@@ -152,6 +164,10 @@ class PostgreIntegration implements Integration {
      * @param lib the library to be unwrapped
      */
     doUnwrap(lib: any) {
+        ThundraLogger.debug('<PostgreIntegration> Do unwrap');
+
+        ThundraLogger.debug('<PostgreIntegration> Unwrapping "pg.query"');
+
         shimmer.unwrap(lib.Client.prototype, 'query');
     }
 
@@ -159,6 +175,8 @@ class PostgreIntegration implements Integration {
      * @inheritDoc
      */
     unwrap() {
+        ThundraLogger.debug('<PostgreIntegration> Unwrap');
+
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
