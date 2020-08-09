@@ -1,9 +1,6 @@
 import Integration from './Integration';
 import * as opentracing from 'opentracing';
-import {
-    HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames,
-    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, TriggerHeaderTags,
-} from '../Constants';
+import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, TriggerHeaderTags } from '../Constants';
 import Utils from '../utils/Utils';
 import * as url from 'url';
 import ThundraLogger from '../ThundraLogger';
@@ -32,6 +29,8 @@ class HttpIntegration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<HTTPIntegration> Activating HTTP integration');
+
         this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME_HTTP, MODULE_NAME_HTTPS], null,
@@ -64,6 +63,8 @@ class HttpIntegration implements Integration {
      * @inheritDoc
      */
     wrap(lib: any, config: any, moduleName: string): void {
+        ThundraLogger.debug('<HTTPIntegration> Wrap');
+
         const nodeVersion = process.version;
         const plugin = this;
 
@@ -71,9 +72,12 @@ class HttpIntegration implements Integration {
             return function requestWrapper(options: any, callback: any) {
                 let span: ThundraSpan;
                 try {
+                    ThundraLogger.debug('<HTTPIntegration> Tracing HTTP request:', options);
+
                     const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
+                        ThundraLogger.debug('<HTTPIntegration> Skipped tracing request as no tracer is available');
                         return request.apply(this, [options, callback]);
                     }
 
@@ -88,11 +92,16 @@ class HttpIntegration implements Integration {
                     path = splittedPath[0];
 
                     if (!HttpIntegration.isValidUrl(host)) {
+                        ThundraLogger.debug(
+                            `<HTTPIntegration> Skipped tracing request as target host is blacklisted: ${host}`);
                         return request.apply(this, [options, callback]);
                     }
 
                     const parentSpan = tracer.getActiveSpan();
                     const operationName = host + plugin.getNormalizedPath(path);
+
+                    ThundraLogger.debug(`<HTTPIntegration> Starting HTTP span with name ${operationName}`);
+
                     span = tracer._startSpan(operationName, {
                         childOf: parentSpan,
                         domainName: DomainNames.API,
@@ -116,17 +125,16 @@ class HttpIntegration implements Integration {
                         [HttpTags.QUERY_PARAMS]: queryParams,
                         [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
                         [SpanTags.TOPOLOGY_VERTEX]: true,
-                        [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
-                        [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
                     });
 
                     const me = this;
 
                     const wrappedCallback = (err: any, res: any) => {
-                        if (err && span) {
-                            span.setErrorTag(err);
-                        }
                         if (span) {
+                            if (err) {
+                                span.setErrorTag(err);
+                            }
+                            ThundraLogger.debug(`<HTTPIntegration> Closing HTTP span with name ${operationName}`);
                             span.closeWithCallback(me, callback, [err, res]);
                         }
                     };
@@ -136,6 +144,7 @@ class HttpIntegration implements Integration {
                     const req = request.call(this, options, wrappedCallback);
 
                     req.on('response', (res: any) => {
+                        ThundraLogger.debug(`<HTTPIntegration> On response of HTTP span with name ${operationName}`);
                         if ('x-amzn-requestid' in res.headers) {
                             span._setClassName(ClassNames.APIGATEWAY);
                         }
@@ -172,7 +181,9 @@ class HttpIntegration implements Integration {
                                     }
                                     span.setTag(HttpTags.BODY, lines[lines.length - 1]);
                                 } catch (error) {
-                                    ThundraLogger.error(error);
+                                    ThundraLogger.error(
+                                        `<HTTPIntegration> Unable to get body of HTTP span with name ${operationName}:`,
+                                        error);
                                 }
                             }
                         }
@@ -183,14 +194,17 @@ class HttpIntegration implements Integration {
                     return req;
 
                 } catch (error) {
+                    ThundraLogger.error('<HTTPIntegration> Error occurred while tracing HTTP request:', error);
+
                     if (span) {
+                        ThundraLogger.debug(
+                            `<HTTPIntegration> Because of error, closing HTTP span with name ${span.getOperationName()}`);
                         span.close();
                     }
 
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        ThundraLogger.error(error);
                         return request.apply(this, [options, callback]);
                     }
                 }
@@ -199,15 +213,19 @@ class HttpIntegration implements Integration {
 
         if (moduleName === 'http') {
             if (has(lib, 'request')) {
+                ThundraLogger.debug('<HTTPIntegration> Wrapping "http.request"');
                 shimmer.wrap(lib, 'request', wrapper);
                 if (semver.satisfies(nodeVersion, '>=8') && has(lib, 'get')) {
+                    ThundraLogger.debug('<HTTPIntegration> Wrapping "http.get"');
                     shimmer.wrap(lib, 'get', wrapper);
                 }
             }
         } else if (moduleName === 'https') {
             if (semver.satisfies(nodeVersion, '>=9')) {
                 if (has(lib, 'request') && has(lib, 'get')) {
+                    ThundraLogger.debug('<HTTPIntegration> Wrapping "https.request"');
                     shimmer.wrap(lib, 'request', wrapper);
+                    ThundraLogger.debug('<HTTPIntegration> Wrapping "https.get"');
                     shimmer.wrap(lib, 'get', wrapper);
                 }
             }
@@ -219,19 +237,25 @@ class HttpIntegration implements Integration {
      * @param lib the library to be unwrapped
      */
     doUnwrap(lib: any, moduleName: string) {
+        ThundraLogger.debug('<HTTPIntegration> Do unwrap');
+
         const nodeVersion = process.version;
 
         if (moduleName === 'http') {
             if (has(lib, 'request')) {
+                ThundraLogger.debug('<HTTPIntegration> Unwrapping "http.request"');
                 shimmer.unwrap(lib, 'request');
                 if (semver.satisfies(nodeVersion, '>=8') && has(lib, 'get')) {
+                    ThundraLogger.debug('<HTTPIntegration> Unwrapping "http.get"');
                     shimmer.unwrap(lib, 'get');
                 }
             }
         } else if (moduleName === 'https') {
             if (semver.satisfies(nodeVersion, '>=9')) {
                 if (has(lib, 'request') && has(lib, 'get')) {
+                    ThundraLogger.debug('<HTTPIntegration> Unwrapping "https.request"');
                     shimmer.unwrap(lib, 'request');
+                    ThundraLogger.debug('<HTTPIntegration> Unwrapping "https.get"');
                     shimmer.unwrap(lib, 'get');
                 }
             }
@@ -242,6 +266,8 @@ class HttpIntegration implements Integration {
      * @inheritDoc
      */
     unwrap(): void {
+        ThundraLogger.debug('<HTTPIntegration> Unwrap');
+
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
@@ -253,7 +279,11 @@ class HttpIntegration implements Integration {
             if (depth <= 0) {
                 return '';
             }
-            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
+            const normalizedPath = '/' + path
+                    .split('/')
+                    .filter((c) => c !== '')
+                    .slice(0, depth)
+                    .join('/');
             return normalizedPath;
         } catch (error) {
             return path;
