@@ -4,8 +4,9 @@
 
 import Utils from '../../utils/Utils';
 import ThundraSpanContext from '../../opentracing/SpanContext';
-import { DomainNames, ClassNames, TriggerHeaderTags,
-    LAMBDA_FUNCTION_PLATFORM, HttpTags, THUNDRA_TRACE_KEY } from '../../Constants';
+import {
+    DomainNames, ClassNames, LAMBDA_FUNCTION_PLATFORM, THUNDRA_TRACE_KEY,
+    AwsTags, AwsLambdaWrapperTags, TriggerHeaderTags, HttpTags } from '../../Constants';
 import ThundraTracer from '../../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
 import * as opentracing from 'opentracing';
@@ -84,21 +85,20 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         '<LambdaExecutor> Injected trigger tags of transaction', execContext.transactionId,
         'for trigger type:', execContext.triggerClassName);
 
-    execContext.rootSpan.tags['aws.lambda.memory_limit'] = parseInt(originalContext.memoryLimitInMB, 10);
-    execContext.rootSpan.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
-    execContext.rootSpan.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
-    execContext.rootSpan.tags['aws.region'] = pluginContext.applicationInfo.applicationRegion;
-    execContext.rootSpan.tags['aws.lambda.log_group_name'] = originalContext.logGroupName;
-    execContext.rootSpan.tags['aws.lambda.name'] = originalContext.functionName;
-    execContext.rootSpan.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
-    execContext.rootSpan.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
-    execContext.rootSpan.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
+    execContext.rootSpan.tags[AwsTags.AWS_REGION] = pluginContext.applicationInfo.applicationRegion;
+    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_ARN] = originalContext.invokedFunctionArn;
+    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_NAME] = originalContext.functionName;
+    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_MEMORY_LIMIT] = parseInt(originalContext.memoryLimitInMB, 10);
+    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_LOG_GROUP_NAME] = originalContext.logGroupName;
+    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_LOG_STREAM_NAME] = originalContext.logStreamName;
+    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_COLDSTART] = pluginContext.requestCount === 0;
+    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST_ID] = originalContext.awsRequestId;
 
     const request = getRequest(originalEvent, execContext.triggerClassName, config);
     ThundraLogger.debug(
         '<LambdaExecutor> Captured invocation request of transaction',
         execContext.transactionId, ':', request);
-    execContext.rootSpan.tags['aws.lambda.invocation.request'] = request;
+    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST] = request;
 }
 
 /**
@@ -142,7 +142,7 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
     ThundraLogger.debug(
         '<LambdaExecutor> Captured invocation response of transaction',
         execContext.transactionId, ':', resp);
-    rootSpan.tags['aws.lambda.invocation.response'] = resp;
+    rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_RESPONSE] = resp;
 
     rootSpan.finish();
     rootSpan.finishTime = finishTimestamp;
@@ -185,30 +185,31 @@ function setInvocationTags(invocationData: any, pluginContext: PluginContext, ex
 
     const originalContext = LambdaContextProvider.getContext();
 
-    invocationData.tags['aws.lambda.memory_limit'] = pluginContext.maxMemory;
-    invocationData.tags['aws.lambda.invocation.coldstart'] = pluginContext.requestCount === 0;
-    invocationData.tags['aws.region'] = pluginContext.applicationInfo.applicationRegion;
-    invocationData.tags['aws.lambda.invocation.timeout'] = false;
+    invocationData.tags[AwsTags.AWS_REGION] = pluginContext.applicationInfo.applicationRegion;
+    invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_MEMORY_LIMIT] = pluginContext.maxMemory;
+    invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_COLDSTART] = pluginContext.requestCount === 0;
+    invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_TIMEOUT] = false;
 
     if (originalContext) {
-        invocationData.tags['aws.lambda.arn'] = originalContext.invokedFunctionArn;
-        invocationData.tags['aws.account_no'] = LambdaPlatformUtils.getAWSAccountNo(originalContext.invokedFunctionArn);
-        invocationData.tags['aws.lambda.log_group_name'] = originalContext ? originalContext.logGroupName : '';
-        invocationData.tags['aws.lambda.name'] = originalContext ? originalContext.functionName : '';
-        invocationData.tags['aws.lambda.log_stream_name'] = originalContext.logStreamName;
-        invocationData.tags['aws.lambda.invocation.request_id'] = originalContext.awsRequestId;
+        invocationData.tags[AwsTags.AWS_ACCOUNT_NO] =
+            LambdaPlatformUtils.getAWSAccountNo(originalContext.invokedFunctionArn);
+        invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_ARN] = originalContext.invokedFunctionArn;
+        invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_NAME] = originalContext ? originalContext.functionName : '';
+        invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_LOG_GROUP_NAME] = originalContext ? originalContext.logGroupName : '';
+        invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_LOG_STREAM_NAME] = originalContext.logStreamName;
+        invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST_ID] = originalContext.awsRequestId;
     }
 
     const { heapUsed } = process.memoryUsage();
-    invocationData.tags['aws.lambda.invocation.memory_usage'] = Math.floor(heapUsed / (1024 * 1024));
+    invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_MEMORY_USAGE] = Math.floor(heapUsed / (1024 * 1024));
 
     const xrayTraceInfo = Utils.getXRayTraceInfo();
 
     if (xrayTraceInfo.traceID) {
-        invocationData.tags['aws.xray.trace.id'] = xrayTraceInfo.traceID;
+        invocationData.tags[AwsTags.AWS_XRAY_TRACE_ID] = xrayTraceInfo.traceID;
     }
     if (xrayTraceInfo.segmentID) {
-        invocationData.tags['aws.xray.segment.id'] = xrayTraceInfo.segmentID;
+        invocationData.tags[AwsTags.AWS_XRAY_SEGMENT_ID] = xrayTraceInfo.segmentID;
     }
 }
 
@@ -231,7 +232,7 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
 
         if (error instanceof TimeoutError) {
             invocationData.timeout = true;
-            invocationData.tags['aws.lambda.invocation.timeout'] = true;
+            invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_TIMEOUT] = true;
         }
 
         invocationData.tags.error = true;
