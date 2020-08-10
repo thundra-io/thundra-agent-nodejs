@@ -4,7 +4,7 @@ import ReturnValue from './ReturnValue';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../Span';
 import { ThundraSourceCodeInstrumenter } from '@thundra/instrumenter';
-import { ARGS_TAG_NAME, RETURN_VALUE_TAG_NAME, LineByLineTags } from '../../Constants';
+import { MethodTags, LineByLineTags } from '../../Constants';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
@@ -199,7 +199,7 @@ class Instrumenter {
                     }
                 }
 
-                span.setTag(ARGS_TAG_NAME, spanArguments);
+                span.setTag(MethodTags.ARGS, spanArguments);
                 span.setTag(LineByLineTags.SOURCE, args.source);
                 span.setTag(LineByLineTags.START_LINE, args.startLine);
 
@@ -323,7 +323,7 @@ class Instrumenter {
                         const returnValue = args.returnValue;
                         const returnType = typeof returnValue;
                         const packedReturnValue = me.packValue(returnValue);
-                        span.setTag(RETURN_VALUE_TAG_NAME, new ReturnValue(returnType, packedReturnValue));
+                        span.setTag(MethodTags.RETURN_VALUE, new ReturnValue(returnType, packedReturnValue));
                     }
                 } else {
                     span.setErrorTag(args.exceptionValue);
