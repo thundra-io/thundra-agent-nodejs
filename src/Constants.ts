@@ -149,6 +149,27 @@ export const ClassNames = {
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
 
+export const AwsTags = {
+    AWS_REGION: 'aws.region',
+    AWS_ACCOUNT_NO: 'aws.account_no',
+    AWS_XRAY_TRACE_ID: 'aws.xray.trace.id',
+    AWS_XRAY_SEGMENT_ID: 'aws.xray.segment.id',
+};
+
+export const AwsLambdaWrapperTags = {
+    AWS_LAMBDA_ARN: 'aws.lambda.arn',
+    AWS_LAMBDA_NAME: 'aws.lambda.name',
+    AWS_LAMBDA_MEMORY_LIMIT: 'aws.lambda.memory_limit',
+    AWS_LAMBDA_LOG_GROUP_NAME: 'aws.lambda.log_group_name',
+    AWS_LAMBDA_LOG_STREAM_NAME: 'aws.lambda.log_stream_name',
+    AWS_LAMBDA_INVOCATION_COLDSTART: 'aws.lambda.invocation.coldstart',
+    AWS_LAMBDA_INVOCATION_REQUEST_ID: 'aws.lambda.invocation.request_id',
+    AWS_LAMBDA_INVOCATION_MEMORY_USAGE: 'aws.lambda.invocation.memory_usage',
+    AWS_LAMBDA_INVOCATION_TIMEOUT: 'aws.lambda.invocation.timeout',
+    AWS_LAMBDA_INVOCATION_REQUEST: 'aws.lambda.invocation.request',
+    AWS_LAMBDA_INVOCATION_RESPONSE: 'aws.lambda.invocation.response',
+};
+
 export const ZeitTags = {
     DEPLOYMENT_URL: 'DEPLOYMENT_URL',
 };
