@@ -69,11 +69,6 @@ export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
 export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
 export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
 
-export const HOOKS = [
-    'before-invocation',
-    'after-invocation',
-];
-
 export function getDefaultCollectorEndpoint() {
     const region = process.env[EnvVariableKeys.AWS_REGION];
     if (region) {
@@ -87,8 +82,6 @@ export const COMPOSITE_MONITORING_DATA_PATH = '/composite-monitoring-data';
 
 export const PROC_STAT_PATH: string = '/proc/self/stat';
 export const PROC_IO_PATH: string = '/proc/self/io';
-export const ARGS_TAG_NAME: string = 'method.args';
-export const RETURN_VALUE_TAG_NAME: string = 'method.return_value';
 
 export const logLevels: any = {
     0: 0,
@@ -195,6 +188,11 @@ export const MongoDBTags = {
     MONGODB_COMMAND: 'mongodb.command',
     MONGODB_COMMAND_NAME: 'mongodb.command.name',
     MONGODB_COLLECTION: 'mongodb.collection.name',
+};
+
+export const MethodTags = {
+    ARGS: 'method.args',
+    RETURN_VALUE: 'method.return_value',
 };
 
 export const LineByLineTags = {

@@ -1,6 +1,5 @@
 import TestUtils from './utils';
 import {
-    HOOKS,
     PROC_STAT_PATH,
     PROC_IO_PATH,
     DATA_MODEL_VERSION,
@@ -17,10 +16,6 @@ afterEach(() => {
 
 test('DATA_MODEL_VERSION did not change', () => {
     expect(DATA_MODEL_VERSION).toEqual('2.0');
-});
-
-test('HOOKS did not change', () => {
-    expect(HOOKS).toEqual(['before-invocation', 'after-invocation']);
 });
 
 test('PROC_STAT_PATH did not change', () => {
