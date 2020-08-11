@@ -9,11 +9,11 @@ const md5 = require('md5');
 const sdk = require('aws-sdk');
 
 beforeAll(() => {
-    // AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
-    //     return (cb) => {
-    //         cb(Error('foo error'), null);
-    //     };
-    // });
+    AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
+        return (cb) => {
+            cb(null, null, { result: 'OK' });
+        };
+    });
 });
 
 describe('AWS integration', () => {
