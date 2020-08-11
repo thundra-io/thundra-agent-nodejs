@@ -7,19 +7,21 @@ import WrapperUtils from '../WrapperUtils';
 
 const get = require('lodash.get');
 
-export function expressMW() {
+export function expressMW(opts: any = {}) {
     ApplicationManager.setApplicationInfoProvider().update({
         applicationClassName: 'Express',
         applicationDomainName: 'API',
     });
 
-    const config = ConfigProvider.thundraConfig;
+    const config = opts.config || ConfigProvider.thundraConfig;
     const { apiKey } = config;
-    const reporter = new Reporter(apiKey);
-    const pluginContext = WrapperUtils.createPluginContext(apiKey, ExpressExecutor);
-    const plugins = WrapperUtils.createPlugins(config, pluginContext);
+    const reporter = opts.reporter || new Reporter(apiKey);
+    const pluginContext = opts.pluginContext || WrapperUtils.createPluginContext(apiKey, ExpressExecutor);
+    const plugins = opts.plugins || WrapperUtils.createPlugins(config, pluginContext);
 
-    WrapperUtils.initAsyncContextManager();
+    if (!opts.disableAsyncContextManager) {
+        WrapperUtils.initAsyncContextManager();
+    }
 
     return (req: any, res: any, next: any) => ExecutionContextManager.runWithContext(
         WrapperUtils.createExecContext,

@@ -5,8 +5,6 @@ import PluginContext from '../../plugins/PluginContext';
 import ExecutionContext from '../../context/ExecutionContext';
 import WrapperUtils from '../WrapperUtils';
 
-const get = require('lodash.get');
-
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
 }

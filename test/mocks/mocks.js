@@ -1,6 +1,9 @@
 import { LambdaContextProvider } from '../../dist/wrappers/lambda/LambdaContextProvider';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ThundraTracer from '../../dist/opentracing/Tracer';
+import { expressMW } from '../../dist/wrappers/express/ExpressWrapper';
+
+const express = require('express');
 
 const createMockContext = () => {
     return {
@@ -121,7 +124,7 @@ const createMockSQSEvent = () => {
                     SenderId: '123456789012',
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
-                messageAttributes:  {
+                messageAttributes: {
                     'x-thundra-span-id': {
                         stringValue: 'spanId',
                         stringListValues: [],
@@ -163,7 +166,7 @@ const createBatchMockSQSEventDifferentIds = () => {
                     SenderId: '123456789012',
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
-                messageAttributes:  {
+                messageAttributes: {
                     'x-thundra-span-id': {
                         stringValue: 'spanId',
                         stringListValues: [],
@@ -198,7 +201,7 @@ const createBatchMockSQSEventDifferentIds = () => {
                     SenderId: '123456789012',
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
-                messageAttributes:  {
+                messageAttributes: {
                     'x-thundra-span-id': {
                         stringValue: 'differentSpanId',
                         stringListValues: [],
@@ -240,7 +243,7 @@ const createBatchMockSQSEventSameIds = () => {
                     SenderId: '123456789012',
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
-                messageAttributes:  {
+                messageAttributes: {
                     'x-thundra-span-id': {
                         stringValue: 'spanId',
                         stringListValues: [],
@@ -275,7 +278,7 @@ const createBatchMockSQSEventSameIds = () => {
                     SenderId: '123456789012',
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
-                messageAttributes:  {
+                messageAttributes: {
                     'x-thundra-span-id': {
                         stringValue: 'spanId',
                         stringListValues: [],
@@ -323,7 +326,7 @@ const createMockSNSEvent = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id' : {
+                        'x-thundra-trace-id': {
                             Type: 'String',
                             Value: 'traceId'
                         },
@@ -361,7 +364,7 @@ const createBatchMockSNSEventWithDifferentIds = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id' : {
+                        'x-thundra-trace-id': {
                             Type: 'String',
                             Value: 'differentTraceId'
                         },
@@ -392,7 +395,7 @@ const createBatchMockSNSEventWithDifferentIds = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id' : {
+                        'x-thundra-trace-id': {
                             Type: 'String',
                             Value: 'traceId'
                         },
@@ -430,7 +433,7 @@ const createBatchMockSNSEventWithSameIds = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id' : {
+                        'x-thundra-trace-id': {
                             Type: 'String',
                             Value: 'traceId'
                         },
@@ -461,7 +464,7 @@ const createBatchMockSNSEventWithSameIds = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id' : {
+                        'x-thundra-trace-id': {
                             Type: 'String',
                             Value: 'traceId'
                         },
@@ -483,7 +486,7 @@ const createBatchMockSNSEventWithSameIds = () => {
 const createMockApiGatewayProxy = () => {
     return {
         headers: {
-            'x-thundra-trace-id' : 'traceId',
+            'x-thundra-trace-id': 'traceId',
             'x-thundra-transaction-id': 'transactionId',
             'x-thundra-span-id': 'spanId',
         },
@@ -502,16 +505,32 @@ const createMockApiGatewayProxy = () => {
 const createMockClientContext = () => {
     return {
         custom: {
-            'x-thundra-trace-id' : 'traceId',
+            'x-thundra-trace-id': 'traceId',
             'x-thundra-transaction-id': 'transactionId',
             'x-thundra-span-id': 'spanId',
-            'x-thundra-lambda-trigger-operation-name' : 'lambda-function',
+            'x-thundra-lambda-trigger-operation-name': 'lambda-function',
         }
-    };    
+    };
 };
+
+const createMockExpressApp = () => {
+    const app = express();
+
+    app.use(expressMW({
+        disableAsyncContextManager: true,
+        reporter: createMockReporterInstance(),
+    }));
+
+    app.get('/', function (req, res) {
+        res.send('Hello Thundra!');
+    });
+
+    return app;
+}
 
 module.exports = {
     createMockContext,
+    createMockExpressApp,
     createMockReporterInstance,
     createMockWrapperInstance,
     createMockPluginContext,
@@ -526,8 +545,8 @@ module.exports = {
     createMockApiGatewayProxy,
     createMockClientContext,
     createBatchMockSQSEventDifferentIds,
-    createBatchMockSQSEventSameIds, 
-    createBatchMockSNSEventWithDifferentIds, 
+    createBatchMockSQSEventSameIds,
+    createBatchMockSNSEventWithDifferentIds,
     createBatchMockSNSEventWithSameIds,
     createMockLambdaExecContext
 };
