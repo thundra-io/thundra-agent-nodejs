@@ -92,7 +92,7 @@ class HttpIntegration implements Integration {
                     }
 
                     const parentSpan = tracer.getActiveSpan();
-                    const operationName = host + plugin.getNormalizedPath(path);
+                    const operationName = host + Utils.getNormalizedPath(path, config.httpPathDepth);
                     span = tracer._startSpan(operationName, {
                         childOf: parentSpan,
                         domainName: DomainNames.API,
@@ -103,6 +103,7 @@ class HttpIntegration implements Integration {
                     if (!config.httpTraceInjectionDisabled) {
                         const headers = options.headers ? options.headers : {};
                         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
+                        headers[TriggerHeaderTags.RESOURCE_NAME] = operationName;
                         options.headers = headers;
                     }
 
@@ -246,20 +247,6 @@ class HttpIntegration implements Integration {
             this.instrumentContext.uninstrument();
         }
     }
-
-    private getNormalizedPath(path: string): string {
-        try {
-            const depth = this.config.httpPathDepth;
-            if (depth <= 0) {
-                return '';
-            }
-            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
-            return normalizedPath;
-        } catch (error) {
-            return path;
-        }
-    }
-
 }
 
 export default HttpIntegration;

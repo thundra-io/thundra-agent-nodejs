@@ -578,6 +578,18 @@ class Utils {
         return JSON.stringify(data, Utils.getCircularReplacer());
     }
 
+    static getNormalizedPath(pathStr: string, depth: number): string {
+        try {
+            if (depth <= 0) {
+                return '';
+            }
+            const normalizedPath = '/' + pathStr.split('/').filter((c) => c !== '').slice(0, depth).join('/');
+            return normalizedPath;
+        } catch (error) {
+            return pathStr;
+        }
+    }
+
     private static getModuleInfo(name: string, paths?: string[]): any {
         try {
             let modulePath;
