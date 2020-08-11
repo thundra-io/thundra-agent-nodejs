@@ -11,7 +11,7 @@ const sdk = require('aws-sdk');
 beforeAll(() => {
     AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
         return (cb) => {
-            cb(null, null, { result: 'OK' });
+            cb(null, { result: 'OK' });
         };
     });
 });
