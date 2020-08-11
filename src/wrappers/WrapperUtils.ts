@@ -174,16 +174,18 @@ export default class WrapperUtils {
         }
     }
 
-    static startTrace(rootSpanName: string, pluginContext: PluginContext, execContext: ExecutionContext) {
+    static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
         const { tracer, request } = execContext;
-
         const propagatedSpanContext: ThundraSpanContext =
             tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
-        const triggerOperationName = get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`);
+
+        const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
+        const normalizedPath = Utils.getNormalizedPath(request.path, depth);
+        const triggerOperationName = get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`) || request.host + normalizedPath;
         const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
         const incomingSpanID = get(propagatedSpanContext, 'spanId');
 
-        const rootSpan = tracer._startSpan(triggerOperationName || rootSpanName, {
+        const rootSpan = tracer._startSpan(normalizedPath, {
             propagated: propagatedSpanContext ? true : false,
             parentContext: propagatedSpanContext,
             rootTraceId: traceId,
@@ -191,9 +193,7 @@ export default class WrapperUtils {
             className: ClassNames.EXPRESS,
         });
 
-        if (triggerOperationName) {
-            InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
-        }
+        InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
         InvocationSupport.setAgentTag(SpanTags.TRIGGER_DOMAIN_NAME, 'API');
         InvocationSupport.setAgentTag(SpanTags.TRIGGER_CLASS_NAME, 'HTTP');
 

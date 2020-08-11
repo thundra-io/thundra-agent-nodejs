@@ -1,7 +1,6 @@
 import Utils from '../../utils/Utils';
 import { HttpTags } from '../../Constants';
 import PluginContext from '../../plugins/PluginContext';
-
 import ExecutionContext from '../../context/ExecutionContext';
 import WrapperUtils from '../WrapperUtils';
 
@@ -15,9 +14,7 @@ export function finishInvocation(pluginContext: PluginContext, execContext: any)
 
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
     const { request } = execContext;
-    const rootSpanName = Utils.getNormalizedPath(request.path, 2) || 'express-root-span';
-
-    WrapperUtils.startTrace(rootSpanName, pluginContext, execContext);
+    WrapperUtils.startTrace(pluginContext, execContext);
 
     const { rootSpan } = execContext;
     // Put initial root span tags

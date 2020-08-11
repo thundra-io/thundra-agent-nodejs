@@ -5,8 +5,6 @@ import ExecutionContextManager from '../../context/ExecutionContextManager';
 import * as ExpressExecutor from './ExpressExecutor';
 import WrapperUtils from '../WrapperUtils';
 
-const get = require('lodash.get');
-
 export function expressMW(opts: any = {}) {
     ApplicationManager.setApplicationInfoProvider().update({
         applicationClassName: 'Express',
