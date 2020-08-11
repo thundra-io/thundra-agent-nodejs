@@ -703,8 +703,6 @@ export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: {[key: number]: string} = {
 
 export const THUNDRA_TRACE_KEY = '_thundra';
 
-export const MAX_REPORT_SIZE: number = 32 * 1024; // 32 KB
-
 export const SPAN_TAGS_TO_TRIM_1: string[] = [
     MethodTags.ARGS,
     MethodTags.RETURN_VALUE,

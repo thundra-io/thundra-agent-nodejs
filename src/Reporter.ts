@@ -4,7 +4,7 @@ import * as https from 'https';
 import * as url from 'url';
 import {
     COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint,
-    MAX_REPORT_SIZE, SPAN_TAGS_TO_TRIM_1, SPAN_TAGS_TO_TRIM_2,
+    SPAN_TAGS_TO_TRIM_1, SPAN_TAGS_TO_TRIM_2,
 } from './Constants';
 import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
@@ -56,7 +56,7 @@ class Reporter {
                 new SpanTagTrimmer(SPAN_TAGS_TO_TRIM_2),
                 new NonInvocationTrimmer(),
             ];
-        this.maxReportSize = opt.maxReportSize || MAX_REPORT_SIZE;
+        this.maxReportSize = opt.maxReportSize || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_MAX_SIZE);
     }
 
     /**
