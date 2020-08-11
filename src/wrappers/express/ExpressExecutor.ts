@@ -14,10 +14,12 @@ export function finishInvocation(pluginContext: PluginContext, execContext: any)
 }
 
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-    WrapperUtils.startTrace('express-root-span', pluginContext, execContext);
+    const { request } = execContext;
+    const rootSpanName = Utils.getNormalizedPath(request.path, 2) || 'express-root-span';
 
-    const { request, rootSpan } = execContext;
+    WrapperUtils.startTrace(rootSpanName, pluginContext, execContext);
 
+    const { rootSpan } = execContext;
     // Put initial root span tags
     Utils.copyProperties(
         request,

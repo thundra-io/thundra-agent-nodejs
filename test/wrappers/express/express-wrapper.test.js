@@ -5,7 +5,7 @@ import { ClassNames, DomainNames, HttpTags } from '../../../dist/Constants';
 
 const request = require('supertest');
 
-ConfigProvider.init({ apiKey: 'foo' });
+ConfigProvider.init({ apiKey: 'foo' , traceConfig: { disabledIntegrations: ['http'] }});
 
 const app = createMockExpressApp();
 
@@ -26,6 +26,7 @@ describe('express wrapper', () => {
 
         expect(spanList.length).toBe(1);
         
+        expect(rootSpan.operationName).toBe('/');
         expect(rootSpan.className).toBe(ClassNames.EXPRESS);
         expect(rootSpan.domainName).toBe(DomainNames.API);
         expect(rootSpan.startTime).toBeTruthy();

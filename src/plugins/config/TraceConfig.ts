@@ -174,7 +174,7 @@ class TraceConfig extends BasePluginConfig {
         if (options.disabledIntegrations) {
             for (const intgr of options.disabledIntegrations) {
                 if (typeof intgr === 'string') {
-                    this.disabledIntegrations.push(new IntegrationConfig(intgr, {}));
+                    this.disabledIntegrations.push(new IntegrationConfig(intgr, {enabled: false}));
                 } else {
                     this.disabledIntegrations.push(new IntegrationConfig(intgr.name, intgr.opt));
                 }

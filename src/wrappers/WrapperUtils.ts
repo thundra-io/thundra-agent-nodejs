@@ -19,7 +19,7 @@ import InvocationData from '../plugins/data/invocation/InvocationData';
 import TimeoutError from '../error/TimeoutError';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
-import { HttpTags, DomainNames, ClassNames } from '../Constants';
+import { HttpTags, DomainNames, ClassNames, SpanTags, TriggerHeaderTags } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 
 const get = require('lodash.get');
@@ -176,19 +176,26 @@ export default class WrapperUtils {
 
     static startTrace(rootSpanName: string, pluginContext: PluginContext, execContext: ExecutionContext) {
         const { tracer, request } = execContext;
+
         const propagatedSpanContext: ThundraSpanContext =
             tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
-
+        const triggerOperationName = get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`);
         const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
         const incomingSpanID = get(propagatedSpanContext, 'spanId');
 
-        const rootSpan = tracer._startSpan(rootSpanName, {
+        const rootSpan = tracer._startSpan(triggerOperationName || rootSpanName, {
             propagated: propagatedSpanContext ? true : false,
             parentContext: propagatedSpanContext,
             rootTraceId: traceId,
             domainName: DomainNames.API,
             className: ClassNames.EXPRESS,
         });
+
+        if (triggerOperationName) {
+            InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
+        }
+        InvocationSupport.setAgentTag(SpanTags.TRIGGER_DOMAIN_NAME, 'API');
+        InvocationSupport.setAgentTag(SpanTags.TRIGGER_CLASS_NAME, 'HTTP');
 
         if (incomingSpanID) {
             InvocationTraceSupport.addIncomingTraceLink(incomingSpanID);
