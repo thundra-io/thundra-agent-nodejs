@@ -71,7 +71,7 @@ module.exports.s3ListBuckets = (AWS) => {
 };
 
 module.exports.lambda = (AWS) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         AWS.config.update({ region: 'us-west-2' });
         const lambda = new AWS.Lambda();
         const params = {
@@ -82,8 +82,25 @@ module.exports.lambda = (AWS) => {
 
         lambda.invoke(params, function (err, data) {
             if (err) {
-                // Resolve even though there is an error.
-                return resolve(err);
+                return reject(err);
+            }
+            return resolve(data);
+        });
+    });
+};
+
+module.exports.lambdaAsync = (AWS) => {
+    return new Promise((resolve, reject) => {
+        AWS.config.update({ region: 'us-west-2' });
+        const lambda = new AWS.Lambda();
+        const params = {
+            FunctionName: 'Test',
+            InvokeArgs: '{ "name" : "thundra" }'
+        };
+
+        lambda.invokeAsync(params, function (err, data) {
+            if (err) {
+                return reject(err);
             }
             return resolve(data);
         });

@@ -9,11 +9,11 @@ const md5 = require('md5');
 const sdk = require('aws-sdk');
 
 beforeAll(() => {
-    AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
-        return (cb) => {
-            cb(Error('foo error'), null);
-        };
-    });
+    // AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
+    //     return (cb) => {
+    //         cb(Error('foo error'), null);
+    //     };
+    // });
 });
 
 describe('AWS integration', () => {
@@ -167,6 +167,39 @@ describe('AWS integration', () => {
             expect(span.tags['aws.lambda.invocation.payload']).toEqual('{ "name" : "thundra" }');
             expect(span.tags['aws.request.name']).toBe('invoke');
             expect(span.tags['aws.lambda.invocation.type']).toBe('RequestResponse');
+            expect(span.tags['topology.vertex']).toEqual(true);
+            expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
+            expect(span.finishTime).toBeTruthy();
+        });
+    });
+
+    test('should instrument AWS Lambda invokeAsync call ', () => {
+        // Replace actual send function used by AWS SDK
+        // with our mockSend function
+        const mockSend = jest.fn((cb) => {
+            let req = mockSend.mock.instances[0];
+            req.response = {
+                httpResponse: {
+                    headers: {'x-amzn-requestid': 'EXAMPLE_REQUEST_ID_123'}
+                }
+            };
+            cb(null, {result: 'success'});
+        });
+        integration.getOriginalFunction = () => mockSend;
+
+        return AWS.lambdaAsync(sdk).then(() => {
+            const span = tracer.getRecorder().spanList[0];
+
+            expect(span.operationName).toBe('Test');
+
+            expect(span.className).toBe('AWS-Lambda');
+            expect(span.domainName).toBe('API');
+
+            expect(span.tags['aws.lambda.name']).toBe('Test');
+            expect(span.tags['aws.lambda.qualifier']).toBe(undefined);
+            expect(span.tags['aws.lambda.invocation.payload']).toEqual('{ "name" : "thundra" }');
+            expect(span.tags['aws.request.name']).toBe('invokeAsync');
+            expect(span.tags['aws.lambda.invocation.type']).toBe(undefined);
             expect(span.tags['topology.vertex']).toEqual(true);
             expect(span.tags['trace.links']).toEqual(['EXAMPLE_REQUEST_ID_123']);
             expect(span.finishTime).toBeTruthy();
