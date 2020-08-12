@@ -3,7 +3,7 @@ import ConfigProvider from '../../config/ConfigProvider';
 import { ApplicationManager } from '../../application/ApplicationManager';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import * as ExpressExecutor from './ExpressExecutor';
-import WrapperUtils from '../WrapperUtils';
+import WrapperUtils from '../WebWrapperUtils';
 
 export function expressMW(opts: any = {}) {
     ApplicationManager.setApplicationInfoProvider().update({

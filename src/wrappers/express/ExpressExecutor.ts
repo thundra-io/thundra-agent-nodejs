@@ -2,7 +2,7 @@ import Utils from '../../utils/Utils';
 import { HttpTags } from '../../Constants';
 import PluginContext from '../../plugins/PluginContext';
 import ExecutionContext from '../../context/ExecutionContext';
-import WrapperUtils from '../WrapperUtils';
+import WrapperUtils from '../WebWrapperUtils';
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);

@@ -181,7 +181,8 @@ export default class WrapperUtils {
 
         const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
         const normalizedPath = Utils.getNormalizedPath(request.path, depth);
-        const triggerOperationName = get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`) || request.host + normalizedPath;
+        const triggerOperationName = get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`)
+            || request.hostname + normalizedPath;
         const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
         const incomingSpanID = get(propagatedSpanContext, 'spanId');
 
