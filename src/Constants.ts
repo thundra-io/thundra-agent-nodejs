@@ -702,3 +702,29 @@ export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: {[key: number]: string} = {
 };
 
 export const THUNDRA_TRACE_KEY = '_thundra';
+
+export const SPAN_TAGS_TO_TRIM_1: string[] = [
+    MethodTags.ARGS,
+    MethodTags.RETURN_VALUE,
+    LineByLineTags.LINES,
+    LineByLineTags.SOURCE,
+];
+export const SPAN_TAGS_TO_TRIM_2: string[] = [
+    AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST,
+    AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_RESPONSE,
+    HttpTags.BODY,
+    DBTags.DB_STATEMENT,
+    RedisTags.REDIS_COMMAND,
+    RedisTags.REDIS_COMMANDS,
+    RedisTags.REDIS_COMMAND_ARGS,
+    ESTags.ES_BODY,
+    MongoDBTags.MONGODB_COMMAND,
+    AwsLambdaTags.INVOCATION_PAYLOAD,
+    AwsSQSTags.MESSAGE,
+    AwsSQSTags.MESSAGES,
+    AwsSNSTags.MESSAGE,
+    AwsSESTags.BODY,
+    AwsSESTags.TEMPLATE_DATA,
+    AwsEventBridgeTags.ENTRIES,
+    AwsStepFunctionsTags.EXECUTION_INPUT,
+];
