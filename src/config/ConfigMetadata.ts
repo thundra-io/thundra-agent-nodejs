@@ -69,6 +69,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_REPORT_MAX_SIZE]: {
+        type: 'number',
+        defaultValue: 32 * 1024, // 32 KB
+    },
     [ConfigNames.THUNDRA_LAMBDA_HANDLER]: {
         type: 'string',
     },

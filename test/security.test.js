@@ -193,7 +193,7 @@ beforeAll(() => {
     // Mock reporting and destroying methods
     AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
         return (cb) => {
-            cb(Error('foo error'), null);
+            cb(null, { result: 'OK' });
         };
     });
     LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();

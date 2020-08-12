@@ -2,7 +2,10 @@ import * as net from 'net';
 import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
-import { COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint } from './Constants';
+import {
+    COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint,
+    SPAN_TAGS_TO_TRIM_1, SPAN_TAGS_TO_TRIM_2,
+} from './Constants';
 import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
 import BaseMonitoringData from './plugins/data/base/BaseMonitoringData';
@@ -25,22 +28,35 @@ const httpsAgent = new https.Agent({
  */
 class Reporter {
 
-    private readonly MAX_MONITOR_DATA_BATCH_SIZE: number = 100;
-
     private useHttps: boolean;
     private requestOptions: http.RequestOptions;
     private latestReportingLimitedMinute: number;
-    private URL: url.UrlWithStringQuery;
+    private url: url.UrlWithStringQuery;
     private apiKey: string;
+    private async: boolean;
+    private trimmers: Trimmer[];
+    private maxReportSize: number;
 
-    constructor(apiKey: string, u?: url.URL) {
-        this.URL = url.parse(ConfigProvider.get<string>(
-            ConfigNames.THUNDRA_REPORT_REST_BASEURL,
-            'https://' + getDefaultCollectorEndpoint() + '/v1'));
+    constructor(apiKey: string, opt: any = {}) {
+        this.url = url.parse(
+            opt.url ||
+            ConfigProvider.get<string>(
+                    ConfigNames.THUNDRA_REPORT_REST_BASEURL,
+                    'https://' + getDefaultCollectorEndpoint() + '/v1'));
         this.apiKey = apiKey;
-        this.useHttps = (u ? u.protocol : this.URL.protocol) === 'https:';
+        this.async = opt.async || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE);
+        this.useHttps = (opt.protocol || this.url.protocol) === 'https:';
         this.requestOptions = this.createRequestOptions();
         this.latestReportingLimitedMinute = -1;
+        this.trimmers =
+            opt.trimmers ||
+            [
+                new LogAndMetricTrimmer(),
+                new SpanTagTrimmer(SPAN_TAGS_TO_TRIM_1),
+                new SpanTagTrimmer(SPAN_TAGS_TO_TRIM_2),
+                new NonInvocationTrimmer(),
+            ];
+        this.maxReportSize = opt.maxReportSize || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_MAX_SIZE);
     }
 
     /**
@@ -50,36 +66,42 @@ class Reporter {
      */
     sendReports(reports: any[]): Promise<void> {
         ThundraLogger.debug('<Reporter> Sending reports ... ');
-        let batchedReports: any = [];
+        let compositeReport: any;
         try {
-            batchedReports = this.getCompositeBatchedReports(reports);
+            compositeReport = this.getCompositeReport(reports);
         } catch (err) {
             ThundraLogger.error('<Reporter> Cannot create batch request will send no report:', err);
         }
 
         return new Promise<void>((resolve, reject) => {
-            this.sendBatchedReports(batchedReports)
-                .then(() => {
-                    ThundraLogger.debug('<Reporter> Sent reports successfully');
-                    resolve();
-                })
-                .catch((err: any) => {
-                    if (err.code === 'ECONNRESET') {
-                        ThundraLogger.debug('<Reporter> Connection reset by server. Will send monitoring data again.');
-                        this.sendBatchedReports(batchedReports)
-                            .then(() => {
-                                ThundraLogger.debug('<Reporter> Sent reports successfully on retry');
-                                resolve();
-                            })
-                            .catch((err2: any) => {
-                                ThundraLogger.debug('<Reporter> Failed to send reports on retry:', err2);
-                                reject(err2);
-                            });
-                    } else {
-                        ThundraLogger.debug('<Reporter> Failed to send reports:', err);
-                        reject(err);
-                    }
-                });
+            try {
+                const reportJson: string = this.serializeReport(compositeReport);
+                this.doReport(reportJson)
+                    .then((res: any) => {
+                        ThundraLogger.debug('<Reporter> Sent reports successfully');
+                        resolve(res);
+                    })
+                    .catch((err: any) => {
+                        if (err.code === 'ECONNRESET') {
+                            ThundraLogger.debug('<Reporter> Connection reset by server. Will send monitoring data again.');
+                            this.doReport(compositeReport)
+                                .then((res: any) => {
+                                    ThundraLogger.debug('<Reporter> Sent reports successfully on retry');
+                                    resolve(res);
+                                })
+                                .catch((err2: any) => {
+                                    ThundraLogger.debug('<Reporter> Failed to send reports on retry:', err2);
+                                    reject(err2);
+                                });
+                        } else {
+                            ThundraLogger.debug('<Reporter> Failed to send reports:', err);
+                            reject(err);
+                        }
+                    });
+            } catch (err) {
+                ThundraLogger.debug('<Reporter> Failed to serialize and send reports:', err);
+                reject(err);
+            }
         });
     }
 
@@ -88,9 +110,9 @@ class Reporter {
 
         return {
             method: 'POST',
-            hostname: u ? u.hostname : this.URL.hostname,
-            path: (u ? u.pathname : this.URL.pathname) + path,
-            port: parseInt(u ? u.port : this.URL.port, 0),
+            hostname: u ? u.hostname : this.url.hostname,
+            path: (u ? u.pathname : this.url.pathname) + path,
+            port: parseInt(u ? u.port : this.url.port, 0),
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'ApiKey ' + this.apiKey,
@@ -111,37 +133,24 @@ class Reporter {
         };
     }
 
-    private getCompositeBatchedReports(reports: any[]): any[] {
-        ThundraLogger.debug('<Reporter> Generating batched reports ...');
+    private getCompositeReport(reports: any[]): any {
+        ThundraLogger.debug('<Reporter> Generating composite report ...');
         reports = reports.slice(0);
 
-        const batchedReports: any[] = [];
-        const batchCount = Math.ceil(reports.length / this.MAX_MONITOR_DATA_BATCH_SIZE);
         const invocationReport = reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
         if (!invocationReport) {
             ThundraLogger.debug('<Reporter> No invocation data could be found in the reports');
             return [];
         }
-        const initialCompositeData = this.initCompositeMonitoringData(invocationReport.data);
 
-        for (let i = 0; i < batchCount; i++) {
-            const compositeData = this.initCompositeMonitoringData(initialCompositeData);
-            const batch: any[] = [];
-            for (let j = 1; j < this.MAX_MONITOR_DATA_BATCH_SIZE; j++) {
-                const report = reports.shift();
-                if (!report) {
-                    break;
-                }
-
-                batch.push(this.stripCommonFields(report.data as BaseMonitoringData));
-            }
-
-            compositeData.allMonitoringData = batch;
-            const compositeDataReport = Utils.generateReport(compositeData, this.apiKey);
-            batchedReports.push(compositeDataReport);
+        const compositeData = this.initCompositeMonitoringData(invocationReport.data);
+        const batch: any[] = [];
+        for (const report of reports) {
+            batch.push(this.stripCommonFields(report.data as BaseMonitoringData));
         }
+        compositeData.allMonitoringData = batch;
 
-        return batchedReports;
+        return Utils.generateReport(compositeData, this.apiKey);
     }
 
     private initCompositeMonitoringData(data: BaseMonitoringData): CompositeMonitoringData {
@@ -179,28 +188,25 @@ class Reporter {
         return monitoringData;
     }
 
-    private sendBatchedReports(batchedReports: any[]) {
-        ThundraLogger.debug('<Reporter> Sending batched reports ...');
-        const isAsync = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE);
+    private doReport(reportJson: string) {
+        ThundraLogger.debug('<Reporter> Reporting ...');
 
         const reportPromises: any[] = [];
         const currentMinute = Math.floor(Date.now() / 1000);
-        batchedReports.forEach((batch: any) => {
-            if (isAsync) {
-                reportPromises.push(this.writeBatchToCW(batch));
+        if (this.async) {
+            reportPromises.push(this.writeToCW(reportJson));
+        } else {
+            if (currentMinute > this.latestReportingLimitedMinute) {
+                reportPromises.push(this.sendToCollector(reportJson));
             } else {
-                if (currentMinute > this.latestReportingLimitedMinute) {
-                    reportPromises.push(this.request(batch));
-                } else {
-                    ThundraLogger.debug('<Reporter> Skipped sending monitoring data temporarily as it hits the limit');
-                }
+                ThundraLogger.debug('<Reporter> Skipped sending monitoring data temporarily as it hits the limit');
             }
-        });
+        }
 
         return Promise.all(reportPromises);
     }
 
-    private request(batch: any[]): Promise<any> {
+    private sendToCollector(reportJson: string): Promise<any> {
         return new Promise((resolve, reject) => {
             let request: http.ClientRequest;
             const responseHandler = (response: http.IncomingMessage) => {
@@ -252,9 +258,9 @@ class Reporter {
                 return reject(error);
             });
             try {
-                const json = Utils.serializeJSON(batch);
-                ThundraLogger.debug(`<Reporter> Sending data to collector at ${this.requestOptions.hostname}: ${json}`);
-                request.write(json);
+                ThundraLogger.debug(
+                    `<Reporter> Sending data to collector at ${this.requestOptions.hostname}: ${reportJson}`);
+                request.write(reportJson);
                 request.end();
             } catch (error) {
                 ThundraLogger.error('<Reporter> Cannot serialize report data:', error);
@@ -262,12 +268,11 @@ class Reporter {
         });
     }
 
-    private writeBatchToCW(batch: any[]): Promise<any> {
+    private writeToCW(reportJson: string): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                const json = Utils.serializeJSON(batch);
-                ThundraLogger.debug(`<Reporter> Writing data to CloudWatch: ${json}`);
-                const jsonStringReport = '\n' + json.replace(/\r?\n|\r/g, '') + '\n';
+                ThundraLogger.debug(`<Reporter> Writing data to CloudWatch: ${reportJson}`);
+                const jsonStringReport = '\n' + reportJson.replace(/\r?\n|\r/g, '') + '\n';
                 process.stdout.write(jsonStringReport);
                 return resolve();
             } catch (error) {
@@ -275,6 +280,116 @@ class Reporter {
                 return reject(error);
             }
         });
+    }
+
+    private serializeReport(batch: any): string {
+        let json: string = Utils.serializeJSON(batch);
+        if (json.length < this.maxReportSize) {
+            return json;
+        }
+        for (const trimmer of this.trimmers) {
+            const trimResult: TrimResult = trimmer.trim(batch.data.allMonitoringData);
+            batch.data.allMonitoringData = trimResult.monitoringDataList;
+            if (!trimResult.mutated) {
+                continue;
+            }
+            json = Utils.serializeJSON(batch);
+            if (json.length < this.maxReportSize) {
+                return json;
+            }
+        }
+        return Utils.serializeJSON(batch);
+    }
+
+}
+
+export class TrimResult {
+
+    readonly monitoringDataList: any[];
+    readonly mutated: boolean;
+
+    constructor(monitoringDataList: any[], mutated: boolean) {
+        this.monitoringDataList = monitoringDataList;
+        this.mutated = mutated;
+    }
+
+}
+
+export interface Trimmer {
+
+    trim(monitoringDataList: any[]): TrimResult;
+
+}
+
+export class LogAndMetricTrimmer implements Trimmer {
+
+    trim(monitoringDataList: any[]): TrimResult {
+        const trimmedMonitoringDataList: any[] = [];
+        for (const monitoringData of monitoringDataList) {
+            if (monitoringData.type !== MonitoringDataType.LOG &&
+                    monitoringData.type !== MonitoringDataType.METRIC) {
+                trimmedMonitoringDataList.push(monitoringData);
+            }
+        }
+        if (monitoringDataList.length !== trimmedMonitoringDataList.length) {
+            ThundraLogger.debug(`<LogAndMetricTrimmer> Trimmed logs and metrics`);
+        }
+        return new TrimResult(
+            trimmedMonitoringDataList,
+            monitoringDataList.length !== trimmedMonitoringDataList.length,
+        );
+    }
+
+}
+
+export class SpanTagTrimmer implements Trimmer {
+
+    private readonly tagsToTrim: string[];
+
+    constructor(tagsToTrim: string[]) {
+        this.tagsToTrim = tagsToTrim;
+    }
+
+    trim(monitoringDataList: any[]): TrimResult {
+        let trimmed: boolean = false;
+        for (const monitoringData of monitoringDataList) {
+            if (monitoringData.type === MonitoringDataType.SPAN) {
+                if (monitoringData.tags) {
+                    for (const spanTagToTrim of this.tagsToTrim) {
+                        if (monitoringData.tags[spanTagToTrim]) {
+                            delete monitoringData.tags[spanTagToTrim];
+                            ThundraLogger.debug(`<SpanTagTrimmer> Trimmed ${spanTagToTrim}`);
+                            trimmed = true;
+                        }
+                    }
+                }
+            }
+        }
+        return new TrimResult(
+            monitoringDataList,
+            trimmed,
+        );
+    }
+
+}
+
+export class NonInvocationTrimmer implements Trimmer {
+
+    trim(monitoringDataList: any[]): TrimResult {
+        const trimmedMonitoringDataList: any[] = [];
+        for (const monitoringData of monitoringDataList) {
+            if (monitoringData.type === MonitoringDataType.INVOCATION) {
+                trimmedMonitoringDataList.push(monitoringData);
+                break;
+            }
+        }
+        if (monitoringDataList.length !== trimmedMonitoringDataList.length) {
+            ThundraLogger.debug(`<NonInvocationTrimmer> Trimmed non-invocation data`);
+        }
+        return new TrimResult(
+            trimmedMonitoringDataList,
+            monitoringDataList.length !== trimmedMonitoringDataList.length,
+        );
     }
 
 }
