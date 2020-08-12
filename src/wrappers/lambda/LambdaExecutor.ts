@@ -320,8 +320,8 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, exec
             return LambdaEventUtils.injectTriggerTagsForAPIGatewayPassThrough(span, originalEvent);
         } else if (lambdaEventType === LambdaEventType.EventBridge) {
             return LambdaEventUtils.injectTriggerTagsForEventBridge(span, originalEvent);
-        } else if (lambdaEventType === LambdaEventType.Zeit) {
-            return LambdaEventUtils.injectTriggerTagsForZeit(span, originalEvent);
+        } else if (lambdaEventType === LambdaEventType.Vercel) {
+            return LambdaEventUtils.injectTriggerTagsForVercel(span, originalEvent, originalContext);
         } else if (lambdaEventType === LambdaEventType.Netlify) {
             return LambdaEventUtils.injectTriggerTagsForNetlify(span, originalEvent);
         } else {
