@@ -467,7 +467,7 @@ class LambdaEventUtils {
             }
 
             if (host) {
-                const applicationName = (host.split('.').shift() || operationName ) + (path || '');
+                const applicationName = (host.split('.')[0] || operationName ) + (path || '');
                 operationName = host;
                 ApplicationManager.getApplicationInfoProvider().update({
                     applicationName,
