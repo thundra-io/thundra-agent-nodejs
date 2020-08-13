@@ -1,11 +1,12 @@
 import ConfigProvider from '../../../dist/config/ConfigProvider';
 import ExecutionContextManager from '../../../dist/context/ExecutionContextManager';
 import { createMockExpressApp, createMockReporterInstance } from '../../mocks/mocks';
-import { ClassNames, DomainNames, HttpTags } from '../../../dist/Constants';
+import { ClassNames, DomainNames, HttpTags, SpanTags } from '../../../dist/Constants';
 import { expressMW } from '../../../dist/wrappers/express/ExpressWrapper';
 
 const request = require('supertest');
 const express = require('express');
+const http = require('http');
 
 ConfigProvider.init({ apiKey: 'foo' });
 
@@ -150,6 +151,24 @@ describe('express wrapper', () => {
         expect(invocationData.traceId).toBeTruthy();
         expect(invocationData.spanId).toBeTruthy();
     });
+    
+    test('should pass trace context', async () => {
+        const res = await request(app)
+            .get('/')
+            .set('x-thundra-transaction-id', 'incomingTransactionId')
+            .set('x-thundra-trace-id', 'incomingTraceId')
+            .set('x-thundra-span-id', 'incomingSpanId')
+            .set('x-thundra-resource-name', 'incomingResourceName');
+
+        const execContext = ExecutionContextManager.get();
+        const { invocationData } = execContext;
+
+        expect(invocationData.traceId).toBe('incomingTraceId');
+        expect(invocationData.incomingTraceLinks).toEqual(['incomingSpanId']);
+        expect(invocationData.tags[SpanTags.TRIGGER_OPERATION_NAMES]).toEqual(['incomingResourceName']);
+        expect(invocationData.tags[SpanTags.TRIGGER_CLASS_NAME]).toEqual('HTTP');
+        expect(invocationData.tags[SpanTags.TRIGGER_DOMAIN_NAME]).toEqual('API');
+    });
 
     test('should handle parallel requests', async () => {
         const wait = (ms) => new Promise(r => setTimeout(r, ms));
@@ -235,4 +254,57 @@ describe('express wrapper', () => {
             verifyExecContext(execContext);
         }
     });
+
+    describe('should handle 2 express app calling each other', () => {
+        let callerContext;
+        let calleeContext;
+        let calleeServer;
+
+        const calleePort = 4000;
+        const caller = express();
+        const callee = express();
+
+        caller.use(expressMW({ reporter: createMockReporterInstance() }));
+        callee.use(expressMW({ reporter: createMockReporterInstance() }));
+
+        callee.get('/', (req, res) => {
+            calleeContext = ExecutionContextManager.get();
+            res.sendStatus(200);
+        });
+
+        caller.get('/', async (req, res) => {
+            callerContext = ExecutionContextManager.get();
+
+            const url = `http://localhost:${calleePort}`;
+            await new Promise(resolve => {
+                http.get(url, (resp) => {
+                    let data = '';
+                    resp.on('data', (chunk) => {
+                        data += chunk;
+                    });
+                    resp.on('end', () => {
+                        resolve(data);
+                    });
+                }).on('error', (err) => {
+                    resolve(err);
+                });
+            });
+            res.sendStatus(200);
+        });
+
+        beforeAll((done) => {
+            calleeServer = callee.listen(calleePort, done);
+        });
+
+        afterAll((done) => {
+            calleeServer && calleeServer.close(done);
+        })
+
+        test('callee should receive caller trace context', async () => {
+            await request(caller).get('/');
+            
+            expect(calleeContext.traceId).toBe(callerContext.traceId);
+        });
+    });
+
 });
