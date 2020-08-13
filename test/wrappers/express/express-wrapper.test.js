@@ -12,6 +12,10 @@ ConfigProvider.init({ apiKey: 'foo' });
 const app = createMockExpressApp();
 
 describe('express wrapper', () => {
+    beforeEach(() => {
+        ExecutionContextManager.useGlobalProvider();
+    });
+
     test('should get correctly', async () => {
         const res = await request(app).get('/');
 
@@ -85,7 +89,7 @@ describe('express wrapper', () => {
         expect(rootSpan.domainName).toBe(DomainNames.API);
         expect(rootSpan.startTime).toBeTruthy();
         expect(rootSpan.finishTime).toBeTruthy();
-        expect(rootSpan.getDuration()).toBeGreaterThan(200);
+        expect(rootSpan.getDuration()).toBeGreaterThan(190);
 
         // Check first custom span
         expect(customSpan1.operationName).toBe('customSpan1');
@@ -93,7 +97,7 @@ describe('express wrapper', () => {
         expect(customSpan1.domainName).toBeUndefined();
         expect(customSpan1.startTime).toBeTruthy();
         expect(customSpan1.finishTime).toBeTruthy();
-        expect(customSpan1.getDuration()).toBeGreaterThan(100);
+        expect(customSpan1.getDuration()).toBeGreaterThan(95);
         expect(customSpan1.spanContext.transactionId).toBe(transactionId);
         expect(customSpan1.spanContext.parentId).toBe(rootSpanId);
         expect(customSpan1.spanContext.traceId).toBe(traceId);
@@ -104,10 +108,47 @@ describe('express wrapper', () => {
         expect(customSpan2.domainName).toBeUndefined();
         expect(customSpan2.startTime).toBeTruthy();
         expect(customSpan2.finishTime).toBeTruthy();
-        expect(customSpan2.getDuration()).toBeGreaterThan(100);
+        expect(customSpan2.getDuration()).toBeGreaterThan(95);
         expect(customSpan2.spanContext.transactionId).toBe(transactionId);
         expect(customSpan2.spanContext.parentId).toBe(rootSpanId);
         expect(customSpan2.spanContext.traceId).toBe(traceId);
+    });
+
+    test('should fill execution context', async () => {
+        const res = await request(app).get('/');
+
+        const execContext = ExecutionContextManager.get();
+        
+        expect(execContext.startTimestamp).toBeTruthy();
+        expect(execContext.finishTimestamp).toBeTruthy();
+        expect(execContext.tracer).toBeTruthy();
+        expect(execContext.reports).toBeTruthy();
+        expect(execContext.reports.length).toBe(2);
+        expect(execContext.spanId).toBeTruthy();
+        expect(execContext.traceId).toBeTruthy();
+        expect(execContext.rootSpan).toBeTruthy();
+        expect(execContext.invocationData).toBeTruthy();
+        expect(execContext.invocationData).toBeTruthy();
+    });
+    
+    test('should create invocation data', async () => {
+        const res = await request(app).get('/');
+
+        const execContext = ExecutionContextManager.get();
+        const { invocationData } = execContext;
+        expect(invocationData).toBeTruthy();
+
+        expect(invocationData.applicationInstanceId).toBeTruthy();
+        expect(invocationData.applicationClassName).toBe('Express');
+        expect(invocationData.applicationDomainName).toBe('API');
+        expect(invocationData.applicationDomainName).toBe('API');
+        expect(invocationData.startTimestamp).toBeTruthy();
+        expect(invocationData.finishTimestamp).toBeTruthy();
+        expect(invocationData.duration).toBeGreaterThanOrEqual(0);
+        expect(invocationData.erroneous).toBeFalsy();
+        expect(invocationData.transactionId).toBeTruthy();
+        expect(invocationData.traceId).toBeTruthy();
+        expect(invocationData.spanId).toBeTruthy();
     });
 
     test('should handle parallel requests', async () => {
@@ -165,7 +206,7 @@ describe('express wrapper', () => {
             expect(rootSpan.domainName).toBe(DomainNames.API);
             expect(rootSpan.startTime).toBeTruthy();
             expect(rootSpan.finishTime).toBeTruthy();
-            expect(rootSpan.getDuration()).toBeGreaterThan(200);
+            expect(rootSpan.getDuration()).toBeGreaterThan(190);
 
             // Check first custom span
             expect(customSpan1.operationName).toBe('customSpan1');
@@ -173,7 +214,7 @@ describe('express wrapper', () => {
             expect(customSpan1.domainName).toBeUndefined();
             expect(customSpan1.startTime).toBeTruthy();
             expect(customSpan1.finishTime).toBeTruthy();
-            expect(customSpan1.getDuration()).toBeGreaterThan(100);
+            expect(customSpan1.getDuration()).toBeGreaterThan(95);
             expect(customSpan1.spanContext.transactionId).toBe(transactionId);
             expect(customSpan1.spanContext.parentId).toBe(rootSpanId);
             expect(customSpan1.spanContext.traceId).toBe(traceId);
@@ -184,7 +225,7 @@ describe('express wrapper', () => {
             expect(customSpan2.domainName).toBeUndefined();
             expect(customSpan2.startTime).toBeTruthy();
             expect(customSpan2.finishTime).toBeTruthy();
-            expect(customSpan2.getDuration()).toBeGreaterThan(100);
+            expect(customSpan2.getDuration()).toBeGreaterThan(95);
             expect(customSpan2.spanContext.transactionId).toBe(transactionId);
             expect(customSpan2.spanContext.parentId).toBe(rootSpanId);
             expect(customSpan2.spanContext.traceId).toBe(traceId);
