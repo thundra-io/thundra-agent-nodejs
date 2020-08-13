@@ -141,7 +141,7 @@ export const ClassNames = {
     ELASTICSEARCH: 'ELASTICSEARCH',
     MYSQL: 'MYSQL',
     EVENTBRIDGE: 'AWS-EventBridge',
-    ZEIT: 'ZEIT',
+    VERCEL: 'VERCEL',
     NETLIFY: 'Netlify',
     SES: 'AWS-SES',
     STEPFUNCTIONS: 'AWS-StepFunctions',
@@ -170,12 +170,12 @@ export const AwsLambdaWrapperTags = {
     AWS_LAMBDA_INVOCATION_RESPONSE: 'aws.lambda.invocation.response',
 };
 
-export const ZeitTags = {
+export const VercelTags = {
     DEPLOYMENT_URL: 'DEPLOYMENT_URL',
 };
 
-export const ZeitConstants = {
-    DEPLOYMENT_URL_HEADER: 'x-now-deployment-url',
+export const VercelConstants = {
+    DEPLOYMENT_URL_HEADER: 'x-vercel-deployment-url',
 };
 
 export const NetlifyConstants = {

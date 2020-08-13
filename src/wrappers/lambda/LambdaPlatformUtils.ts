@@ -2,6 +2,7 @@ import { EnvVariableKeys } from '../../Constants';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import Utils from '../../utils/Utils';
+import { ApplicationManager } from '../../application/ApplicationManager';
 
 /**
  * Utility class for AWS Lambda platform related stuff
@@ -23,7 +24,7 @@ export class LambdaPlatformUtils {
             || 'local';
         const accountNo = opts.accountNo
             || LambdaPlatformUtils.getAccountNo(arn, ConfigProvider.get<string>(ConfigNames.THUNDRA_APIKEY));
-        const functionName = opts.functionName || LambdaPlatformUtils.getApplicationName(originalContext);
+        const functionName = opts.functionName || LambdaPlatformUtils.getApplicationName();
 
         return `aws:lambda:${region}:${accountNo}:${functionName}`;
     }
@@ -56,11 +57,8 @@ export class LambdaPlatformUtils {
         }
     }
 
-    private static getApplicationName(originalContext: any) {
-        return ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME,
-            originalContext.functionName
-            || Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_FUNCTION_NAME)
-            || 'lambda-app');
+    private static getApplicationName() {
+        return ApplicationManager.getApplicationInfo().applicationName;
     }
 
     private static getARNPart(arn: string, index: number) {
