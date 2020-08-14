@@ -50,7 +50,7 @@ class ConfigNames {
     public static readonly THUNDRA_REPORT_CLOUDWATCH_ENABLE: string =
         'thundra.agent.report.cloudwatch.enable';
     public static readonly THUNDRA_REPORT_MAX_SIZE: string =
-        'thundra.agent.report.rest.maxsize';
+        'thundra.agent.report.maxsize';
 
     /////////////////////////////////////////////////////////////////////////////
 
