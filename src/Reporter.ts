@@ -84,7 +84,7 @@ class Reporter {
                     .catch((err: any) => {
                         if (err.code === 'ECONNRESET') {
                             ThundraLogger.debug('<Reporter> Connection reset by server. Will send monitoring data again.');
-                            this.doReport(compositeReport)
+                            this.doReport(reportJson)
                                 .then((res: any) => {
                                     ThundraLogger.debug('<Reporter> Sent reports successfully on retry');
                                     resolve(res);
