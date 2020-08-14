@@ -9,6 +9,8 @@ const asyncHooks = require('async_hooks');
 
 const contexts: {[key: number]: ExecutionContext} = {};
 
+let hook: any;
+
 function destroyAsync(asyncId: number) {
     delete contexts[asyncId];
 }
@@ -39,7 +41,11 @@ export function set(execCtx: ExecutionContext) {
 }
 
 export function init() {
-    const hook = asyncHooks.createHook({
+    if (hook) {
+        return;
+    }
+
+    hook = asyncHooks.createHook({
         init: initAsync,
         destroy: destroyAsync,
         promiseResolve: destroyAsync,
