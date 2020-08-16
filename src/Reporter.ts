@@ -3,7 +3,7 @@ import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
 import {
-    COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint,
+    COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint, LOCAL_COLLECTOR_ENDPOINT,
     SPAN_TAGS_TO_TRIM_1, SPAN_TAGS_TO_TRIM_2,
 } from './Constants';
 import Utils from './utils/Utils';
@@ -38,11 +38,7 @@ class Reporter {
     private maxReportSize: number;
 
     constructor(apiKey: string, opt: any = {}) {
-        this.url = url.parse(
-            opt.url ||
-            ConfigProvider.get<string>(
-                    ConfigNames.THUNDRA_REPORT_REST_BASEURL,
-                    'https://' + getDefaultCollectorEndpoint() + '/v1'));
+        this.url = url.parse(opt.url || Reporter.getCollectorURL());
         this.apiKey = apiKey;
         this.async = opt.async || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE);
         this.useHttps = (opt.protocol || this.url.protocol) === 'https:';
@@ -57,6 +53,16 @@ class Reporter {
                 new NonInvocationTrimmer(),
             ];
         this.maxReportSize = opt.maxReportSize || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_MAX_SIZE);
+    }
+
+    private static getCollectorURL(): string {
+        const useLocalCollector: boolean = ConfigProvider.get(ConfigNames.THUNDRA_REPORT_REST_LOCAL);
+        if (useLocalCollector) {
+            return 'http://' + LOCAL_COLLECTOR_ENDPOINT + '/v1';
+        }
+        return ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_REPORT_REST_BASEURL,
+            'https://' + getDefaultCollectorEndpoint() + '/v1');
     }
 
     /**

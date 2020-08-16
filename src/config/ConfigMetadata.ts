@@ -65,6 +65,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_REPORT_REST_LOCAL]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_REPORT_CLOUDWATCH_ENABLE]: {
         type: 'boolean',
         defaultValue: false,

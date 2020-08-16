@@ -79,6 +79,7 @@ export function getDefaultCollectorEndpoint() {
 
 export const MONITORING_DATA_PATH = '/monitoring-data';
 export const COMPOSITE_MONITORING_DATA_PATH = '/composite-monitoring-data';
+export const LOCAL_COLLECTOR_ENDPOINT = 'localhost:3333';
 
 export const PROC_STAT_PATH: string = '/proc/self/stat';
 export const PROC_IO_PATH: string = '/proc/self/io';
