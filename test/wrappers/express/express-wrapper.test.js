@@ -303,7 +303,6 @@ describe('should handle 2 express app calling each other', () => {
     })
 
     test('callee should receive caller trace context', async () => {
-        // ConfigProvider.set(ConfigNames.THUNDRA_DEBUG_ENABLE, 'true');
         await request(caller).get('/');
 
         expect(calleeContext.traceId).toBe(callerContext.traceId);
