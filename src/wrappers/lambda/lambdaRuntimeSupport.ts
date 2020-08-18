@@ -6,6 +6,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const semver = require('semver');
 
 class InvalidModule extends Error {}
 class InvalidHandler extends Error {}
@@ -39,7 +40,15 @@ export function loadHandler(appPath: string, handlerString: string) {
     if (!match || match.length !== 3) {
         throw new BadHandlerFormat('Bad handler');
     }
-    const [module, handlerPath] = [match[1], match[2]];
+
+    const handlerPath = match[2];
+    let module = match[1];
+    if (semver.satisfies(process.version, '12.x')) {
+        if (module && !(module.startsWith('./') ||
+            module.startsWith('../'))) {
+            module = './' + module;
+        }
+    }
 
     let userModule;
     let handlerFunc;
