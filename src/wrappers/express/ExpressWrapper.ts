@@ -4,6 +4,8 @@ import { ApplicationManager } from '../../application/ApplicationManager';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import * as ExpressExecutor from './ExpressExecutor';
 import WrapperUtils from '../WebWrapperUtils';
+import ExecutionContext from '../../context/ExecutionContext';
+import ThundraLogger from '../../ThundraLogger';
 
 export function expressMW(opts: any = {}) {
     ApplicationManager.setApplicationInfoProvider().update({
@@ -23,14 +25,16 @@ export function expressMW(opts: any = {}) {
 
     return (req: any, res: any, next: any) => ExecutionContextManager.runWithContext(
         WrapperUtils.createExecContext,
-        () => {
+        async function () {
+            const context: ExecutionContext = this;
             try {
-                WrapperUtils.beforeRequest(req, plugins);
+                await WrapperUtils.beforeRequest(req, plugins);
                 res.once('finish', () => {
+                    ExecutionContextManager.set(context);
                     WrapperUtils.afterRequest(res, plugins, reporter);
                 });
             } catch (err) {
-                console.error(err);
+                ThundraLogger.error('<ExpressWrapper> Error occured in in ExpressWrapper: ', err);
             } finally {
                 next();
             }

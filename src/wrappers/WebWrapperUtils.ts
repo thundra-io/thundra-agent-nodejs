@@ -24,15 +24,15 @@ import ThundraSpanContext from '../opentracing/SpanContext';
 
 const get = require('lodash.get');
 
-export default class WrapperUtils {
-    static beforeRequest(request: any, plugins: any[]) {
+export default class WebWrapperUtils {
+    static async beforeRequest(request: any, plugins: any[]) {
         const context = ExecutionContextManager.get();
 
         // Put current request into the execution context
         context.request = request;
 
         for (const plugin of plugins) {
-            plugin.beforeInvocation(context);
+            await plugin.beforeInvocation(context);
         }
     }
 
@@ -43,13 +43,13 @@ export default class WrapperUtils {
         context.response = response;
 
         for (const plugin of plugins) {
-            plugin.afterInvocation(context);
+            await plugin.afterInvocation(context);
         }
 
         try {
             await reporter.sendReports(context.reports);
         } catch (err) {
-            ThundraLogger.error(err);
+            ThundraLogger.error('<WebWrapperUtils> Error occurred while reporting:', err);
         }
     }
 

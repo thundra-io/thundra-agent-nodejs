@@ -217,7 +217,7 @@ class Utils {
      * @return the generated error
      */
     static parseError(err: any) {
-        const error: any = {errorMessage: '', errorType: 'Unknown Error', stack: null, code: 0};
+        const error: any = { errorMessage: '', errorType: 'Unknown Error', stack: null, code: 0 };
         if (err instanceof Error) {
             error.errorType = err.name;
             error.errorMessage = err.message;
@@ -287,7 +287,7 @@ class Utils {
         try {
             let resolvedPath;
             if (paths) {
-                resolvedPath = customReq.resolve(name, {paths});
+                resolvedPath = customReq.resolve(name, { paths });
             } else {
                 resolvedPath = customReq.resolve(name);
             }
@@ -316,7 +316,7 @@ class Utils {
             const requiredLib = Utils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
             if (requiredLib) {
                 if (version) {
-                    const {basedir} = Utils.getModuleInfo(moduleName);
+                    const { basedir } = Utils.getModuleInfo(moduleName);
                     if (!basedir) {
                         ThundraLogger.error(`Base directory is not found for the package ${moduleName}`);
                         return;
@@ -326,7 +326,7 @@ class Utils {
                     Utils.doInstrument(requiredLib, libs, null, moduleName, null, wrapper, config);
                 }
             }
-            const hook = Hook(moduleName, {internals: true}, (lib: any, name: string, basedir: string) => {
+            const hook = Hook(moduleName, { internals: true }, (lib: any, name: string, basedir: string) => {
                 if (name === moduleName) {
                     Utils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
                 }
@@ -535,7 +535,7 @@ class Utils {
      * @return {ApplicationInfo} the final {@link ApplicationInfo} after merge
      */
     static mergeApplicationInfo(updates: any = {}, applicationInfo: ApplicationInfo) {
-        const newAppInfo: ApplicationInfo = {...applicationInfo};
+        const newAppInfo: ApplicationInfo = { ...applicationInfo };
         newAppInfo.applicationInstanceId = updates.applicationInstanceId || applicationInfo.applicationInstanceId || globalAppID;
         newAppInfo.applicationName = updates.applicationName || applicationInfo.applicationName || 'thundra-app';
         newAppInfo.applicationClassName = updates.applicationClassName || applicationInfo.applicationClassName || '';
@@ -586,6 +586,7 @@ class Utils {
             const normalizedPath = '/' + pathStr.split('/').filter((c) => c !== '').slice(0, depth).join('/');
             return normalizedPath;
         } catch (error) {
+            ThundraLogger.error(`Couldn't normalize the given path ${pathStr}, for depth value: ${depth}`);
             return pathStr;
         }
     }
@@ -594,7 +595,7 @@ class Utils {
         try {
             let modulePath;
             if (paths !== undefined) {
-                modulePath = customReq.resolve(name, {paths});
+                modulePath = customReq.resolve(name, { paths });
             } else {
                 modulePath = customReq.resolve(name);
             }

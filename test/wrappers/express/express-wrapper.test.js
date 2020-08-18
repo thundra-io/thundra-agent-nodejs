@@ -1,5 +1,4 @@
 import ConfigProvider from '../../../dist/config/ConfigProvider';
-import ConfigNames from '../../../dist/config/ConfigNames';
 import ExecutionContextManager from '../../../dist/context/ExecutionContextManager';
 import { createMockExpressApp, createMockReporterInstance } from '../../mocks/mocks';
 import { ClassNames, DomainNames, HttpTags, SpanTags } from '../../../dist/Constants';
