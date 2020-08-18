@@ -34,7 +34,7 @@ export function expressMW(opts: any = {}) {
                     WrapperUtils.afterRequest(res, plugins, reporter);
                 });
             } catch (err) {
-                ThundraLogger.error('<ExpressWrapper> Error occured in in ExpressWrapper: ', err);
+                ThundraLogger.error('<ExpressWrapper> Error occured in ExpressWrapper:', err);
             } finally {
                 next();
             }
