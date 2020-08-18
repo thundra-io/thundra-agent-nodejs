@@ -586,7 +586,7 @@ class Utils {
             const normalizedPath = '/' + pathStr.split('/').filter((c) => c !== '').slice(0, depth).join('/');
             return normalizedPath;
         } catch (error) {
-            ThundraLogger.error(`Couldn't normalize the given path ${pathStr}, for depth value: ${depth}`);
+            ThundraLogger.error(`Couldn't normalize the given path: ${pathStr}, for depth value: ${depth}`);
             return pathStr;
         }
     }
