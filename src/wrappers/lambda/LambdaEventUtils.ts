@@ -473,11 +473,11 @@ class LambdaEventUtils {
                     applicationName,
                     applicationId: LambdaPlatformUtils.getApplicationId(originalContext, {functionName: applicationName}),
                 });
+                span.setOperationName(path);
             }
         } catch (err) {
             // Event is not a Zeit event, pass
         }
-
         this.injectTriggerTagsForInvocation(domainName, className, [operationName]);
         this.injectTriggerTagsForSpan(span, domainName, className, [operationName]);
 
