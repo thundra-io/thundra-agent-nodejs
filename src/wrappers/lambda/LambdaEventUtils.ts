@@ -473,7 +473,7 @@ class LambdaEventUtils {
                     applicationName,
                     applicationId: LambdaPlatformUtils.getApplicationId(originalContext, {functionName: applicationName}),
                 });
-                span.setOperationName(path);
+                span.setOperationName(path || '');
             }
         } catch (err) {
             // Event is not a Zeit event, pass
