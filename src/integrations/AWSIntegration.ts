@@ -24,7 +24,7 @@ const has = require('lodash.has');
 const trim = require('lodash.trim');
 const get = require('lodash.get');
 
-const MODULE_NAME = 'aws-sdk';
+const MODULE_NAMES = ['aws-sdk', 'aws-sdk/lib/core.js'];
 const MODULE_VERSION = '2.x';
 
 /**
@@ -43,7 +43,7 @@ export class AWSIntegration implements Integration {
         this.wrappedFuncs = {};
         this.config = config || {};
         this.instrumentContext = Utils.instrument(
-            [MODULE_NAME], MODULE_VERSION,
+            MODULE_NAMES, MODULE_VERSION,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },
