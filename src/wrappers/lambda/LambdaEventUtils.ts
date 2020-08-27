@@ -467,17 +467,20 @@ class LambdaEventUtils {
             }
 
             if (host) {
-                const applicationName = (host.split('.')[0] || operationName ) + (path || '');
+                const applicationName = (host.split('.')[0] || operationName) + (path || '');
                 operationName = host;
                 ApplicationManager.getApplicationInfoProvider().update({
                     applicationName,
                     applicationId: LambdaPlatformUtils.getApplicationId(originalContext, {functionName: applicationName}),
                 });
             }
+
+            if (path) {
+                span.setOperationName(path);
+            }
         } catch (err) {
             // Event is not a Zeit event, pass
         }
-
         this.injectTriggerTagsForInvocation(domainName, className, [operationName]);
         this.injectTriggerTagsForSpan(span, domainName, className, [operationName]);
 
