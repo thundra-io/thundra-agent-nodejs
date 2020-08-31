@@ -1,5 +1,6 @@
 import ThundraLogger from '../../ThundraLogger';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
+import { ApplicationManager } from '../../application/ApplicationManager';
 
 /**
  * Provides/supports API for invocation related operations
@@ -222,6 +223,21 @@ class InvocationSupport {
         if (execContext) {
             execContext.userError = null;
         }
+    }
+
+    /**
+     * Gets the invocation URL on Thundra Console
+     * @return {string} the invocation URL on Thundra Console
+     */
+    static getConsoleInvocationURL(): string {
+        const applicationInfo = ApplicationManager.getApplicationInfo();
+        const execContext = ExecutionContextManager.get();
+        if (applicationInfo && applicationInfo.applicationId
+            && execContext && execContext.transactionId) {
+            return encodeURI(
+                `https://console.thundra.io/functions/${applicationInfo.applicationId}/${execContext.transactionId}/trace-chart`);
+        }
+        return null;
     }
 
 }
