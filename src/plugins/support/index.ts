@@ -120,4 +120,12 @@ export default {
         InvocationTraceSupport.addOutgoingTraceLinks(traceLinks);
     },
 
+    /**
+     * Gets the invocation URL on Thundra Console
+     * @return {string} the invocation URL on Thundra Console
+     */
+    getConsoleInvocationURL(): string {
+        return InvocationSupport.getConsoleInvocationURL();
+    },
+
 };
