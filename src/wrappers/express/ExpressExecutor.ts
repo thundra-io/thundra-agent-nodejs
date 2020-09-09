@@ -3,6 +3,8 @@ import { HttpTags } from '../../Constants';
 import PluginContext from '../../plugins/PluginContext';
 import ExecutionContext from '../../context/ExecutionContext';
 import WrapperUtils from '../WebWrapperUtils';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
@@ -25,7 +27,6 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
             'query',
             'hostname',
             'path',
-            'body',
         ],
         rootSpan.tags,
         [
@@ -33,9 +34,17 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
             HttpTags.QUERY_PARAMS,
             HttpTags.HTTP_HOST,
             HttpTags.HTTP_PATH,
-            HttpTags.BODY,
         ],
     );
+
+    if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_REQUEST_SKIP)) {
+        Utils.copyProperties(
+            request,
+            ['body'],
+            rootSpan.tags,
+            [HttpTags.BODY],
+        );
+    }
 }
 
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {

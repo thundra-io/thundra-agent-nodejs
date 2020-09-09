@@ -83,11 +83,11 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
-    [ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP]: {
+    [ConfigNames.THUNDRA_TRACE_REQUEST_SKIP]: {
         type: 'boolean',
         defaultValue: false,
     },
-    [ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP]: {
+    [ConfigNames.THUNDRA_TRACE_RESPONSE_SKIP]: {
         type: 'boolean',
         defaultValue: false,
     },

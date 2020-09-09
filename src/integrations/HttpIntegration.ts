@@ -45,9 +45,13 @@ class HttpIntegration implements Integration {
     }
 
     static isValidUrl(host: string): boolean {
-        if (host.indexOf('amazonaws.com') !== -1 &&
-            host.indexOf('execute-api') !== -1) {
-            return true;
+        if (host.indexOf('amazonaws.com') !== -1) {
+            if (host.indexOf('.execute-api.') !== -1
+                || host.indexOf('.elb.') !== -1) {
+                return true;
+            }
+
+            return false;
         }
 
         if (thundraCollectorEndpointPattern1.test(host) ||
