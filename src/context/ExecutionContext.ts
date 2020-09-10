@@ -14,6 +14,7 @@ export default class ExecutionContext {
     tracer: ThundraTracer;
     reports: any[];
     triggerClassName: string;
+    triggerOperationName: string;
     transactionId: string;
     spanId: string;
     traceId: string;
@@ -54,6 +55,7 @@ export default class ExecutionContext {
         this.captureLog = opts.captureLog || true;
         this.logs = opts.logs || [];
         this.metrics = opts.metric || {};
+        this.triggerOperationName = opts.triggerOperationName || '';
     }
 
     /**

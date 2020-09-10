@@ -1,10 +1,12 @@
 import Utils from '../../utils/Utils';
-import { HttpTags } from '../../Constants';
+import { HttpTags, TriggerHeaderTags } from '../../Constants';
 import PluginContext from '../../plugins/PluginContext';
 import ExecutionContext from '../../context/ExecutionContext';
 import WrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
+
+const get = require('lodash.get');
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
@@ -16,9 +18,10 @@ export function finishInvocation(pluginContext: PluginContext, execContext: any)
 
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
     const { request } = execContext;
-    WrapperUtils.startTrace(pluginContext, execContext);
+    const resourceName = get(request, 'route.path');
+    WrapperUtils.startTrace(pluginContext, execContext, resourceName);
 
-    const { rootSpan } = execContext;
+    const { rootSpan, triggerOperationName, response } = execContext;
     // Put initial root span tags
     Utils.copyProperties(
         request,
@@ -45,6 +48,10 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
             [HttpTags.BODY],
         );
     }
+
+    if (triggerOperationName) {
+        response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
+    }
 }
 
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
@@ -53,5 +60,4 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
     const { rootSpan, response } = execContext;
 
     Utils.copyProperties(response, ['statusCode'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
-
 }

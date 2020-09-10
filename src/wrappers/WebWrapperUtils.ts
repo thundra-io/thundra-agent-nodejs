@@ -25,22 +25,22 @@ import ThundraSpanContext from '../opentracing/SpanContext';
 const get = require('lodash.get');
 
 export default class WebWrapperUtils {
-    static async beforeRequest(request: any, plugins: any[]) {
+    static async beforeRequest(request: any, response: any, plugins: any[]) {
         const context = ExecutionContextManager.get();
 
         // Put current request into the execution context
         context.request = request;
+        context.response = response;
 
         for (const plugin of plugins) {
             await plugin.beforeInvocation(context);
         }
     }
 
-    static async afterRequest(response: any, plugins: any[], reporter: Reporter) {
+    static async afterRequest(request: any, response: any, plugins: any[], reporter: Reporter) {
         const context = ExecutionContextManager.get();
 
         context.finishTimestamp = Date.now();
-        context.response = response;
 
         for (const plugin of plugins) {
             await plugin.afterInvocation(context);
@@ -174,15 +174,15 @@ export default class WebWrapperUtils {
         }
     }
 
-    static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
+    static startTrace(pluginContext: PluginContext, execContext: ExecutionContext, resourceName?: string) {
         const { tracer, request } = execContext;
         const propagatedSpanContext: ThundraSpanContext =
             tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
 
         const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
         const normalizedPath = Utils.getNormalizedPath(request.path, depth);
-        const triggerOperationName = get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`)
-            || request.hostname + normalizedPath;
+        const triggerOperationName = resourceName ? request.hostname + resourceName
+            : get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`) || request.hostname + normalizedPath;
         const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
         const incomingSpanID = get(propagatedSpanContext, 'spanId');
 
@@ -206,10 +206,11 @@ export default class WebWrapperUtils {
         execContext.rootSpan = rootSpan;
         execContext.spanId = execContext.rootSpan.spanContext.spanId;
         execContext.rootSpan.startTime = execContext.startTimestamp;
+        execContext.triggerOperationName = triggerOperationName;
     }
 
     static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-        const { rootSpan, finishTimestamp} = execContext;
+        const { rootSpan, finishTimestamp } = execContext;
 
         rootSpan.finish();
         rootSpan.finishTime = finishTimestamp;

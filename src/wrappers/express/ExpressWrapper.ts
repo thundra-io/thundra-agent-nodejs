@@ -28,10 +28,10 @@ export function expressMW(opts: any = {}) {
         async function () {
             const context: ExecutionContext = this;
             try {
-                await WrapperUtils.beforeRequest(req, plugins);
+                await WrapperUtils.beforeRequest(req, res, plugins);
                 res.once('finish', () => {
                     ExecutionContextManager.set(context);
-                    WrapperUtils.afterRequest(res, plugins, reporter);
+                    WrapperUtils.afterRequest(req, res, plugins, reporter);
                 });
             } catch (err) {
                 ThundraLogger.error('<ExpressWrapper> Error occured in ExpressWrapper:', err);
