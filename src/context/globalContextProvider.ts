@@ -9,7 +9,7 @@ let globalContext: ExecutionContext;
 export function runWithContext(createExecContext: Function, fn: Function) {
     globalContext = createExecContext();
 
-    return fn();
+    return fn.call(globalContext);
 }
 
 export function get(): any {

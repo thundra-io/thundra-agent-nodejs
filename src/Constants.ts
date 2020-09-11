@@ -146,6 +146,7 @@ export const ClassNames = {
     NETLIFY: 'Netlify',
     SES: 'AWS-SES',
     STEPFUNCTIONS: 'AWS-StepFunctions',
+    EXPRESS: 'EXPRESS',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -400,6 +401,7 @@ export const HttpTags = {
     HTTP_PATH: 'http.path',
     HTTP_HOST: 'http.host',
     HTTP_STATUS: 'http.status_code',
+    HTTP_ROUTE_PATH: 'http.route_path',
     QUERY_PARAMS: 'http.query_params',
     BODY: 'http.body',
 };

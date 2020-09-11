@@ -44,9 +44,13 @@ class HttpIntegration implements Integration {
     }
 
     static isValidUrl(host: string): boolean {
-        if (host.indexOf('amazonaws.com') !== -1 &&
-            host.indexOf('execute-api') !== -1) {
-            return true;
+        if (host.indexOf('amazonaws.com') !== -1) {
+            if (host.indexOf('.execute-api.') !== -1
+                || host.indexOf('.elb.') !== -1) {
+                return true;
+            }
+
+            return false;
         }
 
         if (thundraCollectorEndpointPattern1.test(host) ||
@@ -98,7 +102,7 @@ class HttpIntegration implements Integration {
                     }
 
                     const parentSpan = tracer.getActiveSpan();
-                    const operationName = host + plugin.getNormalizedPath(path);
+                    const operationName = host + Utils.getNormalizedPath(path, config.httpPathDepth);
 
                     ThundraLogger.debug(`<HTTPIntegration> Starting HTTP span with name ${operationName}`);
 
@@ -112,6 +116,7 @@ class HttpIntegration implements Integration {
                     if (!config.httpTraceInjectionDisabled) {
                         const headers = options.headers ? options.headers : {};
                         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
+                        headers[TriggerHeaderTags.RESOURCE_NAME] = operationName;
                         options.headers = headers;
                     }
 
@@ -272,24 +277,6 @@ class HttpIntegration implements Integration {
             this.instrumentContext.uninstrument();
         }
     }
-
-    private getNormalizedPath(path: string): string {
-        try {
-            const depth = this.config.httpPathDepth;
-            if (depth <= 0) {
-                return '';
-            }
-            const normalizedPath = '/' + path
-                    .split('/')
-                    .filter((c) => c !== '')
-                    .slice(0, depth)
-                    .join('/');
-            return normalizedPath;
-        } catch (error) {
-            return path;
-        }
-    }
-
 }
 
 export default HttpIntegration;

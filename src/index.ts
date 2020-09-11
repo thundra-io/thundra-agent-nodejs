@@ -13,6 +13,7 @@ import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
 import support from './plugins/support';
 import ConfigNames from './config/ConfigNames';
 import { loadHandler } from './wrappers/lambda/lambdaRuntimeSupport';
+import * as ExpressWrapper from './wrappers/express/ExpressWrapper';
 import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
@@ -50,6 +51,18 @@ function lambdaWrapper(handler: any) {
     }
     const wrapper = LambdaWrapper.createWrapper();
     return wrapper(handler);
+}
+
+/**
+ * Creates an Express.js middleware to integrate Thundra
+ * @return the Thundra middleware
+ */
+function expressMW() {
+    if (!initialized) {
+        init();
+    }
+
+    return ExpressWrapper.expressMW();
 }
 
 /**
@@ -105,6 +118,7 @@ Object.assign(module.exports, {
     createLambdaWrapper,
     lambdaWrapper,
     tracer,
+    expressMW,
     InvocationSupport,
     InvocationTraceSupport,
     ...support,

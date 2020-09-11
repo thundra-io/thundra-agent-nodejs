@@ -83,7 +83,8 @@ class ESIntegration implements Integration {
                     const me = this;
                     const parentSpan = tracer.getActiveSpan();
                     const host = await ESIntegration.hostSelect(me);
-                    const normalizedPath = integration.getNormalizedPath(params.path);
+
+                    const normalizedPath = Utils.getNormalizedPath(params.path, config.esPathDepth);
 
                     ThundraLogger.debug(`<ESIntegration> Starting Elasticsearch span with name ${normalizedPath}`);
 
@@ -198,20 +199,6 @@ class ESIntegration implements Integration {
             this.instrumentContext.uninstrument();
         }
     }
-
-    private getNormalizedPath(path: string): string {
-        try {
-            const depth = this.config.esPathDepth;
-            if (depth <= 0) {
-                return '';
-            }
-            const normalizedPath = '/' + path.split('/').filter((c) => c !== '').slice(0, depth).join('/');
-            return normalizedPath;
-        } catch (error) {
-            return path;
-        }
-    }
-
 }
 
 export default ESIntegration;

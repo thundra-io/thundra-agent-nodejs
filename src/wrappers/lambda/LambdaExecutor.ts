@@ -57,23 +57,15 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         '<LambdaExecutor> Extracted span context of transaction',
         execContext.transactionId, ':', propagatedSpanContext);
 
-    if (propagatedSpanContext) {
-        execContext.traceId = propagatedSpanContext.traceId;
-        execContext.rootSpan = tracer._startSpan(originalContext.functionName, {
-            propagated: true,
-            parentContext: propagatedSpanContext,
-            rootTraceId: execContext.traceId,
-            domainName: DomainNames.API,
-            className: ClassNames.LAMBDA,
-        });
-    } else {
-        execContext.traceId = Utils.generateId();
-        execContext.rootSpan = tracer._startSpan(originalContext.functionName, {
-            rootTraceId: execContext.traceId,
-            domainName: DomainNames.API,
-            className: ClassNames.LAMBDA,
-        });
-    }
+    execContext.traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
+
+    execContext.rootSpan = tracer._startSpan(originalContext.functionName, {
+        propagated: propagatedSpanContext ? true : false,
+        parentContext: propagatedSpanContext,
+        rootTraceId: execContext.traceId,
+        domainName: DomainNames.API,
+        className: ClassNames.LAMBDA,
+    });
 
     execContext.spanId = execContext.rootSpan.spanContext.spanId;
     execContext.rootSpan.startTime = execContext.startTimestamp;

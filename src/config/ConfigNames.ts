@@ -68,10 +68,10 @@ class ConfigNames {
     public static readonly THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK: string =
         'thundra.agent.lambda.error.stacktrace.mask';
 
-    public static readonly THUNDRA_LAMBDA_TRACE_REQUEST_SKIP: string =
-        'thundra.agent.lambda.trace.request.skip';
-    public static readonly THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP: string =
-        'thundra.agent.lambda.trace.response.skip';
+    public static readonly THUNDRA_TRACE_REQUEST_SKIP: string =
+        'thundra.agent.trace.request.skip';
+    public static readonly THUNDRA_TRACE_RESPONSE_SKIP: string =
+        'thundra.agent.trace.response.skip';
     public static readonly THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE: string =
         'thundra.agent.lambda.trace.kinesis.request.enable';
     public static readonly THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE: string =

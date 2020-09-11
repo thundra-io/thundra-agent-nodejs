@@ -13,9 +13,11 @@ export class ApplicationManager {
         return ApplicationManager.applicationInfoProvider;
     }
 
-    static setApplicationInfoProvider(applicationInfoProvider: ApplicationInfoProvider) {
-        ApplicationManager.applicationInfoProvider =
-            new GlobalApplicationInfoProvider(applicationInfoProvider);
+    static setApplicationInfoProvider(applicationInfoProvider?: ApplicationInfoProvider) {
+        const globalAppInfoProvider = new GlobalApplicationInfoProvider(applicationInfoProvider);
+        ApplicationManager.applicationInfoProvider = globalAppInfoProvider;
+
+        return globalAppInfoProvider;
     }
 
     static getApplicationInfo(): ApplicationInfo {

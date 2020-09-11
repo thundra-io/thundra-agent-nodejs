@@ -25,6 +25,13 @@ export default class ExecutionContextManager {
     }
 
     /**
+     * Sets the {@link ExecutionContext} provider to globalContextProvider
+     */
+    static useGlobalProvider() {
+        contextProvider = globalContextProvider;
+    }
+
+    /**
      * Runs given {@param fn} in the created {@link ExecutionContext}
      * by given {@param createExecContext}
      * @param {Function} createExecContext creates {@link ExecutionContext}

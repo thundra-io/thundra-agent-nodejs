@@ -13,7 +13,7 @@ export class GlobalApplicationInfoProvider implements ApplicationInfoProvider {
     private applicationInfoProvider: ApplicationInfoProvider;
     private applicationInfo: ApplicationInfo;
 
-    constructor(applicationInfoProvider: ApplicationInfoProvider) {
+    constructor(applicationInfoProvider?: ApplicationInfoProvider) {
         this.applicationInfoProvider = applicationInfoProvider;
         this.applicationInfo = applicationInfoProvider ? applicationInfoProvider.getApplicationInfo() : {} as ApplicationInfo;
 

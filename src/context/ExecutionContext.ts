@@ -14,6 +14,7 @@ export default class ExecutionContext {
     tracer: ThundraTracer;
     reports: any[];
     triggerClassName: string;
+    triggerOperationName: string;
     transactionId: string;
     spanId: string;
     traceId: string;
@@ -26,6 +27,7 @@ export default class ExecutionContext {
     userError: any;
     platformData: any;
     response: any;
+    request: any;
     incomingTraceLinks: any[];
     outgoingTraceLinks: any[];
     captureLog: boolean;
@@ -47,11 +49,13 @@ export default class ExecutionContext {
         this.userError = opts.userError || null;
         this.platformData = opts.platformData || {};
         this.response = opts.response || {};
+        this.request = opts.request || {};
         this.incomingTraceLinks = opts.incomingTraceLinks || [];
         this.outgoingTraceLinks = opts.outgoingTraceLinks || [];
         this.captureLog = opts.captureLog || true;
         this.logs = opts.logs || [];
         this.metrics = opts.metric || {};
+        this.triggerOperationName = opts.triggerOperationName || '';
     }
 
     /**

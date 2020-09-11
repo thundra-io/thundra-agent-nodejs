@@ -32,8 +32,8 @@ describe('trace config', () => {
     });
 
     test('with environment variable overrides programmatic with false value',() => {
-        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP, false);
-        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP, false);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_REQUEST_SKIP, false);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_RESPONSE_SKIP, false);
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE, false);
         ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE, false);
 
@@ -52,8 +52,8 @@ describe('trace config', () => {
     });
 
     test('with environment variable overrides programmatic with true value',() => {
-        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP, true);
-        ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP, true);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_REQUEST_SKIP, true);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_RESPONSE_SKIP, true);
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE, true);
         ConfigProvider.set(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE, true);
 

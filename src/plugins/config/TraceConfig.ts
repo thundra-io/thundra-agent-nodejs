@@ -57,10 +57,10 @@ class TraceConfig extends BasePluginConfig {
         options = options ? options : {};
         super(get(options, 'enabled', true));
         this.disableRequest = ConfigProvider.get<boolean>(
-            ConfigNames.THUNDRA_LAMBDA_TRACE_REQUEST_SKIP,
+            ConfigNames.THUNDRA_TRACE_REQUEST_SKIP,
             options.disableRequest);
         this.disableResponse = ConfigProvider.get<boolean>(
-            ConfigNames.THUNDRA_LAMBDA_TRACE_RESPONSE_SKIP,
+            ConfigNames.THUNDRA_TRACE_RESPONSE_SKIP,
             options.disableResponse);
         this.maskRequest = options.maskRequest;
         this.maskResponse = options.maskResponse;
@@ -174,7 +174,7 @@ class TraceConfig extends BasePluginConfig {
         if (options.disabledIntegrations) {
             for (const intgr of options.disabledIntegrations) {
                 if (typeof intgr === 'string') {
-                    this.disabledIntegrations.push(new IntegrationConfig(intgr, {}));
+                    this.disabledIntegrations.push(new IntegrationConfig(intgr, {enabled: false}));
                 } else {
                     this.disabledIntegrations.push(new IntegrationConfig(intgr.name, intgr.opt));
                 }

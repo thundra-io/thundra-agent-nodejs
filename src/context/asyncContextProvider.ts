@@ -6,18 +6,27 @@
 import ExecutionContext from './ExecutionContext';
 
 const asyncHooks = require('async_hooks');
+const semver = require('semver');
+
+const hasKeepAliveBug = !semver.satisfies(process.version, '^8.13 || >=10.14.2');
 
 const contexts: {[key: number]: ExecutionContext} = {};
+const weaks = new WeakMap();
 
 function destroyAsync(asyncId: number) {
     delete contexts[asyncId];
 }
 
-function initAsync(asyncId: number, type: string, parentAsyncId: number, resource: string) {
-    if (contexts[parentAsyncId]) {
-        contexts[asyncId] = contexts[parentAsyncId];
+function initAsync(asyncId: number, type: string, triggerAsyncId: number, resource: any) {
+    if (contexts[triggerAsyncId]) {
+        contexts[asyncId] = contexts[triggerAsyncId];
     } else if (contexts[asyncHooks.executionAsyncId()]) {
         contexts[asyncId] = contexts[asyncHooks.executionAsyncId()];
+    }
+
+    if (hasKeepAliveBug && (type === 'HTTPPARSER' || type === 'TCPPARSER')) {
+        destroyAsync(weaks.get(resource));
+        weaks.set(resource, asyncId);
     }
 }
 
@@ -27,7 +36,7 @@ export function runWithContext(createExecContext: Function, fn: Function) {
         contexts[asyncHooks.executionAsyncId()] = execContext;
     }
 
-    return fn();
+    return fn.call(execContext);
 }
 
 export function get(): any {
