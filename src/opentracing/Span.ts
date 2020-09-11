@@ -88,7 +88,7 @@ class ThundraSpan extends Span {
      */
     close(finishTime: number = Date.now()) {
         if (this.finishTime !== 0) {
-            ThundraLogger.debug('Span is already closed.');
+            ThundraLogger.debug(`<Span> Span with name ${this.operationName} is already closed`);
             return;
         }
 
@@ -107,7 +107,7 @@ class ThundraSpan extends Span {
      */
     closeWithCallback(me: any, callback: () => any, args: any[] , finishTime: number = Date.now()) {
         if (this.finishTime !== 0) {
-            ThundraLogger.debug('Span is already closed.');
+            ThundraLogger.debug(`<Span> Span with name ${this.operationName} is already closed`);
             return;
         }
 
@@ -198,13 +198,15 @@ class ThundraSpan extends Span {
                 this.tags[key] = keyValuePairs[key];
             });
         } catch (e) {
-            ThundraLogger.error(e);
+            ThundraLogger.error(
+                `<Span> Error occurred while adding tags ${keyValuePairs} \
+                to span with name ${this.operationName}:`, e);
         }
     }
 
     _finish(finishTime: number = Date.now()) {
         if (this.finishTime !== 0) {
-            ThundraLogger.debug('Span is already finished.');
+            ThundraLogger.debug(`<Span> Span with name ${this.operationName} is already finished`);
             return;
         }
 

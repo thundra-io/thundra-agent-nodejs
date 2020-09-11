@@ -4,8 +4,7 @@ import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../ThundraLogger';
 import Utils from '../utils/Utils';
 import {
-    DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags,
-    LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME, RedisCommandTypes,
+    DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags, RedisCommandTypes,
 } from '../Constants';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
@@ -27,6 +26,8 @@ class IORedisIntegration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<IORedisIntegration> Activating IORedis integration');
+
         this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
@@ -43,14 +44,29 @@ class IORedisIntegration implements Integration {
      * @inheritDoc
      */
     wrap(lib: any, config: any) {
+        ThundraLogger.debug('<IORedisIntegration> Wrap');
+
         const plugin = this;
         function wrapper(original: Function) {
             return function internalSendCommandWrapper(command: any) {
+                ThundraLogger.debug('<IORedisIntegration> Tracing Redis command:', command);
+
                 let span: ThundraSpan;
                 try {
                     const { tracer } = ExecutionContextManager.get();
 
-                    if (!tracer || !command || this.status !== 'ready') {
+                    if (!tracer) {
+                        ThundraLogger.debug('<IORedisIntegration> Skipped tracing command as no tracer is available');
+                        return original.call(this, command);
+                    }
+
+                    if (!command) {
+                        ThundraLogger.debug('<IORedisIntegration> Skipped tracing command as no command is available');
+                        return original.call(this, command);
+                    }
+
+                    if (this.status !== 'ready') {
+                        ThundraLogger.debug('<IORedisIntegration> Skipped tracing command as status is not ready');
                         return original.call(this, command);
                     }
 
@@ -59,6 +75,8 @@ class IORedisIntegration implements Integration {
                     const port: string = get(this.options, 'port', '6379');
                     const commandName: string = get(command, 'name', '').toUpperCase();
                     const operationType = get(RedisCommandTypes, commandName, '');
+
+                    ThundraLogger.debug(`<IORedisIntegration> Starting Redis span with name ${host}`);
 
                     span = tracer._startSpan(host, {
                         childOf: parentSpan,
@@ -77,8 +95,6 @@ class IORedisIntegration implements Integration {
                             [RedisTags.REDIS_COMMAND_TYPE]: operationType,
                             [SpanTags.OPERATION_TYPE]: operationType,
                             [SpanTags.TOPOLOGY_VERTEX]: true,
-                            [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
-                            [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
                         },
                     });
 
@@ -91,21 +107,25 @@ class IORedisIntegration implements Integration {
                         if (typeof command.promise.finally === 'function') {
                             command.promise.finally(plugin.patchEnd(span));
                         } else if (typeof command.promise.then === 'function') {
-                            command.promise.then(plugin.patchEnd(span))
+                            command.promise
+                                .then(plugin.patchEnd(span))
                                 .catch(plugin.patchEnd(span));
                         }
                     }
 
                     return original.call(this, command);
                 } catch (error) {
+                    ThundraLogger.error('<IORedisIntegration> Error occurred while tracing Redis command:', error);
+
                     if (span) {
+                        ThundraLogger.debug(
+                            `<IORedisIntegration> Because of error, closing Redis span with name ${span.getOperationName()}`);
                         span.close();
                     }
 
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        ThundraLogger.error(error);
                         return original.call(this, command);
                     }
                 }
@@ -113,6 +133,8 @@ class IORedisIntegration implements Integration {
         }
 
         if (has(lib, 'prototype.sendCommand')) {
+            ThundraLogger.debug('<IORedisIntegration> Wrapping "ioredis.sendCommand"');
+
             shimmer.wrap(lib.prototype, 'sendCommand', wrapper);
         }
     }
@@ -122,6 +144,10 @@ class IORedisIntegration implements Integration {
      * @param lib the library to be unwrapped
      */
     doUnwrap(lib: any) {
+        ThundraLogger.debug('<IORedisIntegration> Do unwrap');
+
+        ThundraLogger.debug('<IORedisIntegration> Unwrapping "ioredis.sendCommand"');
+
         shimmer.unwrap(lib.prototype, 'sendCommand');
     }
 
@@ -129,6 +155,8 @@ class IORedisIntegration implements Integration {
      * @inheritDoc
      */
     unwrap() {
+        ThundraLogger.debug('<IORedisIntegration> Unwrap');
+
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
@@ -139,6 +167,8 @@ class IORedisIntegration implements Integration {
             if (err instanceof Error) {
                 span.setErrorTag(err);
             }
+            ThundraLogger.debug(`<IORedisIntegration> Closing Redis span with name ${span.getOperationName()}`);
+
             span.close();
             if (typeof resultHandler === 'function') {
                 return resultHandler.apply(this, arguments);

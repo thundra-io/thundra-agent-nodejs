@@ -57,9 +57,7 @@ export default class Trace {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     beforeInvocation = (execContext: ExecutionContext) => {
-        if (ThundraLogger.isDebugEnabled()) {
-            ThundraLogger.debug('<Trace> Before invocation of transaction', execContext.transactionId);
-        }
+        ThundraLogger.debug('<Trace> Before invocation of transaction', execContext.transactionId);
 
         const { executor } = this.pluginContext;
         const { tracer } = execContext;
@@ -76,9 +74,7 @@ export default class Trace {
      * @param {ExecutionContext} execContext the {@link ExecutionContext}
      */
     afterInvocation = (execContext: ExecutionContext) => {
-        if (ThundraLogger.isDebugEnabled()) {
-            ThundraLogger.debug('<Trace> After invocation of transaction', execContext.transactionId);
-        }
+        ThundraLogger.debug('<Trace> After invocation of transaction', execContext.transactionId);
 
         const { apiKey, executor } = this.pluginContext;
         const { tracer, rootSpan } = execContext;
@@ -91,11 +87,10 @@ export default class Trace {
         const isSampled = get(this.config, 'sampler.isSampled', () => true);
         const sampled = isSampled(rootSpan);
 
-        if (ThundraLogger.isDebugEnabled()) {
-            ThundraLogger.debug('<Trace> Checked sampling of transaction', execContext.transactionId, ':', sampled);
-        }
+        ThundraLogger.debug('<Trace> Checked sampling of transaction', execContext.transactionId, ':', sampled);
 
         if (sampled) {
+            const debugEnabled: boolean = ThundraLogger.isDebugEnabled();
             for (const span of spanList) {
                 if (span) {
                     if (this.config.runSamplerOnEachSpan && !isSampled(span)) {
@@ -106,9 +101,11 @@ export default class Trace {
 
                     const spanData = this.buildSpanData(span, execContext);
                     const spanReportData = Utils.generateReport(spanData, apiKey);
-                    if (ThundraLogger.isDebugEnabled()) {
+
+                    if (debugEnabled) {
                         ThundraLogger.debug('<Trace> Reporting span:', spanReportData);
                     }
+
                     execContext.report(spanReportData);
                 }
             }
@@ -133,6 +130,8 @@ export default class Trace {
                         if (!this.config.isIntegrationDisabled(key)) {
                             const instance = new clazz(this.config);
                             this.integrationsMap.set(key, instance);
+                        } else {
+                            ThundraLogger.debug(`<Trace> Disabled integration ${key}`);
                         }
                     }
                 }

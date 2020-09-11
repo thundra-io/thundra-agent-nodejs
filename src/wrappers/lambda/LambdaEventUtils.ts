@@ -1,15 +1,19 @@
 import ThundraSpan from '../../opentracing/Span';
-import { SpanTags, DomainNames, ClassNames, ZeitTags,
-    ZeitConstants, NetlifyConstants, EnvVariableKeys, THUNDRA_TRACE_KEY } from '../../Constants';
+import {
+    SpanTags, DomainNames, ClassNames, VercelTags,
+    VercelConstants, NetlifyConstants, EnvVariableKeys, THUNDRA_TRACE_KEY,
+} from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
-import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../../integrations/AWSIntegration';
+import {AWSFirehoseIntegration, AWSDynamoDBIntegration} from '../../integrations/AWSIntegration';
 import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
 import Utils from '../../utils/Utils';
+import {ApplicationManager} from '../../application/ApplicationManager';
+import {LambdaPlatformUtils} from './LambdaPlatformUtils';
 
 const get = require('lodash.get');
 
@@ -22,6 +26,7 @@ class LambdaEventUtils {
 
     private constructor() {
     }
+
     /**
      * Checks if a propagated trace link exists in the incoming event
      * @param originalEvent the original AWS Lambda invocation event
@@ -32,7 +37,8 @@ class LambdaEventUtils {
             if (incomingTraceLink) {
                 InvocationTraceSupport.addIncomingTraceLink(incomingTraceLink);
             }
-        } catch (e) { /* pass */ }
+        } catch (e) { /* pass */
+        }
     }
 
     /**
@@ -80,12 +86,12 @@ class LambdaEventUtils {
             return LambdaEventType.EventBridge;
         } else if (originalEvent.Action && originalEvent.body) {
             try {
-                const { headers } = JSON.parse(originalEvent.body);
-                if (headers && headers[ZeitConstants.DEPLOYMENT_URL_HEADER]) {
-                    return LambdaEventType.Zeit;
+                const {headers} = JSON.parse(originalEvent.body);
+                if (headers && headers[VercelConstants.DEPLOYMENT_URL_HEADER]) {
+                    return LambdaEventType.Vercel;
                 }
             } catch (err) {
-                // Event is not a Zeit event, pass
+                // Event is not a Vercel event, pass
             }
         }
     }
@@ -353,7 +359,7 @@ class LambdaEventUtils {
 
             return className;
         } catch (error) {
-            ThundraLogger.error('Cannot read CloudWatch log data. ' + error);
+            ThundraLogger.error('<LambdaEventUtils> Cannot read CloudWatch log data:', error);
         }
     }
 
@@ -442,31 +448,39 @@ class LambdaEventUtils {
     }
 
     /**
-     * Injects trigger tags for Zeit events
+     * Injects trigger tags for Vercel events
      * @param {ThundraSpan} span the span to inject tags
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-    static injectTriggerTagsForZeit(span: ThundraSpan, originalEvent: any): string {
-        const className = ClassNames.ZEIT;
+    static injectTriggerTagsForVercel(span: ThundraSpan, originalEvent: any, originalContext: any): string {
+        const className = ClassNames.VERCEL;
         const domainName = DomainNames.API;
-        let operationName = 'zeit-now';
+        let operationName = 'vercel';
 
         try {
-            const { headers, host } = JSON.parse(originalEvent.body);
+            const {headers, host, path} = JSON.parse(originalEvent.body);
 
-            if (headers[ZeitConstants.DEPLOYMENT_URL_HEADER]) {
-                const deplomentUrl = headers[ZeitConstants.DEPLOYMENT_URL_HEADER];
-                InvocationSupport.setTag(ZeitTags.DEPLOYMENT_URL, deplomentUrl);
+            if (headers[VercelConstants.DEPLOYMENT_URL_HEADER]) {
+                const deplomentUrl = headers[VercelConstants.DEPLOYMENT_URL_HEADER];
+                InvocationSupport.setTag(VercelTags.DEPLOYMENT_URL, deplomentUrl);
             }
 
             if (host) {
+                const applicationName = (host.split('.')[0] || operationName) + (path || '');
                 operationName = host;
+                ApplicationManager.getApplicationInfoProvider().update({
+                    applicationName,
+                    applicationId: LambdaPlatformUtils.getApplicationId(originalContext, {functionName: applicationName}),
+                });
+            }
+
+            if (path) {
+                span.setOperationName(path);
             }
         } catch (err) {
             // Event is not a Zeit event, pass
         }
-
         this.injectTriggerTagsForInvocation(domainName, className, [operationName]);
         this.injectTriggerTagsForSpan(span, domainName, className, [operationName]);
 
@@ -632,7 +646,7 @@ export enum LambdaEventType {
     APIGatewayPassThrough,
     Lambda,
     EventBridge,
-    Zeit,
+    Vercel,
     Netlify,
     SES,
 }

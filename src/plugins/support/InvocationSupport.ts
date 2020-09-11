@@ -1,5 +1,6 @@
 import ThundraLogger from '../../ThundraLogger';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
+import { ApplicationManager } from '../../application/ApplicationManager';
 
 /**
  * Provides/supports API for invocation related operations
@@ -20,7 +21,7 @@ class InvocationSupport {
             try {
                 tags[name] = value;
             } catch (e) {
-                ThundraLogger.error(e);
+                ThundraLogger.error(`<InvocationSupport> Error occurred while setting agent tag ${name}=${value}:`, e);
             }
         }
     }
@@ -37,7 +38,7 @@ class InvocationSupport {
                     tags[name] = tagsToSet[name];
                 });
             } catch (e) {
-                ThundraLogger.error(e);
+                ThundraLogger.error(`<InvocationSupport> Error occurred while setting agent tags ${tagsToSet}:`, e);
             }
         }
     }
@@ -78,7 +79,7 @@ class InvocationSupport {
                     delete tags[name];
                 }
             } catch (e) {
-                ThundraLogger.error(e);
+                ThundraLogger.error(`<InvocationSupport> Error occurred while removing agent tag ${name}:`, e);
             }
         }
     }
@@ -104,7 +105,7 @@ class InvocationSupport {
             try {
                 userTags[name] = value;
             } catch (e) {
-                ThundraLogger.error(e);
+                ThundraLogger.error(`<InvocationSupport> Error occurred while setting tag ${name}=${value}:`, e);
             }
         }
     }
@@ -121,7 +122,7 @@ class InvocationSupport {
                     userTags[name] = tagsToSet[name];
                 });
             } catch (e) {
-                ThundraLogger.error(e);
+                ThundraLogger.error(`<InvocationSupport> Error occurred while setting tags ${tagsToSet}:`, e);
             }
         }
     }
@@ -162,7 +163,7 @@ class InvocationSupport {
                     delete userTags[name];
                 }
             } catch (e) {
-                ThundraLogger.error(e);
+                ThundraLogger.error(`<InvocationSupport> Error occurred while removing tag ${name}:`, e);
             }
         }
     }
@@ -197,6 +198,9 @@ class InvocationSupport {
             if (execContext) {
                 execContext.userError = error;
             }
+        } else {
+            ThundraLogger.debug(
+                '<InvocationSupport> Skipped setting invocation error as it is not an instance of Error:', error);
         }
     }
 
@@ -219,6 +223,21 @@ class InvocationSupport {
         if (execContext) {
             execContext.userError = null;
         }
+    }
+
+    /**
+     * Gets the invocation URL on Thundra Console
+     * @return {string} the invocation URL on Thundra Console
+     */
+    static getConsoleInvocationURL(): string {
+        const applicationInfo = ApplicationManager.getApplicationInfo();
+        const execContext = ExecutionContextManager.get();
+        if (applicationInfo && applicationInfo.applicationId
+            && execContext && execContext.transactionId) {
+            return encodeURI(
+                `https://console.thundra.io/functions/${applicationInfo.applicationId}/${execContext.transactionId}/trace-chart`);
+        }
+        return null;
     }
 
 }

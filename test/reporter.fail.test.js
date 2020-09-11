@@ -55,9 +55,9 @@ describe('reporter', () => {
     describe('http', () => {
         // noinspection JSAnnotator
         const url = new URL('http://collector.thundra.io/api');
-        const reporter = new Reporter('apiKey', url);
-        const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
-        const mockReport2 = {data: {type: 'Span', data: 'data2'}};
+        const reporter = new Reporter('apiKey', { url });
+        const mockReport1 = { data: { type: 'Invocation', data: 'data1' }};
+        const mockReport2 = { data: { type: 'Span', data: 'data2' }};
 
         const reports = [];
         reports.push(mockReport1);
@@ -69,7 +69,6 @@ describe('reporter', () => {
             expect(httpRequestOnCalled).toEqual(true);
             expect(httpRequestWriteCalled).toEqual(true);
             expect(httpRequestEndCalled).toEqual(true);
-
         });
 
         test('should JSON.stringify reports on https.request', () => {
@@ -80,21 +79,26 @@ describe('reporter', () => {
     });
 
     describe('send reports failure', () => {
-        let consoleOutput;
+        const consoleLogOriginal = console.log;
+        try {
+            let consoleOutput;
 
-        const reporter = new Reporter('apiKey');
-        const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
-        const mockReport2 = {data: {type: 'Span', data: 'data2'}};
+            const reporter = new Reporter('apiKey');
+            const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
+            const mockReport2 = {data: {type: 'Span', data: 'data2'}};
 
-        const reports = [];
-        reports.push(mockReport1);
-        reports.push(mockReport2);
+            const reports = [];
+            reports.push(mockReport1);
+            reports.push(mockReport2);
 
-        console['log'] = jest.fn(input => (consoleOutput = input));
+            console.log = jest.fn(input => (consoleOutput = input));
 
-        return reporter.sendReports(reports).then(() => {
-            expect(consoleOutput).toEqual(JSON.stringify(reports));
-        });
+            return reporter.sendReports(reports).then(() => {
+                expect(consoleOutput).toEqual(JSON.stringify(reports));
+            });
+        } finally {
+            console.log = consoleLogOriginal;
+        }
     });
 
 });

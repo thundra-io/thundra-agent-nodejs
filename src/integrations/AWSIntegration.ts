@@ -5,7 +5,6 @@ import {
     AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
     AwsStepFunctionsTags, SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
     AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY,
 } from '../Constants';
 import Utils from '../utils/Utils';
@@ -25,7 +24,7 @@ const has = require('lodash.has');
 const trim = require('lodash.trim');
 const get = require('lodash.get');
 
-const MODULE_NAME = 'aws-sdk';
+const MODULE_NAMES = ['aws-sdk', 'aws-sdk/lib/core.js'];
 const MODULE_VERSION = '2.x';
 
 /**
@@ -44,7 +43,7 @@ export class AWSIntegration implements Integration {
         this.wrappedFuncs = {};
         this.config = config || {};
         this.instrumentContext = Utils.instrument(
-            [MODULE_NAME], MODULE_VERSION,
+            MODULE_NAMES, MODULE_VERSION,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },
@@ -382,8 +381,6 @@ export class AWSAthenaIntegration {
 
         if (operationType) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
 
             if (outputLocation !== '') {
                 activeSpan.setTag(AwsAthenaTags.S3_OUTPUT_LOCATION, outputLocation);
@@ -436,8 +433,7 @@ export class AWSLambdaIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.LAMBDA);
-        const normalizedFunctionName = AWSLambdaIntegration.normalizeFunctionName(
-            get(request, 'params.FunctionName', AWS_SERVICE_REQUEST));
+        const normalizedFunctionName = AWSLambdaIntegration.getNormalizedFunctionName(request);
         const spanName = normalizedFunctionName.name;
         const parentSpan = tracer.getActiveSpan();
 
@@ -451,7 +447,9 @@ export class AWSLambdaIntegration {
                 [AwsSDKTags.REQUEST_NAME]: operationName,
                 [SpanTags.OPERATION_TYPE]: operationType,
                 [AwsLambdaTags.FUNCTION_QUALIFIER]: request.params.Qualifier || normalizedFunctionName.qualifier,
-                [AwsLambdaTags.INVOCATION_PAYLOAD]: config.maskLambdaPayload ? undefined : request.params.Payload,
+                [AwsLambdaTags.INVOCATION_PAYLOAD]: config.maskLambdaPayload
+                    ? undefined
+                    : AWSLambdaIntegration.getPayload(request),
                 [AwsLambdaTags.FUNCTION_NAME]: normalizedFunctionName.name,
                 [AwsLambdaTags.INVOCATION_TYPE]: request.params.InvocationType,
             },
@@ -463,11 +461,10 @@ export class AWSLambdaIntegration {
 
         if (operationType) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
         }
 
-        if (custom && operationName && operationName.includes && operationName.includes('invoke')) {
+        // only "invoke" supports ClientContext", not "invokeAsync"
+        if (custom && operationName && operationName === 'invoke') {
             if (request.params.ClientContext) {
                 const context = Buffer.from(request.params.ClientContext, 'base64').toString('utf8');
                 try {
@@ -499,8 +496,17 @@ export class AWSLambdaIntegration {
         return traceLinks;
     }
 
-    public  static processResponse(span: ThundraSpan, request: any, config: any): void {
+    public static processResponse(span: ThundraSpan, request: any, config: any): void {
         return;
+    }
+
+    private static getPayload(request: any): string {
+        const payload = get(request, 'params.Payload') || get(request, 'params.InvokeArgs');
+        if (payload) {
+            return payload.toString();
+        } else {
+            return null;
+        }
     }
 
     private static injectSpanContextIntoLambdaClientContext(tracer: ThundraTracer, span: ThundraSpan): any {
@@ -509,7 +515,8 @@ export class AWSLambdaIntegration {
         return custom;
     }
 
-    private static normalizeFunctionName(fullName: string) {
+    private static getNormalizedFunctionName(request: any) {
+        const fullName: string = get(request, 'params.FunctionName', AWS_SERVICE_REQUEST);
         const parts = fullName.split(':');
 
         if (parts.length === 0 || parts.length === 1) { // funcName
@@ -568,8 +575,6 @@ export class AWSSNSIntegration {
 
         if (operationType) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
 
             if (topicName) {
                 activeSpan.setTag(AwsSNSTags.TOPIC_NAME, topicName);
@@ -642,11 +647,9 @@ export class AWSStepFunctionsIntegration {
         const stateMachineARN = get(request, 'params.stateMachineArn', '');
         const executionName = get(request, 'params.name', '');
 
+        activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
         activeSpan.setTag(AwsStepFunctionsTags.STATE_MACHINE_ARN, stateMachineARN);
         activeSpan.setTag(AwsStepFunctionsTags.EXECUTION_NAME, executionName);
-        activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-        activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-        activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
 
         return activeSpan;
     }
@@ -720,9 +723,6 @@ export class AWSSQSIntegration {
 
         if (operationType) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
-
             activeSpan.setTag(AwsSQSTags.QUEUE_NAME, queueName);
         }
 
@@ -807,9 +807,6 @@ export class AWSFirehoseIntegration {
 
         if (request.params.DeliveryStreamName) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
-
             activeSpan.setTag(AwsFirehoseTags.STREAM_NAME, request.params.DeliveryStreamName);
         }
 
@@ -892,9 +889,6 @@ export class AWSKinesisIntegration {
 
         if (request.params.StreamName) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
-
             activeSpan.setTag(AwsKinesisTags.STREAM_NAME, request.params.StreamName);
         }
 
@@ -963,8 +957,6 @@ export class AWSDynamoDBIntegration {
 
         if (operationType) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
             activeSpan.setTag(AwsDynamoTags.TABLE_NAME, tableName);
         }
 
@@ -1119,8 +1111,6 @@ export class AWSS3Integration {
 
         if (operationType) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
             activeSpan.setTag(AwsS3Tags.OBJECT_NAME, request.params.Key);
         }
 
@@ -1192,8 +1182,6 @@ export class AWSEventBridgeIntegration {
 
         if (operationType) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
         }
 
         return activeSpan;
@@ -1257,8 +1245,6 @@ export class AWSSESIntegration {
 
         if (operationType) {
             activeSpan.setTag(SpanTags.TOPOLOGY_VERTEX, true);
-            activeSpan.setTag(SpanTags.TRIGGER_DOMAIN_NAME, LAMBDA_APPLICATION_DOMAIN_NAME);
-            activeSpan.setTag(SpanTags.TRIGGER_CLASS_NAME, LAMBDA_APPLICATION_CLASS_NAME);
         }
 
         return activeSpan;

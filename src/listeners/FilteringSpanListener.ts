@@ -29,9 +29,9 @@ class FilteringSpanListener implements ThundraSpanListener {
             this.all = get(opt, 'all', false);
             this.listener = this._getListenerFromConfig(opt);
             this.spanFilterer = new StandardSpanFilterer(this._getSpanFiltererFromConfig(opt), this.all);
-        } catch (err) {
+        } catch (e) {
             ThundraLogger.error(
-                `Cannot parse span listener config with reason: ${err.message}`);
+                `<FilteringSpanListener> Cannot parse span listener config ${opt}:`, e);
         }
     }
 

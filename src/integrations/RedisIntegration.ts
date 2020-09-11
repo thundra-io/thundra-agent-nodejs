@@ -1,8 +1,7 @@
 import Integration from './Integration';
 import {
     SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames,
-    ClassNames, DBTypes, DBTags, LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME,
-} from '../Constants';
+    ClassNames, DBTypes, DBTags } from '../Constants';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -26,6 +25,8 @@ class RedisIntegration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<RedisIntegration> Activating Redis integration');
+
         this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
@@ -42,18 +43,23 @@ class RedisIntegration implements Integration {
      * @inheritDoc
      */
     wrap(lib: any, config: any) {
-        const integration = this;
+        ThundraLogger.debug('<RedisIntegration> Wrap');
+
         function wrapper(internalSendCommand: any) {
             return function internalSendCommandWrapper(options: any) {
+                ThundraLogger.debug('<RedisIntegration> Tracing Redis command:', options);
+
                 let span: ThundraSpan;
                 try {
                     const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
+                        ThundraLogger.debug('<RedisIntegration> Skipped tracing command as no tracer is available');
                         return internalSendCommand.call(this, options);
                     }
 
                     if (!options) {
+                        ThundraLogger.debug('<RedisIntegration> Skipped tracing command as no options is available');
                         return internalSendCommand.call(this, options);
                     }
 
@@ -72,6 +78,8 @@ class RedisIntegration implements Integration {
 
                     const operationType = RedisCommandTypes[command] ? RedisCommandTypes[command] : '';
 
+                    ThundraLogger.debug(`<RedisIntegration> Starting Redis span with name ${host}`);
+
                     span = tracer._startSpan(host, {
                         childOf: parentSpan,
                         domainName: DomainNames.CACHE,
@@ -89,8 +97,6 @@ class RedisIntegration implements Integration {
                             [RedisTags.REDIS_COMMAND_TYPE]: operationType,
                             [SpanTags.OPERATION_TYPE]: operationType,
                             [SpanTags.TOPOLOGY_VERTEX]: true,
-                            [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
-                            [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
                         },
                     });
 
@@ -102,7 +108,7 @@ class RedisIntegration implements Integration {
                         if (err) {
                             span.setErrorTag(err);
                         }
-
+                        ThundraLogger.debug(`<RedisIntegration> Closing Redis span with name ${span.getOperationName()}`);
                         span.closeWithCallback(me, originalCallback, [err, res]);
                     };
 
@@ -110,14 +116,17 @@ class RedisIntegration implements Integration {
 
                     return internalSendCommand.call(this, options);
                 } catch (error) {
+                    ThundraLogger.error('<RedisIntegration> Error occurred while tracing Redis command:', error);
+
                     if (span) {
+                        ThundraLogger.debug(
+                            `<RedisIntegration> Because of error, closing Redis span with name ${span.getOperationName()}`);
                         span.close();
                     }
 
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        ThundraLogger.error(error);
                         internalSendCommand.call(this, options);
                     }
                 }
@@ -125,6 +134,8 @@ class RedisIntegration implements Integration {
         }
 
         if (has(lib, 'RedisClient.prototype.internal_send_command')) {
+            ThundraLogger.debug('<RedisIntegration> Wrapping "redis.RedisClient.internal_send_command"');
+
             shimmer.wrap(lib.RedisClient.prototype, 'internal_send_command', wrapper);
         }
     }
@@ -134,6 +145,10 @@ class RedisIntegration implements Integration {
      * @param lib the library to be unwrapped
      */
     doUnwrap(lib: any) {
+        ThundraLogger.debug('<RedisIntegration> Do unwrap');
+
+        ThundraLogger.debug('<RedisIntegration> Unwrapping "redis.RedisClient.internal_send_command"');
+
         shimmer.unwrap(lib.RedisClient.prototype, 'internal_send_command');
     }
 
@@ -141,6 +156,8 @@ class RedisIntegration implements Integration {
      * @inheritDoc
      */
     unwrap() {
+        ThundraLogger.debug('<RedisIntegration> Unwrap');
+
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }

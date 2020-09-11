@@ -1,4 +1,4 @@
-import SecurityAwareSpanListener from '../../dist/opentracing/listeners/SecurityAwareSpanListener';
+import SecurityAwareSpanListener from '../../dist/listeners/SecurityAwareSpanListener';
 import ThundraSpan from '../../dist/opentracing/Span';
 import { SecurityTags, SpanTags } from '../../dist/Constants';
 

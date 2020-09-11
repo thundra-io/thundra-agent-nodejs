@@ -66,4 +66,23 @@ export default class ExecutionContext {
         this.reports = [...this.reports, data];
     }
 
+    /**
+     * Summarizes the {@link ExecutionContext}
+     * @return {string} summary of the {@link ExecutionContext}
+     */
+    summary(): any {
+        return {
+            startTimestamp: this.startTimestamp,
+            finishTimestamp: this.finishTimestamp,
+            triggerClassName: this.triggerClassName,
+            transactionId: this.transactionId,
+            spanId: this.spanId,
+            traceId: this.traceId,
+            error: this.error,
+            userError: this.userError,
+            platformData: this.platformData,
+            response: this.response,
+        };
+    }
+
 }

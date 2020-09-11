@@ -153,8 +153,8 @@ class TraceConfig extends BasePluginConfig {
             if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG)) {
                 try {
                     this.traceableConfigs.push(TraceableConfig.fromString(ConfigProvider.get<string>(configName)));
-                } catch (ex) {
-                    ThundraLogger.error(`Cannot parse trace def ${configName}`);
+                } catch (e) {
+                    ThundraLogger.error(`<TraceConfig> Cannot parse trace definition ${configName}:`, e);
                 }
             }
         }

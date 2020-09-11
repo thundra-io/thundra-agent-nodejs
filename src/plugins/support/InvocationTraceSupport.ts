@@ -58,7 +58,7 @@ class InvocationTraceSupport {
             return Array.from(resourcesMap.values());
         } catch (e) {
             ThundraLogger.error(
-                `Error while creating the resources data for invocation. ${e}`);
+                `<InvocationTraceSupport> Error while creating the resources data for invocation:`, e);
         }
     }
 
@@ -155,7 +155,7 @@ class InvocationTraceSupport {
             return [...new Set<string>(traceLinks)];
         } catch (e) {
             ThundraLogger.error(
-                `Error while getting the outgoing trace links for invocation. ${e}`);
+                `<InvocationTraceSupport> Error while getting the outgoing trace links for invocation:`, e);
         }
     }
 

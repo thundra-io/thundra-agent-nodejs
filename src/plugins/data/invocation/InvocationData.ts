@@ -41,7 +41,7 @@ class InvocationData extends BaseMonitoringData {
                 this.tags[name] = tags[name];
             });
         } catch (e) {
-            ThundraLogger.error(e);
+            ThundraLogger.error(`<InvocationData> Error occurred while setting tags ${tags}:`, e);
         }
     }
 
@@ -55,7 +55,7 @@ class InvocationData extends BaseMonitoringData {
                 this.userTags[name] = userTags[name];
             });
         } catch (e) {
-            ThundraLogger.error(e);
+            ThundraLogger.error(`<InvocationData> Error occurred while setting user tags ${userTags}:`, e);
         }
     }
 

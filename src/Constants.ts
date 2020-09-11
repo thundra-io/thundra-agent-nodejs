@@ -69,11 +69,6 @@ export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
 export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
 export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
 
-export const HOOKS = [
-    'before-invocation',
-    'after-invocation',
-];
-
 export function getDefaultCollectorEndpoint() {
     const region = process.env[EnvVariableKeys.AWS_REGION];
     if (region) {
@@ -84,11 +79,10 @@ export function getDefaultCollectorEndpoint() {
 
 export const MONITORING_DATA_PATH = '/monitoring-data';
 export const COMPOSITE_MONITORING_DATA_PATH = '/composite-monitoring-data';
+export const LOCAL_COLLECTOR_ENDPOINT = 'localhost:3333';
 
 export const PROC_STAT_PATH: string = '/proc/self/stat';
 export const PROC_IO_PATH: string = '/proc/self/io';
-export const ARGS_TAG_NAME: string = 'method.args';
-export const RETURN_VALUE_TAG_NAME: string = 'method.return_value';
 
 export const logLevels: any = {
     0: 0,
@@ -148,7 +142,7 @@ export const ClassNames = {
     ELASTICSEARCH: 'ELASTICSEARCH',
     MYSQL: 'MYSQL',
     EVENTBRIDGE: 'AWS-EventBridge',
-    ZEIT: 'ZEIT',
+    VERCEL: 'VERCEL',
     NETLIFY: 'Netlify',
     SES: 'AWS-SES',
     STEPFUNCTIONS: 'AWS-StepFunctions',
@@ -157,12 +151,33 @@ export const ClassNames = {
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
 
-export const ZeitTags = {
+export const AwsTags = {
+    AWS_REGION: 'aws.region',
+    AWS_ACCOUNT_NO: 'aws.account_no',
+    AWS_XRAY_TRACE_ID: 'aws.xray.trace.id',
+    AWS_XRAY_SEGMENT_ID: 'aws.xray.segment.id',
+};
+
+export const AwsLambdaWrapperTags = {
+    AWS_LAMBDA_ARN: 'aws.lambda.arn',
+    AWS_LAMBDA_NAME: 'aws.lambda.name',
+    AWS_LAMBDA_MEMORY_LIMIT: 'aws.lambda.memory_limit',
+    AWS_LAMBDA_LOG_GROUP_NAME: 'aws.lambda.log_group_name',
+    AWS_LAMBDA_LOG_STREAM_NAME: 'aws.lambda.log_stream_name',
+    AWS_LAMBDA_INVOCATION_COLDSTART: 'aws.lambda.invocation.coldstart',
+    AWS_LAMBDA_INVOCATION_REQUEST_ID: 'aws.lambda.invocation.request_id',
+    AWS_LAMBDA_INVOCATION_MEMORY_USAGE: 'aws.lambda.invocation.memory_usage',
+    AWS_LAMBDA_INVOCATION_TIMEOUT: 'aws.lambda.invocation.timeout',
+    AWS_LAMBDA_INVOCATION_REQUEST: 'aws.lambda.invocation.request',
+    AWS_LAMBDA_INVOCATION_RESPONSE: 'aws.lambda.invocation.response',
+};
+
+export const VercelTags = {
     DEPLOYMENT_URL: 'DEPLOYMENT_URL',
 };
 
-export const ZeitConstants = {
-    DEPLOYMENT_URL_HEADER: 'x-now-deployment-url',
+export const VercelConstants = {
+    DEPLOYMENT_URL_HEADER: 'x-vercel-deployment-url',
 };
 
 export const NetlifyConstants = {
@@ -196,6 +211,11 @@ export const MongoDBTags = {
     MONGODB_COMMAND: 'mongodb.command',
     MONGODB_COMMAND_NAME: 'mongodb.command.name',
     MONGODB_COLLECTION: 'mongodb.collection.name',
+};
+
+export const MethodTags = {
+    ARGS: 'method.args',
+    RETURN_VALUE: 'method.return_value',
 };
 
 export const LineByLineTags = {
@@ -685,3 +705,29 @@ export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: {[key: number]: string} = {
 };
 
 export const THUNDRA_TRACE_KEY = '_thundra';
+
+export const SPAN_TAGS_TO_TRIM_1: string[] = [
+    MethodTags.ARGS,
+    MethodTags.RETURN_VALUE,
+    LineByLineTags.LINES,
+    LineByLineTags.SOURCE,
+];
+export const SPAN_TAGS_TO_TRIM_2: string[] = [
+    AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST,
+    AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_RESPONSE,
+    HttpTags.BODY,
+    DBTags.DB_STATEMENT,
+    RedisTags.REDIS_COMMAND,
+    RedisTags.REDIS_COMMANDS,
+    RedisTags.REDIS_COMMAND_ARGS,
+    ESTags.ES_BODY,
+    MongoDBTags.MONGODB_COMMAND,
+    AwsLambdaTags.INVOCATION_PAYLOAD,
+    AwsSQSTags.MESSAGE,
+    AwsSQSTags.MESSAGES,
+    AwsSNSTags.MESSAGE,
+    AwsSESTags.BODY,
+    AwsSESTags.TEMPLATE_DATA,
+    AwsEventBridgeTags.ENTRIES,
+    AwsStepFunctionsTags.EXECUTION_INPUT,
+];

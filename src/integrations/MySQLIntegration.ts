@@ -1,7 +1,6 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes,
-    LAMBDA_APPLICATION_DOMAIN_NAME, LAMBDA_APPLICATION_CLASS_NAME, ClassNames,
+    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, ClassNames,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -26,6 +25,8 @@ class MySQLIntegration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<MySQLIntegration> Activating MySQL integration');
+
         this.config = config || {};
         this.instrumentContext = Utils.instrument(
             [MODULE_NAME], MODULE_VERSION,
@@ -44,21 +45,26 @@ class MySQLIntegration implements Integration {
      * @inheritDoc
      */
     wrap(lib: any, config: any) {
-        const integration = this;
+        ThundraLogger.debug('<MySQLIntegration> Wrap');
 
         function wrapper(query: any) {
             let span: ThundraSpan;
 
             return function queryWrapper(sql: any, values: any, cb: any) {
                 try {
+                    ThundraLogger.debug('<MySQLIntegration> Tracing MySQL query:', sql);
+
                     const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
+                        ThundraLogger.debug('<MySQLIntegration> Skipped tracing query as no tracer is available');
                         return query.call(this, sql, values, cb);
                     }
 
                     const me = this;
                     const parentSpan = tracer.getActiveSpan();
+
+                    ThundraLogger.debug(`<MySQLIntegration> Starting MySQL span with name ${this.config.database}`);
 
                     span = tracer._startSpan(this.config.database, {
                         childOf: parentSpan,
@@ -75,8 +81,6 @@ class MySQLIntegration implements Integration {
                         [DBTags.DB_PORT]: this.config.port,
                         [DBTags.DB_TYPE]: DBTypes.MYSQL,
                         [SpanTags.TOPOLOGY_VERTEX]: true,
-                        [SpanTags.TRIGGER_DOMAIN_NAME]: LAMBDA_APPLICATION_DOMAIN_NAME,
-                        [SpanTags.TRIGGER_CLASS_NAME]: LAMBDA_APPLICATION_CLASS_NAME,
                     });
 
                     const statement = sql;
@@ -101,7 +105,7 @@ class MySQLIntegration implements Integration {
                         if (err) {
                             span.setErrorTag(err);
                         }
-
+                        ThundraLogger.debug(`<MySQLIntegration> Closing MySQL span with name ${span.getOperationName()}`);
                         span.closeWithCallback(me, originalCallback, [err, res]);
                     };
 
@@ -109,20 +113,24 @@ class MySQLIntegration implements Integration {
                         sequence.onResult = wrappedCallback;
                     } else {
                         sequence.on('end', () => {
+                            ThundraLogger.debug(`<MySQLIntegration> Closing MySQL span with name ${span.getOperationName()}`);
                             span.close();
                         });
                     }
 
                     return sequence;
                 } catch (error) {
+                    ThundraLogger.error('<MySQLIntegration> Error occurred while tracing MySQL query:', error);
+
                     if (span) {
+                        ThundraLogger.debug(
+                            `<MySQLIntegration> Because of error, closing MySQL span with name ${span.getOperationName()}`);
                         span.close();
                     }
 
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        ThundraLogger.error(error);
                         query.call(this, sql, values, cb);
                     }
                 }
@@ -130,6 +138,8 @@ class MySQLIntegration implements Integration {
         }
 
         if (has(lib, 'prototype.query')) {
+            ThundraLogger.debug('<MySQLIntegration> Wrapping "mysql.query"');
+
             shimmer.wrap(lib.prototype, 'query', wrapper);
         }
     }
@@ -139,6 +149,10 @@ class MySQLIntegration implements Integration {
      * @param lib the library to be unwrapped
      */
     doUnwrap(lib: any) {
+        ThundraLogger.debug('<MySQLIntegration> Do unwrap');
+
+        ThundraLogger.debug('<MySQLIntegration> Unwrapping "mysql.query"');
+
         shimmer.unwrap(lib.prototype, 'query');
     }
 
@@ -146,6 +160,8 @@ class MySQLIntegration implements Integration {
      * @inheritDoc
      */
     unwrap() {
+        ThundraLogger.debug('<MySQLIntegration> Unwrap');
+
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
