@@ -381,6 +381,7 @@ export const HttpTags = {
     HTTP_PATH: 'http.path',
     HTTP_HOST: 'http.host',
     HTTP_STATUS: 'http.status_code',
+    HTTP_ROUTE_PATH: 'http.route_path',
     QUERY_PARAMS: 'http.query_params',
     BODY: 'http.body',
 };

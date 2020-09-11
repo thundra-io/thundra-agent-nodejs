@@ -54,7 +54,8 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
     WrapperUtils.finishTrace(pluginContext, execContext);
 
-    const { rootSpan, response } = execContext;
+    const { rootSpan, response, request } = execContext;
 
     Utils.copyProperties(response, ['statusCode'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
+    Utils.copyProperties(request.route, ['path'], rootSpan.tags, [HttpTags.HTTP_ROUTE_PATH]);
 }
