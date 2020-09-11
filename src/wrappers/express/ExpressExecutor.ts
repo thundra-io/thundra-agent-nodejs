@@ -6,8 +6,6 @@ import WrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 
-const get = require('lodash.get');
-
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
 }
@@ -18,8 +16,7 @@ export function finishInvocation(pluginContext: PluginContext, execContext: any)
 
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
     const { request } = execContext;
-    const resourceName = get(request, 'route.path');
-    WrapperUtils.startTrace(pluginContext, execContext, resourceName);
+    WrapperUtils.startTrace(pluginContext, execContext);
 
     const { rootSpan, triggerOperationName, response } = execContext;
     // Put initial root span tags

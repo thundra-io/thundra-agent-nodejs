@@ -174,15 +174,15 @@ export default class WebWrapperUtils {
         }
     }
 
-    static startTrace(pluginContext: PluginContext, execContext: ExecutionContext, resourceName?: string) {
+    static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
         const { tracer, request } = execContext;
         const propagatedSpanContext: ThundraSpanContext =
             tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
 
         const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
         const normalizedPath = Utils.getNormalizedPath(request.path, depth);
-        const triggerOperationName = resourceName ? request.hostname + resourceName
-            : get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`) || request.hostname + normalizedPath;
+        const triggerOperationName = get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`) 
+            || request.hostname + normalizedPath;
         const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
         const incomingSpanID = get(propagatedSpanContext, 'spanId');
 
