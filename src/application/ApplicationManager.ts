@@ -21,7 +21,11 @@ export class ApplicationManager {
     }
 
     static getApplicationInfo(): ApplicationInfo {
-        return ApplicationManager.applicationInfoProvider.getApplicationInfo();
+        if (ApplicationManager.applicationInfoProvider) {
+            return ApplicationManager.applicationInfoProvider.getApplicationInfo();
+        } else {
+            return null;
+        }
     }
 
 }
