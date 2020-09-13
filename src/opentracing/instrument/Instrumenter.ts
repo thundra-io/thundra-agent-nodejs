@@ -123,7 +123,7 @@ class Instrumenter {
         }
         const valueType = typeof value;
         if (valueType === 'function') {
-            return value.toString();
+            return `function ${value.name}(...) { ... }`;
         }
         if (value instanceof Map || value instanceof Set) {
             value = [...value];
