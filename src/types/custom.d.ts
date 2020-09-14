@@ -3,11 +3,10 @@
  */
 
 declare namespace NodeJS {
-
     export interface Global {
-        __thundraTraceEntry__ : any
-        __thundraTraceLine__ : any
-        __thundraTraceExit__ : any
+        __thundraImports__: any;
+        __thundraTraceEntry__: any;
+        __thundraTraceLine__: any;
+        __thundraTraceExit__: any;
     }
-
 }

@@ -18,6 +18,15 @@ import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
 
+// Check if multiple instances of package exist
+if (!global.__thundraImports__) {
+    global.__thundraImports__ = {};
+}
+global.__thundraImports__[__filename] = true;
+if (Object.keys(global.__thundraImports__).length > 1) {
+    console.warn('Beware that multiple instances of "@thundra/core" package exist!');
+}
+
 let initialized = false;
 
 /**
