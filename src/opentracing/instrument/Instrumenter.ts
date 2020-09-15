@@ -179,7 +179,7 @@ class Instrumenter {
             }
             let methodName = null;
             try {
-                methodName = args.path + '.' + args.name;
+                methodName = args.path + '/' + args.name;
                 const span = tracer.startSpan(
                     methodName,
                     {
