@@ -24,7 +24,11 @@ if (!global.__thundraImports__) {
 }
 global.__thundraImports__[__filename] = true;
 if (Object.keys(global.__thundraImports__).length > 1) {
-    console.warn('Beware that multiple instances of "@thundra/core" package exist!');
+    let message = 'Beware that multiple instances of "@thundra/core" package exist in the following locations!';
+    for (const location in global.__thundraImports__) {
+        message += `\r\n${location}`;
+    }
+    console.warn(message);
 }
 
 let initialized = false;
