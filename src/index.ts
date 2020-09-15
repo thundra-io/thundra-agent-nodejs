@@ -24,7 +24,7 @@ if (!global.__thundraImports__) {
 }
 global.__thundraImports__[__filename] = true;
 if (Object.keys(global.__thundraImports__).length > 1) {
-    let message = 'Beware that multiple instances of "@thundra/core" package exist in the following locations!';
+    let message = '[THUNDRA] Beware that multiple instances of "@thundra/core" package exist in the following locations!';
     for (const location in global.__thundraImports__) {
         message += `\r\n${location}`;
     }
