@@ -186,7 +186,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH]: {
         type: 'number',
-        defaultValue: 1,
+        defaultValue: 2,
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE]: {
         type: 'boolean',
