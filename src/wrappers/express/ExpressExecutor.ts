@@ -73,7 +73,7 @@ function handleRoutePath(context: ExecutionContext, resourceName: string) {
     // Change root span name and response header
     rootSpan.operationName = resourceName;
     response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
-    InvocationSupport.setAgentTagit sg(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
+    InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
 }
 
 function setupRoutePathHandler(execContext: ExecutionContext) {
