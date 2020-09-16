@@ -1,10 +1,11 @@
 import Utils from '../../utils/Utils';
-import { HttpTags, TriggerHeaderTags } from '../../Constants';
+import { HttpTags, TriggerHeaderTags, SpanTags } from '../../Constants';
 import PluginContext from '../../plugins/PluginContext';
 import ExecutionContext from '../../context/ExecutionContext';
 import WrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
+import InvocationSupport from '../../plugins/support/InvocationSupport';
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
@@ -72,6 +73,7 @@ function handleRoutePath(context: ExecutionContext, resourceName: string) {
     // Change root span name and response header
     rootSpan.operationName = resourceName;
     response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
+    InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
 }
 
 function setupRoutePathHandler(execContext: ExecutionContext) {

@@ -165,7 +165,7 @@ describe('express wrapper', () => {
 
         expect(invocationData.traceId).toBe('incomingTraceId');
         expect(invocationData.incomingTraceLinks).toEqual(['incomingSpanId']);
-        expect(invocationData.tags[SpanTags.TRIGGER_OPERATION_NAMES]).toEqual(['incomingResourceName']);
+        expect(invocationData.tags[SpanTags.TRIGGER_OPERATION_NAMES]).toEqual(['127.0.0.1/']);
         expect(invocationData.tags[SpanTags.TRIGGER_CLASS_NAME]).toEqual('HTTP');
         expect(invocationData.tags[SpanTags.TRIGGER_DOMAIN_NAME]).toEqual('API');
     });
