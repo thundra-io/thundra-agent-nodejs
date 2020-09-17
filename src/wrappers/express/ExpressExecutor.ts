@@ -87,11 +87,35 @@ function setupRoutePathHandler(execContext: ExecutionContext) {
             set(newValue) {
                 request._route = newValue;
                 if (request._route) {
-                    handleRoutePath(execContext, request._route.path);
+                    const mergedPath = mergePathAndRoute(request.originalUrl, request._route.path);
+                    handleRoutePath(execContext, mergedPath);
                 }
             },
         });
     } else {
         handleRoutePath(execContext, request.route.path);
     }
+}
+
+export function mergePathAndRoute(path: string, route: string) {
+    if (path.indexOf('?') > -1) {
+        path = path.substring(0, path.indexOf('?'));
+    }
+
+    const routeSCount = route.split('/').length - 1;
+    const onlySlash = route === '/';
+
+    let normalizedPath;
+
+    if (!onlySlash) {
+        for (let i = 0; i < routeSCount; i++) {
+            path = path.substring(0, path.lastIndexOf('/'));
+        }
+        normalizedPath = path + route;
+    } else {
+        const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
+        normalizedPath = Utils.getNormalizedPath(path, depth);
+    }
+
+    return normalizedPath;
 }
