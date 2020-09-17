@@ -6,6 +6,7 @@ import WrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
+import { memoryUsage } from 'process';
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
@@ -97,22 +98,25 @@ function setupRoutePathHandler(execContext: ExecutionContext) {
     }
 }
 
-function mergePathAndRoute(path: string, route: string) {
+export function mergePathAndRoute(path: string, route: string) {
     if (path.indexOf('?') > -1) {
-        path = path.substring(0, path.lastIndexOf('?'));
+        path = path.substring(0, path.indexOf('?'));
     }
 
-    const routePCount = route.split('/').length - 1;
-    const multipleParanthesis = routePCount > 1;
+    const routeSCount = route.split('/').length - 1;
+    const onlySlash = route === '/';
 
-    if (multipleParanthesis) {
-        for (let i = 0; i < routePCount; i++) {
+    let normalizedPath;
+
+    if (!onlySlash) {
+        for (let i = 0; i < routeSCount; i++) {
             path = path.substring(0, path.lastIndexOf('/'));
         }
+        normalizedPath = path + route;
+    } else {
+        const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
+        normalizedPath = Utils.getNormalizedPath(path, depth);
     }
-    const pathToNormalize = multipleParanthesis ? path + route : path;
-    const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
-    const normalizedPath = Utils.getNormalizedPath(pathToNormalize, depth);
 
     return normalizedPath;
 }

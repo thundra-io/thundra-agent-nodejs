@@ -140,12 +140,6 @@ export default class WebWrapperUtils {
         if (error) {
             const parsedErr = Utils.parseError(error);
             invocationData.setError(parsedErr);
-
-            if (error instanceof TimeoutError) { // TODO: Move to platform utils
-                invocationData.timeout = true;
-                invocationData.tags['aws.lambda.invocation.timeout'] = true;
-            }
-
             invocationData.tags.error = true;
             invocationData.tags['error.message'] = parsedErr.errorMessage;
             invocationData.tags['error.kind'] = parsedErr.errorType;
