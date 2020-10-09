@@ -65,15 +65,16 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
 }
 
 function handleRoutePath(context: ExecutionContext, resourceName: string) {
-    const { rootSpan, response } = context;
+    const { rootSpan, request, response } = context;
 
-    context.triggerOperationName = resourceName;
+    const triggerOperationName = request.hostname + resourceName;
+    context.triggerOperationName = triggerOperationName;
     context.applicationResourceName = resourceName;
 
     // Change root span name and response header
     rootSpan.operationName = resourceName;
-    response.set(TriggerHeaderTags.RESOURCE_NAME, resourceName);
-    InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [resourceName]);
+    response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
+    InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
 }
 
 function setupRoutePathHandler(execContext: ExecutionContext) {

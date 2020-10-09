@@ -202,6 +202,7 @@ export default class WebWrapperUtils {
         execContext.spanId = execContext.rootSpan.spanContext.spanId;
         execContext.rootSpan.startTime = execContext.startTimestamp;
         execContext.triggerOperationName = triggerOperationName;
+        execContext.applicationResourceName = normalizedPath;
     }
 
     static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
