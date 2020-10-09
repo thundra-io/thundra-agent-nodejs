@@ -6,6 +6,7 @@ import WrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
+import { ApplicationManager } from '../../application/ApplicationManager';
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
@@ -65,15 +66,18 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
 }
 
 function handleRoutePath(context: ExecutionContext, resourceName: string) {
-    const { rootSpan, request, response } = context;
+    const { rootSpan, response } = context;
 
-    const triggerOperationName = request.hostname + resourceName;
+    const triggerOperationName = resourceName;
     context.triggerOperationName = triggerOperationName;
 
     // Change root span name and response header
     rootSpan.operationName = resourceName;
     response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
     InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
+    ApplicationManager.getApplicationInfoProvider().update({
+        applicationResourceName: resourceName,
+    });
 }
 
 function setupRoutePathHandler(execContext: ExecutionContext) {

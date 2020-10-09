@@ -165,7 +165,7 @@ describe('express wrapper', () => {
 
         expect(invocationData.traceId).toBe('incomingTraceId');
         expect(invocationData.incomingTraceLinks).toEqual(['incomingSpanId']);
-        expect(invocationData.tags[SpanTags.TRIGGER_OPERATION_NAMES]).toEqual(['127.0.0.1/']);
+        expect(invocationData.tags[SpanTags.TRIGGER_OPERATION_NAMES]).toEqual(['/']);
         expect(invocationData.tags[SpanTags.TRIGGER_CLASS_NAME]).toEqual('HTTP');
         expect(invocationData.tags[SpanTags.TRIGGER_DOMAIN_NAME]).toEqual('API');
     });
@@ -306,7 +306,7 @@ describe('should handle 2 express app calling each other', () => {
 
         expect(calleeContext.traceId).toBe(callerContext.traceId);
         expect(calleeContext.invocationData.incomingTraceLinks).toEqual([callerContext.tracer.getSpanList()[1].spanContext.spanId]);
-        expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_OPERATION_NAMES]).toEqual(['localhost/user']);
+        expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_OPERATION_NAMES]).toEqual(['/user']);
         expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_CLASS_NAME]).toEqual('HTTP');
         expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_DOMAIN_NAME]).toEqual('API');
         expect(calleeContext.invocationData.incomingTraceLinks).toEqual(callerContext.invocationData.outgoingTraceLinks);

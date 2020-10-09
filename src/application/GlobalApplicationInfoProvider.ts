@@ -39,6 +39,7 @@ export class GlobalApplicationInfoProvider implements ApplicationInfoProvider {
             applicationRegion: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_REGION),
             applicationVersion: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_VERSION),
             applicationStage: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_STAGE),
+            applicationResourceName: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_RESOURCE_NAME),
             applicationTags: Utils.getApplicationTags(),
         };
     }

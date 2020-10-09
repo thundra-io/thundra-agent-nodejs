@@ -13,6 +13,7 @@ class InvocationData extends BaseMonitoringData {
     spanId: string;
     applicationPlatform: string;
     applicationRegion: string;
+    applicationResourceName: string;
     startTimestamp: number;
     finishTimestamp: number;
     duration: number;

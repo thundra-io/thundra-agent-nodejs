@@ -162,6 +162,7 @@ export default class WebWrapperUtils {
         invocationData.resources = InvocationTraceSupport.getResources(spanId);
         invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
         invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
+        invocationData.applicationResourceName = ApplicationManager.getApplicationInfo().applicationResourceName;
 
         if (Utils.isValidHTTPResponse(response)) {
             invocationData.setUserTags({ [HttpTags.HTTP_STATUS]: response.statusCode });
