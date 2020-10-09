@@ -11,5 +11,4 @@ export interface ApplicationInfo {
     applicationVersion: string;
     applicationStage: string;
     applicationTags: any;
-    applicationResourceName: string;
 }

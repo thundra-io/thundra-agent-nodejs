@@ -32,8 +32,6 @@ class ConfigNames {
         'thundra.agent.application.name';
     public static readonly THUNDRA_APPLICATION_STAGE: string =
         'thundra.agent.application.stage';
-    public static readonly THUNDRA_APPLICATION_RESOURCE_NAME: string =
-        'thundra.agent.application.resourcename';
     public static readonly THUNDRA_APPLICATION_DOMAIN_NAME: string =
         'thundra.agent.application.domainname';
     public static readonly THUNDRA_APPLICATION_CLASS_NAME: string =

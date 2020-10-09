@@ -26,7 +26,6 @@ export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
             applicationStage: '',
             applicationVersion: functionVersion ? functionVersion : '',
             applicationTags: Utils.getApplicationTags(),
-            applicationResourceName: '',
         };
     }
 

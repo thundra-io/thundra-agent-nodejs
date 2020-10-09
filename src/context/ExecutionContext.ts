@@ -30,6 +30,7 @@ export default class ExecutionContext {
     request: any;
     incomingTraceLinks: any[];
     outgoingTraceLinks: any[];
+    applicationResourceName: string;
     captureLog: boolean;
     logs: LogData[];
 
@@ -56,6 +57,7 @@ export default class ExecutionContext {
         this.logs = opts.logs || [];
         this.metrics = opts.metric || {};
         this.triggerOperationName = opts.triggerOperationName || '';
+        this.applicationResourceName = opts.applicationResourceName || '';
     }
 
     /**

@@ -43,9 +43,6 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     [ConfigNames.THUNDRA_APPLICATION_STAGE]: {
         type: 'string',
     },
-    [ConfigNames.THUNDRA_APPLICATION_RESOURCE_NAME]: {
-        type: 'string',
-    },
     [ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME]: {
         type: 'string',
         defaultValue: 'API',
