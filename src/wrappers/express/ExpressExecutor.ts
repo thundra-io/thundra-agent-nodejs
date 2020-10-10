@@ -69,6 +69,7 @@ function handleRoutePath(context: ExecutionContext, resourceName: string) {
 
     const triggerOperationName = request.hostname + resourceName;
     context.triggerOperationName = triggerOperationName;
+    context.applicationResourceName = resourceName;
 
     // Change root span name and response header
     rootSpan.operationName = resourceName;

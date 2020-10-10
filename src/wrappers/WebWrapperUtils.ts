@@ -135,7 +135,7 @@ export default class WebWrapperUtils {
     }
 
     static finishInvocationData(execContext: ExecutionContext, pluginContext: PluginContext) {
-        const { error, invocationData } = execContext;
+        const { error, invocationData, applicationResourceName } = execContext;
 
         if (error) {
             const parsedErr = Utils.parseError(error);
@@ -162,6 +162,7 @@ export default class WebWrapperUtils {
         invocationData.resources = InvocationTraceSupport.getResources(spanId);
         invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
         invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
+        invocationData.applicationResourceName = applicationResourceName;
 
         if (Utils.isValidHTTPResponse(response)) {
             invocationData.setUserTags({ [HttpTags.HTTP_STATUS]: response.statusCode });
@@ -201,6 +202,7 @@ export default class WebWrapperUtils {
         execContext.spanId = execContext.rootSpan.spanContext.spanId;
         execContext.rootSpan.startTime = execContext.startTimestamp;
         execContext.triggerOperationName = triggerOperationName;
+        execContext.applicationResourceName = normalizedPath;
     }
 
     static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
