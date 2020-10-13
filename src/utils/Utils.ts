@@ -545,10 +545,7 @@ class Utils {
         newAppInfo.applicationStage = updates.applicationStage || applicationInfo.applicationStage || '';
         newAppInfo.applicationVersion = updates.applicationVersion || applicationInfo.applicationVersion || '';
         newAppInfo.applicationTags = updates.applicationTags || applicationInfo.applicationTags;
-
-        const defaultAppID =
-            `node:${newAppInfo.applicationClassName}:${newAppInfo.applicationRegion}:${newAppInfo.applicationName}`;
-        newAppInfo.applicationId = updates.applicationId || applicationInfo.applicationId || defaultAppID;
+        newAppInfo.applicationId = updates.applicationId || applicationInfo.applicationId;
 
         return newAppInfo;
     }

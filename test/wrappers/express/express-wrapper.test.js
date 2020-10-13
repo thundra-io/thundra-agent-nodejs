@@ -139,9 +139,9 @@ describe('express wrapper', () => {
         const { invocationData } = execContext;
         expect(invocationData).toBeTruthy();
 
+        expect(invocationData.applicationId).toBe("node:EXPRESS::thundra-app");
         expect(invocationData.applicationInstanceId).toBeTruthy();
-        expect(invocationData.applicationClassName).toBe('Express');
-        expect(invocationData.applicationDomainName).toBe('API');
+        expect(invocationData.applicationClassName).toBe('EXPRESS');
         expect(invocationData.applicationDomainName).toBe('API');
         expect(invocationData.startTimestamp).toBeTruthy();
         expect(invocationData.finishTimestamp).toBeTruthy();

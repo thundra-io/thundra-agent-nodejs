@@ -6,11 +6,17 @@ import * as ExpressExecutor from './ExpressExecutor';
 import WrapperUtils from '../WebWrapperUtils';
 import ExecutionContext from '../../context/ExecutionContext';
 import ThundraLogger from '../../ThundraLogger';
+import { ClassNames, DomainNames } from '../../Constants';
 
 export function expressMW(opts: any = {}) {
     ApplicationManager.setApplicationInfoProvider().update({
-        applicationClassName: 'Express',
-        applicationDomainName: 'API',
+        applicationClassName: ClassNames.EXPRESS,
+        applicationDomainName: DomainNames.API,
+    });
+
+    const appInfo = ApplicationManager.getApplicationInfo();
+    ApplicationManager.getApplicationInfoProvider().update({
+        applicationId: WrapperUtils.getDefaultApplicationId(appInfo),
     });
 
     const config = opts.config || ConfigProvider.thundraConfig;

@@ -21,10 +21,15 @@ import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import { HttpTags, DomainNames, ClassNames, SpanTags, TriggerHeaderTags } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
+import { ApplicationInfo } from '../application/ApplicationInfo';
 
 const get = require('lodash.get');
 
 export default class WebWrapperUtils {
+    static getDefaultApplicationId(appInfo: ApplicationInfo) {
+        return `node:${appInfo.applicationClassName}:${appInfo.applicationRegion}:${appInfo.applicationName}`;
+    }
+
     static async beforeRequest(request: any, response: any, plugins: any[]) {
         const context = ExecutionContextManager.get();
 
