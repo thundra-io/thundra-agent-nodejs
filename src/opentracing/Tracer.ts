@@ -239,6 +239,10 @@ class ThundraTracer extends Tracer {
     }
 
     _extract(format: any, carrier: any): ThundraSpanContext {
+        if (!carrier) {
+            return null;
+        }
+
         try {
             return this.propagators[format].extract(carrier);
         } catch (e) {
