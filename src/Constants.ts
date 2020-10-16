@@ -9,7 +9,7 @@ import MySQLIntegration from './integrations/MySQLIntegration';
 import RedisIntegration from './integrations/RedisIntegration';
 import MongoDBIntegration from './integrations/MongoDBIntegration';
 import IORedisIntegration from './integrations/IORedisIntegration';
-import {AWSIntegration} from './integrations/AWSIntegration';
+import { AWSIntegration } from './integrations/AWSIntegration';
 import ESIntegration from './integrations/ESIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './listeners/ErrorInjectorSpanListener';
@@ -36,6 +36,9 @@ export const EnvVariableKeys = {
 
     NODE_TLS_REJECT_UNAUTHORIZED: 'NODE_TLS_REJECT_UNAUTHORIZED',
     _HANDLER: '_HANDLER',
+
+    GGC_VERSION: 'GGC_VERSION',
+    MY_FUNCTION_ARN: 'MY_FUNCTION_ARN',
 };
 
 export function getTimeoutMargin(region: string) {
@@ -698,7 +701,7 @@ export const DEBUG_BRIDGE_FILE_NAME = 'debugBridge.js';
 export const BROKER_WS_PROTOCOL = 'ws://';
 export const BROKER_WSS_PROTOCOL = 'wss://';
 export const BROKER_WS_HTTP_ERROR_PATTERN = /:\s*\D*(\d+)/;
-export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: {[key: number]: string} = {
+export const BROKER_WS_HTTP_ERR_CODE_TO_MSG: { [key: number]: string } = {
     429: `Reached the concurrent session limit, couldn't start Thundra debugger.`,
     401: `Authentication is failed, check your Thundra debugger authentication token.`,
     409: `Another session with the same session name exists, connection closed.`,
