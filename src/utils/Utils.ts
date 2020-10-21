@@ -3,7 +3,7 @@ import * as os from 'os';
 import {
     DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
     EnvVariableKeys,
-    LISTENERS, AGENT_VERSION, AWS_SERVICE_REQUEST,
+    LISTENERS, AGENT_VERSION,
 } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
