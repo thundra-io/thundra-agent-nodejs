@@ -8,6 +8,7 @@ import {
     AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY,
 } from '../Constants';
 import Utils from '../utils/Utils';
+import LambdaUtils from '../utils/LambdaUtils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -433,7 +434,7 @@ export class AWSLambdaIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.LAMBDA);
-        const normalizedFunctionName = Utils.getNormalizedFunctionName(request);
+        const normalizedFunctionName = LambdaUtils.getNormalizedFunctionName(request);
         const spanName = normalizedFunctionName.name;
         const parentSpan = tracer.getActiveSpan();
 

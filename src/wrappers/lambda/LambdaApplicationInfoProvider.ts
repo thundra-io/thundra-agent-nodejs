@@ -1,4 +1,6 @@
 import Utils from '../../utils/Utils';
+import LambdaUtils from '../../utils/LambdaUtils';
+
 import { EnvVariableKeys, LAMBDA_APPLICATION_CLASS_NAME, LAMBDA_APPLICATION_DOMAIN_NAME } from '../../Constants';
 import { ApplicationInfoProvider } from '../../application/ApplicationInfoProvider';
 import { ApplicationInfo } from '../../application/ApplicationInfo';
@@ -17,7 +19,7 @@ export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
         const ggcVersion = Utils.getEnvVar(EnvVariableKeys.GGC_VERSION);
 
         if (ggcVersion) {
-            const lambdaArn = Utils.getNormalizedFunctionName(null,
+            const lambdaArn = LambdaUtils.getNormalizedFunctionName(null,
                 Utils.getEnvVar(EnvVariableKeys.MY_FUNCTION_ARN));
 
             functionVersion = lambdaArn.qualifier;

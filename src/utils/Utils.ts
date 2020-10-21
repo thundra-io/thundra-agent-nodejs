@@ -30,7 +30,6 @@ const uuidv4 = require('uuid/v4');
 const zlib = require('zlib');
 const Hook = require('require-in-the-middle');
 const path = require('path');
-const get = require('lodash.get');
 
 declare var __non_webpack_require__: any;
 const customReq = typeof __non_webpack_require__ !== 'undefined'
@@ -590,25 +589,6 @@ class Utils {
         } catch (error) {
             ThundraLogger.error(`Couldn't normalize the given path: ${pathStr}, for depth value: ${depth}`);
             return pathStr;
-        }
-    }
-
-    static getNormalizedFunctionName(request: any, lambdaArn?: string) {
-        const fullName: string = lambdaArn ? lambdaArn : get(request, 'params.FunctionName', AWS_SERVICE_REQUEST);
-        const parts = fullName.split(':');
-
-        if (parts.length === 0 || parts.length === 1) { // funcName
-            return { name: fullName };
-        } else if (parts.length === 2) { // funcName:qualifier
-            return { name: parts[0], qualifier: parts[1] };
-        } else if (parts.length === 3) { // accountId:function:funcName
-            return { name: parts[2] };
-        } else if (parts.length === 4) { // accountId:function:funcName:qualifier
-            return { name: parts[2], qualifier: parts[3] };
-        } else if (parts.length === 7) { // arn:aws:lambda:region:accountId:function:funcName
-            return { name: parts[6] };
-        } else if (parts.length === 8) { // arn:aws:lambda:region:accountId:function:funcName:qualifier
-            return { name: parts[6], qualifier: parts[7] };
         }
     }
 
