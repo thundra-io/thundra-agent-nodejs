@@ -6,6 +6,7 @@ import WrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
+import { HTTP_METHOD } from 'opentracing/lib/ext/tags';
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
@@ -41,6 +42,8 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         ],
     );
 
+    InvocationSupport.setAgentTag(HTTP_METHOD, request.method);
+
     if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_REQUEST_SKIP)) {
         Utils.copyProperties(
             request,
@@ -60,6 +63,7 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
 
     const { rootSpan, response, request } = execContext;
 
+    InvocationSupport.setAgentTag(HttpTags.HTTP_STATUS, response.statusCode);
     Utils.copyProperties(response, ['statusCode'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
     Utils.copyProperties(request.route, ['path'], rootSpan.tags, [HttpTags.HTTP_ROUTE_PATH]);
 }
