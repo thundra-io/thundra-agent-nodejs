@@ -8,6 +8,7 @@ import {
     AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY,
 } from '../Constants';
 import Utils from '../utils/Utils';
+import LambdaUtils from '../utils/LambdaUtils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -433,7 +434,7 @@ export class AWSLambdaIntegration {
     public static createSpan(tracer: any, request: any, config: any): ThundraSpan {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.LAMBDA);
-        const normalizedFunctionName = AWSLambdaIntegration.getNormalizedFunctionName(request);
+        const normalizedFunctionName = LambdaUtils.getNormalizedFunctionName(request);
         const spanName = normalizedFunctionName.name;
         const parentSpan = tracer.getActiveSpan();
 
@@ -513,25 +514,6 @@ export class AWSLambdaIntegration {
         const custom: any = {};
         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, custom);
         return custom;
-    }
-
-    private static getNormalizedFunctionName(request: any) {
-        const fullName: string = get(request, 'params.FunctionName', AWS_SERVICE_REQUEST);
-        const parts = fullName.split(':');
-
-        if (parts.length === 0 || parts.length === 1) { // funcName
-            return {name: fullName};
-        } else if (parts.length === 2) { // funcName:qualifier
-            return {name: parts[0], qualifier: parts[1]};
-        } else if (parts.length === 3) { // accountId:function:funcName
-            return {name: parts[2]};
-        } else if (parts.length === 4) { // accountId:function:funcName:qualifier
-            return {name: parts[2], qualifier: parts[3]};
-        } else if (parts.length === 7) { // arn:aws:lambda:region:accountId:function:funcName
-            return {name: parts[6]};
-        } else if (parts.length === 8) { // arn:aws:lambda:region:accountId:function:funcName:qualifier
-            return {name: parts[6], qualifier: parts[7]};
-        }
     }
 
 }
