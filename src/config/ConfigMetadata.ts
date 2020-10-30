@@ -45,11 +45,9 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     },
     [ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME]: {
         type: 'string',
-        defaultValue: 'API',
     },
     [ConfigNames.THUNDRA_APPLICATION_CLASS_NAME]: {
         type: 'string',
-        defaultValue: 'AWS-Lambda',
     },
     [ConfigNames.THUNDRA_APPLICATION_VERSION]: {
         type: 'string',
