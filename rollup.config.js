@@ -1,3 +1,5 @@
+import copy from 'rollup-plugin-copy';
+
 const typescript = require('rollup-plugin-typescript');
 const { terser } = require('rollup-plugin-terser');
 const resolve = require('rollup-plugin-node-resolve');
@@ -40,7 +42,12 @@ module.exports = [
                 replaces: {
                     'import * as opentracing from \'opentracing\';': 'import opentracing from \'opentracing\';',
                 }
-            })
+            }),
+            copy({
+                targets: [{
+                    src: 'src/index.d.ts', dest: 'dist', rename: 'thundra.d.ts',
+                }],
+            }),
         ]
     },
     {
