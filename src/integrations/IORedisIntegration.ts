@@ -2,7 +2,7 @@ import Integration from './Integration';
 import ThundraSpan from '../opentracing/Span';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../ThundraLogger';
-import Utils from '../utils/Utils';
+import ModuleUtils from '../utils/ModuleUtils';
 import {
     DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags, RedisCommandTypes,
 } from '../Constants';
@@ -29,7 +29,7 @@ class IORedisIntegration implements Integration {
         ThundraLogger.debug('<IORedisIntegration> Activating IORedis integration');
 
         this.config = config || {};
-        this.instrumentContext = Utils.instrument(
+        this.instrumentContext = ModuleUtils.instrument(
             [MODULE_NAME], MODULE_VERSION,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);

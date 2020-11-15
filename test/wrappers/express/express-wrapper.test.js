@@ -2,15 +2,38 @@ import ConfigProvider from '../../../dist/config/ConfigProvider';
 import ExecutionContextManager from '../../../dist/context/ExecutionContextManager';
 import { createMockExpressApp, createMockReporterInstance } from '../../mocks/mocks';
 import { ClassNames, DomainNames, HttpTags, SpanTags } from '../../../dist/Constants';
-import { expressMW } from '../../../dist/wrappers/express/ExpressWrapper';
+import { init as initExpressWrapper, expressMW } from '../../../dist/wrappers/express/ExpressWrapper';
 
 const request = require('supertest');
 const express = require('express');
 const http = require('http');
+const methods = require('methods');
 
 ConfigProvider.init({ apiKey: 'foo' });
 
+initExpressWrapper();
+
 const app = createMockExpressApp();
+
+function doRequest(app) {
+    var obj = {};
+
+    if (app.server) {
+        app = app.server;
+    } else if (typeof app === 'function') {
+        app = http.createServer(app);
+    }
+
+    methods.forEach(function(method) {
+        obj[method] = function(url) {
+            return new request.Test(app, method, url);
+        };
+    });
+
+    obj.del = obj.delete;
+
+    return obj;
+}
 
 describe('express wrapper', () => {
     beforeEach(() => {
@@ -18,14 +41,14 @@ describe('express wrapper', () => {
     });
 
     test('should get correctly', async () => {
-        const res = await request(app).get('/');
+        const res = await doRequest(app).get('/');
 
         expect(res.status).toBe(200);
         expect(res.text).toBe('Hello Thundra!');
     });
 
     test('should create root span', async () => {
-        const res = await request(app).get('/');
+        const res = await doRequest(app).get('/');
 
         const execContext = ExecutionContextManager.get();
         const spanList = execContext.tracer.getSpanList();
@@ -42,6 +65,30 @@ describe('express wrapper', () => {
         expect(rootSpan.tags[HttpTags.HTTP_HOST]).toBe('127.0.0.1');
         expect(rootSpan.tags[HttpTags.HTTP_PATH]).toBe('/');
         expect(rootSpan.tags[HttpTags.HTTP_STATUS]).toBe(200);
+    });
+
+    test('should trace error', async () => {
+        const res = await doRequest(app).get('/error');
+
+        const execContext = ExecutionContextManager.get();
+        const spanList = execContext.tracer.getSpanList();
+        const rootSpan = spanList[0];
+
+        expect(spanList.length).toBe(1);
+
+        expect(rootSpan.operationName).toBe('/error');
+        expect(rootSpan.className).toBe(ClassNames.EXPRESS);
+        expect(rootSpan.domainName).toBe(DomainNames.API);
+        expect(rootSpan.startTime).toBeTruthy();
+        expect(rootSpan.finishTime).toBeTruthy();
+
+        expect(rootSpan.tags['error']).toBeTruthy();
+        expect(rootSpan.tags['error.kind']).toBe('APIError');
+        expect(rootSpan.tags['error.message']).toBe('Boom');
+
+        expect(rootSpan.tags[HttpTags.HTTP_HOST]).toBe('127.0.0.1');
+        expect(rootSpan.tags[HttpTags.HTTP_PATH]).toBe('/error');
+        expect(rootSpan.tags[HttpTags.HTTP_STATUS]).toBe(500);
     });
 
     test('should connect custom spans', async () => {
@@ -72,7 +119,7 @@ describe('express wrapper', () => {
             res.sendStatus(200);
         });
 
-        const res = await request(customApp).get('/');
+        const res = await doRequest(customApp).get('/');
 
         const spanList = execContext.tracer.getSpanList();
         const rootSpan = spanList[0];
@@ -116,7 +163,7 @@ describe('express wrapper', () => {
     });
 
     test('should fill execution context', async () => {
-        const res = await request(app).get('/');
+        const res = await doRequest(app).get('/');
 
         const execContext = ExecutionContextManager.get();
 
@@ -133,13 +180,13 @@ describe('express wrapper', () => {
     });
 
     test('should create invocation data', async () => {
-        const res = await request(app).get('/');
+        const res = await doRequest(app).get('/');
 
         const execContext = ExecutionContextManager.get();
         const { invocationData } = execContext;
         expect(invocationData).toBeTruthy();
 
-        expect(invocationData.applicationId).toBe("node:EXPRESS::thundra-app");
+        expect(invocationData.applicationId).toBe('node:EXPRESS::thundra-app');
         expect(invocationData.applicationInstanceId).toBeTruthy();
         expect(invocationData.applicationClassName).toBe('EXPRESS');
         expect(invocationData.applicationDomainName).toBe('API');
@@ -153,7 +200,7 @@ describe('express wrapper', () => {
     });
 
     test('should pass trace context', async () => {
-        const res = await request(app)
+        const res = await doRequest(app)
             .get('/')
             .set('x-thundra-transaction-id', 'incomingTransactionId')
             .set('x-thundra-trace-id', 'incomingTraceId')
@@ -198,7 +245,7 @@ describe('express wrapper', () => {
             res.sendStatus(200);
         });
 
-        const supertestAgent = request(customApp);
+        const supertestAgent = doRequest(customApp);
         const promises = [];
         const reqCount = 5;
 
@@ -248,7 +295,7 @@ describe('express wrapper', () => {
             expect(customSpan2.spanContext.transactionId).toBe(transactionId);
             expect(customSpan2.spanContext.parentId).toBe(rootSpanId);
             expect(customSpan2.spanContext.traceId).toBe(traceId);
-        }
+        };
 
         for (const execContext of execContexts) {
             verifyExecContext(execContext);
@@ -302,7 +349,7 @@ describe('should handle 2 express app calling each other', () => {
     })
 
     test('callee should receive caller trace context', async () => {
-        await request(caller).get('/');
+        await doRequest(caller).get('/');
 
         expect(calleeContext.traceId).toBe(callerContext.traceId);
         expect(calleeContext.invocationData.incomingTraceLinks).toEqual([callerContext.tracer.getSpanList()[1].spanContext.spanId]);

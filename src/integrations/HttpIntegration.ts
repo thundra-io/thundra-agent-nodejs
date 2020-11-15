@@ -2,6 +2,7 @@ import Integration from './Integration';
 import * as opentracing from 'opentracing';
 import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, TriggerHeaderTags } from '../Constants';
 import Utils from '../utils/Utils';
+import ModuleUtils from '../utils/ModuleUtils';
 import * as url from 'url';
 import ThundraLogger from '../ThundraLogger';
 import HttpError from '../error/HttpError';
@@ -32,7 +33,7 @@ class HttpIntegration implements Integration {
         ThundraLogger.debug('<HTTPIntegration> Activating HTTP integration');
 
         this.config = config || {};
-        this.instrumentContext = Utils.instrument(
+        this.instrumentContext = ModuleUtils.instrument(
             [MODULE_NAME_HTTP, MODULE_NAME_HTTPS], null,
             (lib: any, cfg: any, moduleName: string) => {
                 this.wrap.call(this, lib, cfg, moduleName);

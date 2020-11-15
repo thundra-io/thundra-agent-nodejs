@@ -46,7 +46,9 @@ describe('thundra library', () => {
             let wrappedFunction;
 
             beforeAll(() => {
-                thundraWrapper = Thundra({ apiKey: 'apiKey' });
+                ConfigProvider.init({ apiKey: 'apiKey' });
+
+                thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
@@ -70,6 +72,7 @@ describe('thundra library', () => {
 
             beforeAll(() => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_APIKEY, 'apiKey');
+                ConfigProvider.init({ });
 
                 thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
@@ -96,7 +99,9 @@ describe('thundra library', () => {
             let wrappedFunction;
             
             beforeAll(() => {
-                thundraWrapper = Thundra({ apiKey: 'apiKey', disableThundra: true, plugins: [] });
+                ConfigProvider.init({ apiKey: 'apiKey', disableThundra: true, plugins: [] });
+
+                thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
@@ -116,7 +121,9 @@ describe('thundra library', () => {
 
             beforeAll(() => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_DISABLE, true);
-                thundraWrapper = Thundra({ apiKey: 'apiKey' });
+                ConfigProvider.init({ apiKey: 'apiKey' });
+
+                thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
@@ -137,7 +144,9 @@ describe('thundra library', () => {
             let wrappedFunction;
 
             beforeAll(() => {
-                thundraWrapper = Thundra({apiKey: 'apiKey', disableTrace: true, disableMetric: true});
+                ConfigProvider.init({ apiKey: 'apiKey', disableTrace: true, disableMetric: true });
+
+                thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
@@ -161,8 +170,9 @@ describe('thundra library', () => {
             beforeAll(() => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_TRACE_DISABLE, true);
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_METRIC_DISABLE, true);
+                ConfigProvider.init({ apiKey: 'apiKey' });
 
-                thundraWrapper = Thundra({apiKey: 'apiKey'});
+                thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
@@ -186,8 +196,9 @@ describe('thundra library', () => {
             beforeAll(() => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_TRACE_DISABLE, false);
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_METRIC_DISABLE, 'ignore');
+                ConfigProvider.init({ apiKey: 'apiKey' });
 
-                thundraWrapper = Thundra({apiKey: 'apiKey'});
+                thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
@@ -211,8 +222,9 @@ describe('thundra library', () => {
 
         beforeAll(() => {
             ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE, true);
+            ConfigProvider.init({ apiKey: 'apiKey' });
 
-            const thundraWrapper = Thundra({ apiKey: 'apiKey' });
+            const thundraWrapper = Thundra();
             const wrappedFunction = thundraWrapper(originalFunction);
 
             console.log = jest.fn();
@@ -235,7 +247,9 @@ describe('thundra library', () => {
         let wrappedFunction;
         
         beforeAll(() => {
-            thundraWrapper = Thundra({ apiKey: 'apiKey' });
+            ConfigProvider.init({ apiKey: 'apiKey' });
+
+            thundraWrapper = Thundra();
             wrappedFunction = thundraWrapper(originalFunction);
             
             return wrappedFunction(originalEvent, originalContext, originalCallback);
@@ -256,7 +270,9 @@ describe('thundra library', () => {
             let wrappedFunction;
             
             beforeAll(() => {
-                thundraWrapper = new Thundra({ apiKey: 'apiKey', trustAllCert: true });
+                ConfigProvider.init({ apiKey: 'apiKey', trustAllCert: true });
+
+                thundraWrapper = new Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
@@ -276,8 +292,9 @@ describe('thundra library', () => {
             
             beforeAll(() => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_REPORT_REST_TRUSTALLCERTIFICATES, true);
+                ConfigProvider.init( { apiKey: 'apiKey' });
 
-                thundraWrapper = new Thundra({ apiKey: 'apiKey' });
+                thundraWrapper = new Thundra();
                 wrappedFunction = thundraWrapper(originalFunction); 
                 return wrappedFunction(originalEvent, originalContext, originalCallback);
             });
