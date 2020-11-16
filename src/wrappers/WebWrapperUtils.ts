@@ -51,10 +51,14 @@ export default class WebWrapperUtils {
             await plugin.afterInvocation(context);
         }
 
-        try {
-            await reporter.sendReports(context.reports);
-        } catch (err) {
-            ThundraLogger.error('<WebWrapperUtils> Error occurred while reporting:', err);
+        if (!context.reportingDisabled) {
+            try {
+                await reporter.sendReports(context.reports);
+            } catch (err) {
+                ThundraLogger.error('<WebWrapperUtils> Error occurred while reporting:', err);
+            }
+        } else {
+            ThundraLogger.debug('<WebWrapperUtils> Skipped reporting as reporting is disabled');
         }
     }
 

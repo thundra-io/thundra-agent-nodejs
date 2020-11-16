@@ -23,8 +23,10 @@ export default class Trace {
 
     pluginOrder: number = 1;
     pluginContext: PluginContext;
-    hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
-            'after-invocation': (execContext: ExecutionContext) => void; };
+    hooks: {
+        'before-invocation': (execContext: ExecutionContext) => void;
+        'after-invocation': (execContext: ExecutionContext) => void;
+    };
     config: TraceConfig;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
@@ -84,8 +86,8 @@ export default class Trace {
         }
 
         const spanList = tracer.getRecorder().getSpanList();
-        const isSampled = get(this.config, 'sampler.isSampled', () => true);
-        const sampled = isSampled(rootSpan);
+        const sampler = get(this.config, 'sampler', { isSampled: () => true });
+        const sampled = sampler.isSampled(rootSpan);
 
         ThundraLogger.debug('<Trace> Checked sampling of transaction', execContext.transactionId, ':', sampled);
 
@@ -93,7 +95,7 @@ export default class Trace {
             const debugEnabled: boolean = ThundraLogger.isDebugEnabled();
             for (const span of spanList) {
                 if (span) {
-                    if (this.config.runSamplerOnEachSpan && !isSampled(span)) {
+                    if (this.config.runSamplerOnEachSpan && !sampler.isSampled(span)) {
                         ThundraLogger.debug(
                             `<Trace> Filtering span with name ${span.getOperationName()} due to custom sampling configuration`);
                         continue;
