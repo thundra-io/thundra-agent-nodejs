@@ -11,10 +11,11 @@
     "test": "npm run compile && npm run test-automatic-instrumentation && docker-compose up -d && jest --silent; docker-compose stop",
     "test-ci": "npm run compile && npm run test-automatic-instrumentation && jest --silent --config jest.ci.config.json --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "tslint --project tsconfig.json -t stylish",
-    "release-minor": "npm install; npm run build; release-it minor -n --npm.publish --src.commit --src.tag --src.push --src.tagName='v%s' --github.release --no-requireCleanWorkingDir --no-requireUpstream",
-    "release-minor-without-tag": "npm install; npm run build; release-it minor -n --npm.publish --no-requireCleanWorkingDir --no-requireUpstream --no-src.commit --no-src.tag --no-src.push --no-src.push --no-src.tagName='v%s' --no-github.release",
-    "release": "npm install; npm run build; release-it -n --npm.publish --src.commit --src.tag --src.push --no-src.push --src.tagName='v%s' --github.release --no-requireCleanWorkingDir --no-requireUpstream",
-    "release-without-tag": "npm install; npm run build; release-it -n --npm.publish --no-requireCleanWorkingDir --no-requireUpstream --no-src.commit --no-src.tag --no-src.push --no-src.push --no-src.tagName='v%s' --no-github.release"
+    "release-minor": "npm install; npm run build; release-it minor --ci --git.commit --git.push --git.tag --git.tagName='v%s' --github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
+    "release-minor-without-tag": "npm install; npm run build; release-it minor --ci --no-git.commit --no-git.push --no-git.tag --no-git.tagName='v%s' --no-git.requireCleanWorkingDir --no-git.requireUpstream --no-github.release --npm.publish",
+    "release": "npm install; npm run build; release-it --ci --git.commit --git.push --git.tag --git.tagName='v%s' --github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
+    "release-without-tag": "npm install; npm run build; release-it --ci --no-git.commit --no-git.push --no-git.tag --no-git.tagName='v%s' --no-github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
+    "release-dry-run": "npm install; npm run build; release-it minor --dry-run --ci --no-git.commit --no-git.push --no-git.tag --no-git.tagName='v%s' --no-git.requireCleanWorkingDir --no-git.requireUpstream --no-github.release --no-npm.publish"
   },
   "repository": {
     "type": "git",
@@ -71,7 +72,7 @@
     "pg": "^7.4.1",
     "pg-hstore": "^2.3.2",
     "redis": "^2.8.0",
-    "release-it": "^7.5.0",
+    "release-it": "^14.2.1",
     "rollup": "^1.16.4",
     "rollup-plugin-commonjs": "^10.0.1",
     "rollup-plugin-json": "^4.0.0",
