@@ -109,6 +109,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_INVOCATION_SAMPLE_ONERROR]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE]: {
         type: 'boolean',
         defaultValue: false,

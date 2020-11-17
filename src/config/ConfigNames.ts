@@ -83,6 +83,11 @@ class ConfigNames {
 
     /////////////////////////////////////////////////////////////////////////////
 
+    public static readonly THUNDRA_INVOCATION_SAMPLE_ONERROR: string =
+        'thundra.agent.invocation.sample.onerror';
+
+    /////////////////////////////////////////////////////////////////////////////
+
     public static readonly THUNDRA_TRACE_INSTRUMENT_DISABLE: string =
         'thundra.agent.trace.instrument.disable';
     public static readonly THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG: string =

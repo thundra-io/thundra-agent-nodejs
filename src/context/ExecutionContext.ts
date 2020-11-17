@@ -33,6 +33,7 @@ export default class ExecutionContext {
     applicationResourceName: string;
     captureLog: boolean;
     logs: LogData[];
+    reportingDisabled: boolean;
 
     constructor(opts: any = {}) {
         this.startTimestamp = opts.startTimestamp || 0;

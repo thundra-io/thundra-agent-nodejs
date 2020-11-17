@@ -12,7 +12,7 @@ import {
     DEBUG_BRIDGE_FILE_NAME,
 } from '../../Constants';
 import Utils from '../../utils/Utils';
-import {readFileSync} from 'fs';
+import { readFileSync } from 'fs';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
@@ -146,9 +146,9 @@ class LambdaHandlerWrapper {
                         if (ThundraLogger.isDebugEnabled()) {
                             ThundraLogger.debug(
                                 '<LambdaHandlerWrapper> Calling original function with the following arguments:', {
-                                    event: this.originalEvent,
-                                    context: this.wrappedContext,
-                                });
+                                event: this.originalEvent,
+                                context: this.wrappedContext,
+                            });
                         }
                         const result = this.originalFunction.call(
                             this.originalThis,
@@ -174,9 +174,9 @@ class LambdaHandlerWrapper {
                         ThundraLogger.debug(
                             '<LambdaHandlerWrapper> Since Lambda wrapper failed, \
                             calling original function directly with the following arguments:', {
-                                event: this.originalEvent,
-                                context: this.originalContext,
-                            });
+                            event: this.originalEvent,
+                            context: this.originalContext,
+                        });
                     }
                     // There is an error on "before-invocation" phase
                     // So skip Thundra wrapping and call original function directly
@@ -493,7 +493,11 @@ class LambdaHandlerWrapper {
 
         ThundraLogger.debug('<LambdaHandlerWrapper> Sending reports');
 
-        await this.reporter.sendReports(execContext.reports);
+        if (!execContext.reportingDisabled) {
+            await this.reporter.sendReports(execContext.reports);
+        } else {
+            ThundraLogger.debug('<LambdaHandlerWrapper> Skipped reporting as reporting is disabled');
+        }
     }
 
     private async report(error: any, result: any, callback: any) {

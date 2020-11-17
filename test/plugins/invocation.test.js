@@ -96,7 +96,7 @@ describe('invocation', () => {
 
             invocation.beforeInvocation(mockExecContext);
             invocation.afterInvocation(mockExecContext);
-            
+
             expect(mockPluginContext.executor.startInvocation).toHaveBeenCalledTimes(1);
             expect(mockPluginContext.executor.startInvocation).toBeCalledWith(mockPluginContext, mockExecContext);
             expect(mockPluginContext.executor.finishInvocation).toHaveBeenCalledTimes(1);
