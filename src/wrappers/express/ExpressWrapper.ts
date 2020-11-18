@@ -1,14 +1,15 @@
 import Reporter from '../../Reporter';
 import ConfigProvider from '../../config/ConfigProvider';
-import { ApplicationManager } from '../../application/ApplicationManager';
+import {ApplicationManager} from '../../application/ApplicationManager';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import * as ExpressExecutor from './ExpressExecutor';
 import WrapperUtils from '../WebWrapperUtils';
 import ExecutionContext from '../../context/ExecutionContext';
 import ThundraLogger from '../../ThundraLogger';
-import { ClassNames, DomainNames } from '../../Constants';
+import {ClassNames, DomainNames} from '../../Constants';
 import ModuleUtils from '../../utils/ModuleUtils';
 import Utils from '../../utils/Utils';
+import LambdaUtils from '../../utils/LambdaUtils';
 
 export function expressMW(opts: any = {}) {
     ApplicationManager.setApplicationInfoProvider().update({
@@ -22,7 +23,7 @@ export function expressMW(opts: any = {}) {
     });
 
     const config = opts.config || ConfigProvider.thundraConfig;
-    const { apiKey } = config;
+    const {apiKey} = config;
     const reporter = opts.reporter || new Reporter(apiKey);
     const pluginContext = opts.pluginContext || WrapperUtils.createPluginContext(apiKey, ExpressExecutor);
     const plugins = opts.plugins || WrapperUtils.createPlugins(config, pluginContext);
@@ -121,14 +122,19 @@ function wrapListen(originalListen: Function) {
 
 export function init() {
     ThundraLogger.debug('<ExpressWrapper> Initializing ...');
-    ModuleUtils.patchModule(
-        'express',
-        'use',
-        wrapUse,
-        (express: any) => express.Router);
-    ModuleUtils.patchModule(
-        'express',
-        'listen',
-        wrapListen,
-        (express: any) => express.application);
+    const lambdaRuntime = LambdaUtils.isLambdaRuntime();
+    if (!lambdaRuntime) {
+        ModuleUtils.patchModule(
+            'express',
+            'use',
+            wrapUse,
+            (express: any) => express.Router);
+        ModuleUtils.patchModule(
+            'express',
+            'listen',
+            wrapListen,
+            (express: any) => express.application);
+    } else {
+        ThundraLogger.debug('<ExpressWrapper> Skipping initializing due to running in lambda runtime ...');
+    }
 }
