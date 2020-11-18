@@ -4,6 +4,9 @@
 import {INITIALIZERS} from './Initializers';
 import ThundraLogger from '../ThundraLogger';
 
+/**
+ * Manages initialization of initializers
+ */
 class InitManager {
 
     private static initialized: boolean = false;
@@ -31,7 +34,7 @@ class InitManager {
                         }
                     } else {
                         ThundraLogger.error(
-                            `<InitManager> Couldn't initialize ${initializer.name} /
+                            `<InitManager> Couldn't initialize ${initializer.name} \
                             because no "init" method is either defined or exported`);
                     }
                 } else {
