@@ -8,6 +8,7 @@ import {
     AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY,
 } from '../Constants';
 import Utils from '../utils/Utils';
+import ModuleUtils from '../utils/ModuleUtils';
 import LambdaUtils from '../utils/LambdaUtils';
 import { DB_INSTANCE, DB_TYPE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../ThundraLogger';
@@ -43,7 +44,7 @@ export class AWSIntegration implements Integration {
     constructor(config: any) {
         this.wrappedFuncs = {};
         this.config = config || {};
-        this.instrumentContext = Utils.instrument(
+        this.instrumentContext = ModuleUtils.instrument(
             MODULE_NAMES, MODULE_VERSION,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);

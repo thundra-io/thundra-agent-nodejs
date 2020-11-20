@@ -16,7 +16,6 @@ import * as asyncContextProvider from '../context/asyncContextProvider';
 import * as opentracing from 'opentracing';
 import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
 import InvocationData from '../plugins/data/invocation/InvocationData';
-import TimeoutError from '../error/TimeoutError';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import { HttpTags, DomainNames, ClassNames, SpanTags, TriggerHeaderTags } from '../Constants';
@@ -215,7 +214,11 @@ export default class WebWrapperUtils {
     }
 
     static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-        const { rootSpan, finishTimestamp } = execContext;
+        const { error, rootSpan, finishTimestamp } = execContext;
+
+        if (error) {
+            rootSpan.setErrorTag(error);
+        }
 
         rootSpan.finish();
         rootSpan.finishTime = finishTimestamp;

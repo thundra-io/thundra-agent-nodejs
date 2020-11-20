@@ -5,7 +5,7 @@ import {
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
-import Utils from '../utils/Utils';
+import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 
@@ -30,7 +30,7 @@ class MongoDBIntegration implements Integration {
 
         this.config = config || {};
         this.spans = {};
-        this.instrumentContext = Utils.instrument(
+        this.instrumentContext = ModuleUtils.instrument(
             [MODULE_NAME], MODULE_VERSION,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);

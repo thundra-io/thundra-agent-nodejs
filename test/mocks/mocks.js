@@ -525,7 +525,22 @@ const createMockExpressApp = () => {
         res.send('Hello Thundra!');
     });
 
+    app.get('/error', function (req, res, next) {
+        next(new APIError('Boom'));
+    });
+
+    const server = app.listen();
+    app.server = server;
+
     return app;
+};
+
+class APIError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = APIError.name;
+        Error.captureStackTrace(this, APIError);
+    }
 }
 
 module.exports = {

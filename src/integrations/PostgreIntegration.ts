@@ -2,7 +2,7 @@ import Integration from './Integration';
 import {
     DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes,
 } from '../Constants';
-import Utils from '../utils/Utils';
+import ModuleUtils from '../utils/ModuleUtils';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
@@ -27,7 +27,7 @@ class PostgreIntegration implements Integration {
         ThundraLogger.debug('<PostgreIntegration> Activating Postgre integration');
 
         this.config = config || {};
-        this.instrumentContext = Utils.instrument(
+        this.instrumentContext = ModuleUtils.instrument(
             [MODULE_NAME], MODULE_VERSION,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);

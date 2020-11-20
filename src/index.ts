@@ -17,6 +17,7 @@ import * as ExpressWrapper from './wrappers/express/ExpressWrapper';
 import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
+import InitManager from './init/InitManager';
 
 // Check if multiple instances of package exist
 if (!global.__thundraImports__) {
@@ -38,8 +39,11 @@ let initialized = false;
  * @param options the options (configs, etc ...) to initialize agent
  */
 function init(options?: any) {
-    ConfigProvider.init(options);
-    initialized = true;
+    if (!initialized) {
+        ConfigProvider.init(options);
+        InitManager.init();
+        initialized = true;
+    }
 }
 
 /**
@@ -74,7 +78,6 @@ function expressMW() {
     if (!initialized) {
         init();
     }
-
     return ExpressWrapper.expressMW();
 }
 
