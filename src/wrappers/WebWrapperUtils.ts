@@ -44,6 +44,11 @@ export default class WebWrapperUtils {
     static async afterRequest(request: any, response: any, plugins: any[], reporter: Reporter) {
         const context = ExecutionContextManager.get();
 
+        if (!context.error && response.statusCode >= 500) {
+            console.log('response ', response);
+            context.error = Utils.buildError(new Error(response.statusMessage));
+        }
+
         context.finishTimestamp = Date.now();
 
         for (const plugin of plugins) {

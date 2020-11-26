@@ -1,6 +1,8 @@
 import {
     AWS_SERVICE_REQUEST,
+    EnvVariableKeys,
 } from '../Constants';
+import Utils from './Utils';;
 
 const get = require('lodash.get');
 
@@ -29,6 +31,15 @@ export class LambdaUtils {
         } else if (parts.length === 8) { // arn:aws:lambda:region:accountId:function:funcName:qualifier
             return { name: parts[6], qualifier: parts[7] };
         }
+    }
+
+    static isLambdaRuntime(runtimeIdentifier?: string) {
+        const runtimeIdentifierPrefix = 'AWS_Lambda_';
+        runtimeIdentifier = runtimeIdentifier ? runtimeIdentifier : Utils.getEnvVar(EnvVariableKeys.AWS_EXECUTION_ENV);
+        if (runtimeIdentifier) {
+            return runtimeIdentifier.startsWith(runtimeIdentifierPrefix);
+        }
+        return false;
     }
 }
 
