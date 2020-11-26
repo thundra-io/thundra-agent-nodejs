@@ -2,7 +2,7 @@ import {
     AWS_SERVICE_REQUEST,
     EnvVariableKeys,
 } from '../Constants';
-import Utils from './Utils';;
+import Utils from './Utils';
 
 const get = require('lodash.get');
 
