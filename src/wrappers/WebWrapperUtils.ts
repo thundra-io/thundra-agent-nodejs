@@ -21,6 +21,7 @@ import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
 import { HttpTags, DomainNames, ClassNames, SpanTags, TriggerHeaderTags } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import { ApplicationInfo } from '../application/ApplicationInfo';
+import HttpError from '../error/HttpError';
 
 const get = require('lodash.get');
 
@@ -43,6 +44,10 @@ export default class WebWrapperUtils {
 
     static async afterRequest(request: any, response: any, plugins: any[], reporter: Reporter) {
         const context = ExecutionContextManager.get();
+
+        if (!context.error && response.statusCode >= 500) {
+            context.error = new HttpError(`Returned with status code ${response.statusCode}.`);
+        }
 
         context.finishTimestamp = Date.now();
 

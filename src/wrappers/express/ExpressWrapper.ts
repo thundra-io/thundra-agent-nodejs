@@ -9,6 +9,7 @@ import ThundraLogger from '../../ThundraLogger';
 import { ClassNames, DomainNames } from '../../Constants';
 import ModuleUtils from '../../utils/ModuleUtils';
 import Utils from '../../utils/Utils';
+import LambdaUtils from '../../utils/LambdaUtils';
 
 export function expressMW(opts: any = {}) {
     ApplicationManager.setApplicationInfoProvider().update({
@@ -121,14 +122,20 @@ function wrapListen(originalListen: Function) {
 
 export function init() {
     ThundraLogger.debug('<ExpressWrapper> Initializing ...');
-    ModuleUtils.patchModule(
-        'express',
-        'use',
-        wrapUse,
-        (express: any) => express.Router);
-    ModuleUtils.patchModule(
-        'express',
-        'listen',
-        wrapListen,
-        (express: any) => express.application);
+    const lambdaRuntime = LambdaUtils.isLambdaRuntime();
+    if (!lambdaRuntime) {
+        ModuleUtils.patchModule(
+            'express',
+            'use',
+            wrapUse,
+            (express: any) => express.Router);
+        ModuleUtils.patchModule(
+            'express',
+            'listen',
+            wrapListen,
+            (express: any) => express.application);
+    } else {
+        ThundraLogger.debug('<ExpressWrapper> Skipping initializing due to running in lambda runtime ...');
+    }
+
 }
