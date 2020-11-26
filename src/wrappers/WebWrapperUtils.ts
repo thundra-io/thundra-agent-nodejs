@@ -45,7 +45,6 @@ export default class WebWrapperUtils {
         const context = ExecutionContextManager.get();
 
         if (!context.error && response.statusCode >= 500) {
-            console.log('response ', response);
             context.error = Utils.buildError(new Error(response.statusMessage));
         }
 
