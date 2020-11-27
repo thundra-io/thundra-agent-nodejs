@@ -11,6 +11,12 @@ import ModuleUtils from '../../utils/ModuleUtils';
 import Utils from '../../utils/Utils';
 import LambdaUtils from '../../utils/LambdaUtils';
 
+const http = require('http');
+
+const METHODS = http.METHODS && http.METHODS.map((method: string) => {
+    return method.toLowerCase();
+});
+
 export function expressMW(opts: any = {}) {
     ApplicationManager.setApplicationInfoProvider().update({
         applicationClassName: ClassNames.EXPRESS,
@@ -43,6 +49,11 @@ export function expressMW(opts: any = {}) {
                 executionContext: context,
                 setError(err: any) {
                     context.error = Utils.buildError(err);
+                },
+                report() {
+                    ExecutionContextManager.set(context);
+                    ThundraLogger.debug('<ExpressWrapper> Reporting request');
+                    WrapperUtils.afterRequest(req, res, plugins, reporter);
                 },
             };
             try {
@@ -77,8 +88,49 @@ function wrapMiddleware(originalMiddleware: Function) {
             return originalMiddleware.apply(this, arguments);
         };
     }
-    ThundraLogger.debug('<ExpressWrapper> Using original middleware as middleware wrapper');
-    return originalMiddleware;
+    ThundraLogger.debug('<ExpressWrapper> Using wrapped middleware as middleware wrapper');
+    return function internalMiddlewareWrapper(req: any, res: any, next: Function) {
+        ThundraLogger.debug('<ExpressWrapper> Calling original middleware by wrapped middleware');
+        // No need to put inside try/catch here
+        // because, sync errors are already delegated to error aware handlers
+        const result = originalMiddleware.apply(this, [req, res, next]);
+        if (result && typeof result.catch === 'function') {
+            ThundraLogger.debug('<ExpressWrapper> Original middleware returned Promise, hooking into "catch"');
+            return result.catch((err: Error) => {
+                // We detected an uncaught exception here as it was reached through our catch callback
+                // as either there is no catch callback or previous catch callbacks rethrow error
+                if (err && req.thundra) {
+                    ThundraLogger.debug(
+                        '<ExpressWrapper> Setting error into execution context by wrapped middleware:', err);
+                    req.thundra.setError(err);
+                    // As uncaught exceptions are not handled inside regular flow,
+                    // status code is not set accordingly.
+                    // So we are setting status code to 500 to indicate that it is "Internal Server Error"
+                    // TODO Do we need to revert back after reporting???
+                    res.statusCode = 500;
+                    ThundraLogger.debug('<ExpressWrapper> Uncaught error detected so reporting request forcefully');
+                    // We should report here as uncaught exception will cut down the regular flow
+                    req.thundra.report();
+                }
+                throw err;
+            });
+        }
+        return result;
+    };
+}
+
+function wrapMethod(originalMethod: Function, name: string) {
+    ThundraLogger.debug(`<ExpressWrapper> Wrapping "app.${name}" method ...`);
+    return function internalMethodWrapper() {
+        for (let i = 0; i < arguments.length; i++) {
+            if (arguments[i] && typeof arguments[i] === 'function') {
+                ThundraLogger.debug(`<ExpressWrapper> Wrapping original middleware for "app.${name}" method`);
+                arguments[i] = wrapMiddleware(arguments[i]);
+            }
+        }
+        ThundraLogger.debug(`<ExpressWrapper> Calling original "app.${name}" method by wrapped method`);
+        return originalMethod.apply(this, arguments);
+    };
 }
 
 function wrapUse(originalUse: Function) {
@@ -134,8 +186,14 @@ export function init() {
             'listen',
             wrapListen,
             (express: any) => express.application);
+        METHODS.forEach((method: string) => {
+            ModuleUtils.patchModule(
+                'express',
+                method,
+                wrapMethod,
+                (express: any) => express.application);
+        });
     } else {
         ThundraLogger.debug('<ExpressWrapper> Skipping initializing due to running in lambda runtime ...');
     }
-
 }
