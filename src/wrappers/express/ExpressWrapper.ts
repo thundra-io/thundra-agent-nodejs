@@ -191,7 +191,7 @@ export function init() {
                 'express',
                 method,
                 wrapMethod,
-                (express: any) => express.application);
+                (express: any) => express.Route.prototype);
         });
     } else {
         ThundraLogger.debug('<ExpressWrapper> Skipping initializing due to running in lambda runtime ...');
