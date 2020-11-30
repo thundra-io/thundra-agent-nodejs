@@ -25,7 +25,7 @@ class ESIntegration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
-        ThundraLogger.debug('<ESIntegration> Wrap');
+        ThundraLogger.debug('<ESIntegration> Activating ES integration');
 
         this.config = config || {};
         this.instrumentContext = ModuleUtils.instrument(
