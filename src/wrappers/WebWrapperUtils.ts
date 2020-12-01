@@ -51,13 +51,24 @@ export default class WebWrapperUtils {
 
         context.finishTimestamp = Date.now();
 
-        for (const plugin of plugins) {
-            await plugin.afterInvocation(context);
+        let reports: any = [];
+
+        // Clear reports first
+        context.reports = [];
+        try {
+            // Run plugins and let them to generate reports
+            for (const plugin of plugins) {
+                await plugin.afterInvocation(context);
+            }
+            reports = context.reports;
+        } finally {
+            // Make sure generated reports are cleared
+            context.reports = [];
         }
 
         if (!context.reportingDisabled) {
             try {
-                await reporter.sendReports(context.reports);
+                await reporter.sendReports(reports);
             } catch (err) {
                 ThundraLogger.error('<WebWrapperUtils> Error occurred while reporting:', err);
             }
@@ -170,8 +181,9 @@ export default class WebWrapperUtils {
 
         const { startTimestamp, finishTimestamp, spanId, response } = execContext;
 
-        invocationData.finishTimestamp = finishTimestamp;
-        invocationData.duration = finishTimestamp - startTimestamp;
+        // Finish invocation if it is not finished yet
+        invocationData.finish(finishTimestamp);
+
         invocationData.resources = InvocationTraceSupport.getResources(spanId);
         invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
         invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
@@ -225,8 +237,8 @@ export default class WebWrapperUtils {
             rootSpan.setErrorTag(error);
         }
 
-        rootSpan.finish();
-        rootSpan.finishTime = finishTimestamp;
+        // If root span is already finished, it won't have any effect
+        rootSpan.finish(finishTimestamp);
     }
 
 }
