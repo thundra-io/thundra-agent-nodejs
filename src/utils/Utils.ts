@@ -299,28 +299,38 @@ class Utils {
      * @return {BaseMonitoringData} the created and initialized monitoring data
      */
     static initMonitoringData(pluginContext: PluginContext, type: MonitoringDataType): BaseMonitoringData {
-        const monitoringData = this.createMonitoringData(type);
-
-        const applicationInfo = ApplicationManager.getApplicationInfo();
+        const monitoringData: BaseMonitoringData = this.createMonitoringData(type);
 
         monitoringData.id = Utils.generateId();
-        monitoringData.agentVersion = AGENT_VERSION;
-        monitoringData.dataModelVersion = DATA_MODEL_VERSION;
-        monitoringData.applicationInstanceId = applicationInfo.applicationInstanceId;
-        monitoringData.applicationId = applicationInfo.applicationId;
-        monitoringData.applicationName = applicationInfo.applicationName;
-        monitoringData.applicationClassName = applicationInfo.applicationClassName;
-        monitoringData.applicationDomainName = applicationInfo.applicationDomainName;
-        monitoringData.applicationStage = applicationInfo.applicationStage;
-        monitoringData.applicationVersion = applicationInfo.applicationVersion;
-        monitoringData.applicationRuntimeVersion = process.version;
-
-        monitoringData.applicationTags = {
-            ...monitoringData.applicationTags,
-            ...applicationInfo.applicationTags,
-        };
+        Utils.injectCommonApplicationProperties(monitoringData);
 
         return monitoringData;
+    }
+
+    /**
+     * Injects common application properties into given {@link BaseMonitoringData} monitoring data
+     * @param {BaseMonitoringData} monitoringData the @link BaseMonitoringData} monitoring data
+     *        in which common application properties will be injected to
+     */
+    static injectCommonApplicationProperties(monitoringData: BaseMonitoringData) {
+        const applicationInfo = ApplicationManager.getApplicationInfo();
+
+        monitoringData.agentVersion = AGENT_VERSION;
+        monitoringData.dataModelVersion = DATA_MODEL_VERSION;
+        monitoringData.applicationRuntimeVersion = process.version;
+        if (applicationInfo) {
+            monitoringData.applicationInstanceId = applicationInfo.applicationInstanceId;
+            monitoringData.applicationId = applicationInfo.applicationId;
+            monitoringData.applicationName = applicationInfo.applicationName;
+            monitoringData.applicationClassName = applicationInfo.applicationClassName;
+            monitoringData.applicationDomainName = applicationInfo.applicationDomainName;
+            monitoringData.applicationStage = applicationInfo.applicationStage;
+            monitoringData.applicationVersion = applicationInfo.applicationVersion;
+            monitoringData.applicationTags = {
+                ...monitoringData.applicationTags,
+                ...applicationInfo.applicationTags,
+            };
+        }
     }
 
     /**

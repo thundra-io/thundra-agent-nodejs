@@ -236,7 +236,7 @@ describe('reporter', () => {
 
     it('trim reports', async () => {
         const reporter = new Reporter('apiKey', {
-            maxReportSize: 256,
+            maxReportSize: 400,
         });
         const mockReport1 = { data: { type: 'Invocation', data: 'data1'}};
         const mockReport2 = { data: { type: 'Span', data: 'data2', tags: { } }};

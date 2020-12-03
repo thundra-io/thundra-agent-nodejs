@@ -141,15 +141,8 @@ class Reporter {
 
     private getCompositeReport(reports: any[]): any {
         ThundraLogger.debug('<Reporter> Generating composite report ...');
-        reports = reports.slice(0);
 
-        const invocationReport = reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
-        if (!invocationReport) {
-            ThundraLogger.debug('<Reporter> No invocation data could be found in the reports');
-            return [];
-        }
-
-        const compositeData = this.initCompositeMonitoringData(invocationReport.data);
+        const compositeData = this.initCompositeMonitoringData();
         const batch: any[] = [];
         for (const report of reports) {
             batch.push(this.stripCommonFields(report.data as BaseMonitoringData));
@@ -159,21 +152,11 @@ class Reporter {
         return Utils.generateReport(compositeData, this.apiKey);
     }
 
-    private initCompositeMonitoringData(data: BaseMonitoringData): CompositeMonitoringData {
+    private initCompositeMonitoringData(): CompositeMonitoringData {
         const monitoringData = Utils.createMonitoringData(MonitorDataType.COMPOSITE);
 
         monitoringData.id = Utils.generateId();
-        monitoringData.agentVersion = data.agentVersion;
-        monitoringData.dataModelVersion = data.dataModelVersion;
-        monitoringData.applicationId = data.applicationId;
-        monitoringData.applicationDomainName = data.applicationDomainName;
-        monitoringData.applicationClassName = data.applicationClassName;
-        monitoringData.applicationName = data.applicationName;
-        monitoringData.applicationVersion = data.applicationVersion;
-        monitoringData.applicationStage = data.applicationStage;
-        monitoringData.applicationRuntime = data.applicationRuntime;
-        monitoringData.applicationRuntimeVersion = data.applicationRuntimeVersion;
-        monitoringData.applicationTags = data.applicationTags;
+        Utils.injectCommonApplicationProperties(monitoringData);
 
         return monitoringData as CompositeMonitoringData;
     }
