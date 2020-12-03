@@ -273,6 +273,10 @@ function extractSpanContext(tracer: ThundraTracer, lambdaEventType: LambdaEventT
 }
 
 function processAPIGWResponse(response: any, originalEvent: any): void {
+    // If response is custom authorizer response, skip processing it
+    if (response && response.principalId && response.policyDocument) {
+        return;
+    }
     try {
         const headers = get(response, 'headers', {});
         headers[TriggerHeaderTags.RESOURCE_NAME] = originalEvent.resource;
