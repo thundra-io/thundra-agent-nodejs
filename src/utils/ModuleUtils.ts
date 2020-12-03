@@ -50,11 +50,15 @@ class ModuleUtils {
      *                   {@code false} otherwise
      */
     static instrumentModule(moduleName: string, module: any): boolean {
+        ThundraLogger.debug(
+            `<ModuleUtils> Looking for registered instrumenter to instrument module ${moduleName} ...`);
         const instrumenter = ModuleUtils.instrumenters[moduleName];
         if (instrumenter) {
             const { libs, wrapper, config } = instrumenter;
-            ModuleUtils.doInstrument(module, libs, null, moduleName, null, wrapper, config);
-            return true;
+            return ModuleUtils.doInstrument(module, libs, null, moduleName, null, wrapper, config);
+        } else {
+            ThundraLogger.debug(
+                `<ModuleUtils> Couldn't find any registered instrumenter for module ${moduleName} to instrument`);
         }
         return false;
     }
@@ -67,22 +71,15 @@ class ModuleUtils {
      *                   {@code false} otherwise
      */
     static uninstrumentModule(moduleName: string, module: any): boolean {
+        ThundraLogger.debug(
+            `<ModuleUtils> Looking for registered instrumenter to uninstrument module ${moduleName} ...`);
         const instrumenter = ModuleUtils.instrumenters[moduleName];
         if (instrumenter) {
             const { libs, unwrapper, config } = instrumenter;
-            if (module[thundraWrapped] && unwrapper) {
-                // Unwrap module
-                unwrapper(module, config);
-                // Remove module from libs
-                for (let i = libs.length - 1; i >= 0; i--) {
-                    if (libs[i] === module) {
-                        libs.splice(i, 1);
-                    }
-                }
-                // Remove Thundra wrapper flag from module
-                delete module[thundraWrapped];
-                return true;
-            }
+            return ModuleUtils.doUninstrument(module, libs, moduleName, unwrapper, config);
+        } else {
+            ThundraLogger.debug(
+                `<ModuleUtils> Couldn't find any registered instrumenter for module ${moduleName} to uninstrument`);
         }
         return false;
     }
@@ -104,6 +101,7 @@ class ModuleUtils {
         const hooks: any[] = [];
         // Register for given module names as instrumenter
         moduleNames.forEach((moduleName: string) => {
+            ThundraLogger.debug(`<ModuleUtils> Registering instrumenter for module ${moduleName}`);
             ModuleUtils.instrumenters[moduleName] = {
                 libs,
                 wrapper,
@@ -158,9 +156,11 @@ class ModuleUtils {
      */
     static patchModule(moduleName: string, methodName: string,
                        wrapper: Function, extractor: Function = (mod: any) => mod): boolean {
+        ThundraLogger.debug(`<ModuleUtils> Patching module ${moduleName}`);
         const module = ModuleUtils.tryRequire(moduleName);
         if (module) {
             shimmer.wrap(extractor(module), methodName, wrapper);
+            ThundraLogger.debug(`<ModuleUtils> Patched module ${moduleName}`);
             return true;
         } else {
             ThundraLogger.debug(`<ModuleUtils> Couldn't find module ${moduleName} to patch`);
@@ -184,7 +184,8 @@ class ModuleUtils {
     }
 
     private static doInstrument(lib: any, libs: any[], basedir: string, moduleName: string,
-                                version: string, wrapper: any, config?: any): any {
+                                version: string, wrapper: any, config?: any): boolean {
+        ThundraLogger.debug(`<ModuleUtils> Instrumenting module ${moduleName} ...`);
         let isValid = false;
         if (version) {
             const moduleValidator = new ModuleVersionValidator();
@@ -203,7 +204,44 @@ class ModuleUtils {
                 wrapper(lib, config, moduleName);
                 lib[thundraWrapped] = true;
                 libs.push(lib);
+                ThundraLogger.debug(`<ModuleUtils> Instrumented module ${moduleName}`);
+                return true;
+            } else {
+                ThundraLogger.debug(
+                    `<ModuleUtils> Couldn't instrument module ${moduleName} as it is already instrumented`);
             }
+        } else {
+            ThundraLogger.debug(
+                `<ModuleUtils> Couldn't instrument module ${moduleName} as it is not valid to instrument`);
+        }
+        return false;
+    }
+
+    private static doUninstrument(lib: any, libs: any[], moduleName: string, unwrapper: any, config?: any): boolean {
+        ThundraLogger.debug(`<ModuleUtils> Uninstrumenting module ${moduleName} ...`);
+        const wrappedByThundra = lib[thundraWrapped];
+        if (wrappedByThundra && unwrapper) {
+            // Unwrap module
+            unwrapper(module, config);
+            // Remove module from libs
+            for (let i = libs.length - 1; i >= 0; i--) {
+                if (libs[i] === module) {
+                    libs.splice(i, 1);
+                }
+            }
+            // Remove Thundra wrapper flag from module
+            delete lib[thundraWrapped];
+            ThundraLogger.debug(`<ModuleUtils> Uninstrumented module ${moduleName}`);
+            return true;
+        } else {
+            if (!wrappedByThundra) {
+                ThundraLogger.debug(
+                    `<ModuleUtils> Couldn't uninstrument module ${moduleName} as it is not instrumented yet`);
+            } else {
+                ThundraLogger.debug(
+                    `<ModuleUtils> Couldn't uninstrument module ${moduleName} as no unwrapper could be found`);
+            }
+            return false;
         }
     }
 
