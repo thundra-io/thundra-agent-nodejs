@@ -18,6 +18,7 @@ import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
 import InitManager from './init/InitManager';
+import ModuleUtils from './utils/ModuleUtils';
 
 // Check if multiple instances of package exist
 if (!global.__thundraImports__) {
@@ -116,6 +117,28 @@ function tracer() {
     return ExecutionContextManager.get().tracer;
 }
 
+/**
+ * Instruments given module if it is supported
+ * @param moduleName {string} name of the module to be instrumented
+ * @param module the module to be instrumented
+ * @return {boolean} {@code true} if the given has been instrumented,
+ *                   {@code false} otherwise
+ */
+function instrumentModule(moduleName: string, module: any): boolean {
+    return ModuleUtils.instrumentModule(moduleName, module);
+}
+
+/**
+ * Uninstruments given module if it is supported and already instrumented
+ * @param moduleName {string} name of the module to be uninstrumented
+ * @param module the module to be uninstrumented
+ * @return {boolean} {@code true} if the given has been uninstrumented,
+ *                   {@code false} otherwise
+ */
+function uninstrumentModule(moduleName: string, module: any): boolean {
+    return ModuleUtils.uninstrumentModule(moduleName, module);
+}
+
 const updateConfig = config.ThundraConfig.updateConfig;
 
 // Expose Lambda wrapper creator by default
@@ -134,6 +157,8 @@ Object.assign(module.exports, {
     createLambdaWrapper,
     lambdaWrapper,
     tracer,
+    instrumentModule,
+    uninstrumentModule,
     expressMW,
     InvocationSupport,
     InvocationTraceSupport,

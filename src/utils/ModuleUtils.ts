@@ -17,6 +17,8 @@ const thundraWrapped = '__thundra_wrapped';
  */
 class ModuleUtils {
 
+    private static readonly instrumenters: any = [];
+
     private constructor() {
     }
 
@@ -41,6 +43,51 @@ class ModuleUtils {
     }
 
     /**
+     * Instruments given module if it is supported
+     * @param moduleName {string} name of the module to be instrumented
+     * @param module the module to be instrumented
+     * @return {boolean} {@code true} if the given has been instrumented,
+     *                   {@code false} otherwise
+     */
+    static instrumentModule(moduleName: string, module: any): boolean {
+        const instrumenter = ModuleUtils.instrumenters[moduleName];
+        if (instrumenter) {
+            const { libs, wrapper, config } = instrumenter;
+            ModuleUtils.doInstrument(module, libs, null, moduleName, null, wrapper, config);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Uninstruments given module if it is supported and already instrumented
+     * @param moduleName {string} name of the module to be uninstrumented
+     * @param module the module to be uninstrumented
+     * @return {boolean} {@code true} if the given has been uninstrumented,
+     *                   {@code false} otherwise
+     */
+    static uninstrumentModule(moduleName: string, module: any): boolean {
+        const instrumenter = ModuleUtils.instrumenters[moduleName];
+        if (instrumenter) {
+            const { libs, unwrapper, config } = instrumenter;
+            if (module[thundraWrapped] && unwrapper) {
+                // Unwrap module
+                unwrapper(module, config);
+                // Remove module from libs
+                for (let i = libs.length - 1; i >= 0; i--) {
+                    if (libs[i] === module) {
+                        libs.splice(i, 1);
+                    }
+                }
+                // Remove Thundra wrapper flag from module
+                delete module[thundraWrapped];
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Instruments given module by its name
      * @param {string[]} moduleNames the modules names to instrument
      * @param {string} version the version of the library
@@ -55,6 +102,15 @@ class ModuleUtils {
                       unwrapper?: any, config?: any, paths?: string[], fileName?: string): any {
         const libs: any[] = [];
         const hooks: any[] = [];
+        // Register for given module names as instrumenter
+        moduleNames.forEach((moduleName: string) => {
+            ModuleUtils.instrumenters[moduleName] = {
+                libs,
+                wrapper,
+                unwrapper,
+                config,
+            };
+        });
         for (const moduleName of moduleNames) {
             const requiredLib = ModuleUtils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
             if (requiredLib) {
