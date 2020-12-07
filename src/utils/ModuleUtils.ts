@@ -18,6 +18,7 @@ const thundraWrapped = '__thundra_wrapped';
 class ModuleUtils {
 
     private static readonly instrumenters: any = [];
+    private static readonly pendingModulesToInstrument: any = [];
 
     private constructor() {
     }
@@ -59,6 +60,8 @@ class ModuleUtils {
         } else {
             ThundraLogger.debug(
                 `<ModuleUtils> Couldn't find any registered instrumenter for module ${moduleName} to instrument`);
+            ModuleUtils.pendingModulesToInstrument[moduleName] = module;
+            ThundraLogger.debug(`<ModuleUtils> Registered ${moduleName} as pending module to instrument later`);
         }
         return false;
     }
@@ -73,6 +76,8 @@ class ModuleUtils {
     static uninstrumentModule(moduleName: string, module: any): boolean {
         ThundraLogger.debug(
             `<ModuleUtils> Looking for registered instrumenter to uninstrument module ${moduleName} ...`);
+        // Remove module from pending modules in any case
+        delete ModuleUtils.pendingModulesToInstrument[moduleName];
         const instrumenter = ModuleUtils.instrumenters[moduleName];
         if (instrumenter) {
             const { libs, unwrapper, config } = instrumenter;
@@ -108,6 +113,16 @@ class ModuleUtils {
                 unwrapper,
                 config,
             };
+            // Check whether there is any pending module to instrument
+            const moduleToInstrument = ModuleUtils.pendingModulesToInstrument[moduleName];
+            if (moduleToInstrument) {
+                ThundraLogger.debug(
+                    `<ModuleUtils> Found pending module ${moduleName} to instrument, so instrumenting it`);
+                // Remove module from pending modules
+                delete ModuleUtils.pendingModulesToInstrument[moduleName];
+                // Instrument pending module
+                ModuleUtils.instrumentModule(moduleName, moduleToInstrument);
+            }
         });
         for (const moduleName of moduleNames) {
             const requiredLib = ModuleUtils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
