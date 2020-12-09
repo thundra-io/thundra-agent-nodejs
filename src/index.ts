@@ -141,26 +141,45 @@ function uninstrumentModule(moduleName: string, module: any): boolean {
 
 const updateConfig = config.ThundraConfig.updateConfig;
 
-// Expose Lambda wrapper creator by default
-module.exports = createLambdaWrapper;
+if (global.__thundraMasterModule__) {
+    // This is another Thundra module which is the master module
 
-// Named exports
-Object.assign(module.exports, {
-    config,
-    samplers,
-    listeners,
-    init,
-    updateConfig,
-    createLogger,
-    loadUserHandler,
-    addLogListener,
-    createLambdaWrapper,
-    lambdaWrapper,
-    tracer,
-    instrumentModule,
-    uninstrumentModule,
-    expressMW,
-    InvocationSupport,
-    InvocationTraceSupport,
-    ...support,
-});
+    const thundraMasterModule = global.__thundraMasterModule__;
+
+    console.warn(`[THUNDRA] Thundra master module detected at ${thundraMasterModule.fileName}.`,
+        `So delegating from current module at ${__filename} to the master module.`);
+
+    // Expose master module exports
+    module.exports = thundraMasterModule.moduleExports;
+} else {
+    // This is the Thundra master module,
+
+    // Expose Lambda wrapper creator by default
+    module.exports = createLambdaWrapper;
+
+    // Named exports
+    Object.assign(module.exports, {
+        config,
+        samplers,
+        listeners,
+        init,
+        updateConfig,
+        createLogger,
+        loadUserHandler,
+        addLogListener,
+        createLambdaWrapper,
+        lambdaWrapper,
+        tracer,
+        instrumentModule,
+        uninstrumentModule,
+        expressMW,
+        InvocationSupport,
+        InvocationTraceSupport,
+        ...support,
+    });
+
+    global.__thundraMasterModule__ = {
+        fileName: __filename,
+        moduleExports: module.exports,
+    };
+}
