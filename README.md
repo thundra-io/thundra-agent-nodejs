@@ -6,7 +6,7 @@
 
 Instrument and profile your AWS lambda functions with zero overhead.
 
-Check out [example projects](https://github.com/thundra-io/thundra-examples-lambda-nodejs) for a quick start and [Thundra docs](https://docs.thundra.io/) for more information.
+Check out [example projects](https://github.com/thundra-io/thundra-examples-lambda-nodejs) for a quick start and [Thundra docs](https://apm.docs.thundra.io) for more information.
 
 ## Installation
 
@@ -43,7 +43,7 @@ You can configure Thundra using **environment variables** or **module initializa
 
 Environment variables have **higher precedence** over initialization parameters.
 
-Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configuration) of our docs for more detailed information.
+Check out the [configuration part](https://apm.docs.thundra.io/node.js/nodejs-configuration-options/agent-configurations) of our docs for more detailed information.
 
 #### 1. Environment variables
 
@@ -104,7 +104,7 @@ Check out the [configuration part](https://thundra.readme.io/docs/nodejs-configu
 ## Async Monitoring with Zero Overhead
 By default, Thundra agent reports by making an HTTPS request. This adds an overhead to your lambda function.
 
-Instead, you can [setup async monitoring](https://docs.thundra.io/docs/how-to-setup-async-monitoring) in **2 minutes** and monitor your lambda functions with **zero overhead**!
+Instead, you can [setup async monitoring](https://apm.docs.thundra.io/performance/zero-overhead-with-asynchronous-monitoring) in **2 minutes** and monitor your lambda functions with **zero overhead**!
 
 Check out our async monitoring example at our [example projects](https://github.com/thundra-io/thundra-examples-lambda-nodejs)  for a quick start.
 
