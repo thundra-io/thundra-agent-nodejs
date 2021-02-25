@@ -1,0 +1,24 @@
+name: Thundra CI Check
+
+on:
+  push:
+    branches: [github-actions]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 8.11
+        uses: actions/setup-node@v1
+        with:
+          node-version: 8.11
+      - name: Start Docker Images
+        run: docker-compose up -d --quiet-pull --no-recreate
+      - name: NPM Install
+        run: npm install
+      - name: NPM Linter
+        run: npm run lint
+      - name: NPM Test CI
+        run: npm run test-ci
