@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 8.11
+      - name: Use Node.js 12.x
         uses: actions/setup-node@v1
         with:
-          node-version: 8.11
+          node-version: "12.x"
       - name: Start Docker Images
         run: docker-compose up -d --quiet-pull --no-recreate
       - name: NPM Install
@@ -21,4 +21,4 @@ jobs:
       - name: NPM Linter
         run: npm run lint
       - name: NPM Test CI
-        run: npm run test-ci
+        run: npm run test-ga

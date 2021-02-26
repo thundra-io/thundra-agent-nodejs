@@ -1,6 +1,6 @@
 module.exports.get = (http) => {
     return new Promise((resolve) => {
-        const url = 'http://httpstat.us/200?userId=1';
+        const url = 'http://httpstat.us/200/cors?userId=1';
         http.get(url, (resp) => {
             let data = '';
             resp.on('data', (chunk) => {
@@ -11,6 +11,7 @@ module.exports.get = (http) => {
             });
         }).on('error', (err) => {
             // We resolve with error.
+            console.log('HTTP request returned an error. Error: ', err);
             resolve(err);
         });
     });
@@ -29,6 +30,7 @@ module.exports.getAPIGW = (http) => {
             });
         }).on('error', (err) => {
             // We resolve with error.
+            console.log('HTTP request returned an error. Error: ', err);
             resolve(err);
         });
     });
@@ -36,7 +38,7 @@ module.exports.getAPIGW = (http) => {
 
 module.exports.getError = (http) => {
     return new Promise((resolve) => {
-        const url = 'http://httpstat.us/404';
+        const url = 'http://httpstat.us/404/cors';
         http.get(url, (resp) => {
             let data = '';
             resp.on('data', (chunk) => {
@@ -47,6 +49,7 @@ module.exports.getError = (http) => {
             });
         }).on('error', (err) => {
             // We resolve with error.
+            console.log('HTTP request returned an error. Error: ', err);
             resolve(err);
         });
     });
@@ -77,8 +80,9 @@ module.exports.post = (https) => {
             return resolve();
         });
 
-        req.on('error', (error) => {
-            return resolve(error);
+        req.on('error', (err) => {
+            console.log('HTTP request returned an error. Error: ', err);
+            return resolve(err);
         });
 
         req.write(data);

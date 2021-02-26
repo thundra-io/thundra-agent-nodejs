@@ -122,6 +122,8 @@ const operationList = [
         tags: {
             'http.host': [
                 'jsonplaceholder.typicode.com',
+                'httpstat.us',
+                'qbzotxrb9a.execute-api.us-west-2.amazonaws.com',
                 '34zsqapxkj.execute-api.eu-west-1.amazonaws.com'
             ],
             'operation.type': [
@@ -222,7 +224,7 @@ describe('whitelist config', () => {
 
     beforeAll(() => {
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
+        thundraWrapper = thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
     });
 
     describe('using aws integration', () => {
@@ -465,7 +467,7 @@ describe('blacklist config', () => {
 
     beforeAll(() => {
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
+        thundraWrapper = thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
     });
 
     describe('using aws integration', () => {

@@ -24,8 +24,8 @@ function doRequest(app) {
         app = http.createServer(app);
     }
 
-    methods.forEach(function(method) {
-        obj[method] = function(url) {
+    methods.forEach(function (method) {
+        obj[method] = function (url) {
             return new request.Test(app, method, url);
         };
     });
@@ -186,9 +186,9 @@ describe('express wrapper', () => {
         const { invocationData } = execContext;
         expect(invocationData).toBeTruthy();
 
-        expect(invocationData.applicationId).toBe('node:EXPRESS::thundra-app');
+        expect(invocationData.applicationId).toBe('node:Express::thundra-app');
         expect(invocationData.applicationInstanceId).toBeTruthy();
-        expect(invocationData.applicationClassName).toBe('EXPRESS');
+        expect(invocationData.applicationClassName).toBe('Express');
         expect(invocationData.applicationDomainName).toBe('API');
         expect(invocationData.startTimestamp).toBeTruthy();
         expect(invocationData.finishTimestamp).toBeTruthy();
