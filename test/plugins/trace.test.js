@@ -7,9 +7,16 @@ import * as LambdaExecutor from '../../dist/wrappers/lambda/LambdaExecutor';
 import { ApplicationManager } from '../../dist/application/ApplicationManager';
 
 import {
-    createMockPluginContext, createMockApiGatewayProxy, createMockLambdaExecContext,
-    createMockSNSEvent, createMockSQSEvent, createMockClientContext, createBatchMockSQSEventDifferentIds,
-    createBatchMockSQSEventSameIds, createBatchMockSNSEventWithDifferentIds, createBatchMockSNSEventWithSameIds
+    createMockPluginContext,
+    createMockApiGatewayProxy,
+    createMockLambdaExecContext,
+    createMockSNSEvent,
+    createMockSQSEvent,
+    createMockClientContext,
+    createBatchMockSQSEventDifferentIds,
+    createBatchMockSQSEventSameIds,
+    createBatchMockSNSEventWithDifferentIds,
+    createBatchMockSNSEventWithSameIds
 } from '../mocks/mocks';
 import * as mockAWSEvents from '../mocks/aws.events.mocks';
 
@@ -233,7 +240,6 @@ describe('trace', () => {
             expect(mockExecContext.spanId).toBeTruthy();
         });
     });
-
 
     describe('before invocation with batch SNS event from multiple triggers', () => {
         const trace = new Trace(new TraceConfig());
@@ -604,7 +610,6 @@ describe('trace', () => {
             expect(rootSpan.tags['trigger.operationNames']).toEqual(['random.execute-api.us-west-2.amazonaws.com/dev/hello']);
         });
     });
-
 
     describe('before invocation with Lambda event', () => {
         const trace = new Trace(new TraceConfig());
