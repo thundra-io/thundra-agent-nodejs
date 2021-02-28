@@ -2,7 +2,7 @@ name: Thundra CI Check
 
 on:
   push:
-    branches: [master]
+    branches: [master flaky-test-narrowing]
   pull_request:
     branches: [master]
   workflow_dispatch:

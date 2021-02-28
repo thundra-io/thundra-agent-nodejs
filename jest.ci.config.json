@@ -1,8 +1,6 @@
 {
   "testMatch": [
-    "<rootDir>/test/*.test.js",
-    "<rootDir>/test/plugins/*.js",
-    "<rootDir>/test/opentracing/*.js"
+    "<rootDir>/test/security.test.js"
   ],
   "transform": {
     ".*": "<rootDir>/node_modules/babel-jest"
