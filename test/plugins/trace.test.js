@@ -7,15 +7,9 @@ import * as LambdaExecutor from '../../dist/wrappers/lambda/LambdaExecutor';
 import { ApplicationManager } from '../../dist/application/ApplicationManager';
 
 import {
-    createMockPluginContext,
-    createMockLambdaExecContext,
-    createMockSNSEvent,
-    createMockSQSEvent,
-    createMockClientContext,
-    createBatchMockSQSEventDifferentIds,
-    createBatchMockSQSEventSameIds,
-    createBatchMockSNSEventWithDifferentIds,
-    createBatchMockSNSEventWithSameIds
+    createMockPluginContext, createMockApiGatewayProxy, createMockLambdaExecContext,
+    createMockSNSEvent, createMockSQSEvent, createMockClientContext, createBatchMockSQSEventDifferentIds,
+    createBatchMockSQSEventSameIds, createBatchMockSNSEventWithDifferentIds, createBatchMockSNSEventWithSameIds
 } from '../mocks/mocks';
 import * as mockAWSEvents from '../mocks/aws.events.mocks';
 
@@ -26,7 +20,8 @@ ApplicationManager.setApplicationInfoProvider(null);
 
 const pluginContext = createMockPluginContext();
 
-describe.skip('trace', () => {
+describe('trace', () => {
+
     describe('constructor', () => {
         const config = new TraceConfig();
         const trace = new Trace(config);
@@ -39,7 +34,6 @@ describe.skip('trace', () => {
         it('should set variables', () => {
             expect(trace.hooks).toBeTruthy();
         });
-
         it('should not have new HOOKS', () => {
             expect(trace.hooks).toEqual({
                 'before-invocation': trace.beforeInvocation,
@@ -71,6 +65,7 @@ describe.skip('trace', () => {
             expect(tracePluginWithOptions.config.traceableConfigs[0].traceArgs).toEqual(configs.traceableConfigs[0].traceArgs);
             expect(tracePluginWithOptions.config.traceableConfigs[0].traceError).toEqual(configs.traceableConfigs[0].traceError);
         });
+
     });
 
     describe('set plugin context', () => {
@@ -239,6 +234,7 @@ describe.skip('trace', () => {
         });
     });
 
+
     describe('before invocation with batch SNS event from multiple triggers', () => {
         const trace = new Trace(new TraceConfig());
         const mockPluginContext = createMockPluginContext();
@@ -277,24 +273,24 @@ describe.skip('trace', () => {
         });
     });
 
-    // describe('before invocation with ApiGateway event', () => {
-    //     const trace = new Trace(new TraceConfig());
-    //     const mockPluginContext = createMockPluginContext();
-    //     mockPluginContext.executor = LambdaExecutor;
-    //     trace.setPluginContext(mockPluginContext);
+    describe('before invocation with ApiGateway event', () => {
+        const trace = new Trace(new TraceConfig());
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
 
-    //     it('should set propagated ids in plugin context', () => {
-    //         const mockExecContext = createMockLambdaExecContext();
-    //         mockExecContext.platformData.originalEvent = createMockApiGatewayProxy();
-    //         ExecutionContextManager.set(mockExecContext);
+        it('should set propagated ids in plugin context', () => {
+            const mockExecContext = createMockLambdaExecContext();
+            mockExecContext.platformData.originalEvent = createMockApiGatewayProxy();
+            ExecutionContextManager.set(mockExecContext);
 
-    //         trace.beforeInvocation(mockExecContext);
+            trace.beforeInvocation(mockExecContext);
 
-    //         expect(mockExecContext.transactionId).toBeTruthy();
-    //         expect(mockExecContext.traceId).toBe('traceId');
-    //         expect(mockExecContext.spanId).toBeTruthy();
-    //     });
-    // });
+            expect(mockExecContext.transactionId).toBeTruthy();
+            expect(mockExecContext.traceId).toBe('traceId');
+            expect(mockExecContext.spanId).toBeTruthy();
+        });
+    });
 
     describe('before invocation with Lambda trigger', () => {
         const trace = new Trace(new TraceConfig());
@@ -560,32 +556,32 @@ describe.skip('trace', () => {
         });
     });
 
-    // describe('before invocation with APIGatewayProxy event ', () => {
-    //     const trace = new Trace(new TraceConfig());
-    //     const mockPluginContext = createMockPluginContext();
-    //     mockPluginContext.executor = LambdaExecutor;
-    //     trace.setPluginContext(mockPluginContext);
-    //     const mockExecContext = createMockLambdaExecContext();
-    //     mockExecContext.platformData.originalEvent = mockAWSEvents.createMockAPIGatewayProxyEvent();
+    describe('before invocation with APIGatewayProxy event ', () => {
+        const trace = new Trace(new TraceConfig());
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
+        const mockExecContext = createMockLambdaExecContext();
+        mockExecContext.platformData.originalEvent = mockAWSEvents.createMockAPIGatewayProxyEvent();
 
-    //     beforeAll(() => {
-    //         ExecutionContextManager.set(mockExecContext);
-    //         trace.beforeInvocation(mockExecContext);
-    //     });
+        beforeAll(() => {
+            ExecutionContextManager.set(mockExecContext);
+            trace.beforeInvocation(mockExecContext);
+        });
 
-    //     it('should set trigger tags for APIGatewayProxy to root span', () => {
-    //         const { rootSpan } = mockExecContext;
+        it('should set trigger tags for APIGatewayProxy to root span', () => {
+            const { rootSpan } = mockExecContext;
 
-    //         expect(rootSpan.tags['trigger.domainName']).toBe('API');
-    //         expect(rootSpan.tags['trigger.className']).toBe('AWS-APIGateway');
-    //         expect(rootSpan.tags['trigger.operationNames']).toEqual(['/{proxy+}']);
-    //     });
+            expect(rootSpan.tags['trigger.domainName']).toBe('API');
+            expect(rootSpan.tags['trigger.className']).toBe('AWS-APIGateway');
+            expect(rootSpan.tags['trigger.operationNames']).toEqual(['/{proxy+}']);
+        });
 
-    //     it('should create incoming apigateway trace links', () => {
-    //         const expTraceLinks = ['spanId'];
-    //         expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
-    //     });
-    // });
+        it('should create incoming apigateway trace links', () => {
+            const expTraceLinks = ['spanId'];
+            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
+        });
+    });
 
     describe('before invocation with APIGatewayPassThrough event ', () => {
         const trace = new Trace(new TraceConfig());
@@ -608,6 +604,7 @@ describe.skip('trace', () => {
             expect(rootSpan.tags['trigger.operationNames']).toEqual(['random.execute-api.us-west-2.amazonaws.com/dev/hello']);
         });
     });
+
 
     describe('before invocation with Lambda event', () => {
         const trace = new Trace(new TraceConfig());
@@ -635,4 +632,61 @@ describe.skip('trace', () => {
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
+
+    // describe('after invocation without error data', () => {
+    //     const tracer = new Trace(new TraceConfig());
+    //     tracer.generateAuditInfoFromTraces = jest.fn();
+    //     tracer.setPluginContext(pluginContext);
+    //     const beforeInvocationData = createMockBeforeInvocationData();
+    //     const afterInvocationData = {
+    //         response: { key: 'data' }
+    //     };
+    //     tracer.report = jest.fn();
+    //     tracer.beforeInvocation(beforeInvocationData);
+    //     tracer.afterInvocation(afterInvocationData);
+
+    //     it('should set finishTimestamp', () => {
+    //         expect(tracer.finishTimestamp).toBeTruthy();
+    //     });
+
+    //     const rootSpanData = tracer.buildSpanData(tracer.rootSpan, tracer.pluginContext);
+
+    //     it('should call report', () => {
+    //         expect(tracer.report).toBeCalledWith({
+    //             data: rootSpanData,
+    //             type: 'Span',
+    //             apiKey: tracer.apiKey,
+    //             dataModelVersion: DATA_MODEL_VERSION
+    //         });
+    //     });
+
+    // });
+
+    // describe('after invocation with error data', () => {
+    //     const tracer = new Trace(new TraceConfig());
+    //     tracer.setPluginContext(pluginContext);
+    //     const beforeInvocationData = createMockBeforeInvocationData();
+    //     const testError = Error('error message');
+    //     const afterInvocationData = {
+    //         error: testError,
+    //         response: { key: 'data' }
+    //     };
+    //     tracer.report = jest.fn();
+    //     tracer.beforeInvocation(beforeInvocationData);
+    //     tracer.afterInvocation(afterInvocationData);
+
+    //     it('should set finishTimestamp', () => {
+    //         expect(tracer.finishTimestamp).toBeTruthy();
+    //     });
+
+    //     it('should set rootSpan', () => {
+    //         expect(tracer.rootSpan.tags['aws.lambda.invocation.response']).toEqual({
+    //             errorMessage: 'error message',
+    //             errorType: 'Error',
+    //             code: 0,
+    //             stack: testError.stack
+    //         });
+    //     });
+    // });
+
 });
