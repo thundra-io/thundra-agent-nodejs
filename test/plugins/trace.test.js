@@ -16,13 +16,13 @@ import * as mockAWSEvents from '../mocks/aws.events.mocks';
 const md5 = require('md5');
 const flatten = require('lodash.flatten');
 
-beforeAll(() => {
-    ApplicationManager.setApplicationInfoProvider(null);
-
-    const pluginContext = createMockPluginContext();
-});
 
 describe.skip('trace', () => {
+    beforeAll(() => {
+        ApplicationManager.setApplicationInfoProvider(null);
+
+        const pluginContext = createMockPluginContext();
+    });
 
     describe('constructor', () => {
         const config = new TraceConfig();
