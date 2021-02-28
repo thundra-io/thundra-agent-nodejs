@@ -1,5 +1,6 @@
 {
   "testMatch": [
+    "<rootDir>/test/*.test.js",
     "<rootDir>/test/opentracing/*.js",
     "<rootDir>/test/plugins/console.shim.filter.test.js",
     "<rootDir>/test/plugins/console.shim.test.js",
@@ -12,8 +13,7 @@
     "<rootDir>/test/plugins/metric.test.js",
     "<rootDir>/test/plugins/thundra.config.test.js",
     "<rootDir>/test/plugins/trace.config.test.js",
-    "<rootDir>/test/plugins/trace.test.js",
-    "<rootDir>/test/*.test.js"
+    "<rootDir>/test/plugins/trace.test.js"
   ],
   "transform": {
     ".*": "<rootDir>/node_modules/babel-jest"

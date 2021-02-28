@@ -16,9 +16,11 @@ import * as mockAWSEvents from '../mocks/aws.events.mocks';
 const md5 = require('md5');
 const flatten = require('lodash.flatten');
 
-ApplicationManager.setApplicationInfoProvider(null);
+beforeAll(() => {
+    ApplicationManager.setApplicationInfoProvider(null);
 
-const pluginContext = createMockPluginContext();
+    const pluginContext = createMockPluginContext();
+});
 
 describe.skip('trace', () => {
 
