@@ -22,6 +22,7 @@ const pluginContext = createMockPluginContext();
 
 describe('trace', () => {
 
+    /*
     describe('constructor', () => {
         const config = new TraceConfig();
         const trace = new Trace(config);
@@ -42,7 +43,6 @@ describe('trace', () => {
         });
     });
 
-    /*
     describe('constructor with trace def', () => {
         const configs = new TraceConfig({
             traceableConfigs: [{
