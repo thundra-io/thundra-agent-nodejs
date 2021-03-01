@@ -1,8 +1,6 @@
 import ExecutionContext from './ExecutionContext';
 import * as globalContextProvider from './globalContextProvider';
 
-let contextProvider = globalContextProvider;
-
 const moduleId = Math.random();
 console.log('***** Loading ExecutionContextManager with module id:', moduleId);
 
@@ -12,11 +10,13 @@ console.log('***** Loading ExecutionContextManager with module id:', moduleId);
  */
 export default class ExecutionContextManager {
 
+    private static contextProvider: any = globalContextProvider;
+
     /**
      * Initializes {@link ExecutionContextManager}
      */
     static init() {
-        contextProvider.init();
+        ExecutionContextManager.contextProvider.init();
     }
 
     /**
@@ -24,14 +24,14 @@ export default class ExecutionContextManager {
      * @param provided the {@link ExecutionContext} provider to be set
      */
     static setProvider(provider: any) {
-        contextProvider = provider;
+        ExecutionContextManager.contextProvider = provider;
     }
 
     /**
      * Sets the {@link ExecutionContext} provider to globalContextProvider
      */
     static useGlobalProvider() {
-        contextProvider = globalContextProvider;
+        ExecutionContextManager.contextProvider = globalContextProvider;
     }
 
     /**
@@ -41,7 +41,7 @@ export default class ExecutionContextManager {
      * @param {Function} fn runs in the created {@link ExecutionContext}
      */
     static runWithContext(createExecContext: Function, fn: Function) {
-        return contextProvider.runWithContext(createExecContext, fn);
+        return ExecutionContextManager.contextProvider.runWithContext(createExecContext, fn);
     }
 
     /**
@@ -49,7 +49,7 @@ export default class ExecutionContextManager {
      * @return {ExecutionContext} the {@link ExecutionContext}
      */
     static get(): ExecutionContext {
-        const execContext: ExecutionContext = contextProvider.get();
+        const execContext: ExecutionContext = ExecutionContextManager.contextProvider.get();
         if (execContext) {
             return execContext;
         } else {
@@ -62,7 +62,7 @@ export default class ExecutionContextManager {
      * @param {ExecutionContext} execCtx {@link ExecutionContext} to be set
      */
     static set(execCtx: ExecutionContext) {
-        return contextProvider.set(execCtx);
+        return ExecutionContextManager.contextProvider.set(execCtx);
     }
 
 }
