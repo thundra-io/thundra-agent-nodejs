@@ -1,6 +1,5 @@
 {
   "verbose": true,
-  "runInBand": true,
   "testMatch": [
     "<rootDir>/test/security.test.js",
     "<rootDir>/test/plugins/trace.test.js"
