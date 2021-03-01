@@ -32,6 +32,7 @@ describe('trace', () => {
 
         it('should create an instance with options', () => {
             expect(trace.config).toEqual(config);
+            trace.destroy();
         });
         /*
         it('should set variables', () => {

@@ -119,6 +119,11 @@ export default class Trace {
      */
     destroy(): void {
         // pass
+        if (this.integrationsMap) {
+            this.integrationsMap.forEach((int: Integration, intName: string, map: Map<string, Integration>) => {
+                int.unwrap();
+            });
+        }
     }
 
     private initIntegrations(): void {
