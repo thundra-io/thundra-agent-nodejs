@@ -333,6 +333,8 @@ describe('whitelist config', () => {
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
                 const { tracer } = ExecutionContextManager.get();
+                console.log('<<< SECURITY TEST HTTP >>>');
+                console.log(tracer.recorder.spanList);
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -344,6 +346,8 @@ describe('whitelist config', () => {
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
                 const { tracer } = ExecutionContextManager.get();
+                console.log('<<< SECURITY TEST APIGateway >>>');
+                console.log(tracer.recorder.spanList);
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });

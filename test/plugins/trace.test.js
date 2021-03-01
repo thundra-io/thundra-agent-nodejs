@@ -519,6 +519,9 @@ describe('trace', () => {
 
     // Gidebilir
     // describe('before invocation with APIGatewayProxy event ', () => {
+    //     console.log("========================");
+    //     console.log("THIS TEST SHOULD NOT RUN < APIGatewatProxy");
+    //     console.log("========================");
     //     const trace = new Trace(new TraceConfig());
     //     const mockPluginContext = createMockPluginContext();
     //     mockPluginContext.executor = LambdaExecutor;
@@ -547,6 +550,9 @@ describe('trace', () => {
 
     // // Gidebilir
     // describe('before invocation with APIGatewayPassThrough event ', () => {
+    //     console.log("========================");
+    //     console.log("THIS TEST SHOULD NOT RUN < APIGatewayPassThrough");
+    //     console.log("========================");
     //     const trace = new Trace(new TraceConfig());
     //     const mockPluginContext = createMockPluginContext();
     //     mockPluginContext.executor = LambdaExecutor;
@@ -570,6 +576,9 @@ describe('trace', () => {
 
     // // Gidebilir
     // describe('before invocation with Lambda event', () => {
+    //     console.log("========================");
+    //     console.log("THIS TEST SHOULD NOT RUN < Lambda event");
+    //     console.log("========================");
     //     const trace = new Trace(new TraceConfig());
     //     const mockPluginContext = createMockPluginContext();
     //     mockPluginContext.executor = LambdaExecutor;
