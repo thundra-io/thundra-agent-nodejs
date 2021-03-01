@@ -13,7 +13,6 @@ import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
 import Recorder from '../dist/opentracing/Recorder';
 import { AWSIntegration } from '../dist/integrations/AWSIntegration';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
-import axios from 'axios';
 
 import TestUtils from './utils.js';
 
@@ -324,28 +323,30 @@ describe('whitelist config', () => {
     // These tests are failing on Github Action
     // but passing on CircleCI and on local.
     // No idea what's going on.
-    describe('using http integration', async () => {
+    describe('using http integration', () => {
         const http = require('http');
         const https = require('https');
 
-        test('should whitelist http get operation', async () => {
+        test('should whitelist http get operation', () => {
             const originalFunction = () => HTTPCalls.get(http);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            await wrappedFunc(originalEvent, originalContext);
-            const { tracer } = ExecutionContextManager.get();
-            const span = tracer.recorder.spanList[1];
-            checkIfWhitelisted(span);
+            return wrappedFunc(originalEvent, originalContext).then(() => {
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
+                checkIfWhitelisted(span);
+            });
         });
 
-        test('should whitelist api-gateway get operation', async () => {
+        test('should whitelist api-gateway get operation', () => {
             const originalFunction = () => HTTPCalls.getAPIGW(https);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            await wrappedFunc(originalEvent, originalContext);
-            const { tracer } = ExecutionContextManager.get();
-            const span = tracer.recorder.spanList[1];
-            checkIfWhitelisted(span);
+            return wrappedFunc(originalEvent, originalContext).then(() => {
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.recorder.spanList[1];
+                checkIfWhitelisted(span);
+            });
         });
     });
 

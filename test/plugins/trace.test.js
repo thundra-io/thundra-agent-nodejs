@@ -517,7 +517,50 @@ describe('trace', () => {
         });
     });
 
-    // Gidebilir
+    describe('before invocation with ApiGateway event', () => {
+        const trace = new Trace(new TraceConfig());
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
+
+        it('should set propagated ids in plugin context', () => {
+            const mockExecContext = createMockLambdaExecContext();
+            mockExecContext.platformData.originalEvent = createMockApiGatewayProxy();
+            ExecutionContextManager.set(mockExecContext);
+
+            trace.beforeInvocation(mockExecContext);
+
+            expect(mockExecContext.transactionId).toBeTruthy();
+            expect(mockExecContext.traceId).toBe('traceId');
+            expect(mockExecContext.spanId).toBeTruthy();
+        });
+    });
+
+    describe('before invocation with Lambda trigger', () => {
+        const trace = new Trace(new TraceConfig());
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
+
+        it('should set propagated ids in plugin context', () => {
+            const mockExecContext = createMockLambdaExecContext();
+            mockExecContext.platformData.originalContext.clientContext = createMockClientContext();
+            ExecutionContextManager.set(mockExecContext);
+
+            trace.beforeInvocation(mockExecContext);
+
+            expect(mockExecContext.transactionId).toBeTruthy();
+            expect(mockExecContext.traceId).toBe('traceId');
+            expect(mockExecContext.spanId).toBeTruthy();
+        });
+    });
+
+    ///////////////////////////////////////////////////////////////////////////////
+    //
+    //  Flaky tests
+    //
+    ///////////////////////////////////////////////////////////////////////////////
+
     describe('before invocation with APIGatewayProxy event', () => {
         const trace = new Trace(new TraceConfig());
         const mockPluginContext = createMockPluginContext();
@@ -545,7 +588,6 @@ describe('trace', () => {
         });
     });
 
-    // Gidebilir
     describe('before invocation with APIGatewayPassThrough event', () => {
         const trace = new Trace(new TraceConfig());
         const mockPluginContext = createMockPluginContext();
@@ -568,7 +610,6 @@ describe('trace', () => {
         });
     });
 
-    // Gidebilir
     describe('before invocation with Lambda event', () => {
         const trace = new Trace(new TraceConfig());
         const mockPluginContext = createMockPluginContext();
@@ -596,43 +637,4 @@ describe('trace', () => {
         });
     });
 
-    // Gidebilir
-    describe('before invocation with ApiGateway event', () => {
-        const trace = new Trace(new TraceConfig());
-        const mockPluginContext = createMockPluginContext();
-        mockPluginContext.executor = LambdaExecutor;
-        trace.setPluginContext(mockPluginContext);
-
-        it('should set propagated ids in plugin context', () => {
-            const mockExecContext = createMockLambdaExecContext();
-            mockExecContext.platformData.originalEvent = createMockApiGatewayProxy();
-            ExecutionContextManager.set(mockExecContext);
-
-            trace.beforeInvocation(mockExecContext);
-
-            expect(mockExecContext.transactionId).toBeTruthy();
-            expect(mockExecContext.traceId).toBe('traceId');
-            expect(mockExecContext.spanId).toBeTruthy();
-        });
-    });
-
-    // Gidebilir
-    describe('before invocation with Lambda trigger', () => {
-        const trace = new Trace(new TraceConfig());
-        const mockPluginContext = createMockPluginContext();
-        mockPluginContext.executor = LambdaExecutor;
-        trace.setPluginContext(mockPluginContext);
-
-        it('should set propagated ids in plugin context', () => {
-            const mockExecContext = createMockLambdaExecContext();
-            mockExecContext.platformData.originalContext.clientContext = createMockClientContext();
-            ExecutionContextManager.set(mockExecContext);
-
-            trace.beforeInvocation(mockExecContext);
-
-            expect(mockExecContext.transactionId).toBeTruthy();
-            expect(mockExecContext.traceId).toBe('traceId');
-            expect(mockExecContext.spanId).toBeTruthy();
-        });
-    });
 });
