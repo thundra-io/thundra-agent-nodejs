@@ -328,23 +328,15 @@ describe('whitelist config', () => {
         const http = require('http');
         const https = require('https');
 
-        test.only('should whitelist http get operation', async () => {
+        test.only('should whitelist http get operation', () => {
             const originalFunction = () => HTTPCalls.get(http);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            try {
-                let res = await axios.get('http://httpstat.us/200');
-                console.log(res);
-
-                await wrappedFunc(originalEvent, originalContext);
+            return wrappedFunc(originalEvent, originalContext).then(() => {
                 const { tracer } = ExecutionContextManager.get();
-                console.log('<<< SECURITY TEST HTTP >>>');
-                console.log(tracer.recorder.spanList);
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
-            } catch (error) {
-                console.error(error);
-            }
+            });
         });
 
         test('should whitelist api-gateway get operation', () => {
