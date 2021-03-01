@@ -21,11 +21,13 @@ const thundra = require('../dist/index');
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();
     ConfigProvider.clear();
+    ConfigProvider.set(ConfigNames.THUNDRA_DEBUG_ENABLE, true);
 });
 
 afterEach(() => {
     TestUtils.clearEnvironmentVariables();
     ConfigProvider.clear();
+    ConfigProvider.set(ConfigNames.THUNDRA_DEBUG_ENABLE, true);
 });
 
 const operationList = [
@@ -441,7 +443,6 @@ describe('whitelist config', () => {
             });
         });
     });
-
 });
 
 describe('blacklist config', () => {
@@ -684,5 +685,4 @@ describe('blacklist config', () => {
             });
         });
     });
-
 });
