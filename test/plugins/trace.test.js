@@ -7,7 +7,8 @@ import * as LambdaExecutor from '../../dist/wrappers/lambda/LambdaExecutor';
 import { ApplicationManager } from '../../dist/application/ApplicationManager';
 
 import {
-    createMockPluginContext
+    createMockPluginContext,
+    createMockLambdaExecContext,
 } from '../mocks/mocks';
 
 const md5 = require('md5');
@@ -76,4 +77,27 @@ describe('trace', () => {
         });
     });
 
+    describe('disable request and response', () => {
+        const trace = new Trace(new TraceConfig({
+            disableRequest: true,
+            disableResponse: true,
+        }));
+
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
+
+        it('should not add request and response to traceData', () => {
+            const mockExecContext = createMockLambdaExecContext();
+            ExecutionContextManager.set(mockExecContext);
+
+            trace.beforeInvocation(mockExecContext);
+            trace.afterInvocation(mockExecContext);
+
+            const { rootSpan } = mockExecContext;
+
+            expect(rootSpan.tags['aws.lambda.invocation.request']).toBe(null);
+            expect(rootSpan.tags['aws.lambda.invocation.response']).toBe(null);
+        });
+    });
 });
