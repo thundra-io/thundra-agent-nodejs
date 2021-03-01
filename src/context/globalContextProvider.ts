@@ -5,8 +5,9 @@
 import ExecutionContext from './ExecutionContext';
 
 let globalContext: ExecutionContext;
-const moduleId = Math.random();
 
+const moduleId = Math.random();
+console.log('***** Loading globalContextProvider with module id:', moduleId);
 export function runWithContext(createExecContext: Function, fn: Function) {
     globalContext = createExecContext();
 
