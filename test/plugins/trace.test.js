@@ -396,6 +396,127 @@ describe('trace', () => {
         });
     });
 
+    describe('before invocation with SQS event ', () => {
+        const trace = new Trace(new TraceConfig());
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
+        const mockExecContext = createMockLambdaExecContext();
+        mockExecContext.platformData.originalEvent = mockAWSEvents.createMockSQSEvent();
+
+        beforeAll(() => {
+            ExecutionContextManager.set(mockExecContext);
+            trace.beforeInvocation(mockExecContext);
+        });
+
+        it('should set trigger tags for SNS to root span', () => {
+            const { rootSpan } = mockExecContext;
+
+            expect(rootSpan.tags['trigger.domainName']).toBe('Messaging');
+            expect(rootSpan.tags['trigger.className']).toBe('AWS-SQS');
+            expect(rootSpan.tags['trigger.operationNames']).toEqual(['MyQueue']);
+        });
+
+        it('should create incoming sqs trace links', () => {
+            const expTraceLinks = ['19dd0b57-b21e-4ac1-bd88-01bbb068cb78'];
+            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
+        });
+    });
+
+    describe('before invocation with S3 event ', () => {
+        const trace = new Trace(new TraceConfig());
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
+        const mockExecContext = createMockLambdaExecContext();
+        mockExecContext.platformData.originalEvent = mockAWSEvents.createMockS3Event();
+
+        beforeAll(() => {
+            ExecutionContextManager.set(mockExecContext);
+            trace.beforeInvocation(mockExecContext);
+        });
+
+        it('should set trigger tags for S3 to root span', () => {
+            const { rootSpan } = mockExecContext;
+
+            expect(rootSpan.tags['trigger.domainName']).toBe('Storage');
+            expect(rootSpan.tags['trigger.className']).toBe('AWS-S3');
+            expect(rootSpan.tags['trigger.operationNames']).toEqual(['example-bucket']);
+
+        });
+
+        it('should create incoming s3 trace links', () => {
+            const expTraceLinks = ['EXAMPLE123456789'];
+            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
+        });
+    });
+
+    describe('before invocation with CloudWatchSchedule event ', () => {
+        const trace = new Trace(new TraceConfig());
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
+        const mockExecContext = createMockLambdaExecContext();
+        mockExecContext.platformData.originalEvent = mockAWSEvents.createMockCloudWatchScheduledEvent();
+
+        beforeAll(() => {
+            ExecutionContextManager.set(mockExecContext);
+            trace.beforeInvocation(mockExecContext);
+        });
+
+        it('should set trigger tags for CloudWatchSchedule to root span', () => {
+            const { rootSpan } = mockExecContext;
+
+            expect(rootSpan.tags['trigger.domainName']).toBe('Schedule');
+            expect(rootSpan.tags['trigger.className']).toBe('AWS-CloudWatch-Schedule');
+            expect(rootSpan.tags['trigger.operationNames']).toEqual(['ExampleRule']);
+        });
+    });
+
+    describe('before invocation with CloudWatchLog event ', () => {
+        const trace = new Trace(new TraceConfig());
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
+        const mockExecContext = createMockLambdaExecContext();
+        mockExecContext.platformData.originalEvent = mockAWSEvents.createMockCloudWatchLogEvent();
+
+        beforeAll(() => {
+            ExecutionContextManager.set(mockExecContext);
+            trace.beforeInvocation(mockExecContext);
+        });
+
+        it('should set trigger tags for CloudWatchLog to root span', () => {
+            const { rootSpan } = mockExecContext;
+
+            expect(rootSpan.tags['trigger.domainName']).toBe('Log');
+            expect(rootSpan.tags['trigger.className']).toBe('AWS-CloudWatch-Log');
+            expect(rootSpan.tags['trigger.operationNames']).toEqual(['testLogGroup']);
+        });
+    });
+
+    describe('before invocation with CloudFront event ', () => {
+        const trace = new Trace(new TraceConfig());
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = LambdaExecutor;
+        trace.setPluginContext(mockPluginContext);
+        const mockExecContext = createMockLambdaExecContext();
+        mockExecContext.platformData.originalEvent = mockAWSEvents.createMockCloudFrontEvent();
+
+        beforeAll(() => {
+            ExecutionContextManager.set(mockExecContext);
+            trace.beforeInvocation(mockExecContext);
+        });
+
+        it('should set trigger tags for CloudFront to root span', () => {
+            const { rootSpan } = mockExecContext;
+
+            expect(rootSpan.tags['trigger.domainName']).toBe('CDN');
+            expect(rootSpan.tags['trigger.className']).toBe('AWS-CloudFront');
+            expect(rootSpan.tags['trigger.operationNames']).toEqual(['/test']);
+        });
+    });
+
     // Gidebilir
     // describe('before invocation with APIGatewayProxy event ', () => {
     //     console.log("========================");

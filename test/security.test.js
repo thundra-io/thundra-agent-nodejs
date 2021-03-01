@@ -324,25 +324,24 @@ describe('whitelist config', () => {
     // These tests are failing on Github Action
     // but passing on CircleCI and on local.
     // No idea what's going on.
-    describe('using http integration', () => {
+    describe('using http integration', async () => {
         const http = require('http');
         const https = require('https');
 
-        test('should whitelist http get operation', () => {
+        test.only('should whitelist http get operation', async () => {
             const originalFunction = () => HTTPCalls.get(http);
             const wrappedFunc = thundraWrapper(originalFunction);
 
             try {
-                axios.get('httpstat.us/200').then((res) => {
-                    console.log(res);
-                    wrappedFunc(originalEvent, originalContext).then(() => {
-                        const { tracer } = ExecutionContextManager.get();
-                        console.log('<<< SECURITY TEST HTTP >>>');
-                        console.log(tracer.recorder.spanList);
-                        const span = tracer.recorder.spanList[1];
-                        checkIfWhitelisted(span);
-                    });
-                });
+                let res = await axios.get('http://httpstat.us/200');
+                console.log(res);
+
+                await wrappedFunc(originalEvent, originalContext);
+                const { tracer } = ExecutionContextManager.get();
+                console.log('<<< SECURITY TEST HTTP >>>');
+                console.log(tracer.recorder.spanList);
+                const span = tracer.recorder.spanList[1];
+                checkIfWhitelisted(span);
             } catch (error) {
                 console.error(error);
             }
