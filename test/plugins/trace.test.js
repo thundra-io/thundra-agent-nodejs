@@ -19,6 +19,8 @@ const flatten = require('lodash.flatten');
 ApplicationManager.setApplicationInfoProvider(null);
 
 const pluginContext = createMockPluginContext();
+require('http');
+require('https');
 
 describe('trace', () => {
 
