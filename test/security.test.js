@@ -335,8 +335,7 @@ describe('whitelist config', () => {
             try {
                 axios.get('httpstat.us/200').then((res) => {
                     console.log(res);
-
-                    return wrappedFunc(originalEvent, originalContext).then(() => {
+                    wrappedFunc(originalEvent, originalContext).then(() => {
                         const { tracer } = ExecutionContextManager.get();
                         console.log('<<< SECURITY TEST HTTP >>>');
                         console.log(tracer.recorder.spanList);
