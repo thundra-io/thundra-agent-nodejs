@@ -9,14 +9,16 @@ import ESCalls from './integrations/utils/es.integration.utils';
 import RedisCalls from './integrations/utils/redis.integration.utils';
 import MySQLCalls from './integrations/utils/mysql.integration.utils';
 import MongoCalls from './integrations/utils/mongodb.integration.utils';
+import * as LambdaWrapper from '../dist/wrappers/lambda/LambdaWrapper';
 import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
 import Recorder from '../dist/opentracing/Recorder';
 import { AWSIntegration } from '../dist/integrations/AWSIntegration';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
 
 import TestUtils from './utils.js';
+import InitManager from '../dist/init/InitManager';
 
-const thundra = require('../dist/index');
+//const thundra = require('../dist/index');
 
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();
@@ -223,8 +225,10 @@ describe('whitelist config', () => {
     };
 
     beforeAll(() => {
+        ConfigProvider.init({ apiKey: 'apiKey', timeoutMargin: 0 });
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        thundraWrapper = thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
+        InitManager.init();
+        thundraWrapper = LambdaWrapper.createWrapper(); //thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
     });
 
     describe('using aws integration', () => {
@@ -470,8 +474,10 @@ describe('blacklist config', () => {
     };
 
     beforeAll(() => {
+        ConfigProvider.init({ apiKey: 'apiKey', timeoutMargin: 0 });
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        thundraWrapper = thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
+        InitManager.init();
+        thundraWrapper = LambdaWrapper.createWrapper(); //thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
     });
 
     describe('using aws integration', () => {

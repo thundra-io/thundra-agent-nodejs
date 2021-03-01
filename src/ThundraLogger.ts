@@ -25,7 +25,7 @@ class ThundraLogger {
      *         {@code false} otherwise
      */
     static isDebugEnabled(): boolean {
-        return true; // ConfigProvider.get<boolean>(ConfigNames.THUNDRA_DEBUG_ENABLE);
+        return false; // ConfigProvider.get<boolean>(ConfigNames.THUNDRA_DEBUG_ENABLE);
     }
 
     /**
