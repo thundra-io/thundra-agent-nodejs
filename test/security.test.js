@@ -13,6 +13,7 @@ import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
 import Recorder from '../dist/opentracing/Recorder';
 import { AWSIntegration } from '../dist/integrations/AWSIntegration';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
+import axios from 'axios';
 
 import TestUtils from './utils.js';
 
@@ -331,13 +332,21 @@ describe('whitelist config', () => {
             const originalFunction = () => HTTPCalls.get(http);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
-                console.log('<<< SECURITY TEST HTTP >>>');
-                console.log(tracer.recorder.spanList);
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
+            try {
+                axios.get('httpstat.us/200').then((res) => {
+                    console.log(res);
+
+                    return wrappedFunc(originalEvent, originalContext).then(() => {
+                        const { tracer } = ExecutionContextManager.get();
+                        console.log('<<< SECURITY TEST HTTP >>>');
+                        console.log(tracer.recorder.spanList);
+                        const span = tracer.recorder.spanList[1];
+                        checkIfWhitelisted(span);
+                    });
+                });
+            } catch (error) {
+                console.error(error);
+            }
         });
 
         test('should whitelist api-gateway get operation', () => {
