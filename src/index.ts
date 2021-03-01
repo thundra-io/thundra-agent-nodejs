@@ -177,9 +177,10 @@ if (global.__thundraMasterModule__) {
         InvocationTraceSupport,
         ...support,
     });
-
+    /*
     global.__thundraMasterModule__ = {
         fileName: __filename,
         moduleExports: module.exports,
     };
+    */
 }
