@@ -80,6 +80,15 @@ class HttpIntegration implements Integration {
                     ThundraLogger.debug('<HTTPIntegration> Tracing HTTP request:', options);
 
                     const { tracer } = ExecutionContextManager.get();
+                    // @ts-ignore
+                    let id = tracer.id;
+                    if (!id) {
+                        id = Math.random();
+                        // @ts-ignore
+                        tracer.id = id;
+                    }
+                    // @ts-ignore
+                    console.log("***** <HTTPIntegration> using tracer with id ", tracer.id, ":", options);
 
                     if (!tracer) {
                         ThundraLogger.debug('<HTTPIntegration> Skipped tracing request as no tracer is available');

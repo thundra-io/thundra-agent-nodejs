@@ -333,6 +333,12 @@ describe('whitelist config', () => {
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
                 const { tracer } = ExecutionContextManager.get();
+                let id = tracer.id;
+                if (!id) {
+                    id = Math.random();
+                    tracer.id = id;
+                }
+                console.log('***** <should whitelist http get operation> using tracer with id ', tracer.id);
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
