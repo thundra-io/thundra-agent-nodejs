@@ -22,7 +22,7 @@ const pluginContext = createMockPluginContext();
 
 describe('trace', () => {
 
-    /*
+
     describe('constructor', () => {
         const config = new TraceConfig();
         const trace = new Trace(config);
@@ -31,7 +31,7 @@ describe('trace', () => {
         it('should create an instance with options', () => {
             expect(trace.config).toEqual(config);
         });
-
+        /*
         it('should set variables', () => {
             expect(trace.hooks).toBeTruthy();
         });
@@ -41,8 +41,9 @@ describe('trace', () => {
                 'after-invocation': trace.afterInvocation
             });
         });
+        */
     });
-
+    /*
     describe('constructor with trace def', () => {
         const configs = new TraceConfig({
             traceableConfigs: [{
