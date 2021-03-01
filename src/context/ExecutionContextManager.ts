@@ -1,6 +1,9 @@
 import ExecutionContext from './ExecutionContext';
 import * as globalContextProvider from './globalContextProvider';
 
+export const moduleId = Math.random();
+console.log('***** Loading ExecutionContextManager with module id:', moduleId);
+
 /**
  * Manages {@link ExecutionContext} and
  * contract point to the outside for {@link ExecutionContext} related operation.

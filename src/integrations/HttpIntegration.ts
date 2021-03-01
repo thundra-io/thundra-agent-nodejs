@@ -9,6 +9,8 @@ import HttpError from '../error/HttpError';
 import ThundraSpan from '../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
+const ExecutionContextManagerModuleId = require('../context/ExecutionContextManager').moduleId;
+console.log('***** Loading ExecutionContextManager with module id:', ExecutionContextManagerModuleId);
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');

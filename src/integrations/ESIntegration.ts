@@ -8,6 +8,8 @@ import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
+const ExecutionContextManagerModuleId = require('../context/ExecutionContextManager').moduleId;
+console.log('***** Loading ExecutionContextManager with module id:', ExecutionContextManagerModuleId);
 
 const has = require('lodash.has');
 const shimmer = require('shimmer');
