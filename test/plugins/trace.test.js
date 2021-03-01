@@ -145,25 +145,25 @@ describe('trace', () => {
         });
     });
 
-    // describe('before invocation', () => {
-    //     const traceConfig = new TraceConfig();
-    //     const trace = new Trace(traceConfig);
-    //     const mockPluginContext = createMockPluginContext();
-    //     mockPluginContext.executor = {
-    //         startTrace: jest.fn(),
-    //     };
+    describe('before invocation', () => {
+        const traceConfig = new TraceConfig();
+        const trace = new Trace(traceConfig);
+        const mockPluginContext = createMockPluginContext();
+        mockPluginContext.executor = {
+            startTrace: jest.fn(),
+        };
 
-    //     trace.setPluginContext(mockPluginContext);
-    //     it('should call executor', () => {
-    //         const mockExecContext = createMockLambdaExecContext();
-    //         ExecutionContextManager.set(mockExecContext);
+        trace.setPluginContext(mockPluginContext);
+        it('should call executor', () => {
+            const mockExecContext = createMockLambdaExecContext();
+            ExecutionContextManager.set(mockExecContext);
 
-    //         trace.beforeInvocation(mockExecContext);
+            trace.beforeInvocation(mockExecContext);
 
-    //         expect(mockPluginContext.executor.startTrace).toHaveBeenCalledTimes(1);
-    //         expect(mockPluginContext.executor.startTrace).toHaveBeenCalledWith(mockPluginContext, mockExecContext, traceConfig);
-    //     });
-    // });
+            expect(mockPluginContext.executor.startTrace).toHaveBeenCalledTimes(1);
+            expect(mockPluginContext.executor.startTrace).toHaveBeenCalledWith(mockPluginContext, mockExecContext, traceConfig);
+        });
+    });
 
     // describe('before invocation with SQS event', () => {
     //     const trace = new Trace(new TraceConfig());
