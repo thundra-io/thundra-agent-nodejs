@@ -12,7 +12,7 @@ if (!global.id) {
 }
 
 // @ts-ignore
-console.log('***** Loading globalContextProvider with global id:', !global.id);
+console.log('***** Loading globalContextProvider with global id:', global.id);
 
 const moduleId = Math.random();
 console.log('***** Loading globalContextProvider with module id:', moduleId);
