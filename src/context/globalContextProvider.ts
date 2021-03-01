@@ -35,6 +35,8 @@ export function runWithContext(createExecContext: Function, fn: Function) {
 export function get(): any {
     const execCtx = global.__thundraGlobalExecutionContext__ || null;
 
+    console.log('***** <get context> using execution context with module id:', moduleId);
+
     if (execCtx) {
         // @ts-ignore
         console.log('***** <get context> using execution context with id ', execCtx.id, 'module id:', moduleId);

@@ -105,7 +105,6 @@ class ModuleUtils {
         const libs: any[] = [];
         const hooks: any[] = [];
         // Register for given module names as instrumenter
-        /*
         moduleNames.forEach((moduleName: string) => {
             ThundraLogger.debug(`<ModuleUtils> Registering instrumenter for module ${moduleName}`);
             ModuleUtils.instrumenters[moduleName] = {
@@ -125,7 +124,6 @@ class ModuleUtils {
                 ModuleUtils.instrumentModule(moduleName, moduleToInstrument);
             }
         });
-        */
         for (const moduleName of moduleNames) {
             const requiredLib = ModuleUtils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
             if (requiredLib) {
@@ -140,7 +138,6 @@ class ModuleUtils {
                     ModuleUtils.doInstrument(requiredLib, libs, null, moduleName, null, wrapper, config);
                 }
             }
-            /*
             const hook = Hook(moduleName, { internals: true }, (lib: any, name: string, basedir: string) => {
                 if (name === moduleName) {
                     ModuleUtils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
@@ -148,7 +145,6 @@ class ModuleUtils {
                 return lib;
             });
             hooks.push(hook);
-            */
         }
         return {
             uninstrument: () => {
