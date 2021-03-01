@@ -574,10 +574,9 @@ describe('blacklist config', () => {
     });
 
     describe('using http integration', () => {
-        const http = require('http');
-        const https = require('https');
-
         test('should blacklist http get operation', () => {
+            const http = require('http');
+
             const originalFunction = () => HTTPCalls.get(http);
             const wrappedFunc = thundraWrapper(originalFunction);
 
@@ -589,6 +588,7 @@ describe('blacklist config', () => {
         });
 
         test('should blacklist api-gateway get operation', () => {
+            const https = require('https');
             const originalFunction = () => HTTPCalls.getAPIGW(https);
             const wrappedFunc = thundraWrapper(originalFunction);
 
