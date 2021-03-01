@@ -5,6 +5,7 @@ on:
     branches:
       - "master"
       - "flaky-test-narrowing"
+      - "test/fix-node-ga-test"
   pull_request:
     branches: [master]
   workflow_dispatch:
