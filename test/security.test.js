@@ -21,11 +21,13 @@ import InitManager from '../dist/init/InitManager';
 //const thundra = require('../dist/index');
 
 beforeEach(() => {
+    jest.resetModules();
     TestUtils.clearEnvironmentVariables();
     ConfigProvider.clear();
 });
 
 afterEach(() => {
+    jest.resetModules();
     TestUtils.clearEnvironmentVariables();
     ConfigProvider.clear();
 });
