@@ -234,7 +234,6 @@ describe('trace', () => {
         });
     });
 
-
     describe('before invocation with batch SNS event from multiple triggers', () => {
         const trace = new Trace(new TraceConfig());
         const mockPluginContext = createMockPluginContext();
@@ -515,125 +514,6 @@ describe('trace', () => {
             expect(rootSpan.tags['trigger.domainName']).toBe('CDN');
             expect(rootSpan.tags['trigger.className']).toBe('AWS-CloudFront');
             expect(rootSpan.tags['trigger.operationNames']).toEqual(['/test']);
-        });
-    });
-
-    // Gidebilir
-    describe('before invocation with APIGatewayProxy event ', () => {
-        const trace = new Trace(new TraceConfig());
-        const mockPluginContext = createMockPluginContext();
-        mockPluginContext.executor = LambdaExecutor;
-        trace.setPluginContext(mockPluginContext);
-        const mockExecContext = createMockLambdaExecContext();
-        mockExecContext.platformData.originalEvent = mockAWSEvents.createMockAPIGatewayProxyEvent();
-
-        beforeAll(() => {
-            ExecutionContextManager.set(mockExecContext);
-            trace.beforeInvocation(mockExecContext);
-        });
-
-        it('should set trigger tags for APIGatewayProxy to root span', () => {
-            const { rootSpan } = mockExecContext;
-
-            expect(rootSpan.tags['trigger.domainName']).toBe('API');
-            expect(rootSpan.tags['trigger.className']).toBe('AWS-APIGateway');
-            expect(rootSpan.tags['trigger.operationNames']).toEqual(['/{proxy+}']);
-        });
-
-        it('should create incoming apigateway trace links', () => {
-            const expTraceLinks = ['spanId'];
-            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
-        });
-    });
-
-    // Gidebilir
-    describe('before invocation with APIGatewayPassThrough event ', () => {
-        const trace = new Trace(new TraceConfig());
-        const mockPluginContext = createMockPluginContext();
-        mockPluginContext.executor = LambdaExecutor;
-        trace.setPluginContext(mockPluginContext);
-        const mockExecContext = createMockLambdaExecContext();
-        mockExecContext.platformData.originalEvent = mockAWSEvents.createMockAPIGatewayPassThroughRequest();
-
-        beforeAll(() => {
-            ExecutionContextManager.set(mockExecContext);
-            trace.beforeInvocation(mockExecContext);
-        });
-
-        it('should set trigger tags for APIGatewayProxy to root span', () => {
-            const { rootSpan } = mockExecContext;
-
-            expect(rootSpan.tags['trigger.domainName']).toBe('API');
-            expect(rootSpan.tags['trigger.className']).toBe('AWS-APIGateway');
-            expect(rootSpan.tags['trigger.operationNames']).toEqual(['random.execute-api.us-west-2.amazonaws.com/dev/hello']);
-        });
-    });
-
-    // Gidebilir
-    describe('before invocation with Lambda event', () => {
-        const trace = new Trace(new TraceConfig());
-        const mockPluginContext = createMockPluginContext();
-        mockPluginContext.executor = LambdaExecutor;
-        trace.setPluginContext(mockPluginContext);
-        const mockExecContext = createMockLambdaExecContext();
-        mockExecContext.platformData.originalContext.clientContext = createMockClientContext();
-
-        beforeAll(() => {
-            ExecutionContextManager.set(mockExecContext);
-            trace.beforeInvocation(mockExecContext);
-        });
-
-        it('should set trigger tags for Lambda to root span', () => {
-            const { rootSpan } = mockExecContext;
-
-            expect(rootSpan.tags['trigger.domainName']).toBe('API');
-            expect(rootSpan.tags['trigger.className']).toBe('AWS-Lambda');
-            expect(rootSpan.tags['trigger.operationNames']).toEqual(['lambda-function']);
-        });
-
-        it('should create incoming lambda trace links', () => {
-            const expTraceLinks = ['awsRequestId'];
-            expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
-        });
-    });
-
-    // Gidebilir
-    describe('before invocation with ApiGateway event', () => {
-        const trace = new Trace(new TraceConfig());
-        const mockPluginContext = createMockPluginContext();
-        mockPluginContext.executor = LambdaExecutor;
-        trace.setPluginContext(mockPluginContext);
-
-        it('should set propagated ids in plugin context', () => {
-            const mockExecContext = createMockLambdaExecContext();
-            mockExecContext.platformData.originalEvent = createMockApiGatewayProxy();
-            ExecutionContextManager.set(mockExecContext);
-
-            trace.beforeInvocation(mockExecContext);
-
-            expect(mockExecContext.transactionId).toBeTruthy();
-            expect(mockExecContext.traceId).toBe('traceId');
-            expect(mockExecContext.spanId).toBeTruthy();
-        });
-    });
-
-    // Gidebilir
-    describe('before invocation with Lambda trigger', () => {
-        const trace = new Trace(new TraceConfig());
-        const mockPluginContext = createMockPluginContext();
-        mockPluginContext.executor = LambdaExecutor;
-        trace.setPluginContext(mockPluginContext);
-
-        it('should set propagated ids in plugin context', () => {
-            const mockExecContext = createMockLambdaExecContext();
-            mockExecContext.platformData.originalContext.clientContext = createMockClientContext();
-            ExecutionContextManager.set(mockExecContext);
-
-            trace.beforeInvocation(mockExecContext);
-
-            expect(mockExecContext.transactionId).toBeTruthy();
-            expect(mockExecContext.traceId).toBe('traceId');
-            expect(mockExecContext.spanId).toBeTruthy();
         });
     });
 
