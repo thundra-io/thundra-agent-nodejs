@@ -328,28 +328,24 @@ describe('whitelist config', () => {
         const http = require('http');
         const https = require('https');
 
-        test.only('should whitelist http get operation', () => {
+        test('should whitelist http get operation', async () => {
             const originalFunction = () => HTTPCalls.get(http);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
+            await wrappedFunc(originalEvent, originalContext);
+            const { tracer } = ExecutionContextManager.get();
+            const span = tracer.recorder.spanList[1];
+            checkIfWhitelisted(span);
         });
 
-        test('should whitelist api-gateway get operation', () => {
+        test('should whitelist api-gateway get operation', async () => {
             const originalFunction = () => HTTPCalls.getAPIGW(https);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
-                console.log('<<< SECURITY TEST APIGateway >>>');
-                console.log(tracer.recorder.spanList);
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
+            await wrappedFunc(originalEvent, originalContext);
+            const { tracer } = ExecutionContextManager.get();
+            const span = tracer.recorder.spanList[1];
+            checkIfWhitelisted(span);
         });
     });
 

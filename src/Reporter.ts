@@ -263,7 +263,7 @@ class Reporter {
                 ThundraLogger.debug(`<Reporter> Writing data to CloudWatch: ${reportJson}`);
                 const jsonStringReport = '\n' + reportJson.replace(/\r?\n|\r/g, '') + '\n';
                 process.stdout.write(jsonStringReport);
-                return resolve();
+                return resolve(true);
             } catch (error) {
                 ThundraLogger.debug('<Reporter> Cannot write report data to CloudWatch:', error);
                 return reject(error);
@@ -316,7 +316,7 @@ export class LogAndMetricTrimmer implements Trimmer {
         const trimmedMonitoringDataList: any[] = [];
         for (const monitoringData of monitoringDataList) {
             if (monitoringData.type !== MonitoringDataType.LOG &&
-                    monitoringData.type !== MonitoringDataType.METRIC) {
+                monitoringData.type !== MonitoringDataType.METRIC) {
                 trimmedMonitoringDataList.push(monitoringData);
             }
         }
