@@ -4,8 +4,19 @@
 
 import ExecutionContext from './ExecutionContext';
 
+// @ts-ignore
+if (!global.id) {
+    console.log('***** Loading globalContextProvider by setting global id');
+    // @ts-ignore
+    global.id = Math.random();
+}
+
+// @ts-ignore
+console.log('***** Loading globalContextProvider with global id:', !global.id);
+
 const moduleId = Math.random();
 console.log('***** Loading globalContextProvider with module id:', moduleId);
+
 export function runWithContext(createExecContext: Function, fn: Function) {
     global.__thundraGlobalExecutionContext__ = createExecContext();
 
@@ -17,7 +28,14 @@ export function runWithContext(createExecContext: Function, fn: Function) {
 }
 
 export function get(): any {
-    return global.__thundraGlobalExecutionContext__ || null;
+    const execCtx = global.__thundraGlobalExecutionContext__ || null;
+
+    if (execCtx) {
+        // @ts-ignore
+        console.log('***** <get context> using execution context with id ', execCtx.id, 'module id:', moduleId);
+    }
+
+    return execCtx;
 }
 
 export function set(execCtx: ExecutionContext) {

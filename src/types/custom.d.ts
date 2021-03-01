@@ -10,5 +10,6 @@ declare namespace NodeJS {
         __thundraTraceLine__: any;
         __thundraTraceExit__: any;
         __thundraGlobalExecutionContext__: any;
+        __thundraId: any;
     }
 }
