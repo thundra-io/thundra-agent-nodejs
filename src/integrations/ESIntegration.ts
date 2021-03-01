@@ -15,6 +15,9 @@ const shimmer = require('shimmer');
 const MODULE_NAME = 'elasticsearch';
 const MODULE_VERSION = '>=10.5';
 
+const moduleId = Math.random();
+console.log('***** Loading ESIntegration with module id:', moduleId);
+
 /**
  * {@link Integration} implementation for Elasticsearch integration
  * through {@code elasticsearch} library

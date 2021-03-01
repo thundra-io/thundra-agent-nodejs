@@ -20,6 +20,9 @@ const thundraCollectorEndpointPattern2 = /^([\w-]+\.)?collector\.thundra\.io$/;
 const MODULE_NAME_HTTP = 'http';
 const MODULE_NAME_HTTPS = 'https';
 
+const moduleId = Math.random();
+console.log('***** Loading HttpIntegration with module id:', moduleId);
+
 /**
  * {@link Integration} implementation for HTTP integration
  * through {@code http} and {@code https} modules
