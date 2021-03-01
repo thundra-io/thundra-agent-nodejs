@@ -80,6 +80,10 @@ class ESIntegration implements Integration {
                     ThundraLogger.debug('<ESIntegration> Tracing Elasticsearch request:', params);
 
                     const { tracer } = ExecutionContextManager.get();
+                    // @ts-ignore
+                    const { id }  = ExecutionContextManager.get();
+                    // @ts-ignore
+                    console.log('***** <ESIntegration> using tracer with id', id, ':', params);
 
                     if (!tracer) {
                         ThundraLogger.debug('<ESIntegration> Skipped tracing request as no tracer is available');

@@ -367,6 +367,8 @@ describe('whitelist config', () => {
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
                 const { tracer } = ExecutionContextManager.get();
+                const { id } = ExecutionContextManager.get();
+                console.log('***** <should whitelist es query operation> using execution context with id ', id);
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
