@@ -42,6 +42,7 @@ describe('trace', () => {
         });
     });
 
+    /*
     describe('constructor with trace def', () => {
         const configs = new TraceConfig({
             traceableConfigs: [{
@@ -554,13 +555,13 @@ describe('trace', () => {
             expect(mockExecContext.spanId).toBeTruthy();
         });
     });
-
+    */
     ///////////////////////////////////////////////////////////////////////////////
     //
     //  Flaky tests
     //
     ///////////////////////////////////////////////////////////////////////////////
-
+/*
     describe('before invocation with APIGatewayProxy event', () => {
         const trace = new Trace(new TraceConfig());
         const mockPluginContext = createMockPluginContext();
@@ -636,5 +637,5 @@ describe('trace', () => {
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
-
+*/
 });
