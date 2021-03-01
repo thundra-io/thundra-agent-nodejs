@@ -7,6 +7,9 @@ import ExecutionContext from './ExecutionContext';
 console.log('***** Loading globalContextProvider with pid ' + process.pid);
 
 // @ts-ignore
+console.log('***** Loading globalContextProvider with global id:', global.id);
+
+// @ts-ignore
 if (!global.id) {
     console.log('***** Loading globalContextProvider by setting global id');
     // @ts-ignore
