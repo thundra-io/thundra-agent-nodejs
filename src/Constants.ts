@@ -532,7 +532,7 @@ export const SpanTypes = {
 };
 
 export const INTEGRATIONS: any = {
-
+    http: HttpIntegration,
     pg: PostgreIntegration,
     mysql2: MySQL2Integration,
     mysql: MySQLIntegration,
@@ -541,7 +541,6 @@ export const INTEGRATIONS: any = {
     aws: AWSIntegration,
     es: ESIntegration,
     mongodb: MongoDBIntegration,
-    http: HttpIntegration,
 };
 
 export const LISTENERS: any = {

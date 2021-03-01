@@ -8,7 +8,6 @@ import ThundraLogger from '../ThundraLogger';
 import HttpError from '../error/HttpError';
 import ThundraSpan from '../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
-import ExecutionContextManager from '../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -78,7 +77,7 @@ class HttpIntegration implements Integration {
                 let span: ThundraSpan;
                 try {
                     ThundraLogger.debug('<HTTPIntegration> Tracing HTTP request:', options);
-
+                    const ExecutionContextManager = require('../context/ExecutionContextManager').default;
                     const { tracer } = ExecutionContextManager.get();
                     // @ts-ignore
                     const { id }  = ExecutionContextManager.get();
