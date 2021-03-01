@@ -9,7 +9,7 @@
     "start": "npm-run-all --parallel watch:server watch:build",
     "test-automatic-instrumentation": "node ./test/instrumentation/automated.instrumentation.js",
     "test": "npm run compile && npm run test-automatic-instrumentation && docker-compose up -d && jest --config jest.ci.config.json; docker-compose stop",
-    "test-ga": "npm run compile && npm run test-automatic-instrumentation && jest --config jest.ci.config.json --runInBand",
+    "test-ga": "npm run compile && jest --config jest.ci.config.json --runInBand",
     "test-ci": "npm run compile && npm run test-automatic-instrumentation && jest --config jest.ci.config.json --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "tslint --project tsconfig.json -t stylish",
     "release-minor": "npm install; npm run build; release-it minor --ci --git.commit --git.push --git.tag --git.tagName='v${version}' --github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
