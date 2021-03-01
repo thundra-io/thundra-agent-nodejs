@@ -9,8 +9,9 @@ console.log('***** Loading globalContextProvider with module id:', moduleId);
 export function runWithContext(createExecContext: Function, fn: Function) {
     global.__thundraGlobalExecutionContext__ = createExecContext();
 
+    const execCtx = global.__thundraGlobalExecutionContext__;
     // @ts-ignore
-    console.log('***** <runWithContext> using execution context with id ', global.__thundraGlobalExecutionContext__.id, 'module id:', moduleId);
+    console.log('***** <runWithContext> using execution context with id ', execCtx.id, 'module id:', moduleId);
 
     return fn.call(global.__thundraGlobalExecutionContext__);
 }
