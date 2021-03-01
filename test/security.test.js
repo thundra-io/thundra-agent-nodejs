@@ -330,10 +330,8 @@ describe('whitelist config', () => {
     // but passing on CircleCI and on local.
     // No idea what's going on.
     describe('using http integration', () => {
-        const http = require('http');
-        const https = require('https');
-
         test('should whitelist http get operation', () => {
+            const http = require('http');
             const originalFunction = () => HTTPCalls.get(http);
             const wrappedFunc = thundraWrapper(originalFunction);
 
@@ -347,6 +345,7 @@ describe('whitelist config', () => {
         });
 
         test('should whitelist api-gateway get operation', () => {
+            const https = require('https');
             const originalFunction = () => HTTPCalls.getAPIGW(https);
             const wrappedFunc = thundraWrapper(originalFunction);
 
