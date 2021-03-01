@@ -518,7 +518,7 @@ describe('trace', () => {
     });
 
     // Gidebilir
-    describe('before invocation with APIGatewayProxy event ', () => {
+    describe('before invocation with APIGatewayProxy event', () => {
         const trace = new Trace(new TraceConfig());
         const mockPluginContext = createMockPluginContext();
         mockPluginContext.executor = LambdaExecutor;
@@ -546,7 +546,7 @@ describe('trace', () => {
     });
 
     // Gidebilir
-    describe('before invocation with APIGatewayPassThrough event ', () => {
+    describe('before invocation with APIGatewayPassThrough event', () => {
         const trace = new Trace(new TraceConfig());
         const mockPluginContext = createMockPluginContext();
         mockPluginContext.executor = LambdaExecutor;
