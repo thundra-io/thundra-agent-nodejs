@@ -320,9 +320,6 @@ describe('whitelist config', () => {
         });
     });
 
-    // These tests are failing on Github Action
-    // but passing on CircleCI and on local.
-    // No idea what's going on.
     describe('using http integration', () => {
         const http = require('http');
         const https = require('https');
@@ -333,8 +330,6 @@ describe('whitelist config', () => {
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
                 const { tracer } = ExecutionContextManager.get();
-                const { id } = ExecutionContextManager.get();
-                console.log('***** <should whitelist http get operation> using execution context with id ', id);
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
