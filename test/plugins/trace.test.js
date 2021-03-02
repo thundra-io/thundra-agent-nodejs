@@ -19,22 +19,25 @@ const flatten = require('lodash.flatten');
 ApplicationManager.setApplicationInfoProvider(null);
 
 const pluginContext = createMockPluginContext();
-require('http');
-require('https');
 
 describe('trace', () => {
-
 
     describe('constructor', () => {
         const config = new TraceConfig();
         const trace = new Trace(config);
-        trace.setPluginContext(pluginContext);
+
+        beforeAll(() => {
+            trace.setPluginContext(pluginContext);
+        });
+
+        afterAll(() => {
+            trace.destroy();
+        });
 
         it('should create an instance with options', () => {
             expect(trace.config).toEqual(config);
-            //trace.destroy();
         });
-        /*
+
         it('should set variables', () => {
             expect(trace.hooks).toBeTruthy();
         });
@@ -44,7 +47,6 @@ describe('trace', () => {
                 'after-invocation': trace.afterInvocation
             });
         });
-        */
     });
     /*
     describe('constructor with trace def', () => {
