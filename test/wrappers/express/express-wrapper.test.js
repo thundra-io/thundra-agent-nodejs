@@ -3,6 +3,7 @@ import ExecutionContextManager from '../../../dist/context/ExecutionContextManag
 import { createMockExpressApp, createMockReporterInstance } from '../../mocks/mocks';
 import { ClassNames, DomainNames, HttpTags, SpanTags } from '../../../dist/Constants';
 import { init as initExpressWrapper, expressMW } from '../../../dist/wrappers/express/ExpressWrapper';
+import ConfigNames from '../../../dist/config/ConfigNames';
 
 const request = require('supertest');
 const express = require('express');
@@ -24,8 +25,8 @@ function doRequest(app) {
         app = http.createServer(app);
     }
 
-    methods.forEach(function(method) {
-        obj[method] = function(url) {
+    methods.forEach(function (method) {
+        obj[method] = function (url) {
             return new request.Test(app, method, url);
         };
     });
@@ -165,18 +166,20 @@ describe('express wrapper', () => {
     test('should fill execution context', async () => {
         const res = await doRequest(app).get('/');
 
-        const execContext = ExecutionContextManager.get();
+        setTimeout(() => {
+            const execContext = ExecutionContextManager.get();
 
-        expect(execContext.startTimestamp).toBeTruthy();
-        expect(execContext.finishTimestamp).toBeTruthy();
-        expect(execContext.tracer).toBeTruthy();
-        expect(execContext.reports).toBeTruthy();
-        expect(execContext.reports.length).toBe(2);
-        expect(execContext.spanId).toBeTruthy();
-        expect(execContext.traceId).toBeTruthy();
-        expect(execContext.rootSpan).toBeTruthy();
-        expect(execContext.invocationData).toBeTruthy();
-        expect(execContext.invocationData).toBeTruthy();
+            expect(execContext.startTimestamp).toBeTruthy();
+            expect(execContext.finishTimestamp).toBeTruthy();
+            expect(execContext.tracer).toBeTruthy();
+            expect(execContext.reports).toBeTruthy();
+            expect(execContext.reports.length).toBe(2);
+            expect(execContext.spanId).toBeTruthy();
+            expect(execContext.traceId).toBeTruthy();
+            expect(execContext.rootSpan).toBeTruthy();
+            expect(execContext.invocationData).toBeTruthy();
+            expect(execContext.invocationData).toBeTruthy();
+        }, 500); // Wait a bit before checking the execution context.
     });
 
     test('should create invocation data', async () => {
@@ -186,9 +189,9 @@ describe('express wrapper', () => {
         const { invocationData } = execContext;
         expect(invocationData).toBeTruthy();
 
-        expect(invocationData.applicationId).toBe('node:EXPRESS::thundra-app');
+        expect(invocationData.applicationId).toBe('node:Express::thundra-app');
         expect(invocationData.applicationInstanceId).toBeTruthy();
-        expect(invocationData.applicationClassName).toBe('EXPRESS');
+        expect(invocationData.applicationClassName).toBe('Express');
         expect(invocationData.applicationDomainName).toBe('API');
         expect(invocationData.startTimestamp).toBeTruthy();
         expect(invocationData.finishTimestamp).toBeTruthy();

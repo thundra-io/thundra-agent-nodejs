@@ -222,7 +222,7 @@ describe('whitelist config', () => {
 
     beforeAll(() => {
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
+        thundraWrapper = thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
     });
 
     describe('using aws integration', () => {
@@ -465,7 +465,7 @@ describe('blacklist config', () => {
 
     beforeAll(() => {
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
+        thundraWrapper = thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
     });
 
     describe('using aws integration', () => {
