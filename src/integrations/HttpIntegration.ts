@@ -9,8 +9,6 @@ import HttpError from '../error/HttpError';
 import ThundraSpan from '../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
-const ExecutionContextManagerModuleId = require('../context/ExecutionContextManager').moduleId;
-console.log('***** Loading ExecutionContextManager with module id:', ExecutionContextManagerModuleId);
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -21,9 +19,6 @@ const thundraCollectorEndpointPattern2 = /^([\w-]+\.)?collector\.thundra\.io$/;
 
 const MODULE_NAME_HTTP = 'http';
 const MODULE_NAME_HTTPS = 'https';
-
-const moduleId = Math.random();
-console.log('***** Loading HttpIntegration with module id:', moduleId);
 
 /**
  * {@link Integration} implementation for HTTP integration
@@ -85,10 +80,6 @@ class HttpIntegration implements Integration {
                     ThundraLogger.debug('<HTTPIntegration> Tracing HTTP request:', options);
 
                     const { tracer } = ExecutionContextManager.get();
-                    // @ts-ignore
-                    const { id }  = ExecutionContextManager.get();
-                    // @ts-ignore
-                    console.log('***** <HTTPIntegration> using tracer with id', id, ':', options);
 
                     if (!tracer) {
                         ThundraLogger.debug('<HTTPIntegration> Skipped tracing request as no tracer is available');

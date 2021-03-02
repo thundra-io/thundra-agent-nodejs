@@ -155,10 +155,7 @@ function createExecContext(): ExecutionContext {
         transactionId,
     });
     if (ThundraLogger.isDebugEnabled()) {
-        // @ts-ignore
-        execContext.id = Math.random();
-        // @ts-ignore
-        ThundraLogger.debug('<LambdaWrapper> Created execution context with id', execContext.id, ':', execContext.summary());
+        ThundraLogger.debug('<LambdaWrapper> Created execution context:', execContext.summary());
     }
     return execContext;
 }
