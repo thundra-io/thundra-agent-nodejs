@@ -8,17 +8,12 @@ import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
-const ExecutionContextManagerModuleId = require('../context/ExecutionContextManager').moduleId;
-console.log('***** Loading ExecutionContextManager with module id:', ExecutionContextManagerModuleId);
 
 const has = require('lodash.has');
 const shimmer = require('shimmer');
 
 const MODULE_NAME = 'elasticsearch';
 const MODULE_VERSION = '>=10.5';
-
-const moduleId = Math.random();
-console.log('***** Loading ESIntegration with module id:', moduleId);
 
 /**
  * {@link Integration} implementation for Elasticsearch integration
@@ -80,10 +75,6 @@ class ESIntegration implements Integration {
                     ThundraLogger.debug('<ESIntegration> Tracing Elasticsearch request:', params);
 
                     const { tracer } = ExecutionContextManager.get();
-                    // @ts-ignore
-                    const { id }  = ExecutionContextManager.get();
-                    // @ts-ignore
-                    console.log('***** <ESIntegration> using tracer with id', id, ':', params);
 
                     if (!tracer) {
                         ThundraLogger.debug('<ESIntegration> Skipped tracing request as no tracer is available');
