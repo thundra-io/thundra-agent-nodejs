@@ -138,6 +138,7 @@ class ModuleUtils {
                     ModuleUtils.doInstrument(requiredLib, libs, null, moduleName, null, wrapper, config);
                 }
             }
+            /*
             const hook = Hook(moduleName, { internals: true }, (lib: any, name: string, basedir: string) => {
                 if (name === moduleName) {
                     ModuleUtils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
@@ -145,6 +146,7 @@ class ModuleUtils {
                 return lib;
             });
             hooks.push(hook);
+            */
         }
         return {
             uninstrument: () => {
