@@ -3,6 +3,18 @@ import ThundraTracer from '../../dist/opentracing/Tracer';
 import Http from './utils/http.integration.utils';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
+import ConfigProvider from '../../dist/config/ConfigProvider';
+import TestUtils from '../utils';
+
+beforeEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
+
+afterEach(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+});
 
 describe('HTTP integration', () => {
     let tracer;
