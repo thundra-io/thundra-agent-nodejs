@@ -120,7 +120,7 @@ export default class Trace {
     destroy(): void {
         // pass
         if (this.integrationsMap) {
-            this.integrationsMap.forEach((int: Integration, intName: string, map: Map<string, Integration>) => {
+            this.integrationsMap.forEach((int: Integration) => {
                 int.unwrap();
             });
         }

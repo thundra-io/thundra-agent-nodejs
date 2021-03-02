@@ -11,6 +11,7 @@ const customReq = typeof __non_webpack_require__ !== 'undefined'
     ? __non_webpack_require__
     : require;
 const thundraWrapped = '__thundra_wrapped';
+const thundraModuleName = '__thundra_moduleName';
 
 /**
  * Common/global utilities for module related stuff
@@ -152,7 +153,7 @@ class ModuleUtils {
             uninstrument: () => {
                 for (const lib of libs) {
                     if (unwrapper) {
-                        unwrapper(lib, config);
+                        unwrapper(lib, config, lib[thundraModuleName]);
                     }
                     delete lib[thundraWrapped];
                 }
@@ -220,6 +221,7 @@ class ModuleUtils {
             if (!lib[thundraWrapped]) {
                 wrapper(lib, config, moduleName);
                 lib[thundraWrapped] = true;
+                lib[thundraModuleName] = moduleName;
                 libs.push(lib);
                 ThundraLogger.debug(`<ModuleUtils> Instrumented module ${moduleName}`);
                 return true;
@@ -239,7 +241,7 @@ class ModuleUtils {
         const wrappedByThundra = lib[thundraWrapped];
         if (wrappedByThundra && unwrapper) {
             // Unwrap module
-            unwrapper(module, config);
+            unwrapper(module, config, moduleName);
             // Remove module from libs
             for (let i = libs.length - 1; i >= 0; i--) {
                 if (libs[i] === module) {
