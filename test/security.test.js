@@ -179,6 +179,9 @@ const operationList = [
 ];
 
 beforeAll(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
+
     Utils.readProcIoPromise = jest.fn(() => {
         return new Promise((resolve, reject) => {
             return resolve({ readBytes: 1024, writeBytes: 4096 });
@@ -191,7 +194,6 @@ beforeAll(() => {
         });
     });
 
-
     // Mock reporting and destroying methods
     AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
         return (cb) => {
@@ -200,6 +202,11 @@ beforeAll(() => {
     });
     LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();
     Recorder.prototype.destroy = jest.fn();
+});
+
+afterAll(() => {
+    TestUtils.clearEnvironmentVariables();
+    ConfigProvider.clear();
 });
 
 describe('whitelist config', () => {
