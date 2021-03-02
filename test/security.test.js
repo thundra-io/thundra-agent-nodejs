@@ -9,25 +9,21 @@ import ESCalls from './integrations/utils/es.integration.utils';
 import RedisCalls from './integrations/utils/redis.integration.utils';
 import MySQLCalls from './integrations/utils/mysql.integration.utils';
 import MongoCalls from './integrations/utils/mongodb.integration.utils';
-import * as LambdaWrapper from '../dist/wrappers/lambda/LambdaWrapper';
 import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
 import Recorder from '../dist/opentracing/Recorder';
 import { AWSIntegration } from '../dist/integrations/AWSIntegration';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
 
 import TestUtils from './utils.js';
-import InitManager from '../dist/init/InitManager';
 
-//const thundra = require('../dist/index');
+const thundra = require('../dist/index');
 
 beforeEach(() => {
-    jest.resetModules();
     TestUtils.clearEnvironmentVariables();
     ConfigProvider.clear();
 });
 
 afterEach(() => {
-    jest.resetModules();
     TestUtils.clearEnvironmentVariables();
     ConfigProvider.clear();
 });
@@ -227,10 +223,8 @@ describe('whitelist config', () => {
     };
 
     beforeAll(() => {
-        ConfigProvider.init({ apiKey: 'apiKey', timeoutMargin: 0 });
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        InitManager.init();
-        thundraWrapper = LambdaWrapper.createWrapper(); //thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
+        thundraWrapper = thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
     });
 
     describe('using aws integration', () => {
@@ -411,9 +405,9 @@ describe('whitelist config', () => {
     });
 
     describe('using mysql integration', () => {
-        //const mysql = require('mysql');
+        const mysql = require('mysql');
         const mysql2 = require('mysql2');
-/*
+
         test('should whitelist mysql operation', () => {
             const originalFunction = () => MySQLCalls.selectMySql(mysql);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -424,7 +418,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-*/
+
         test('should whitelist mysql2 operation', () => {
             const originalFunction = () => MySQLCalls.selectMySql2(mysql2);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -478,10 +472,8 @@ describe('blacklist config', () => {
     };
 
     beforeAll(() => {
-        ConfigProvider.init({ apiKey: 'apiKey', timeoutMargin: 0 });
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        InitManager.init();
-        thundraWrapper = LambdaWrapper.createWrapper(); //thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
+        thundraWrapper = thundra({ apiKey: 'apiKey', timeoutMargin: 0 });
     });
 
     describe('using aws integration', () => {
