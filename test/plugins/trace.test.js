@@ -48,7 +48,7 @@ describe('trace', () => {
             });
         });
     });
-    /*
+
     describe('constructor with trace def', () => {
         const configs = new TraceConfig({
             traceableConfigs: [{
@@ -77,8 +77,13 @@ describe('trace', () => {
 
     describe('set plugin context', () => {
         const trace = new Trace(new TraceConfig());
+
         beforeAll(() => {
             trace.setPluginContext(pluginContext);
+        });
+
+        afterAll(() => {
+            trace.destroy();
         });
 
         it('Should set apiKey and pluginContext', () => {
@@ -91,6 +96,10 @@ describe('trace', () => {
             disableRequest: true,
             disableResponse: true,
         }));
+
+        afterAll(() => {
+            trace.destroy();
+        });
 
         const mockPluginContext = createMockPluginContext();
         mockPluginContext.executor = LambdaExecutor;
@@ -127,6 +136,10 @@ describe('trace', () => {
             }
         }));
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         const mockPluginContext = createMockPluginContext();
         mockPluginContext.executor = LambdaExecutor;
         trace.setPluginContext(mockPluginContext);
@@ -153,6 +166,10 @@ describe('trace', () => {
             startTrace: jest.fn(),
         };
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         trace.setPluginContext(mockPluginContext);
         it('should call executor', () => {
             const mockExecContext = createMockLambdaExecContext();
@@ -170,6 +187,10 @@ describe('trace', () => {
         const mockPluginContext = createMockPluginContext();
         mockPluginContext.executor = LambdaExecutor;
         trace.setPluginContext(mockPluginContext);
+
+        afterAll(() => {
+            trace.destroy();
+        });
 
         it('should set propagated ids in plugin context', () => {
             const mockExecContext = createMockLambdaExecContext();
@@ -190,6 +211,10 @@ describe('trace', () => {
         mockPluginContext.executor = LambdaExecutor;
         trace.setPluginContext(mockPluginContext);
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set propagated ids in plugin context', () => {
             const mockExecContext = createMockLambdaExecContext();
             mockExecContext.platformData.originalEvent = createBatchMockSQSEventDifferentIds();
@@ -208,6 +233,10 @@ describe('trace', () => {
         const mockPluginContext = createMockPluginContext();
         mockPluginContext.executor = LambdaExecutor;
         trace.setPluginContext(mockPluginContext);
+
+        afterAll(() => {
+            trace.destroy();
+        });
 
         it('should set propagated ids in plugin context', () => {
             const mockExecContext = createMockLambdaExecContext();
@@ -228,6 +257,10 @@ describe('trace', () => {
         mockPluginContext.executor = LambdaExecutor;
         trace.setPluginContext(mockPluginContext);
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set propagated ids in plugin context', () => {
             const mockExecContext = createMockLambdaExecContext();
             mockExecContext.platformData.originalEvent = createMockSNSEvent();
@@ -247,6 +280,10 @@ describe('trace', () => {
         mockPluginContext.executor = LambdaExecutor;
         trace.setPluginContext(mockPluginContext);
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set propagated ids in plugin context', () => {
             const mockExecContext = createMockLambdaExecContext();
             mockExecContext.platformData.originalEvent = createBatchMockSNSEventWithDifferentIds();
@@ -265,6 +302,10 @@ describe('trace', () => {
         const mockPluginContext = createMockPluginContext();
         mockPluginContext.executor = LambdaExecutor;
         trace.setPluginContext(mockPluginContext);
+
+        afterAll(() => {
+            trace.destroy();
+        });
 
         it('should set propagated ids in plugin context', () => {
             const mockExecContext = createMockLambdaExecContext();
@@ -292,6 +333,10 @@ describe('trace', () => {
             trace.beforeInvocation(mockExecContext);
         });
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set trigger tags for Kinesis to root span', () => {
             const { rootSpan } = mockExecContext;
 
@@ -317,6 +362,10 @@ describe('trace', () => {
         beforeAll(() => {
             ExecutionContextManager.set(mockExecContext);
             trace.beforeInvocation(mockExecContext);
+        });
+
+        afterAll(() => {
+            trace.destroy();
         });
 
         it('should set trigger tags for FireHose to root span', () => {
@@ -348,6 +397,10 @@ describe('trace', () => {
         beforeAll(() => {
             ExecutionContextManager.set(mockExecContext);
             trace.beforeInvocation(mockExecContext);
+        });
+
+        afterAll(() => {
+            trace.destroy();
         });
 
         it('should set trigger tags for DynamoDB to root span', () => {
@@ -389,6 +442,10 @@ describe('trace', () => {
             trace.beforeInvocation(mockExecContext);
         });
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set trigger tags for SNS to root span', () => {
             const { rootSpan } = mockExecContext;
 
@@ -416,6 +473,10 @@ describe('trace', () => {
             trace.beforeInvocation(mockExecContext);
         });
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set trigger tags for SNS to root span', () => {
             const { rootSpan } = mockExecContext;
 
@@ -441,6 +502,10 @@ describe('trace', () => {
         beforeAll(() => {
             ExecutionContextManager.set(mockExecContext);
             trace.beforeInvocation(mockExecContext);
+        });
+
+        afterAll(() => {
+            trace.destroy();
         });
 
         it('should set trigger tags for S3 to root span', () => {
@@ -471,6 +536,10 @@ describe('trace', () => {
             trace.beforeInvocation(mockExecContext);
         });
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set trigger tags for CloudWatchSchedule to root span', () => {
             const { rootSpan } = mockExecContext;
 
@@ -491,6 +560,10 @@ describe('trace', () => {
         beforeAll(() => {
             ExecutionContextManager.set(mockExecContext);
             trace.beforeInvocation(mockExecContext);
+        });
+
+        afterAll(() => {
+            trace.destroy();
         });
 
         it('should set trigger tags for CloudWatchLog to root span', () => {
@@ -515,6 +588,10 @@ describe('trace', () => {
             trace.beforeInvocation(mockExecContext);
         });
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set trigger tags for CloudFront to root span', () => {
             const { rootSpan } = mockExecContext;
 
@@ -529,6 +606,10 @@ describe('trace', () => {
         const mockPluginContext = createMockPluginContext();
         mockPluginContext.executor = LambdaExecutor;
         trace.setPluginContext(mockPluginContext);
+
+        afterAll(() => {
+            trace.destroy();
+        });
 
         it('should set propagated ids in plugin context', () => {
             const mockExecContext = createMockLambdaExecContext();
@@ -549,6 +630,10 @@ describe('trace', () => {
         mockPluginContext.executor = LambdaExecutor;
         trace.setPluginContext(mockPluginContext);
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set propagated ids in plugin context', () => {
             const mockExecContext = createMockLambdaExecContext();
             mockExecContext.platformData.originalContext.clientContext = createMockClientContext();
@@ -561,13 +646,13 @@ describe('trace', () => {
             expect(mockExecContext.spanId).toBeTruthy();
         });
     });
-    */
+
     ///////////////////////////////////////////////////////////////////////////////
     //
     //  Flaky tests
     //
     ///////////////////////////////////////////////////////////////////////////////
-/*
+
     describe('before invocation with APIGatewayProxy event', () => {
         const trace = new Trace(new TraceConfig());
         const mockPluginContext = createMockPluginContext();
@@ -579,6 +664,10 @@ describe('trace', () => {
         beforeAll(() => {
             ExecutionContextManager.set(mockExecContext);
             trace.beforeInvocation(mockExecContext);
+        });
+
+        afterAll(() => {
+            trace.destroy();
         });
 
         it('should set trigger tags for APIGatewayProxy to root span', () => {
@@ -608,6 +697,10 @@ describe('trace', () => {
             trace.beforeInvocation(mockExecContext);
         });
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set trigger tags for APIGatewayProxy to root span', () => {
             const { rootSpan } = mockExecContext;
 
@@ -630,6 +723,10 @@ describe('trace', () => {
             trace.beforeInvocation(mockExecContext);
         });
 
+        afterAll(() => {
+            trace.destroy();
+        });
+
         it('should set trigger tags for Lambda to root span', () => {
             const { rootSpan } = mockExecContext;
 
@@ -643,5 +740,5 @@ describe('trace', () => {
             expect(InvocationTraceSupport.getIncomingTraceLinks()).toEqual(expTraceLinks);
         });
     });
-*/
+
 });
