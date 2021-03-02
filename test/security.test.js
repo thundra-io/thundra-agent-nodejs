@@ -411,9 +411,9 @@ describe('whitelist config', () => {
     });
 
     describe('using mysql integration', () => {
-        const mysql = require('mysql');
+        //const mysql = require('mysql');
         const mysql2 = require('mysql2');
-
+/*
         test('should whitelist mysql operation', () => {
             const originalFunction = () => MySQLCalls.selectMySql(mysql);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -424,7 +424,7 @@ describe('whitelist config', () => {
                 checkIfWhitelisted(span);
             });
         });
-
+*/
         test('should whitelist mysql2 operation', () => {
             const originalFunction = () => MySQLCalls.selectMySql2(mysql2);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -655,9 +655,9 @@ describe('blacklist config', () => {
     });
 
     describe('using mysql integration', () => {
-        const mysql = require('mysql');
+        //const mysql = require('mysql');
         const mysql2 = require('mysql2');
-
+/*
         test('should blacklist mysql operation', () => {
             const originalFunction = () => MySQLCalls.selectMySql(mysql);
             const wrappedFunc = thundraWrapper(originalFunction);
@@ -668,7 +668,7 @@ describe('blacklist config', () => {
                 checkIfBlacklisted(span);
             });
         });
-
+*/
         test('should blacklist mysql2 operation', () => {
             const originalFunction = () => MySQLCalls.selectMySql2(mysql2);
             const wrappedFunc = thundraWrapper(originalFunction);
