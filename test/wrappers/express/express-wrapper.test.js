@@ -14,7 +14,7 @@ ConfigProvider.init({ apiKey: 'foo' });
 
 initExpressWrapper();
 
-const app = createMockExpressApp();
+let app;
 
 function doRequest(app) {
     var obj = {};
@@ -37,7 +37,10 @@ function doRequest(app) {
 }
 
 describe('express wrapper', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+        if(!app){
+            app = await createMockExpressApp();
+        }
         ExecutionContextManager.useGlobalProvider();
     });
 
@@ -164,9 +167,7 @@ describe('express wrapper', () => {
     });
 
     test('should fill execution context', async () => {
-        const res = await doRequest(app).get('/');
-
-        setTimeout(() => {
+        doRequest(app).get('/' , () => {
             const execContext = ExecutionContextManager.get();
 
             expect(execContext.startTimestamp).toBeTruthy();
@@ -179,7 +180,7 @@ describe('express wrapper', () => {
             expect(execContext.rootSpan).toBeTruthy();
             expect(execContext.invocationData).toBeTruthy();
             expect(execContext.invocationData).toBeTruthy();
-        }, 500); // Wait a bit before checking the execution context.
+        });
     });
 
     test('should create invocation data', async () => {
@@ -315,8 +316,8 @@ describe('should handle 2 express app calling each other', () => {
     const caller = express();
     const callee = express();
 
-    caller.use(expressMW({ reporter: createMockReporterInstance() }));
-    callee.use(expressMW({ reporter: createMockReporterInstance() }));
+    caller.use(expressMW({reporter: createMockReporterInstance()}));
+    callee.use(expressMW({reporter: createMockReporterInstance()}));
 
     callee.get('/user', (req, res) => {
         calleeContext = ExecutionContextManager.get();

@@ -513,7 +513,7 @@ const createMockClientContext = () => {
     };
 };
 
-const createMockExpressApp = () => {
+const createMockExpressApp = async () => {
     const app = express();
 
     app.use(expressMW({
@@ -529,7 +529,12 @@ const createMockExpressApp = () => {
         next(new APIError('Boom'));
     });
 
-    const server = app.listen();
+    const server = await new Promise((resolve => {
+        app.listen(() => {
+            console.log("MockExpressApp is up for testing...")
+            resolve();
+        });
+    }))
     app.server = server;
 
     return app;

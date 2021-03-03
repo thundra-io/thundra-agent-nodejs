@@ -257,7 +257,7 @@ class Reporter {
         });
     }
 
-    private writeToCW(reportJson: string): Promise<any> {
+    private writeToCW(reportJson: string): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
                 ThundraLogger.debug(`<Reporter> Writing data to CloudWatch: ${reportJson}`);
