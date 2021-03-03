@@ -1,8 +1,8 @@
 import ConfigProvider from '../../../dist/config/ConfigProvider';
 import ExecutionContextManager from '../../../dist/context/ExecutionContextManager';
-import { createMockExpressApp, createMockReporterInstance } from '../../mocks/mocks';
-import { ClassNames, DomainNames, HttpTags, SpanTags } from '../../../dist/Constants';
-import { init as initExpressWrapper, expressMW } from '../../../dist/wrappers/express/ExpressWrapper';
+import {createMockExpressApp, createMockReporterInstance} from '../../mocks/mocks';
+import {ClassNames, DomainNames, HttpTags, SpanTags} from '../../../dist/Constants';
+import {init as initExpressWrapper, expressMW} from '../../../dist/wrappers/express/ExpressWrapper';
 import ConfigNames from '../../../dist/config/ConfigNames';
 
 const request = require('supertest');
@@ -10,7 +10,7 @@ const express = require('express');
 const http = require('http');
 const methods = require('methods');
 
-ConfigProvider.init({ apiKey: 'foo' });
+ConfigProvider.init({apiKey: 'foo'});
 
 initExpressWrapper();
 
@@ -37,10 +37,19 @@ function doRequest(app) {
 }
 
 describe('express wrapper', () => {
-    beforeEach(async () => {
-        if(!app){
+    beforeAll(async () => {
+        if (!app) {
             app = await createMockExpressApp();
         }
+    });
+
+    afterAll(() => {
+        if (app && app.server) {
+            app.server.close(()=>console.log("Close mock server..."))
+        }
+    });
+
+    beforeEach(async () => {
         ExecutionContextManager.useGlobalProvider();
     });
 
@@ -99,7 +108,7 @@ describe('express wrapper', () => {
         const wait = (ms) => new Promise(r => setTimeout(r, ms));
         const doSomeWork = (spanName) => new Promise((res, rej) => {
             setTimeout(async () => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.startSpan(spanName);
                 await wait(100);
                 span.finish();
@@ -130,7 +139,7 @@ describe('express wrapper', () => {
         const customSpan1 = spanList[1];
         const customSpan2 = spanList[2];
         const rootSpanId = rootSpan.spanContext.spanId;
-        const { transactionId, traceId } = rootSpan.spanContext;
+        const {transactionId, traceId} = rootSpan.spanContext;
 
         // Check span count
         expect(spanList.length).toBe(3);
@@ -167,7 +176,7 @@ describe('express wrapper', () => {
     });
 
     test('should fill execution context', async () => {
-        doRequest(app).get('/' , () => {
+        doRequest(app).get('/', () => {
             const execContext = ExecutionContextManager.get();
 
             expect(execContext.startTimestamp).toBeTruthy();
@@ -187,7 +196,7 @@ describe('express wrapper', () => {
         const res = await doRequest(app).get('/');
 
         const execContext = ExecutionContextManager.get();
-        const { invocationData } = execContext;
+        const {invocationData} = execContext;
         expect(invocationData).toBeTruthy();
 
         expect(invocationData.applicationId).toBe('node:Express::thundra-app');
@@ -212,7 +221,7 @@ describe('express wrapper', () => {
             .set('x-thundra-resource-name', 'incomingResourceName');
 
         const execContext = ExecutionContextManager.get();
-        const { invocationData } = execContext;
+        const {invocationData} = execContext;
 
         expect(invocationData.traceId).toBe('incomingTraceId');
         expect(invocationData.incomingTraceLinks).toEqual(['incomingSpanId']);
@@ -225,7 +234,7 @@ describe('express wrapper', () => {
         const wait = (ms) => new Promise(r => setTimeout(r, ms));
         const doSomeWork = (spanName) => new Promise((res, rej) => {
             setTimeout(async () => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.startSpan(spanName);
                 await wait(100);
                 span.finish();
@@ -265,7 +274,7 @@ describe('express wrapper', () => {
             const customSpan1 = spanList[1];
             const customSpan2 = spanList[2];
             const rootSpanId = rootSpan.spanContext.spanId;
-            const { transactionId, traceId } = rootSpan.spanContext;
+            const {transactionId, traceId} = rootSpan.spanContext;
 
             // Check span count
             expect(spanList.length).toBe(3);
