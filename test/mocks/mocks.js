@@ -1,7 +1,9 @@
-import { LambdaContextProvider } from '../../dist/wrappers/lambda/LambdaContextProvider';
+import {LambdaContextProvider} from '../../dist/wrappers/lambda/LambdaContextProvider';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ThundraTracer from '../../dist/opentracing/Tracer';
-import { expressMW } from '../../dist/wrappers/express/ExpressWrapper';
+import {expressMW} from '../../dist/wrappers/express/ExpressWrapper';
+
+const http = require('http');
 
 const express = require('express');
 
@@ -35,7 +37,7 @@ const createMockWrapperInstance = () => {
     return {
         apiKey: 'apiKey',
         originalContext: createMockContext(),
-        originalEvent: { key: 'data' },
+        originalEvent: {key: 'data'},
         coldStart: 'false',
         reporter: createMockReporterInstance(),
         pluginContext: createMockPluginContext()
@@ -44,7 +46,7 @@ const createMockWrapperInstance = () => {
 
 const createMockPlugin = () => {
     return {
-        hooks: { 'not-a-real-hook': jest.fn() }
+        hooks: {'not-a-real-hook': jest.fn()}
     };
 };
 
@@ -71,9 +73,9 @@ const createMockLambdaExecContext = () => {
         transactionId: 'foo',
         platformData: {
             originalContext: createMockContext(),
-            originalEvent: { key: 'data' },
+            originalEvent: {key: 'data'},
         },
-        response: { key: 'data' },
+        response: {key: 'data'},
     });
 }
 
@@ -515,7 +517,6 @@ const createMockClientContext = () => {
 
 const createMockExpressApp = async () => {
     const app = express();
-
     app.use(expressMW({
         disableAsyncContextManager: true,
         reporter: createMockReporterInstance(),
@@ -529,13 +530,13 @@ const createMockExpressApp = async () => {
         next(new APIError('Boom'));
     });
 
-    const server = await new Promise((resolve => {
-        app.listen(() => {
-            console.log("MockExpressApp is up for testing...")
-            resolve();
-        });
-    }))
+    let resolve;
+    const serverInitPromise = new Promise((r => resolve = r));
+    const server = app.listen(() => {
+        resolve();
+    });
     app.server = server;
+    await serverInitPromise;
 
     return app;
 };

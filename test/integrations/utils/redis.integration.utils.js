@@ -1,6 +1,9 @@
-module.exports.set = (redis) => {
+module.exports.set = (redis, container) => {
     return new Promise((resolve, reject) => {
-        const client = redis.createClient();
+        const client = redis.createClient(
+            container.getMappedPort(6379),
+            container.getHost()
+        );
 
         client.on('error', function (err) {
             return reject(err);

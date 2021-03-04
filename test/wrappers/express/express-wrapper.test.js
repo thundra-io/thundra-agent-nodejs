@@ -45,7 +45,7 @@ describe('express wrapper', () => {
 
     afterAll(() => {
         if (app && app.server) {
-            app.server.close(()=>console.log("Close mock server..."))
+            app.server.close();
         }
     });
 
