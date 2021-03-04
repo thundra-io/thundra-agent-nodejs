@@ -20,15 +20,7 @@ import TestUtils from './utils.js';
 
 const thundra = require('../dist/index');
 
-beforeEach(() => {
-    TestUtils.clearEnvironmentVariables();
-    ConfigProvider.clear();
-});
 
-afterEach(() => {
-    TestUtils.clearEnvironmentVariables();
-    ConfigProvider.clear();
-});
 
 const operationList = [
     {
@@ -180,40 +172,52 @@ const operationList = [
 let container;
 
 
-beforeAll(async () => {
-    container = await new GenericContainer("redis")
-        .withExposedPorts(6379)
-        .withWaitStrategy(Wait.forLogMessage("Ready to accept connections"))
-        .start()
-
-    Utils.readProcIoPromise = jest.fn(() => {
-        return new Promise((resolve, reject) => {
-            return resolve({readBytes: 1024, writeBytes: 4096});
-        });
-    });
-
-    Utils.readProcMetricPromise = jest.fn(() => {
-        return new Promise((resolve, reject) => {
-            return resolve({threadCount: 10});
-        });
-    });
-
-
-    // Mock reporting and destroying methods
-    AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
-        return (cb) => {
-            cb(null, {result: 'OK'});
-        };
-    });
-    LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();
-    Recorder.prototype.destroy = jest.fn();
-});
-
-afterAll(async ()=>{
-    await container.stop();
-})
-
 describe('whitelist config', () => {
+    beforeAll(async () => {
+        container = await new GenericContainer("redis")
+            .withExposedPorts(6379)
+            .withWaitStrategy(Wait.forLogMessage("Ready to accept connections"))
+            .start()
+
+        Utils.readProcIoPromise = jest.fn(() => {
+            return new Promise((resolve, reject) => {
+                return resolve({readBytes: 1024, writeBytes: 4096});
+            });
+        });
+
+        Utils.readProcMetricPromise = jest.fn(() => {
+            return new Promise((resolve, reject) => {
+                return resolve({threadCount: 10});
+            });
+        });
+
+
+        // Mock reporting and destroying methods
+        AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
+            return (cb) => {
+                cb(null, {result: 'OK'});
+            };
+        });
+        LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();
+        Recorder.prototype.destroy = jest.fn();
+    });
+
+    afterAll(async ()=>{
+        await container.stop();
+    })
+
+
+
+    beforeEach(() => {
+        TestUtils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
+    afterEach(() => {
+        TestUtils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
     const config = {
         type: 'SecurityAwareSpanListener',
         config: {
