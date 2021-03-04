@@ -6,5 +6,5 @@ gaze_run_interrupt(['src/**/*.ts', 'test/**/*.js'], [{
     command: 'node_modules/.bin/tsc'
 }, {
     command: 'node_modules/.bin/jest',
-    args: ['--config', 'jest.ci.config.json', '--coverage']
+    args: ['--config', 'jest.config.js', '--coverage']
 }]);
