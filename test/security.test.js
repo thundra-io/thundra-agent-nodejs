@@ -171,8 +171,7 @@ const operationList = [
 ];
 let container;
 
-
-describe('whitelist config', () => {
+describe('security test', () =>{
     beforeAll(async () => {
         container = await new GenericContainer("redis")
             .withExposedPorts(6379)
@@ -198,503 +197,513 @@ describe('whitelist config', () => {
                 cb(null, {result: 'OK'});
             };
         });
-        LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();
-        Recorder.prototype.destroy = jest.fn();
+
     });
 
     afterAll(async ()=>{
         await container.stop();
     })
 
+    describe('whitelist config', () => {
 
 
-    beforeEach(() => {
-        TestUtils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
+        beforeAll(()=>{
+            LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();
+            Recorder.prototype.destroy = jest.fn();
+        })
 
-    afterEach(() => {
-        TestUtils.clearEnvironmentVariables();
-        ConfigProvider.clear();
-    });
 
-    const config = {
-        type: 'SecurityAwareSpanListener',
-        config: {
-            block: false,
-            whitelist: operationList,
-        }
-    };
-
-    let thundraWrapper;
-    const originalEvent = {key: 'value'};
-    const originalContext = createMockContext();
-
-    const checkIfWhitelisted = (span) => {
-        expect(span.tags[SecurityTags.BLOCKED]).toBeUndefined();
-        expect(span.tags[SecurityTags.VIOLATED]).toBeUndefined();
-        expect(span.startTime).toBeGreaterThan(0);
-        expect(span.finishTime).toBeGreaterThan(0);
-    };
-
-    beforeAll(() => {
-        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
-    });
-
-    describe('using aws integration', () => {
-        const sdk = require('aws-sdk');
-        sdk.config.update({maxRetries: 0});
-
-        test('should whitelist dynamodb operation', () => {
-            const originalFunction = () => AWSCalls.dynamo(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
+        beforeEach(() => {
+            TestUtils.clearEnvironmentVariables();
+            ConfigProvider.clear();
         });
 
-        test('should whitelist lambda operation', () => {
-            const originalFunction = () => AWSCalls.lambda(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
+        afterEach(() => {
+            TestUtils.clearEnvironmentVariables();
+            ConfigProvider.clear();
         });
 
-        test('should whitelist sqs operation', () => {
-            const originalFunction = () => AWSCalls.sqs(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-
-        test('should whitelist s3 operation', () => {
-            const originalFunction = () => AWSCalls.s3GetObject(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-
-        test('should whitelist sns operation', () => {
-            const originalFunction = () => AWSCalls.sns_topic(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-
-        test('should whitelist kinesis operation', () => {
-            const originalFunction = () => AWSCalls.kinesis(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-
-        test('should whitelist firehose operation', () => {
-            const originalFunction = () => AWSCalls.kinesis(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-
-        test('should whitelist athena operation', () => {
-            const originalFunction = () => AWSCalls.athenaStartQueryExec(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-    });
-
-    describe('using http integration', () => {
-        const http = require('http');
-        const https = require('https');
-
-        test('should whitelist http get operation', () => {
-            const originalFunction = () => HTTPCalls.get(http);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-
-        test('should whitelist api-gateway get operation', () => {
-            const originalFunction = () => HTTPCalls.getAPIGW(https);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-    });
-
-    describe('using elasticsearch integration', () => {
-        const es = require('elasticsearch');
-
-        test('should whitelist es query operation', () => {
-            const originalFunction = () => ESCalls.query(es);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-    });
-
-    describe('using redis integration', () => {
-        const redis = require('redis');
-        const ioredis = require('ioredis');
-
-        test('should whitelist redis query operation', async () => {
-            const originalFunction = () => RedisCalls.set(redis, container);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            await wrappedFunc(originalEvent, originalContext)
-            const {tracer} = ExecutionContextManager.get();
-            for (const span of tracer.recorder.spanList) {
-                if (span.tags['redis.command.type'] === 'WRITE') {
-                    checkIfWhitelisted(span);
-                    break;
-                }
+        const config = {
+            type: 'SecurityAwareSpanListener',
+            config: {
+                block: false,
+                whitelist: operationList,
             }
+        };
 
+        let thundraWrapper;
+        const originalEvent = {key: 'value'};
+        const originalContext = createMockContext();
+
+        const checkIfWhitelisted = (span) => {
+            expect(span.tags[SecurityTags.BLOCKED]).toBeUndefined();
+            expect(span.tags[SecurityTags.VIOLATED]).toBeUndefined();
+            expect(span.startTime).toBeGreaterThan(0);
+            expect(span.finishTime).toBeGreaterThan(0);
+        };
+
+        beforeAll(() => {
+            ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
+            thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
         });
 
-        test('should whitelist ioredis query operation', async () => {
-            const originalFunction = () => RedisCalls.set(ioredis, container);
-            const wrappedFunc = thundraWrapper(originalFunction);
+        describe('using aws integration', () => {
+            const sdk = require('aws-sdk');
+            sdk.config.update({maxRetries: 0});
 
-            await wrappedFunc(originalEvent, originalContext);
-            const {tracer} = ExecutionContextManager.get();
-            for (const span of tracer.recorder.spanList) {
-                if (span.tags['redis.command.type'] === 'WRITE') {
+            test('should whitelist dynamodb operation', () => {
+                const originalFunction = () => AWSCalls.dynamo(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
                     checkIfWhitelisted(span);
-                    break;
-                }
-            }
+                });
+            });
 
-        });
-    });
+            test('should whitelist lambda operation', () => {
+                const originalFunction = () => AWSCalls.lambda(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
 
-    describe('using mysql integration', () => {
-        const mysql = require('mysql');
-        const mysql2 = require('mysql2');
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
+            });
 
-        test('should whitelist mysql operation', () => {
-            const originalFunction = () => MySQLCalls.selectMySql(mysql);
-            const wrappedFunc = thundraWrapper(originalFunction);
+            test('should whitelist sqs operation', () => {
+                const originalFunction = () => AWSCalls.sqs(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
 
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
+            });
+
+            test('should whitelist s3 operation', () => {
+                const originalFunction = () => AWSCalls.s3GetObject(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
+            });
+
+            test('should whitelist sns operation', () => {
+                const originalFunction = () => AWSCalls.sns_topic(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
+            });
+
+            test('should whitelist kinesis operation', () => {
+                const originalFunction = () => AWSCalls.kinesis(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
+            });
+
+            test('should whitelist firehose operation', () => {
+                const originalFunction = () => AWSCalls.kinesis(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
+            });
+
+            test('should whitelist athena operation', () => {
+                const originalFunction = () => AWSCalls.athenaStartQueryExec(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
             });
         });
 
-        test('should whitelist mysql2 operation', () => {
-            const originalFunction = () => MySQLCalls.selectMySql2(mysql2);
-            const wrappedFunc = thundraWrapper(originalFunction);
+        describe('using http integration', () => {
+            const http = require('http');
+            const https = require('https');
 
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
+            test('should whitelist http get operation', () => {
+                const originalFunction = () => HTTPCalls.get(http);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
             });
-        });
-    });
 
-    describe('using mongodb integration', () => {
-        const mongodb = require('mongodb');
+            test('should whitelist api-gateway get operation', () => {
+                const originalFunction = () => HTTPCalls.getAPIGW(https);
+                const wrappedFunc = thundraWrapper(originalFunction);
 
-        test('should whitelist mongodb operation', () => {
-            const originalFunction = () => MongoCalls.dropCollection(mongodb);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
-        });
-    });
-
-});
-
-describe('blacklist config', () => {
-    let thundraWrapper;
-    const config = {
-        type: 'SecurityAwareSpanListener',
-        config: {
-            block: true,
-            blacklist: operationList,
-        }
-    };
-    const securityErrorType = 'SecurityError';
-    const securityErrorMessage = 'Operation was blocked due to security configuration';
-    const originalEvent = {key: 'value'};
-    const originalContext = createMockContext();
-
-    const checkIfBlacklisted = (span) => {
-        expect(span.startTime).toBeGreaterThan(0);
-        expect(span.finishTime).toBeGreaterThan(0);
-        expect(span.getTag('error')).toBeTruthy();
-        expect(span.getTag('error.kind')).toEqual(securityErrorType);
-        expect(span.getTag('error.message')).toEqual(securityErrorMessage);
-        expect(span.getTag(SecurityTags.BLOCKED)).toBeTruthy();
-        expect(span.getTag(SecurityTags.VIOLATED)).toBeTruthy();
-    };
-
-    beforeAll(() => {
-        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
-        thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
-    });
-
-    describe('using aws integration', () => {
-        const sdk = require('aws-sdk');
-        sdk.config.update({maxRetries: 0});
-
-        test('should blacklist dynamodb operation', () => {
-            const originalFunction = () => AWSCalls.dynamo(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
             });
         });
 
-        test('should blacklist lambda operation', () => {
-            const originalFunction = () => AWSCalls.lambda(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
+        describe('using elasticsearch integration', () => {
+            const es = require('elasticsearch');
 
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
+            test('should whitelist es query operation', () => {
+                const originalFunction = () => ESCalls.query(es);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
             });
         });
 
-        test('should blacklist sqs operation', () => {
-            const originalFunction = () => AWSCalls.sqs(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
+        describe('using redis integration', () => {
+            const redis = require('redis');
+            const ioredis = require('ioredis');
 
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
+            test('should whitelist redis query operation', async () => {
+                const originalFunction = () => RedisCalls.set(redis, container);
+                const wrappedFunc = thundraWrapper(originalFunction);
 
-        test('should blacklist s3 operation', () => {
-            const originalFunction = () => AWSCalls.s3GetObject(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
-
-        test('should blacklist sns operation', () => {
-            const originalFunction = () => AWSCalls.sns_topic(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
-
-        test('should blacklist kinesis operation', () => {
-            const originalFunction = () => AWSCalls.kinesis(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
-
-        test('should blacklist firehose operation', () => {
-            const originalFunction = () => AWSCalls.kinesis(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
-
-        test('should blacklist athena operation', () => {
-            const originalFunction = () => AWSCalls.athenaStartQueryExec(sdk);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
-    });
-
-    describe('using http integration', () => {
-        const http = require('http');
-        const https = require('https');
-
-        test('should blacklist http get operation', () => {
-            const originalFunction = () => HTTPCalls.get(http);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
-
-        test('should blacklist api-gateway get operation', () => {
-            const originalFunction = () => HTTPCalls.getAPIGW(https);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
-    });
-
-    describe('using elasticsearch integration', () => {
-        const es = require('elasticsearch');
-
-        test('should blacklist es query operation', () => {
-            const originalFunction = () => ESCalls.query(es);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
-    });
-
-    describe.skip('using redis integration', () => {
-        const redis = require('redis');
-        const ioredis = require('ioredis');
-
-        test('should blacklist redis query operation', async () => {
-            const originalFunction = () => RedisCalls.set(redis, container);
-            const wrappedFunc = thundraWrapper(originalFunction);
-
-            await wrappedFunc(originalEvent, originalContext).catch(() => {
+                await wrappedFunc(originalEvent, originalContext)
                 const {tracer} = ExecutionContextManager.get();
                 for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
-                        checkIfBlacklisted(span);
+                        checkIfWhitelisted(span);
                         break;
                     }
                 }
+
             });
-        });
 
-        test('should blacklist ioredis query operation', async () => {
-            const originalFunction = () => RedisCalls.set(ioredis, container);
-            const wrappedFunc = thundraWrapper(originalFunction);
+            test('should whitelist ioredis query operation', async () => {
+                const originalFunction = () => RedisCalls.set(ioredis, container);
+                const wrappedFunc = thundraWrapper(originalFunction);
 
-            await wrappedFunc(originalEvent, originalContext).catch(() => {
+                await wrappedFunc(originalEvent, originalContext);
                 const {tracer} = ExecutionContextManager.get();
                 for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
-                        checkIfBlacklisted(span);
+                        checkIfWhitelisted(span);
                         break;
                     }
                 }
+
             });
         });
+
+        describe('using mysql integration', () => {
+            const mysql = require('mysql');
+            const mysql2 = require('mysql2');
+
+            test('should whitelist mysql operation', () => {
+                const originalFunction = () => MySQLCalls.selectMySql(mysql);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
+            });
+
+            test('should whitelist mysql2 operation', () => {
+                const originalFunction = () => MySQLCalls.selectMySql2(mysql2);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
+            });
+        });
+
+        describe('using mongodb integration', () => {
+            const mongodb = require('mongodb');
+
+            test('should whitelist mongodb operation', () => {
+                const originalFunction = () => MongoCalls.dropCollection(mongodb);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).then(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfWhitelisted(span);
+                });
+            });
+        });
+
     });
 
-    describe('using mysql integration', () => {
-        const mysql = require('mysql');
-        const mysql2 = require('mysql2');
+    describe('blacklist config', () => {
+        let thundraWrapper;
+        const config = {
+            type: 'SecurityAwareSpanListener',
+            config: {
+                block: true,
+                blacklist: operationList,
+            }
+        };
+        const securityErrorType = 'SecurityError';
+        const securityErrorMessage = 'Operation was blocked due to security configuration';
+        const originalEvent = {key: 'value'};
+        const originalContext = createMockContext();
 
-        test('should blacklist mysql operation', () => {
-            const originalFunction = () => MySQLCalls.selectMySql(mysql);
-            const wrappedFunc = thundraWrapper(originalFunction);
+        const checkIfBlacklisted = (span) => {
+            expect(span.startTime).toBeGreaterThan(0);
+            expect(span.finishTime).toBeGreaterThan(0);
+            expect(span.getTag('error')).toBeTruthy();
+            expect(span.getTag('error.kind')).toEqual(securityErrorType);
+            expect(span.getTag('error.message')).toEqual(securityErrorMessage);
+            expect(span.getTag(SecurityTags.BLOCKED)).toBeTruthy();
+            expect(span.getTag(SecurityTags.VIOLATED)).toBeTruthy();
+        };
 
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
+        beforeAll(() => {
+            ConfigProvider.set(ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG, JSON.stringify(config));
+            thundraWrapper = thundra({apiKey: 'apiKey', timeoutMargin: 0});
+        });
+
+        describe('using aws integration', () => {
+            const sdk = require('aws-sdk');
+            sdk.config.update({maxRetries: 0});
+
+            test('should blacklist dynamodb operation', () => {
+                const originalFunction = () => AWSCalls.dynamo(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+
+            test('should blacklist lambda operation', () => {
+                const originalFunction = () => AWSCalls.lambda(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+
+            test('should blacklist sqs operation', () => {
+                const originalFunction = () => AWSCalls.sqs(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+
+            test('should blacklist s3 operation', () => {
+                const originalFunction = () => AWSCalls.s3GetObject(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+
+            test('should blacklist sns operation', () => {
+                const originalFunction = () => AWSCalls.sns_topic(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+
+            test('should blacklist kinesis operation', () => {
+                const originalFunction = () => AWSCalls.kinesis(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+
+            test('should blacklist firehose operation', () => {
+                const originalFunction = () => AWSCalls.kinesis(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+
+            test('should blacklist athena operation', () => {
+                const originalFunction = () => AWSCalls.athenaStartQueryExec(sdk);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
             });
         });
 
-        test('should blacklist mysql2 operation', () => {
-            const originalFunction = () => MySQLCalls.selectMySql2(mysql2);
-            const wrappedFunc = thundraWrapper(originalFunction);
+        describe('using http integration', () => {
+            const http = require('http');
+            const https = require('https');
 
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
+            test('should blacklist http get operation', () => {
+                const originalFunction = () => HTTPCalls.get(http);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+
+            test('should blacklist api-gateway get operation', () => {
+                const originalFunction = () => HTTPCalls.getAPIGW(https);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
             });
         });
+
+        describe('using elasticsearch integration', () => {
+            const es = require('elasticsearch');
+
+            test('should blacklist es query operation', () => {
+                const originalFunction = () => ESCalls.query(es);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+        });
+
+        describe.skip('using redis integration', () => {
+            const redis = require('redis');
+            const ioredis = require('ioredis');
+
+            test('should blacklist redis query operation', async () => {
+                const originalFunction = () => RedisCalls.set(redis, container);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                await wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    for (const span of tracer.recorder.spanList) {
+                        if (span.tags['redis.command.type'] === 'WRITE') {
+                            checkIfBlacklisted(span);
+                            break;
+                        }
+                    }
+                });
+            });
+
+            test('should blacklist ioredis query operation', async () => {
+                const originalFunction = () => RedisCalls.set(ioredis, container);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                await wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    for (const span of tracer.recorder.spanList) {
+                        if (span.tags['redis.command.type'] === 'WRITE') {
+                            checkIfBlacklisted(span);
+                            break;
+                        }
+                    }
+                });
+            });
+        });
+
+        describe('using mysql integration', () => {
+            const mysql = require('mysql');
+            const mysql2 = require('mysql2');
+
+            test('should blacklist mysql operation', () => {
+                const originalFunction = () => MySQLCalls.selectMySql(mysql);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+
+            test('should blacklist mysql2 operation', () => {
+                const originalFunction = () => MySQLCalls.selectMySql2(mysql2);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+        });
+
+        describe('using mongodb integration', () => {
+            const mongodb = require('mongodb');
+
+            test('should blacklist mongodb operation', () => {
+                const originalFunction = () => MongoCalls.dropCollection(mongodb);
+                const wrappedFunc = thundraWrapper(originalFunction);
+
+                return wrappedFunc(originalEvent, originalContext).catch(() => {
+                    const {tracer} = ExecutionContextManager.get();
+                    const span = tracer.recorder.spanList[1];
+                    checkIfBlacklisted(span);
+                });
+            });
+        });
+
     });
 
-    describe('using mongodb integration', () => {
-        const mongodb = require('mongodb');
+})
 
-        test('should blacklist mongodb operation', () => {
-            const originalFunction = () => MongoCalls.dropCollection(mongodb);
-            const wrappedFunc = thundraWrapper(originalFunction);
 
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const {tracer} = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfBlacklisted(span);
-            });
-        });
-    });
-
-});
