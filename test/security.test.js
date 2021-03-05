@@ -1,8 +1,8 @@
 import ConfigProvider from '../dist/config/ConfigProvider';
 import ConfigNames from '../dist/config/ConfigNames';
 import Utils from '../dist/utils/Utils';
-import { createMockContext } from './mocks/mocks';
-import { SecurityTags, ClassNames } from '../dist/Constants';
+import {createMockContext} from './mocks/mocks';
+import {SecurityTags, ClassNames} from '../dist/Constants';
 import AWSCalls from './integrations/utils/aws.integration.utils';
 import HTTPCalls from './integrations/utils/http.integration.utils';
 import ESCalls from './integrations/utils/es.integration.utils';
@@ -11,7 +11,7 @@ import MySQLCalls from './integrations/utils/mysql.integration.utils';
 import MongoCalls from './integrations/utils/mongodb.integration.utils';
 import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
 import Recorder from '../dist/opentracing/Recorder';
-import { AWSIntegration } from '../dist/integrations/AWSIntegration';
+import {AWSIntegration} from '../dist/integrations/AWSIntegration';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
 
 import TestUtils from './utils.js';
@@ -169,13 +169,13 @@ const operationList = [
 beforeAll(() => {
     Utils.readProcIoPromise = jest.fn(() => {
         return new Promise((resolve, reject) => {
-            return resolve({ readBytes: 1024, writeBytes: 4096 });
+            return resolve({readBytes: 1024, writeBytes: 4096});
         });
     });
 
     Utils.readProcMetricPromise = jest.fn(() => {
         return new Promise((resolve, reject) => {
-            return resolve({ threadCount: 10 });
+            return resolve({threadCount: 10});
         });
     });
 
@@ -183,7 +183,7 @@ beforeAll(() => {
     // Mock reporting and destroying methods
     AWSIntegration.prototype.getOriginalFunction = jest.fn(() => {
         return (cb) => {
-            cb(null, { result: 'OK' });
+            cb(null, {result: 'OK'});
         };
     });
     LambdaHandlerWrapper.prototype.executeAfterInvocationAndReport = jest.fn();
@@ -211,7 +211,7 @@ describe('whitelist config', () => {
     };
 
     let thundraWrapper;
-    const originalEvent = { key: 'value' };
+    const originalEvent = {key: 'value'};
     const originalContext = createMockContext();
 
     const checkIfWhitelisted = (span) => {
@@ -228,14 +228,14 @@ describe('whitelist config', () => {
 
     describe('using aws integration', () => {
         const sdk = require('aws-sdk');
-        sdk.config.update({ maxRetries: 0 });
+        sdk.config.update({maxRetries: 0});
 
         test('should whitelist dynamodb operation', () => {
             const originalFunction = () => AWSCalls.dynamo(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -246,7 +246,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -257,7 +257,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -268,7 +268,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -279,7 +279,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -290,7 +290,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -301,7 +301,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -312,7 +312,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -323,26 +323,26 @@ describe('whitelist config', () => {
         const http = require('http');
         const https = require('https');
 
-        test('should whitelist http get operation', () => {
+        test('should whitelist http get operation', async () => {
             const originalFunction = () => HTTPCalls.get(http);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
+            await wrappedFunc(originalEvent, originalContext);
+            const {tracer} = ExecutionContextManager.get();
+            const span = tracer.recorder.spanList[1];
+            checkIfWhitelisted(span);
+
         });
 
-        test('should whitelist api-gateway get operation', () => {
+        test('should whitelist api-gateway get operation', async () => {
             const originalFunction = () => HTTPCalls.getAPIGW(https);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
-                const span = tracer.recorder.spanList[1];
-                checkIfWhitelisted(span);
-            });
+            await wrappedFunc(originalEvent, originalContext);
+            const {tracer} = ExecutionContextManager.get();
+            const span = tracer.recorder.spanList[1];
+            checkIfWhitelisted(span);
+
         });
     });
 
@@ -354,7 +354,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -370,7 +370,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
                         checkIfWhitelisted(span);
@@ -385,7 +385,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
                         checkIfWhitelisted(span);
@@ -405,7 +405,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -416,7 +416,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -431,7 +431,7 @@ describe('whitelist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfWhitelisted(span);
             });
@@ -462,7 +462,7 @@ describe('blacklist config', () => {
     };
     const securityErrorType = 'SecurityError';
     const securityErrorMessage = 'Operation was blocked due to security configuration';
-    const originalEvent = { key: 'value' };
+    const originalEvent = {key: 'value'};
     const originalContext = createMockContext();
 
     const checkIfBlacklisted = (span) => {
@@ -482,14 +482,14 @@ describe('blacklist config', () => {
 
     describe('using aws integration', () => {
         const sdk = require('aws-sdk');
-        sdk.config.update({ maxRetries: 0 });
+        sdk.config.update({maxRetries: 0});
 
         test('should blacklist dynamodb operation', () => {
             const originalFunction = () => AWSCalls.dynamo(sdk);
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -500,7 +500,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -511,7 +511,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -522,7 +522,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -533,7 +533,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -544,7 +544,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -555,7 +555,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -566,7 +566,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -577,23 +577,23 @@ describe('blacklist config', () => {
         const http = require('http');
         const https = require('https');
 
-        test('should blacklist http get operation', () => {
+        test('should blacklist http get operation', async () => {
             const originalFunction = () => HTTPCalls.get(http);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+            await wrappedFunc(originalEvent, originalContext).catch(() => {
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
         });
 
-        test('should blacklist api-gateway get operation', () => {
+        test('should blacklist api-gateway get operation', async () => {
             const originalFunction = () => HTTPCalls.getAPIGW(https);
             const wrappedFunc = thundraWrapper(originalFunction);
 
-            return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+            await wrappedFunc(originalEvent, originalContext).catch(() => {
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -608,7 +608,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -624,7 +624,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
                         checkIfBlacklisted(span);
@@ -639,7 +639,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 for (const span of tracer.recorder.spanList) {
                     if (span.tags['redis.command.type'] === 'WRITE') {
                         checkIfBlacklisted(span);
@@ -659,7 +659,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -670,7 +670,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
@@ -685,7 +685,7 @@ describe('blacklist config', () => {
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {
-                const { tracer } = ExecutionContextManager.get();
+                const {tracer} = ExecutionContextManager.get();
                 const span = tracer.recorder.spanList[1];
                 checkIfBlacklisted(span);
             });
