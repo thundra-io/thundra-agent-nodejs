@@ -2,7 +2,9 @@ name: Thundra CI Check
 
 on:
   push:
-    branches: [master]
+    branches:
+      - "test/ga-trial"
+      - "master"
   pull_request:
     branches:
       - "test/ga-trial"
