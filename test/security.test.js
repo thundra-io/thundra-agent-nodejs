@@ -18,16 +18,6 @@ import TestUtils from './utils.js';
 
 const thundra = require('../dist/index');
 
-beforeEach(() => {
-    TestUtils.clearEnvironmentVariables();
-    ConfigProvider.clear();
-});
-
-afterEach(() => {
-    TestUtils.clearEnvironmentVariables();
-    ConfigProvider.clear();
-});
-
 const operationList = [
     {
         className: ClassNames.DYNAMODB,
@@ -201,6 +191,17 @@ beforeAll(() => {
 });
 
 describe('whitelist config', () => {
+    beforeEach(() => {
+        TestUtils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
+    afterEach(() => {
+        TestUtils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
+
     const config = {
         type: 'SecurityAwareSpanListener',
         config: {
@@ -440,6 +441,17 @@ describe('whitelist config', () => {
 });
 
 describe('blacklist config', () => {
+    beforeEach(() => {
+        TestUtils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
+    afterEach(() => {
+        TestUtils.clearEnvironmentVariables();
+        ConfigProvider.clear();
+    });
+
+
     let thundraWrapper;
     const config = {
         type: 'SecurityAwareSpanListener',
@@ -679,5 +691,4 @@ describe('blacklist config', () => {
             });
         });
     });
-
 });
