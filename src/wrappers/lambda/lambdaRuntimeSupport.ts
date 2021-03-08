@@ -8,10 +8,10 @@ const path = require('path');
 const fs = require('fs');
 const semver = require('semver');
 
-class InvalidModule extends Error {}
-class InvalidHandler extends Error {}
-class BadHandlerFormat extends Error {}
-class UserCodeError extends Error {}
+class InvalidModule extends Error { }
+class InvalidHandler extends Error { }
+class BadHandlerFormat extends Error { }
+class UserCodeError extends Error { }
 
 const FUNCTION_PATTERN = /^([^.]*)\.(.*)$/;
 const UPPER_FOLDER_SUBSTRING = '..';
@@ -43,9 +43,8 @@ export function loadHandler(appPath: string, handlerString: string) {
 
     const handlerPath = match[2];
     let module = match[1];
-    if (semver.satisfies(process.version, '12.x')) {
-        if (module && !(module.startsWith('./') ||
-            module.startsWith('../'))) {
+    if (semver.satisfies(process.version, '12.x') || semver.satisfies(process.version, '14.x')) {
+        if (module && !(module.startsWith('./') || module.startsWith('../'))) {
             module = './' + module;
         }
     }
