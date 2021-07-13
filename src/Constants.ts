@@ -3,6 +3,7 @@
  */
 
 import HttpIntegration from './integrations/HttpIntegration';
+import Http2Integration from './integrations/Http2Integration';
 import PostgreIntegration from './integrations/PostgreIntegration';
 import MySQL2Integration from './integrations/MySQL2Integration';
 import MySQLIntegration from './integrations/MySQLIntegration';
@@ -138,6 +139,7 @@ export const ClassNames = {
     RDB: 'RDB',
     REDIS: 'Redis',
     HTTP: 'HTTP',
+    HTTP2: 'HTTP2',
     CLOUDWATCH: 'AWS-CloudWatch-Schedule',
     CLOUDFRONT: 'AWS-CloudFront',
     APIGATEWAY: 'AWS-APIGateway',
@@ -518,6 +520,7 @@ export const SpanTypes = {
     ELASTIC: 'Elastic',
     RDB: 'RDB',
     HTTP: 'HTTP',
+    HTTP2: 'HTTP2',
     AWS_DYNAMO: 'AWS-DynamoDB',
     AWS_SQS: 'AWS-SQS',
     AWS_SNS: 'AWS-SNS',
@@ -533,6 +536,7 @@ export const SpanTypes = {
 
 export const INTEGRATIONS: any = {
     http: HttpIntegration,
+    http2: Http2Integration,
     pg: PostgreIntegration,
     mysql2: MySQL2Integration,
     mysql: MySQLIntegration,
