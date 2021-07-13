@@ -167,8 +167,14 @@ class Http2Integration implements Integration {
                     });
 
                     clientRequest.once('end', () => {
-                        const payload = JSON.parse(chunks);
-       
+
+                        let payload;
+                        try {
+                            payload = JSON.parse(chunks);
+                        } catch (error) {
+                            ThundraLogger.error('<HTTP2Integration> Response is not valid JSON:', payload);
+                        }
+ 
                         if (span) {
                             const statusCode = responseHeaders[':status'] || 200;
                             if (!config.disableHttp5xxError && `${statusCode}`.startsWith('5')) {
@@ -182,14 +188,25 @@ class Http2Integration implements Integration {
 
                             ThundraLogger.debug(`<HTTP2Integration> Closing HTTP2 span with name ${operationName}`);
                             span.closeWithCallback(me, options, [{}, payload]);
-                        }                 
+                        }   
+                        
+                        // todo: must "clientRequest.close();" it use will be checked. 
                     });
 
                     // todo: compare end & close events for choose usage
                     // clientRequest.once('close', (data: any) => {    
-                    //  ....
-                    //  clientRequest.close();        
+                    //  ....       
                     // });
+
+                    clientRequest.once('error', (error: any) => {
+                        if (span) {
+                            span.setErrorTag(new HttpError(error));
+                        }
+
+                        if (clientRequest.listenerCount('error') === 0) {
+                            ThundraLogger.error('<HTTP2Integration> No error listener, we should explode:', error);
+                        }
+                    });
 
                     return clientRequest;
 
