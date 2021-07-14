@@ -67,6 +67,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         className: ClassNames.LAMBDA,
     });
 
+    execContext.rootSpan.isRootSpan = true;
     execContext.spanId = execContext.rootSpan.spanContext.spanId;
     execContext.rootSpan.startTime = execContext.startTimestamp;
     execContext.triggerClassName =

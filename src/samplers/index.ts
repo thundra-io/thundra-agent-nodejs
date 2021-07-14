@@ -7,6 +7,7 @@ import CountAwareSampler from './CountAwareSampler';
 import DurationAwareSampler from './DurationAwareSampler';
 import ErrorAwareSampler from './ErrorAwareSampler';
 import TimeAwareSampler from './TimeAwareSampler';
+import SpanAwareSampler from './SpanAwareSampler';
 import { SamplerCompositionOperator } from './CompositeSampler';
 
 export default {
@@ -16,4 +17,5 @@ export default {
     ErrorAwareSampler,
     TimeAwareSampler,
     SamplerCompositionOperator,
+    SpanAwareSampler,
 };
