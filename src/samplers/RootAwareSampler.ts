@@ -3,9 +3,9 @@ import ThundraSpan from '../opentracing/Span';
 
 /**
  * {@link Sampler} implementation which samples
- * if the span is not root span
+ * if the span is the root span
  */
-class SpanAwareSampler implements Sampler<ThundraSpan> {
+class RootAwareSampler implements Sampler<ThundraSpan> {
     /**
      * @inheritDoc
      */
@@ -17,4 +17,4 @@ class SpanAwareSampler implements Sampler<ThundraSpan> {
     }
 }
 
-export default SpanAwareSampler;
+export default RootAwareSampler;
