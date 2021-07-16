@@ -93,9 +93,13 @@ export default class Trace {
 
         if (sampled) {
             const debugEnabled: boolean = ThundraLogger.isDebugEnabled();
+            let runSamplerOnEach: boolean = this.config.runSamplerOnEachSpan;
+            if (!runSamplerOnEach && sampler.sampleOnEach && typeof sampler.sampleOnEach === 'function') {
+                runSamplerOnEach = sampler.sampleOnEach();
+            }
             for (const span of spanList) {
                 if (span) {
-                    if (this.config.runSamplerOnEachSpan && !sampler.isSampled(span)) {
+                    if (runSamplerOnEach && !sampler.isSampled(span)) {
                         ThundraLogger.debug(
                             `<Trace> Filtering span with name ${span.getOperationName()} due to custom sampling configuration`);
                         continue;
