@@ -16,6 +16,7 @@ class ThundraSpan extends Span {
     finishTime: number;
     spanContext: ThundraSpanContext;
     rootTraceId: string;
+    isRootSpan: boolean;
     transactionId: string;
     logs: any[];
     className: string;
@@ -37,6 +38,7 @@ class ThundraSpan extends Span {
         this.startTime = startTime;
         this.finishTime = 0;
         this.rootTraceId = fields.rootTraceId || null;
+        this.isRootSpan = fields.isRootSpan || false;
         this.transactionId = fields.transactionId || null;
         this.spanContext = this._createContext(parent);
         this.logs = [];

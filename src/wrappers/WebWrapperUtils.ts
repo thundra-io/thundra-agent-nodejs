@@ -213,6 +213,7 @@ export default class WebWrapperUtils {
             domainName: DomainNames.API,
             className: ClassNames.EXPRESS,
         });
+        rootSpan.isRootSpan = true;
 
         InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
         InvocationSupport.setAgentTag(SpanTags.TRIGGER_DOMAIN_NAME, 'API');
