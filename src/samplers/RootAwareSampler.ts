@@ -1,11 +1,12 @@
-import Sampler from './Sampler';
+import TraceSampler from './TraceSampler';
 import ThundraSpan from '../opentracing/Span';
 
 /**
  * {@link Sampler} implementation which samples
  * if the span is the root span
  */
-class RootAwareSampler implements Sampler<ThundraSpan> {
+class RootAwareSampler extends TraceSampler {
+
     /**
      * @inheritDoc
      */
@@ -15,6 +16,14 @@ class RootAwareSampler implements Sampler<ThundraSpan> {
         }
         return false;
     }
+
+    /**
+     * @inheritDoc
+     */
+    sampleOnEach(): boolean {
+        return true;
+    }
+
 }
 
 export default RootAwareSampler;
