@@ -1,12 +1,12 @@
 import Integration from './Integration';
 import * as opentracing from 'opentracing';
-import { 
-    Http2Tags, 
-    SpanTags, 
-    SpanTypes, 
-    DomainNames, 
-    ClassNames, 
-    TriggerHeaderTags 
+import {
+    Http2Tags,
+    SpanTags,
+    SpanTypes,
+    DomainNames,
+    ClassNames,
+    TriggerHeaderTags,
 } from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
@@ -27,13 +27,13 @@ const thundraCollectorEndpointPattern2 = /^([\w-]+\.)?collector\.thundra\.io$/;
 const MODULE_NAME_HTTP2 = 'http2';
 
 class Http2Integration implements Integration {
-    
+
     config: any;
     private instrumentContext: any;
-    
+
     constructor(config: any) {
         ThundraLogger.debug('<HTTP2Integration> Activating HTTP2 integration');
-        
+
         this.config = config || {};
         this.instrumentContext = ModuleUtils.instrument(
             [MODULE_NAME_HTTP2], null,
@@ -68,9 +68,9 @@ class Http2Integration implements Integration {
 
     static extractHeaders = (headers: any) => {
         return Object.entries(headers)
-            .reduce((obj: any, header: any) => { 
+            .reduce((obj: any, header: any) => {
                 const [key, value] = header;
-                obj[key] = value; 
+                obj[key] = value;
                 return obj;
             }, {});
     }
@@ -96,12 +96,12 @@ class Http2Integration implements Integration {
 
                     const method = (headers[':method'] || 'GET').toUpperCase();
                     headers = typeof headers === 'string' ? url.parse(headers) : headers;
-                    
+
                     const requestUrl = new url.URL(authority);
 
                     const host = authority ? requestUrl.hostname : 'localhost';
 
-                    const path = (headers[':path'] && headers[':path'] != '/') 
+                    const path = (headers[':path'] && headers[':path'] !== '/')
                         ? headers[':path'] : (requestUrl.pathname ? requestUrl.pathname : '/');
 
                     const fullURL = host + path;
@@ -131,7 +131,7 @@ class Http2Integration implements Integration {
                         tempHeaders[TriggerHeaderTags.RESOURCE_NAME] = operationName;
                         headers = tempHeaders;
                     }
-                    
+
                     span.addTags({
                         [SpanTags.OPERATION_TYPE]: method,
                         [SpanTags.SPAN_TYPE]: SpanTypes.HTTP2,
@@ -148,7 +148,7 @@ class Http2Integration implements Integration {
 
                     span._initialized();
 
-                    let clientRequest = request.apply(this, [headers, options]);
+                    const clientRequest = request.apply(this, [headers, options]);
 
                     const chunks: any = [];
                     let responseHeaders: any;
@@ -165,7 +165,7 @@ class Http2Integration implements Integration {
                     });
 
                     clientRequest.once('response', (res: any) => {
-                        responseHeaders = Http2Integration.extractHeaders(res); 
+                        responseHeaders = Http2Integration.extractHeaders(res);
 
                         ThundraLogger.debug(`<HTTP2Integration> On response of HTTP2 span with name ${operationName}`);
                     });
@@ -179,7 +179,7 @@ class Http2Integration implements Integration {
                             ThundraLogger.debug('<HTTP2Integration> Response is not valid JSON:', payload);
                             payload = chunks.toString();
                         }
- 
+
                         if (span) {
                             const statusCode = responseHeaders[':status'] || 200;
                             if (!config.disableHttp5xxError && `${statusCode}`.startsWith('5')) {
@@ -204,14 +204,14 @@ class Http2Integration implements Integration {
 
                             ThundraLogger.debug(`<HTTP2Integration> Closing HTTP2 span with name ${operationName}`);
                             span.closeWithCallback(me, options, [{}, payload]);
-                        }   
-                        
-                        // todo: must "clientRequest.close();" it use will be checked. 
+                        }
+
+                        // todo: must "clientRequest.close();" it use will be checked.
                     });
 
                     // todo: compare end & close events for choose usage
-                    // clientRequest.once('close', (data: any) => {    
-                    //  ....       
+                    // clientRequest.once('close', (data: any) => {
+                    //  ....
                     // });
 
                     clientRequest.once('error', (error: any) => {
@@ -241,8 +241,8 @@ class Http2Integration implements Integration {
                         return request.apply(this, [headers, options]);
                     }
                 }
-            }
-        }
+            };
+        };
 
         const wrapHttp2Connect = (connectFunction: any) => {
             return (authority: any, options: any, listener: any) => {
@@ -256,10 +256,10 @@ class Http2Integration implements Integration {
 
                 return clientSession;
             };
-        }
+        };
 
-        if (moduleName === MODULE_NAME_HTTP2){
-            shimmer.wrap(lib, 'connect', wrapHttp2Connect);      
+        if (moduleName === MODULE_NAME_HTTP2) {
+            shimmer.wrap(lib, 'connect', wrapHttp2Connect);
         }
     }
 
@@ -276,7 +276,7 @@ class Http2Integration implements Integration {
                 ThundraLogger.debug('<HTTP2Integration> Unwrapping "http2.connect"');
                 shimmer.unwrap(lib, 'connect');
             }
-        } 
+        }
     }
 
     unwrap(): void {
