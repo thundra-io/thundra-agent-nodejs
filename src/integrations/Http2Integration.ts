@@ -1,7 +1,7 @@
 import Integration from './Integration';
 import * as opentracing from 'opentracing';
 import {
-    Http2Tags,
+    HttpTags,
     SpanTags,
     SpanTypes,
     DomainNames,
@@ -98,7 +98,7 @@ class Http2Integration implements Integration {
                     span = tracer._startSpan(operationName, {
                         childOf: parentSpan,
                         domainName: DomainNames.API,
-                        className: ClassNames.HTTP2,
+                        className: ClassNames.HTTP,
                         disableActiveStart: true,
                     });
 
@@ -111,12 +111,12 @@ class Http2Integration implements Integration {
 
                     span.addTags({
                         [SpanTags.OPERATION_TYPE]: method,
-                        [SpanTags.SPAN_TYPE]: SpanTypes.HTTP2,
-                        [Http2Tags.HTTP2_METHOD]: method,
-                        [Http2Tags.HTTP2_HOST]: host,
-                        [Http2Tags.HTTP2_PATH]: path,
-                        [Http2Tags.HTTP2_URL]: fullURL,
-                        [Http2Tags.QUERY_PARAMS]: queryParams,
+                        [SpanTags.SPAN_TYPE]: SpanTypes.HTTP,
+                        [HttpTags.HTTP_METHOD]: method,
+                        [HttpTags.HTTP_HOST]: host,
+                        [HttpTags.HTTP_PATH]: path,
+                        [HttpTags.HTTP_URL]: fullURL,
+                        [HttpTags.QUERY_PARAMS]: queryParams,
                         [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     });
@@ -149,7 +149,7 @@ class Http2Integration implements Integration {
 
                     clientRequest.once('end', () => {
 
-                        if (span && !span.isFinished()) {
+                        if (span) {
 
                             let payload;
                             if (chunks && chunks.length) {
@@ -172,12 +172,12 @@ class Http2Integration implements Integration {
                                 span.setErrorTag(new HttpError(statusCode));
                             }
 
-                            span.setTag(Http2Tags.HTTP2_STATUS, statusCode);
+                            span.setTag(HttpTags.HTTP_STATUS, statusCode);
 
                             if (!config.maskHttpBody && payload) {
                                 try {
 
-                                    span.setTag(Http2Tags.BODY, payload);
+                                    span.setTag(HttpTags.BODY, payload);
                                 } catch (error) {
                                     ThundraLogger.error(
                                         `<HTTP2Integration> Unable to get body of HTTP2 span with name ${operationName}:`,

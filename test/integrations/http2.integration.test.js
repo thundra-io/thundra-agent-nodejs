@@ -8,7 +8,7 @@ import ExecutionContextManager from '../../dist/context/ExecutionContextManager'
 import ExecutionContext from '../../dist/context/ExecutionContext';
 
 import { 
-    Http2Tags, 
+    HttpTags, 
     SpanTags, 
     DomainNames, 
     ClassNames 
@@ -67,20 +67,20 @@ describe('HTTP2 integration', () => {
         
         const span = tracer.getRecorder().spanList[0];
         
-        expect(span.className).toBe(ClassNames.HTTP2);
+        expect(span.className).toBe(ClassNames.HTTP);
         expect(span.domainName).toBe(DomainNames.API);
         
         expect(span.tags[SpanTags.OPERATION_TYPE]).toBe(HTTP2Constants.HTTP2_METHOD_POST);
-        expect(span.tags[Http2Tags.HTTP2_METHOD]).toBe(HTTP2Constants.HTTP2_METHOD_POST);
-        expect(span.tags[Http2Tags.HTTP2_HOST]).toBe(serverUrl.hostname);
-        expect(span.tags[Http2Tags.HTTP2_PATH]).toBe(path);
-        expect(span.tags[Http2Tags.HTTP2_URL]).toBe(expectedUrl);
-        expect(span.tags[Http2Tags.HTTP2_STATUS]).toBe(200);
+        expect(span.tags[HttpTags.HTTP_METHOD]).toBe(HTTP2Constants.HTTP2_METHOD_POST);
+        expect(span.tags[HttpTags.HTTP_HOST]).toBe(serverUrl.hostname);
+        expect(span.tags[HttpTags.HTTP_PATH]).toBe(path);
+        expect(span.tags[HttpTags.HTTP_URL]).toBe(expectedUrl);
+        expect(span.tags[HttpTags.HTTP_STATUS]).toBe(200);
         expect(span.tags['error']).toBe(undefined);
         expect(span.tags['error.kind']).toBe(undefined);
         expect(span.tags['error.message']).toBe(undefined);
         expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
-        expect(span.tags[Http2Tags.BODY]).toBeTruthy();
+        expect(span.tags[HttpTags.BODY]).toBeTruthy();
     });
 
     test('should instrument 5XX errors on HTTP calls', async () => {
@@ -101,20 +101,20 @@ describe('HTTP2 integration', () => {
         const span = tracer.getRecorder().spanList[0];
 
         expect(span.operationName).toBe(expectedUrl);
-        expect(span.className).toBe(ClassNames.HTTP2);
+        expect(span.className).toBe(ClassNames.HTTP);
         expect(span.domainName).toBe(DomainNames.API);
         
         expect(span.tags[SpanTags.OPERATION_TYPE]).toBe(HTTP2Constants.HTTP2_METHOD_GET);
-        expect(span.tags[Http2Tags.HTTP2_METHOD]).toBe(HTTP2Constants.HTTP2_METHOD_GET);
-        expect(span.tags[Http2Tags.HTTP2_HOST]).toBe(serverUrl.hostname);
-        expect(span.tags[Http2Tags.HTTP2_PATH]).toBe(path);
-        expect(span.tags[Http2Tags.HTTP2_URL]).toBe(expectedUrl);
-        expect(span.tags[Http2Tags.HTTP2_STATUS]).toBe(500);
+        expect(span.tags[HttpTags.HTTP_METHOD]).toBe(HTTP2Constants.HTTP2_METHOD_GET);
+        expect(span.tags[HttpTags.HTTP_HOST]).toBe(serverUrl.hostname);
+        expect(span.tags[HttpTags.HTTP_PATH]).toBe(path);
+        expect(span.tags[HttpTags.HTTP_URL]).toBe(expectedUrl);
+        expect(span.tags[HttpTags.HTTP_STATUS]).toBe(500);
         expect(span.tags['error']).not.toBeUndefined();
         expect(span.tags['error.kind']).not.toBeUndefined();
         expect(span.tags['error.message']).not.toBeUndefined();
         expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
-        expect(span.tags[Http2Tags.BODY]).not.toBeTruthy();
+        expect(span.tags[HttpTags.BODY]).not.toBeTruthy();
     });
     
     test('should disable 4XX errors on HTTP calls', async () => {
@@ -135,20 +135,20 @@ describe('HTTP2 integration', () => {
         
         const span = tracer.getRecorder().spanList[0];
         expect(span.operationName).toBe(expectedUrl);
-        expect(span.className).toBe(ClassNames.HTTP2);
+        expect(span.className).toBe(ClassNames.HTTP);
         expect(span.domainName).toBe(DomainNames.API);
         
         expect(span.tags[SpanTags.OPERATION_TYPE]).toBe(HTTP2Constants.HTTP2_METHOD_GET);
-        expect(span.tags[Http2Tags.HTTP2_METHOD]).toBe(HTTP2Constants.HTTP2_METHOD_GET);
-        expect(span.tags[Http2Tags.HTTP2_HOST]).toBe(serverUrl.hostname);
-        expect(span.tags[Http2Tags.HTTP2_PATH]).toBe(path);
-        expect(span.tags[Http2Tags.HTTP2_URL]).toBe(expectedUrl);
-        expect(span.tags[Http2Tags.HTTP2_STATUS]).toBe(404);
+        expect(span.tags[HttpTags.HTTP_METHOD]).toBe(HTTP2Constants.HTTP2_METHOD_GET);
+        expect(span.tags[HttpTags.HTTP_HOST]).toBe(serverUrl.hostname);
+        expect(span.tags[HttpTags.HTTP_PATH]).toBe(path);
+        expect(span.tags[HttpTags.HTTP_URL]).toBe(expectedUrl);
+        expect(span.tags[HttpTags.HTTP_STATUS]).toBe(404);
         expect(span.tags['error']).toBe(undefined);
         expect(span.tags['error.kind']).toBe(undefined);
         expect(span.tags['error.message']).toBe(undefined);
         expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
-        expect(span.tags[Http2Tags.BODY]).not.toBeTruthy();
+        expect(span.tags[HttpTags.BODY]).not.toBeTruthy();
     });
 
     test('should mask body in post', async () => {
@@ -175,10 +175,10 @@ describe('HTTP2 integration', () => {
         const span = tracer.getRecorder().spanList[0];
         
         expect(span.operationName).toBe(expectedUrl);
-        expect(span.className).toBe(ClassNames.HTTP2);
+        expect(span.className).toBe(ClassNames.HTTP);
         expect(span.domainName).toBe(DomainNames.API);
         
-        expect(span.tags[Http2Tags.HTTP2_METHOD]).toBe(HTTP2Constants.HTTP2_METHOD_POST);
+        expect(span.tags[HttpTags.HTTP_METHOD]).toBe(HTTP2Constants.HTTP2_METHOD_POST);
         expect(span.tags['http.body']).not.toBeTruthy();
     });
 });
