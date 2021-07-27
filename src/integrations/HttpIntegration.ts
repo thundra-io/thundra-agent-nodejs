@@ -10,12 +10,11 @@ import ThundraSpan from '../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 
+import HTTPUtils from '../utils/HTTPUtils';
+
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 const semver = require('semver');
-
-const thundraCollectorEndpointPattern1 = /^api[-\w]*\.thundra\.io$/;
-const thundraCollectorEndpointPattern2 = /^([\w-]+\.)?collector\.thundra\.io$/;
 
 const MODULE_NAME_HTTP = 'http';
 const MODULE_NAME_HTTPS = 'https';
@@ -42,26 +41,6 @@ class HttpIntegration implements Integration {
                 this.doUnwrap.call(this, lib, moduleName);
             },
             this.config);
-    }
-
-    static isValidUrl(host: string): boolean {
-        if (host.indexOf('amazonaws.com') !== -1) {
-            if (host.indexOf('.execute-api.') !== -1
-                || host.indexOf('.elb.') !== -1) {
-                return true;
-            }
-
-            return false;
-        }
-
-        if (thundraCollectorEndpointPattern1.test(host) ||
-            thundraCollectorEndpointPattern2.test(host) ||
-            host === 'serverless.com' ||
-            host.indexOf('amazonaws.com') !== -1) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -96,7 +75,7 @@ class HttpIntegration implements Integration {
 
                     path = splittedPath[0];
 
-                    if (!HttpIntegration.isValidUrl(host)) {
+                    if (!HTTPUtils.isValidUrl(host)) {
                         ThundraLogger.debug(
                             `<HTTPIntegration> Skipped tracing request as target host is blacklisted: ${host}`);
                         return request.apply(this, [options, callback]);

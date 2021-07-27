@@ -750,3 +750,8 @@ export const SPAN_TAGS_TO_TRIM_2: string[] = [
     AwsEventBridgeTags.ENTRIES,
     AwsStepFunctionsTags.EXECUTION_INPUT,
 ];
+
+export const THUNDRA_COLLECTOR_ENDPOINT_PATTERNS: any = {
+    PATTERN1: /^api[-\w]*\.thundra\.io$/,
+    PATTERN2: /^([\w-]+\.)?collector\.thundra\.io$/,
+};
