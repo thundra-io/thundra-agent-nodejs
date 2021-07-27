@@ -130,20 +130,18 @@ class HttpIntegration implements Integration {
 
                     req.on('response', (res: any) => {
                         ThundraLogger.debug(`<HTTPIntegration> On response of HTTP span with name ${operationName}`);
-                        if ('x-amzn-requestid' in res.headers) {
-                            span._setClassName(ClassNames.APIGATEWAY);
-                        }
-                        if (TriggerHeaderTags.RESOURCE_NAME in res.headers) {
-                            const resourceName: string = res.headers[TriggerHeaderTags.RESOURCE_NAME];
-                            span._setOperationName(resourceName);
-                        }
+
+                        HTTPUtils.fillOperationAndClassNameToSpan(span, res.headers);
+
                         const statusCode = res.statusCode.toString();
                         if (!config.disableHttp5xxError && statusCode.startsWith('5')) {
                             span.setErrorTag(new HttpError(res.statusMessage));
                         }
+
                         if (!config.disableHttp4xxError && statusCode.startsWith('4')) {
                             span.setErrorTag(new HttpError(res.statusMessage));
                         }
+
                         span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
                     });
 

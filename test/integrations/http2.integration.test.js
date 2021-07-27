@@ -84,7 +84,7 @@ describe('HTTP2 integration', () => {
     });
 
     test('should instrument 5XX errors on HTTP calls', async () => {
-    
+       
         const http2Client = HTTP2Util.http2Client(serverUrl, { caPath });
         
         const path = '/500';
@@ -110,9 +110,9 @@ describe('HTTP2 integration', () => {
         expect(span.tags[Http2Tags.HTTP2_PATH]).toBe(path);
         expect(span.tags[Http2Tags.HTTP2_URL]).toBe(expectedUrl);
         expect(span.tags[Http2Tags.HTTP2_STATUS]).toBe(500);
-        expect(span.tags['error']).not.toBeNull();
-        expect(span.tags['error.kind']).not.toBeNull();
-        expect(span.tags['error.message']).not.toBeNull();
+        expect(span.tags['error']).not.toBeUndefined();
+        expect(span.tags['error.kind']).not.toBeUndefined();
+        expect(span.tags['error.message']).not.toBeUndefined();
         expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
         expect(span.tags[Http2Tags.BODY]).not.toBeTruthy();
     });

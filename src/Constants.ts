@@ -755,3 +755,5 @@ export const THUNDRA_COLLECTOR_ENDPOINT_PATTERNS: any = {
     PATTERN1: /^api[-\w]*\.thundra\.io$/,
     PATTERN2: /^([\w-]+\.)?collector\.thundra\.io$/,
 };
+
+export const MAX_HTTP_VALUE_SIZE: number = 10 * 1024;

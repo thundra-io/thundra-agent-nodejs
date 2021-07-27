@@ -7,6 +7,7 @@ import {
     DomainNames,
     ClassNames,
     TriggerHeaderTags,
+    MAX_HTTP_VALUE_SIZE,
 } from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
@@ -130,12 +131,12 @@ class Http2Integration implements Integration {
                     let responseHeaders: any;
 
                     clientRequest.once('data', (chunk: any) => {
-                        if (!chunk) {
+                        if (config.maskHttpBody || !chunk) {
                             return;
                         }
 
                         const totalSize = chunks.reduce((total: any, item: any) => item.length + total, 0);
-                        if (totalSize + chunk.length <= 10 * 1024) {
+                        if (totalSize + chunk.length <= MAX_HTTP_VALUE_SIZE) {
                             chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
                         }
                     });
@@ -148,15 +149,20 @@ class Http2Integration implements Integration {
 
                     clientRequest.once('end', () => {
 
-                        let payload;
-                        try {
-                            payload = JSON.parse(chunks);
-                        } catch (error) {
-                            ThundraLogger.debug('<HTTP2Integration> Response is not valid JSON:', payload);
-                            payload = chunks.toString();
-                        }
+                        if (span && !span.isFinished()) {
 
-                        if (span) {
+                            let payload;
+                            if (chunks && chunks.length) {
+                                try {
+                                    payload = JSON.parse(chunks);
+                                } catch (error) {
+                                    ThundraLogger.debug('<HTTP2Integration> Response is not valid JSON:', payload);
+                                    payload = chunks.toString();
+                                }
+                            }
+
+                            HTTPUtils.fillOperationAndClassNameToSpan(span, responseHeaders);
+
                             const statusCode = responseHeaders[':status'] || 200;
                             if (!config.disableHttp5xxError && `${statusCode}`.startsWith('5')) {
                                 span.setErrorTag(new HttpError(statusCode));
@@ -167,19 +173,20 @@ class Http2Integration implements Integration {
                             }
 
                             span.setTag(Http2Tags.HTTP2_STATUS, statusCode);
+
                             if (!config.maskHttpBody && payload) {
                                 try {
 
                                     span.setTag(Http2Tags.BODY, payload);
                                 } catch (error) {
                                     ThundraLogger.error(
-                                        `<HTTPIntegration> Unable to get body of HTTP2 span with name ${operationName}:`,
+                                        `<HTTP2Integration> Unable to get body of HTTP2 span with name ${operationName}:`,
                                         error);
                                 }
                             }
 
                             ThundraLogger.debug(`<HTTP2Integration> Closing HTTP2 span with name ${operationName}`);
-                            span.closeWithCallback(me, options, [{}, payload]);
+                            span.close();
                         }
 
                         // todo: must "clientRequest.close();" it use will be checked.
@@ -192,7 +199,7 @@ class Http2Integration implements Integration {
 
                     clientRequest.once('error', (error: any) => {
                         if (span) {
-                            span.setErrorTag(new HttpError(error));
+                            span.setErrorTag(error);
                         }
 
                         if (clientRequest.listenerCount('error') === 0) {
@@ -202,7 +209,7 @@ class Http2Integration implements Integration {
 
                     return clientRequest;
 
-                }catch (error) {
+                } catch (error) {
                     ThundraLogger.error('<HTTP2Integration> Error occurred while tracing HTTP2 request:', error);
 
                     if (span) {
@@ -226,6 +233,7 @@ class Http2Integration implements Integration {
 
                 try {
                     shimmer.wrap(clientSession, 'request', (wrappedFunction: any) => http2Wrapper(wrappedFunction, authority));
+                    ThundraLogger.debug('<HTTP2Integration> Wrapping "clientSession.request"');
                 } catch (error) {
                     ThundraLogger.error('<HTTP2Integration> Error occurred while wrapping HTTP2 request:', error);
                 }
@@ -236,6 +244,7 @@ class Http2Integration implements Integration {
 
         if (moduleName === MODULE_NAME_HTTP2) {
             shimmer.wrap(lib, 'connect', wrapHttp2Connect);
+            ThundraLogger.debug('<HTTP2Integration> Wrapping "http2.connect"');
         }
     }
 
@@ -248,11 +257,6 @@ class Http2Integration implements Integration {
         ThundraLogger.debug('<HTTP2Integration> Do unwrap');
 
         if (moduleName === MODULE_NAME_HTTP2) {
-            if (has(lib, 'request')) {
-                ThundraLogger.debug('<HTTP2Integration> Unwrapping "http2.request"');
-                shimmer.unwrap(lib, 'request');
-            }
-
             if (has(lib, 'connect')) {
                 ThundraLogger.debug('<HTTP2Integration> Unwrapping "http2.connect"');
                 shimmer.unwrap(lib, 'connect');
