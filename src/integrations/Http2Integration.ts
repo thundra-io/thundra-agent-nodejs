@@ -1,6 +1,13 @@
 import Integration from './Integration';
 import * as opentracing from 'opentracing';
-import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, TriggerHeaderTags } from '../Constants';
+import { 
+    Http2Tags, 
+    SpanTags, 
+    SpanTypes, 
+    DomainNames, 
+    ClassNames, 
+    TriggerHeaderTags 
+} from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
 import * as url from 'url';
@@ -61,8 +68,6 @@ class Http2Integration implements Integration {
 
     static extractHeaders = (headers: any) => {
         return Object.entries(headers)
-            //  disable this filter for :status header 
-            // .filter(header => !header[0].startsWith(':')) // Filter out keys that start with ':'
             .reduce((obj: any, header: any) => { 
                 const [key, value] = header;
                 obj[key] = value; 
@@ -91,16 +96,16 @@ class Http2Integration implements Integration {
 
                     const method = (headers[':method'] || 'GET').toUpperCase();
                     headers = typeof headers === 'string' ? url.parse(headers) : headers;
-                    const host = authority || 'localhost';
-                    let path = headers[':path'] || '/';
+                    
+                    const requestUrl = new url.URL(authority);
+
+                    const host = authority ? requestUrl.hostname : 'localhost';
+
+                    const path = (headers[':path'] && headers[':path'] != '/') 
+                        ? headers[':path'] : (requestUrl.pathname ? requestUrl.pathname : '/');
+
                     const fullURL = host + path;
-                    const splittedPath = path.split('?');
-                    const queryParams = splittedPath.length > 1 ? splittedPath[1] : '';
-
-                    // todo: will be add to span tags ?
-                    // const requesyHeaders = Http2Integration.extractHeaders(options);
-
-                    path = splittedPath[0];
+                    const queryParams = requestUrl.search || '';
 
                     if (!Http2Integration.isValidUrl(host)) {
                         ThundraLogger.debug(
@@ -111,7 +116,7 @@ class Http2Integration implements Integration {
                     const parentSpan = tracer.getActiveSpan();
                     const operationName = host + Utils.getNormalizedPath(path, config.httpPathDepth);
 
-                    ThundraLogger.debug(`<HTTP2Integration> Starting HTTP span with name ${operationName}`);
+                    ThundraLogger.debug(`<HTTP2Integration> Starting HTTP2 span with name ${operationName}`);
 
                     span = tracer._startSpan(operationName, {
                         childOf: parentSpan,
@@ -120,7 +125,6 @@ class Http2Integration implements Integration {
                         disableActiveStart: true,
                     });
 
-                    // todo: should be verify x-thundra-resource-name 
                     if (!config.httpTraceInjectionDisabled) {
                         const tempHeaders = headers ? headers : {};
                         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, tempHeaders);
@@ -131,11 +135,11 @@ class Http2Integration implements Integration {
                     span.addTags({
                         [SpanTags.OPERATION_TYPE]: method,
                         [SpanTags.SPAN_TYPE]: SpanTypes.HTTP2,
-                        [HttpTags.HTTP_METHOD]: method,
-                        [HttpTags.HTTP_HOST]: host,
-                        [HttpTags.HTTP_PATH]: path,
-                        [HttpTags.HTTP_URL]: fullURL,
-                        [HttpTags.QUERY_PARAMS]: queryParams,
+                        [Http2Tags.HTTP2_METHOD]: method,
+                        [Http2Tags.HTTP2_HOST]: host,
+                        [Http2Tags.HTTP2_PATH]: path,
+                        [Http2Tags.HTTP2_URL]: fullURL,
+                        [Http2Tags.QUERY_PARAMS]: queryParams,
                         [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     });
@@ -163,7 +167,7 @@ class Http2Integration implements Integration {
                     clientRequest.once('response', (res: any) => {
                         responseHeaders = Http2Integration.extractHeaders(res); 
 
-                        ThundraLogger.debug(`<HTTP2Integration> On response of HTTP span with name ${operationName}`);
+                        ThundraLogger.debug(`<HTTP2Integration> On response of HTTP2 span with name ${operationName}`);
                     });
 
                     clientRequest.once('end', () => {
@@ -172,7 +176,8 @@ class Http2Integration implements Integration {
                         try {
                             payload = JSON.parse(chunks);
                         } catch (error) {
-                            ThundraLogger.error('<HTTP2Integration> Response is not valid JSON:', payload);
+                            ThundraLogger.debug('<HTTP2Integration> Response is not valid JSON:', payload);
+                            payload = chunks.toString();
                         }
  
                         if (span) {
@@ -180,11 +185,22 @@ class Http2Integration implements Integration {
                             if (!config.disableHttp5xxError && `${statusCode}`.startsWith('5')) {
                                 span.setErrorTag(new HttpError(statusCode));
                             }
+
                             if (!config.disableHttp4xxError && `${statusCode}`.startsWith('4')) {
                                 span.setErrorTag(new HttpError(statusCode));
                             }
 
-                            span.setTag(HttpTags.HTTP_STATUS, statusCode);
+                            span.setTag(Http2Tags.HTTP2_STATUS, statusCode);
+                            if (!config.maskHttpBody && payload) {
+                                try {
+
+                                    span.setTag(Http2Tags.BODY, payload);
+                                } catch (error) {
+                                    ThundraLogger.error(
+                                        `<HTTPIntegration> Unable to get body of HTTP2 span with name ${operationName}:`,
+                                        error);
+                                }
+                            }
 
                             ThundraLogger.debug(`<HTTP2Integration> Closing HTTP2 span with name ${operationName}`);
                             span.closeWithCallback(me, options, [{}, payload]);
@@ -250,18 +266,15 @@ class Http2Integration implements Integration {
     doUnwrap(lib: any, moduleName: string) {
         ThundraLogger.debug('<HTTP2Integration> Do unwrap');
 
-        const nodeVersion = process.version;
-
         if (moduleName === MODULE_NAME_HTTP2) {
             if (has(lib, 'request')) {
-                ThundraLogger.debug('<HTTP2Integration> Unwrapping "http.request"');
+                ThundraLogger.debug('<HTTP2Integration> Unwrapping "http2.request"');
                 shimmer.unwrap(lib, 'request');
+            }
 
-                // todo: ask, why we are use this ?
-                if (semver.satisfies(nodeVersion, '>=8') && has(lib, 'get')) {
-                    ThundraLogger.debug('<HTTP2Integration> Unwrapping "http.get"');
-                    shimmer.unwrap(lib, 'get');
-                }
+            if (has(lib, 'connect')) {
+                ThundraLogger.debug('<HTTP2Integration> Unwrapping "http2.connect"');
+                shimmer.unwrap(lib, 'connect');
             }
         } 
     }

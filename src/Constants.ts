@@ -412,6 +412,17 @@ export const HttpTags = {
     BODY: 'http.body',
 };
 
+export const Http2Tags = {
+    HTTP2_METHOD: 'http2.method',
+    HTTP2_URL: 'http2.url',
+    HTTP2_PATH: 'http2.path',
+    HTTP2_HOST: 'http2.host',
+    HTTP2_STATUS: 'http2.status_code',
+    HTTP2_ROUTE_PATH: 'http2.route_path',
+    QUERY_PARAMS: 'http2.query_params',
+    BODY: 'http2.body',
+};
+
 export const RedisTags = {
     REDIS_HOST: 'redis.host',
     REDIS_PORT: 'redis.port',
