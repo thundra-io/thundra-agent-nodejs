@@ -24,6 +24,10 @@ const has = require('lodash.has');
 
 const MODULE_NAME_HTTP2 = 'http2';
 
+/**
+ * {@link Integration} implementation for HTTP2 integration
+ * through {@code http2} module
+ */
 class Http2Integration implements Integration {
 
     config: any;
@@ -44,6 +48,9 @@ class Http2Integration implements Integration {
             this.config);
     }
 
+    /**
+     * @inheritDoc
+     */
     wrap(lib: any, config: any, moduleName: string): void {
         ThundraLogger.debug('<HTTP2Integration> Wrap');
 
@@ -232,6 +239,11 @@ class Http2Integration implements Integration {
         }
     }
 
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     * @param moduleName the moduleName
+     */
     doUnwrap(lib: any, moduleName: string) {
         ThundraLogger.debug('<HTTP2Integration> Do unwrap');
 
@@ -248,6 +260,9 @@ class Http2Integration implements Integration {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     unwrap(): void {
         ThundraLogger.debug('<HTTP2Integration> Unwrap');
 
