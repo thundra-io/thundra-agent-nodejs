@@ -1,7 +1,7 @@
 {
   "name": "@thundra/core",
   "version": "2.12.13",
-  "description": "Thundra Lambda Node.js Agent",
+  "description": "Thundra Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
     "compile": "tsc",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/thundra-io/thundra-lambda-agent-nodejs.git"
+    "url": "git+https://github.com/thundra-io/thundra-agent-nodejs.git"
   },
   "files": [
     "dist/"
@@ -38,9 +38,9 @@
   "author": "Thundra <info@thundra.com>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/thundra-io/thundra-lambda-agent-nodejs/issues"
+    "url": "https://github.com/thundra-io/thundra-agent-nodejs/issues"
   },
-  "homepage": "https://github.com/thundra-io/thundra-lambda-agent-nodejs#readme",
+  "homepage": "https://github.com/thundra-io/thundra-agent-nodejs#readme",
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-class-properties": "^7.0.0",
