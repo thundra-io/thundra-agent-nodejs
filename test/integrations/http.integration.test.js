@@ -4,6 +4,8 @@ import Http from './utils/http.integration.utils';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 
+import HTTPUtils from '../../dist/utils/HTTPUtils';
+
 describe('HTTP integration', () => {
     let tracer;
     let integration;
@@ -131,8 +133,8 @@ describe('HTTP integration', () => {
         const okEndpoint = 'google.com';
         const awsEndPoint = 'dynamodb.us-west-2.amazonaws.com';
 
-        expect(HttpIntegration.isValidUrl(apiGatewayEndpoint)).toBe(true);
-        expect(HttpIntegration.isValidUrl(awsEndPoint)).toBe(false);
-        expect(HttpIntegration.isValidUrl(okEndpoint)).toBe(true);
+        expect(HTTPUtils.isValidUrl(apiGatewayEndpoint)).toBe(true);
+        expect(HTTPUtils.isValidUrl(awsEndPoint)).toBe(false);
+        expect(HTTPUtils.isValidUrl(okEndpoint)).toBe(true);
     });
 });

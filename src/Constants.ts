@@ -3,6 +3,7 @@
  */
 
 import HttpIntegration from './integrations/HttpIntegration';
+import Http2Integration from './integrations/Http2Integration';
 import PostgreIntegration from './integrations/PostgreIntegration';
 import MySQL2Integration from './integrations/MySQL2Integration';
 import MySQLIntegration from './integrations/MySQLIntegration';
@@ -533,6 +534,7 @@ export const SpanTypes = {
 
 export const INTEGRATIONS: any = {
     http: HttpIntegration,
+    http2: Http2Integration,
     pg: PostgreIntegration,
     mysql2: MySQL2Integration,
     mysql: MySQLIntegration,
@@ -735,3 +737,10 @@ export const SPAN_TAGS_TO_TRIM_2: string[] = [
     AwsEventBridgeTags.ENTRIES,
     AwsStepFunctionsTags.EXECUTION_INPUT,
 ];
+
+export const THUNDRA_COLLECTOR_ENDPOINT_PATTERNS: any = {
+    PATTERN1: /^api[-\w]*\.thundra\.io$/,
+    PATTERN2: /^([\w-]+\.)?collector\.thundra\.io$/,
+};
+
+export const MAX_HTTP_VALUE_SIZE: number = 10 * 1024;
