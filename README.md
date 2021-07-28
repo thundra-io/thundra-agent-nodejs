@@ -1,8 +1,8 @@
-# Thundra Lambda Node.js Agent
+# Thundra Node.js Agent
 
 [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
-[![Coverage Status](https://coveralls.io/repos/github/thundra-io/thundra-lambda-agent-nodejs/badge.svg?branch=master)](https://coveralls.io/github/thundra-io/thundra-lambda-agent-nodejs?branch=master)
-[![CircleCI](https://circleci.com/gh/thundra-io/thundra-lambda-agent-nodejs.svg?style=svg)](https://circleci.com/gh/thundra-io/thundra-lambda-agent-nodejs)
+[![Coverage Status](https://coveralls.io/repos/github/thundra-io/thundra-agent-nodejs/badge.svg?branch=master)](https://coveralls.io/github/thundra-io/thundra-agent-nodejs?branch=master)
+[![CircleCI](https://circleci.com/gh/thundra-io/thundra-agent-nodejs.svg?style=svg)](https://circleci.com/gh/thundra-io/thundra-agent-nodejs)
 
 Trace your marvelous nodejs projects with async monitoring by [Thundra](https://start.thundra.io/)!
 
