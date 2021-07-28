@@ -188,14 +188,7 @@ class Http2Integration implements Integration {
                             ThundraLogger.debug(`<HTTP2Integration> Closing HTTP2 span with name ${operationName}`);
                             span.close();
                         }
-
-                        // todo: must "clientRequest.close();" it use will be checked.
                     });
-
-                    // todo: compare end & close events for choose usage
-                    // clientRequest.once('close', (data: any) => {
-                    //  ....
-                    // });
 
                     clientRequest.once('error', (error: any) => {
                         if (span) {
