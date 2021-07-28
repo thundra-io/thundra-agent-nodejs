@@ -90,11 +90,9 @@ export class AWSIntegration implements Integration {
         return '';
     }
 
-    static getServiceName(endpoint: string): string {
-        if (!endpoint) {
-            return '';
-        }
-        return endpoint.split('.')[0];
+    static getServiceName(request: any): string {
+        const serviceIdentifier = get(request, 'service.constructor.prototype.serviceIdentifier', '');
+        return serviceIdentifier;
     }
 
     private static parseAWSOperationTypes() {
@@ -134,11 +132,11 @@ export class AWSIntegration implements Integration {
                 return AWSFirehoseIntegration;
             case 'athena':
                 return AWSAthenaIntegration;
-            case 'events':
+            case 'eventbridge':
                 return AWSEventBridgeIntegration;
             case 'email':
                 return AWSSESIntegration;
-            case 'states':
+            case 'stepfunctions':
                 return AWSStepFunctionsIntegration;
             default:
                 return AWSServiceIntegration;
@@ -146,8 +144,7 @@ export class AWSIntegration implements Integration {
     }
 
     private static getServiceFromReq(request: any): any {
-        const serviceEndpoint = get(request, 'service.config.endpoint', '');
-        const serviceName = AWSIntegration.getServiceName(serviceEndpoint as string);
+        const serviceName = AWSIntegration.getServiceName(request);
 
         return AWSIntegration.serviceFactory(serviceName);
     }
@@ -314,8 +311,7 @@ export class AWSServiceIntegration {
     public static createSpan(tracer: any, request: any, config: any) {
         const operationName = request.operation ? request.operation : AWS_SERVICE_REQUEST;
         const operationType = AWSIntegration.getOperationType(operationName, ClassNames.AWSSERVICE);
-        const serviceEndpoint = request.service.config.endpoint;
-        const serviceName = AWSIntegration.getServiceName(serviceEndpoint as string);
+        const serviceName = AWSIntegration.getServiceName(request);
 
         const parentSpan = tracer.getActiveSpan();
         const activeSpan = tracer._startSpan(AWS_SERVICE_REQUEST, {
