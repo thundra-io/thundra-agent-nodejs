@@ -354,4 +354,4 @@ To run tests,
 
 ## Changelog
 
-Please see the [CHANGELOG](https://github.com/thundra-io/thundra-lambda-agent-nodejs/blob/master/CHANGELOG.md) file.
+Please see the [CHANGELOG](https://github.com/thundra-io/thundra-agent-nodejs/blob/master/CHANGELOG.md) file.
