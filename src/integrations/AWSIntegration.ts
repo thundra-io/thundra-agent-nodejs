@@ -134,7 +134,7 @@ export class AWSIntegration implements Integration {
                 return AWSAthenaIntegration;
             case 'eventbridge':
                 return AWSEventBridgeIntegration;
-            case 'email':
+            case 'ses':
                 return AWSSESIntegration;
             case 'stepfunctions':
                 return AWSStepFunctionsIntegration;
