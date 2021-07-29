@@ -510,6 +510,13 @@ export const SpanTags = {
     RESOURCE_NAMES: 'resource.names',
 };
 
+export const TraceHeaderTags = {
+    TRACE_ID: 'x-thundra-trace-id',
+    TRANSACTION_ID: 'x-thundra-transaction-id',
+    SPAN_ID: 'x-thundra-span-id',
+    BAGGAGE_PREFIX: 'x-thundra-baggage-',
+};
+
 export const TriggerHeaderTags = {
     RESOURCE_NAME: 'x-thundra-resource-name',
 };

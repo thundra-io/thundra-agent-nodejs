@@ -1,11 +1,9 @@
-import { THUNDRA_COLLECTOR_ENDPOINT_PATTERNS } from '../Constants';
-
 import {
+    THUNDRA_COLLECTOR_ENDPOINT_PATTERNS,
     ClassNames,
+    TraceHeaderTags,
     TriggerHeaderTags,
 } from '../Constants';
-
-import HttpError from '../error/HttpError';
 
 /**
  * Utility class for HTTP instrument related stuff
@@ -18,7 +16,8 @@ class HTTPUtils {
     /**
      * Check valid state of passed host url
      * @param {string} host host
-     * @return the required module
+     * @return {boolean} {@code true} if the host is valid to be traced,
+     *                   {@code false} otherwise
      */
     static isValidUrl(host: string): boolean {
         if (host.indexOf('amazonaws.com') !== -1) {
@@ -38,6 +37,20 @@ class HTTPUtils {
         }
 
         return true;
+    }
+
+    /**
+     * Check whether or not the request was already traced
+     * @param {any} headers headers
+     * @return {boolean} {@code true} if the request was already traced,
+     *                   {@code false} otherwise
+     */
+    static wasAlreadyTraced(headers: any): boolean {
+        if (headers && headers[TraceHeaderTags.TRACE_ID]) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -63,7 +76,6 @@ class HTTPUtils {
         span: any,
         headers: any,
     ) => {
-
         if (span && headers) {
             if ('x-amzn-requestid' in headers) {
                 span._setClassName(ClassNames.APIGATEWAY);
