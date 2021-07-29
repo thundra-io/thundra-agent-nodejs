@@ -204,6 +204,13 @@ export class AWSIntegration implements Integration {
 
                     activeSpan = AWSIntegration.createSpan(tracer, request, config);
 
+                    if (request.httpRequest) {
+                        const httpRequest = request.httpRequest;
+                        const headers = httpRequest.headers ? httpRequest.headers : {};
+                        tracer.inject(activeSpan.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
+                        httpRequest.headers = headers;
+                    }
+
                     activeSpan._initialized();
 
                     if (originalCallback) {
@@ -437,9 +444,9 @@ export class AWSLambdaIntegration {
 
         const activeSpan = tracer._startSpan(spanName, {
             childOf: parentSpan,
-            disableActiveStart: true,
             domainName: DomainNames.API,
             className: ClassNames.LAMBDA,
+            disableActiveStart: true,
             tags: {
                 [SpanTags.SPAN_TYPE]: SpanTypes.AWS_LAMBDA,
                 [AwsSDKTags.REQUEST_NAME]: operationName,

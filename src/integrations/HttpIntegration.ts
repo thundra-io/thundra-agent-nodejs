@@ -50,7 +50,6 @@ class HttpIntegration implements Integration {
         ThundraLogger.debug('<HTTPIntegration> Wrap');
 
         const nodeVersion = process.version;
-        const plugin = this;
 
         function wrapper(request: any) {
             return function requestWrapper(options: any, callback: any) {
@@ -78,6 +77,12 @@ class HttpIntegration implements Integration {
                     if (!HTTPUtils.isValidUrl(host)) {
                         ThundraLogger.debug(
                             `<HTTPIntegration> Skipped tracing request as target host is blacklisted: ${host}`);
+                        return request.apply(this, [options, callback]);
+                    }
+
+                    if (HTTPUtils.wasAlreadyTraced(options.headers)) {
+                        ThundraLogger.debug(
+                            `<HTTPIntegration> Skipped tracing request as it is already traced: ${host}`);
                         return request.apply(this, [options, callback]);
                     }
 
