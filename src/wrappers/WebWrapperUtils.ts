@@ -210,8 +210,8 @@ export default class WebWrapperUtils {
             propagated: propagatedSpanContext ? true : false,
             parentContext: propagatedSpanContext,
             rootTraceId: traceId,
-            domainName: DomainNames.API,
-            className: ClassNames.EXPRESS,
+            domainName: pluginContext.applicationInfo.applicationDomainName,
+            className: pluginContext.applicationInfo.applicationClassName
         });
         rootSpan.isRootSpan = true;
 

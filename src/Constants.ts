@@ -152,6 +152,7 @@ export const ClassNames = {
     SES: 'AWS-SES',
     STEPFUNCTIONS: 'AWS-StepFunctions',
     EXPRESS: 'Express',
+    HAPI: 'Hapi',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
