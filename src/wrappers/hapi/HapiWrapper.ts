@@ -43,25 +43,17 @@ function hapiServerWrapper(wrappedFunction: Function, opts: any) {
             WrapperUtils.createExecContext, async function () {
                 ThundraLogger.debug('<HapiWrapper> Running with execution context');
 
-                const context: ExecutionContext = this;     
+                const context: ExecutionContext = this;
 
-                request.hostname = request.info.hostname
+                request.hostname = request.info.hostname;
                 request.thundra = {
                     executionContext: context,
-                    setError(err: any) {
-                        context.error = Utils.buildError(err);
-                    },
-                    report() {
-                        ExecutionContextManager.set(context);
-                        ThundraLogger.debug('<HapiWrapper> Reporting request');
-                        WrapperUtils.afterRequest(request, request.response, plugins, reporter);
-                    },
                 };
 
                 ThundraLogger.debug('<HapiWrapper> Before handling request');
                 await WrapperUtils.beforeRequest(request, request.response, plugins);
                 return h.continue;
-            }
+            },
         ));
 
         server.ext('onPreResponse', async (request: any, h: any) => {
@@ -72,9 +64,9 @@ function hapiServerWrapper(wrappedFunction: Function, opts: any) {
 
             ExecutionContextManager.set(context);
 
-            if (response.isBoom){
+            if (response.isBoom) {
                 context.error = response;
-            }       
+            }
 
             ThundraLogger.debug('<HapiWrapper> After handling request');
             WrapperUtils.afterRequest(request, response, plugins, reporter);
@@ -93,24 +85,24 @@ export function init(opts: any = {}) {
         ModuleUtils.patchModule(
             '@hapi/hapi',
             'Server',
-            (wrappedFunction: Function) => hapiServerWrapper(wrappedFunction, opts)
+            (wrappedFunction: Function) => hapiServerWrapper(wrappedFunction, opts),
         );
         ModuleUtils.patchModule(
             '@hapi/hapi',
             'server',
-            (wrappedFunction: Function) => hapiServerWrapper(wrappedFunction, opts)
+            (wrappedFunction: Function) => hapiServerWrapper(wrappedFunction, opts),
         );
         ModuleUtils.patchModule(
             'hapi',
             'server',
-            (wrappedFunction: Function) => hapiServerWrapper(wrappedFunction, opts)
+            (wrappedFunction: Function) => hapiServerWrapper(wrappedFunction, opts),
         );
         ModuleUtils.patchModule(
             'hapi',
             'Server',
-            (wrappedFunction: Function) => hapiServerWrapper(wrappedFunction, opts)
+            (wrappedFunction: Function) => hapiServerWrapper(wrappedFunction, opts),
         );
     } else {
         ThundraLogger.debug('<HapiWrapper> Skipping initializing due to running in lambda runtime ...');
     }
-};
+}

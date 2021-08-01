@@ -21,18 +21,6 @@ const request = require('supertest');
 
 ConfigProvider.init({ apiKey: 'foo' });
 
-const myPlugin = {
-    name: 'myPlugin',
-    version: '1.0.0',
-    register: async function (server, options) {
-
-        server.ext('onPreHandler', (request, h) =>{
-            console.log('onPreHandler');
-            return h.continue;
-        });
-    }
-};
-
 describe('Hapijs Wrapper', () => {
     
     const port = '9090';
@@ -45,10 +33,7 @@ describe('Hapijs Wrapper', () => {
             reporter: createMockReporterInstance(),
         });
 
-        // Thundra.init({ apiKey: 'foo' });
-
         server = await HapiMockServer.start(port);
-        //await server.register(myPlugin);
     });
     
     afterAll(() => {
@@ -57,11 +42,6 @@ describe('Hapijs Wrapper', () => {
     
     beforeEach(() => {
         ExecutionContextManager.useGlobalProvider();
-    });
-
-    test('tryer', async () => { 
-        const { headers } = await request(server.listener).get('/');
-        console.log(headers);
     });
 
     test('should create root span', async () => {
@@ -89,7 +69,9 @@ describe('Hapijs Wrapper', () => {
 
     test('should trace error', async () => {
 
-        await request(server.listener).get('/error');
+        const { headers } = await request(server.listener).get('/error');
+
+        expect(headers[TriggerHeaderTags.RESOURCE_NAME]).toBeTruthy();
 
         const execContext = ExecutionContextManager.get();
         const spanList = execContext.tracer.getSpanList();

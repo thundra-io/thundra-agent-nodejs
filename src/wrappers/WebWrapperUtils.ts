@@ -211,7 +211,7 @@ export default class WebWrapperUtils {
             parentContext: propagatedSpanContext,
             rootTraceId: traceId,
             domainName: pluginContext.applicationInfo.applicationDomainName,
-            className: pluginContext.applicationInfo.applicationClassName
+            className: pluginContext.applicationInfo.applicationClassName,
         });
         rootSpan.isRootSpan = true;
 

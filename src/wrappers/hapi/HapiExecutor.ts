@@ -19,7 +19,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 
     WrapperUtils.startTrace(pluginContext, execContext);
 
-    const { 
+    const {
         request,
         rootSpan,
     } = execContext;
@@ -61,7 +61,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
     WrapperUtils.finishTrace(pluginContext, execContext);
 
-    const { 
+    const {
         rootSpan,
         response,
         request,
@@ -70,12 +70,23 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
 
     let statusCode: Number;
 
-    if (!response.isBoom){      
-        response.header(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
-        statusCode = response.statusCode;
-    } else {
-        response.output.headers[TriggerHeaderTags.RESOURCE_NAME, triggerOperationName];
-        statusCode = response.output.statusCode;
+    if (response) {
+        if (!response.isBoom) {
+            response.header(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
+            statusCode = response.statusCode;
+        } else {
+            if (response.output) {
+                const headers = response.output.headers;
+                if (headers) {
+                    response.output.headers = {
+                        ...headers,
+                        ...{ [TriggerHeaderTags.RESOURCE_NAME]: triggerOperationName },
+                    };
+                }
+
+                statusCode = response.output.statusCode;
+            }
+        }
     }
 
     InvocationSupport.setAgentTag(HttpTags.HTTP_STATUS, statusCode);
