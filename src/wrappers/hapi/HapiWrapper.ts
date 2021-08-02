@@ -75,9 +75,9 @@ function hapiServerWrapper(wrappedFunction: Function) {
 
         const server = wrappedFunction.apply(this, arguments);
 
-        /**  
+        /**
          * Handler method for incoming requests & start instrumentation process
-        */
+         */
         const startInstrument = (request: any) => ExecutionContextManager.runWithContext(
             WrapperUtils.createExecContext, async function () {
 
@@ -94,9 +94,9 @@ function hapiServerWrapper(wrappedFunction: Function) {
             await WrapperUtils.beforeRequest(request, request.response, plugins);
         });
 
-        /**  
+        /**
          * Handler method for outgoing response & finish instrumentation process
-        */
+         */
         const finishInstrument = async (request: any, response: any) => {
 
             ThundraLogger.debug('<HapiWrapper> Finish Instrumentation');
@@ -114,10 +114,10 @@ function hapiServerWrapper(wrappedFunction: Function) {
             await WrapperUtils.afterRequest(request, response, plugins, reporter);
         };
 
-        /**  
+        /**
          * Attach onPreHandler event of Hapi server
          * it will start instrumentation process
-        */
+         */
         server.ext('onPreHandler', (request: any, h: any) => {
 
             ThundraLogger.debug(`<HapiWrapper> Instrumentation started for request: ${request}`);
@@ -127,22 +127,22 @@ function hapiServerWrapper(wrappedFunction: Function) {
             return h.continue;
         });
 
-        /**  
+        /**
          * Attach onPreResponse event of Hapi server
          * it will finish instrumentation process
-        */
+         */
         server.ext('onPreResponse', async (request: any, h: any) => {
 
-            ThundraLogger.debug(`<HapiWrapper> Instrumentation finished for request: ${request}`)
+            ThundraLogger.debug(`<HapiWrapper> Instrumentation finished for request: ${request}`);
 
             const response = request.response;
             if (response.isBoom) {
                 const statusCode = response.output.statusCode;
                 if (statusCode === 404) {
-                    /**  
-                     * if statusCode equels to 404 onPreHandler will not fired 
+                    /**
+                     * if statusCode equels to 404 onPreHandler will not fired
                      * so instrumentation process must be started in here
-                    */
+                     */
                     startInstrument(request);
                 }
             }
