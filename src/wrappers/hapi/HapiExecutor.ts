@@ -6,6 +6,7 @@ import WrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
+import WebWrapperUtils from '../WebWrapperUtils';
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
@@ -24,7 +25,10 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         rootSpan,
     } = execContext;
 
-    const resourceName = request.route.path;
+    const resourceName = request.route.method !== '_special' ?
+        WebWrapperUtils.mergePathAndRoute(request.path, request.route.path)
+        : request.path;
+
     const triggerOperationName = request.hostname + resourceName;
 
     execContext.triggerOperationName = triggerOperationName;

@@ -242,4 +242,26 @@ export default class WebWrapperUtils {
         rootSpan.finish(finishTimestamp);
     }
 
+    static mergePathAndRoute(path: string, route: string) {
+        if (path.indexOf('?') > -1) {
+            path = path.substring(0, path.indexOf('?'));
+        }
+
+        const routeSCount = route.split('/').length - 1;
+        const onlySlash = route === '/';
+
+        let normalizedPath;
+
+        if (!onlySlash) {
+            for (let i = 0; i < routeSCount; i++) {
+                path = path.substring(0, path.lastIndexOf('/'));
+            }
+            normalizedPath = path + route;
+        } else {
+            const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
+            normalizedPath = Utils.getNormalizedPath(path, depth);
+        }
+
+        return normalizedPath;
+    }
 }
