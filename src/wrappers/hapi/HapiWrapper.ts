@@ -18,15 +18,15 @@ import * as HapiExecutor from './HapiExecutor';
 
 function createReporter(apiKey: string): Reporter {
     return new Reporter(apiKey);
-};
+}
 
 function createPluginContext(apiKey: string): PluginContext {
     return WrapperUtils.createPluginContext(apiKey, HapiExecutor);
-};
+}
 
 function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
     return WrapperUtils.createPlugins(config, pluginContext);
-};
+}
 
 function hapiServerWrapper(wrappedFunction: Function) {
 
@@ -46,7 +46,7 @@ function hapiServerWrapper(wrappedFunction: Function) {
     const { apiKey } = config;
 
     const pluginContext = createPluginContext(apiKey);
-    const reporter = __private__.createReporter(apiKey);
+    const reporter = __PRIVETE__.createReporter(apiKey);
     const plugins = createPlugins(config, pluginContext);
 
     return function internalHapiServerWrapper() {
@@ -137,10 +137,10 @@ export const init = () => {
     } else {
         ThundraLogger.debug('<HapiWrapper> Skipping initializing due to running in lambda runtime ...');
     }
-}
+};
 
 /* test-code */
-export const __private__ = {
+export const __PRIVETE__ = {
     createReporter,
 };
 /* end-test-code */
