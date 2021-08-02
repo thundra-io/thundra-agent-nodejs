@@ -8,14 +8,29 @@ import ConfigNames from '../../config/ConfigNames';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
 import WebWrapperUtils from '../WebWrapperUtils';
 
-export function startInvocation(pluginContext: PluginContext, execContext: any) {
+/**
+ * Start invocation process
+ * @param {PluginContext} pluginContext
+ * @param {ExecutionContext} execContext
+ */
+export function startInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
 }
 
-export function finishInvocation(pluginContext: PluginContext, execContext: any) {
+/**
+ * Finish invocation process
+ * @param {PluginContext} pluginContext
+ * @param {ExecutionContext} execContext
+ */
+export function finishInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
     WrapperUtils.finishInvocationData(execContext, pluginContext);
 }
 
+/**
+ * Start trace
+ * @param {PluginContext} pluginContext
+ * @param {ExecutionContext} execContext
+ */
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
 
     WrapperUtils.startTrace(pluginContext, execContext);
@@ -62,6 +77,11 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     }
 }
 
+/**
+ * Finish trace
+ * @param {PluginContext} pluginContext
+ * @param {ExecutionContext} execContext
+ */
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
     WrapperUtils.finishTrace(pluginContext, execContext);
 

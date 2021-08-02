@@ -16,18 +16,38 @@ import ThundraConfig from '../../plugins/config/ThundraConfig';
 
 import * as HapiExecutor from './HapiExecutor';
 
+/**
+ * Create reporter instance
+ * @param {string} apiKey
+ * @return {Reporter} reporter
+ */
 function createReporter(apiKey: string): Reporter {
     return new Reporter(apiKey);
 }
 
+/**
+ * Create plugin context instance
+ * @param {apiKey} apiKey
+ * @return {PluginContext} pluging context
+ */
 function createPluginContext(apiKey: string): PluginContext {
     return WrapperUtils.createPluginContext(apiKey, HapiExecutor);
 }
 
+/**
+ * Handle Hapi server creation process
+ * @param {ThundraConfig} config
+ * @param {pluginContext} PluginContext
+ * @return {any[]} plugings
+ */
 function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
     return WrapperUtils.createPlugins(config, pluginContext);
 }
 
+/**
+ * Handle Hapi server creation process
+ * @param {Function} wrappedFunction
+ */
 function hapiServerWrapper(wrappedFunction: Function) {
 
     ThundraLogger.debug('<HapiWrapper> Creating Thundra middleware ...');
@@ -51,8 +71,13 @@ function hapiServerWrapper(wrappedFunction: Function) {
 
     return function internalHapiServerWrapper() {
 
+        ThundraLogger.debug('<HapiWrapper> Hapi server wrapped.');
+
         const server = wrappedFunction.apply(this, arguments);
 
+        /**  
+         * Handler method for incoming requests & start instrumentation process
+        */
         const startInstrument = (request: any) => ExecutionContextManager.runWithContext(
             WrapperUtils.createExecContext, async function () {
 
@@ -69,6 +94,9 @@ function hapiServerWrapper(wrappedFunction: Function) {
             await WrapperUtils.beforeRequest(request, request.response, plugins);
         });
 
+        /**  
+         * Handler method for outgoing response & finish instrumentation process
+        */
         const finishInstrument = async (request: any, response: any) => {
 
             ThundraLogger.debug('<HapiWrapper> Finish Instrumentation');
@@ -86,17 +114,35 @@ function hapiServerWrapper(wrappedFunction: Function) {
             await WrapperUtils.afterRequest(request, response, plugins, reporter);
         };
 
+        /**  
+         * Attach onPreHandler event of Hapi server
+         * it will start instrumentation process
+        */
         server.ext('onPreHandler', (request: any, h: any) => {
+
+            ThundraLogger.debug(`<HapiWrapper> Instrumentation started for request: ${request}`);
+
             startInstrument(request);
 
             return h.continue;
         });
 
+        /**  
+         * Attach onPreResponse event of Hapi server
+         * it will finish instrumentation process
+        */
         server.ext('onPreResponse', async (request: any, h: any) => {
+
+            ThundraLogger.debug(`<HapiWrapper> Instrumentation finished for request: ${request}`)
+
             const response = request.response;
             if (response.isBoom) {
                 const statusCode = response.output.statusCode;
                 if (statusCode === 404) {
+                    /**  
+                     * if statusCode equels to 404 onPreHandler will not fired 
+                     * so instrumentation process must be started in here
+                    */
                     startInstrument(request);
                 }
             }
@@ -110,6 +156,9 @@ function hapiServerWrapper(wrappedFunction: Function) {
     };
 }
 
+/**
+ * Initiate Hapi wrapper & wrap Hapi server process
+ */
 export const init = () => {
     ThundraLogger.debug('<HapiWrapper> Initializing ...');
     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
