@@ -14,10 +14,7 @@ import * as HapiWrapper from '../../../dist/wrappers/hapi/HapiWrapper';
 
 import { createMockReporterInstance } from '../../mocks/mocks';
 
-const request = require('supertest');
-const Hapi = require('@hapi/hapi');
-
-ConfigProvider.init({ apiKey: 'foo' });
+import request from 'supertest';
 
 describe('Hapijs Wrapper Tests', () => {
     
@@ -27,6 +24,9 @@ describe('Hapijs Wrapper Tests', () => {
  
     beforeAll(async () => {
 
+        ConfigProvider.init({ apiKey: 'foo' });
+
+        HapiWrapper.__private__.createReporter = jest.fn(() => createMockReporterInstance());
         HapiWrapper.init({
             reporter: createMockReporterInstance(),
         });
@@ -173,44 +173,26 @@ describe('Hapijs Wrapper Tests', () => {
         expect(invocationData.traceId).toBeTruthy();
         expect(invocationData.spanId).toBeTruthy();
     });
-});
 
-describe('Hapijs Wrapper Custom Span Tests', () => {
+    test('Hapijs Wrapper Custom Span Tests', async () => {
 
-    let server;
+        let execContext;
 
-    let execContext;
-
-    const wait = (ms) => new Promise(r => setTimeout(r, ms));
-
-    const doSomeWork = (spanName) => new Promise((res, rej) => {
-        setTimeout(async () => {
-            const { tracer } = ExecutionContextManager.get();
-            const span = tracer.startSpan(spanName);
-            await wait(100);
-            span.finish();
-            res();
-        }, 0);
-    });
-
-    beforeEach(() => {
-        ExecutionContextManager.useGlobalProvider();
-    });
-
-    beforeAll(async () => {
-
-        HapiWrapper.init({
-            reporter: createMockReporterInstance(),
-        });
-
-        server = Hapi.server({
-            port: 9090,
-            host: 'localhost'
+        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+    
+        const doSomeWork = (spanName) => new Promise((res, rej) => {
+            setTimeout(async () => {
+                const { tracer } = ExecutionContextManager.get();
+                const span = tracer.startSpan(spanName);
+                await wait(100);
+                span.finish();
+                res();
+            }, 0);
         });
 
         server.route([{
             method: 'GET',
-            path: '/',
+            path: '/custom-spans',
             handler: async (request, h) => {
                 execContext = ExecutionContextManager.get();
                 await doSomeWork('customSpan1');
@@ -219,21 +201,8 @@ describe('Hapijs Wrapper Custom Span Tests', () => {
                 return 'ok';
             }
         }]);
-        
-        await server.start();
-    });
 
-    afterAll(() => {
-        execContext = null;
-        if (server) {
-            server.stop();
-        }
-    });
-
-    test('should connect custom spans', async () => {
-
-        jest.setTimeout(30000);
-        await request(server.listener).get('/');
+        await request(server.listener).get('/custom-spans');
 
         const spanList = execContext.tracer.getSpanList();
         const rootSpan = spanList[0];
@@ -246,7 +215,7 @@ describe('Hapijs Wrapper Custom Span Tests', () => {
         expect(spanList.length).toBe(3);
 
         // Check root span
-        expect(rootSpan.operationName).toBe('/');
+        expect(rootSpan.operationName).toBe('/custom-spans');
         expect(rootSpan.className).toBe(ClassNames.HAPI);
         expect(rootSpan.domainName).toBe(DomainNames.API);
         expect(rootSpan.startTime).toBeTruthy();
