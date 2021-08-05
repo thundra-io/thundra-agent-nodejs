@@ -18,7 +18,7 @@ import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
 import InvocationData from '../plugins/data/invocation/InvocationData';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
-import { HttpTags, DomainNames, ClassNames, SpanTags, TriggerHeaderTags } from '../Constants';
+import { HttpTags, SpanTags, TriggerHeaderTags } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import HttpError from '../error/HttpError';
@@ -210,8 +210,8 @@ export default class WebWrapperUtils {
             propagated: propagatedSpanContext ? true : false,
             parentContext: propagatedSpanContext,
             rootTraceId: traceId,
-            domainName: DomainNames.API,
-            className: ClassNames.EXPRESS,
+            domainName: pluginContext.applicationInfo.applicationDomainName,
+            className: pluginContext.applicationInfo.applicationClassName,
         });
         rootSpan.isRootSpan = true;
 
