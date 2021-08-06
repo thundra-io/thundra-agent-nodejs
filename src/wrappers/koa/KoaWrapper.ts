@@ -55,6 +55,7 @@ export function koaMiddleWare(opts: any = {}) {
             try {
                 await WrapperUtils.beforeRequest(ctx.request, ctx.response, plugins);
                 ctx.res.once('finish', () => {
+                    ctx.request._matchedRoute = ctx._matchedRoute;
                     ExecutionContextManager.set(context);
                     WrapperUtils.afterRequest(ctx.request, ctx.response, plugins, reporter);
                 });
@@ -71,7 +72,6 @@ export function koaMiddleWare(opts: any = {}) {
 function wrapUse(originalUse: Function) {
     ThundraLogger.debug('<KoaWrapper> Wrapping "app.use" ...');
     return function useWrapper() {
-        ThundraLogger.debug('<KoaWrapper> Calling original "app.use"');
         const result = originalUse.apply(this, arguments);
         if (this._thundra) {
             return result;
