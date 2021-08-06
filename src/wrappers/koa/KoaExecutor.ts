@@ -66,13 +66,14 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
 
     const {rootSpan, response, request} = execContext;
 
-    const resourceName = request._matchedRoute || request.path || '';
-    const triggerOperationName = request.hostname + resourceName;
+    if (request._matchedRoute) {
+        const resourceName = request._matchedRoute || request.path || '';
+        const triggerOperationName = request.hostname + resourceName;
 
-    execContext.triggerOperationName = triggerOperationName;
-    execContext.applicationResourceName = resourceName;
-    rootSpan.operationName = resourceName;
-
+        execContext.triggerOperationName = triggerOperationName;
+        execContext.applicationResourceName = resourceName;
+        rootSpan.operationName = resourceName;
+    }
     InvocationSupport.setAgentTag(HttpTags.HTTP_STATUS, response.statusCode);
     Utils.copyProperties(response, ['status'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
     Utils.copyProperties(request, ['path'], rootSpan.tags, [HttpTags.HTTP_ROUTE_PATH]);
