@@ -104,6 +104,8 @@ For more information see the  [doc](https://apm.docs.thundra.io/node.js/integrat
 const thundra = require("@thundra/core");
 const Hapi = require('@hapi/hapi');
 
+thundra.init();
+
 const startServer = async () => {
     const server = Hapi.server({
         ...
