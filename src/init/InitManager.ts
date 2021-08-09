@@ -26,9 +26,12 @@ class InitManager {
                     const init = initializer.impl.init;
                     if (init && typeof init === 'function') {
                         try {
-                            init.apply(this);
-                            initializer.initialized = true;
-                            ThundraLogger.debug(`<InitManager> Initialized ${initializer.name}`);
+                            const initializationResult = init.apply(this);
+                            if (initializationResult) {
+                                ThundraLogger.debug(`<InitManager> Initialized ${initializer.name}`);
+                            }
+
+                            initializer.initialized = initializationResult;
                         } catch (e) {
                             ThundraLogger.error(`<InitManager> Failed initialized of ${initializer.name}: e`);
                         }

@@ -26,6 +26,32 @@ import HttpError from '../error/HttpError';
 const get = require('lodash.get');
 
 export default class WebWrapperUtils {
+
+    static initWrapper(applicationClassName: string, applicationDomainName: string, executor: any) {
+        ApplicationManager.setApplicationInfoProvider().update({
+            applicationClassName,
+            applicationDomainName,
+        });
+
+        const appInfo = ApplicationManager.getApplicationInfo();
+        ApplicationManager.getApplicationInfoProvider().update({
+            applicationId: WebWrapperUtils.getDefaultApplicationId(appInfo),
+        });
+
+        const config = ConfigProvider.thundraConfig;
+        const { apiKey } = config;
+
+        const reporter = WebWrapperUtils.createReporter(apiKey);
+        const pluginContext = WebWrapperUtils.createPluginContext(apiKey, executor);
+        const plugins = WebWrapperUtils.createPlugins(config, pluginContext);
+
+        return {
+            reporter,
+            pluginContext,
+            plugins,
+        };
+    }
+
     static getDefaultApplicationId(appInfo: ApplicationInfo) {
         return `node:${appInfo.applicationClassName}:${appInfo.applicationRegion}:${appInfo.applicationName}`;
     }
@@ -109,6 +135,10 @@ export default class WebWrapperUtils {
             apiKey,
             executor,
         });
+    }
+
+    static createReporter(apiKey: string): Reporter {
+        return new Reporter(apiKey);
     }
 
     static initAsyncContextManager() {
@@ -210,8 +240,8 @@ export default class WebWrapperUtils {
             propagated: propagatedSpanContext ? true : false,
             parentContext: propagatedSpanContext,
             rootTraceId: traceId,
-            domainName: DomainNames.API,
-            className: ClassNames.EXPRESS,
+            domainName: pluginContext.applicationInfo.applicationDomainName,
+            className: pluginContext.applicationInfo.applicationClassName,
         });
         rootSpan.isRootSpan = true;
 
@@ -242,4 +272,26 @@ export default class WebWrapperUtils {
         rootSpan.finish(finishTimestamp);
     }
 
+    static mergePathAndRoute(path: string, route: string) {
+        if (path.indexOf('?') > -1) {
+            path = path.substring(0, path.indexOf('?'));
+        }
+
+        const routeSCount = route.split('/').length - 1;
+        const onlySlash = route === '/';
+
+        let normalizedPath;
+
+        if (!onlySlash) {
+            for (let i = 0; i < routeSCount; i++) {
+                path = path.substring(0, path.lastIndexOf('/'));
+            }
+            normalizedPath = path + route;
+        } else {
+            const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
+            normalizedPath = Utils.getNormalizedPath(path, depth);
+        }
+
+        return normalizedPath;
+    }
 }

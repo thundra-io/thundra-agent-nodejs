@@ -52,6 +52,7 @@ class TraceConfig extends BasePluginConfig {
     runSamplerOnEachSpan: boolean;
     instrumentAWSOnLoad: boolean;
     tracer: ThundraTracer;
+    hapiTraceDisabled: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -148,6 +149,10 @@ class TraceConfig extends BasePluginConfig {
 
         this.runSamplerOnEachSpan = get(options, 'runCustomSamplerOnEachSpan', false);
         this.sampler = options.sampler;
+
+        this.hapiTraceDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE,
+            options.hapiTraceDisabled);
 
         for (const configName of ConfigProvider.names()) {
             if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG)) {
