@@ -26,6 +26,32 @@ import HttpError from '../error/HttpError';
 const get = require('lodash.get');
 
 export default class WebWrapperUtils {
+
+    static initWrapper(applicationClassName: string, applicationDomainName: string, executor: any) {
+        ApplicationManager.setApplicationInfoProvider().update({
+            applicationClassName,
+            applicationDomainName,
+        });
+
+        const appInfo = ApplicationManager.getApplicationInfo();
+        ApplicationManager.getApplicationInfoProvider().update({
+            applicationId: WebWrapperUtils.getDefaultApplicationId(appInfo),
+        });
+
+        const config = ConfigProvider.thundraConfig;
+        const { apiKey } = config;
+
+        const reporter = WebWrapperUtils.createReporter(apiKey);
+        const pluginContext = WebWrapperUtils.createPluginContext(apiKey, executor);
+        const plugins = WebWrapperUtils.createPlugins(config, pluginContext);
+
+        return {
+            reporter,
+            pluginContext,
+            plugins,
+        };
+    }
+
     static getDefaultApplicationId(appInfo: ApplicationInfo) {
         return `node:${appInfo.applicationClassName}:${appInfo.applicationRegion}:${appInfo.applicationName}`;
     }
@@ -109,6 +135,10 @@ export default class WebWrapperUtils {
             apiKey,
             executor,
         });
+    }
+
+    static createReporter(apiKey: string): Reporter {
+        return new Reporter(apiKey);
     }
 
     static initAsyncContextManager() {

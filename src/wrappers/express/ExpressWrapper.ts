@@ -18,21 +18,11 @@ const METHODS = http.METHODS && http.METHODS.map((method: string) => {
 });
 
 export function expressMW(opts: any = {}) {
-    ApplicationManager.setApplicationInfoProvider().update({
-        applicationClassName: ClassNames.EXPRESS,
-        applicationDomainName: DomainNames.API,
-    });
 
-    const appInfo = ApplicationManager.getApplicationInfo();
-    ApplicationManager.getApplicationInfoProvider().update({
-        applicationId: WrapperUtils.getDefaultApplicationId(appInfo),
-    });
-
-    const config = opts.config || ConfigProvider.thundraConfig;
-    const { apiKey } = config;
-    const reporter = opts.reporter || new Reporter(apiKey);
-    const pluginContext = opts.pluginContext || WrapperUtils.createPluginContext(apiKey, ExpressExecutor);
-    const plugins = opts.plugins || WrapperUtils.createPlugins(config, pluginContext);
+    const {
+        reporter,
+        plugins,
+    } = WrapperUtils.initWrapper(ClassNames.EXPRESS, DomainNames.API, ExpressExecutor);
 
     if (!opts.disableAsyncContextManager) {
         WrapperUtils.initAsyncContextManager();
@@ -193,7 +183,11 @@ export function init() {
                 wrapMethod,
                 (express: any) => express.Route.prototype);
         });
+
+        return true;
     } else {
         ThundraLogger.debug('<ExpressWrapper> Skipping initializing due to running in lambda runtime ...');
+
+        return false;
     }
 }

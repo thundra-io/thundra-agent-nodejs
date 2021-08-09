@@ -10,20 +10,32 @@ Check out [example projects](https://github.com/thundra-io/thundra-examples-lamb
 
 ## Contents
 
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
+- [Thundra Node.js Agent](#thundra-nodejs-agent)
+  - [Contents](#contents)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+      - [1. Most Useful Environment variables](#1-most-useful-environment-variables)
+  - [Usage](#usage)
     - [Integration Options for Containers and VMs](#integration-options-for-containers-and-vms)
+      - [Express](#express)
+      - [Hapi](#hapi)
     - [Integration Options for AWS Lambda](#integration-options-for-aws-lambda)
-- [Frameworks](#frameworks)
-- [Integrations](#integrations)
-- [Async Monitoring with Zero Overhead](#async-monitoring-with-zero-overhead)  
-- [Log Support](#log-support)
-- [Warmup Support](#warmup-support)
-- [All Environment Variables](#all-environment-variables)
-- [How to build](#how-to-build)
-- [How to test](#how-to-test)
-- [Changelog](#changelog)
+      - [Using Layers](#using-layers)
+      - [Without Layers](#without-layers)
+  - [Frameworks](#frameworks)
+  - [Integrations](#integrations)
+  - [Async Monitoring with Zero Overhead](#async-monitoring-with-zero-overhead)
+  - [Log Support](#log-support)
+    - [How to use Thundra loggers](#how-to-use-thundra-loggers)
+      - [1. Using `trace`, `debug`, `info`, `warn`, `error`, `fatal` methods](#1-using-trace-debug-info-warn-error-fatal-methods)
+      - [2. Using `log` method](#2-using-log-method)
+    - [Log Levels](#log-levels)
+  - [Warmup Support](#warmup-support)
+  - [All Environment Variables](#all-environment-variables)
+    - [Module initialization parameters](#module-initialization-parameters)
+  - [How to build](#how-to-build)
+  - [How to test](#how-to-test)
+  - [Changelog](#changelog)
 
 
 
@@ -62,6 +74,8 @@ Check out the [configuration part](https://apm.docs.thundra.io/node.js/nodejs-co
 
 ### Integration Options for Containers and VMs  
 
+#### Express
+
 ```js
 const thundra = require("@thundra/core");
 const express = require('express');
@@ -73,6 +87,40 @@ app.get('/', function (req,res) {
    res.send("Response")
 });
 app.listen(3000);
+```
+
+```shell
+export THUNDRA_APIKEY=<your_thundra_api_key>
+export THUNDRA_AGENT_APPLICATION_NAME=<your_application_name>
+```
+
+For `Dockerfile`, you just replace `export` with `ENV`.
+
+For more information see the  [doc](https://apm.docs.thundra.io/node.js/integration-options-for-containers-and-vms)
+
+#### Hapi
+
+```js
+const thundra = require("@thundra/core");
+const Hapi = require('@hapi/hapi');
+
+const startServer = async () => {
+    const server = Hapi.server({
+        ...
+    });
+
+    server.route([{
+        method: 'GET',
+        path: '/',
+        handler: (request, h) => {
+            return 'Response';
+        }
+    }]);
+    
+    await server.start();
+}
+
+startServer();
 ```
 
 ```shell
@@ -122,7 +170,8 @@ The following frameworks are supported by Thundra:
 |Framework                               |Supported Version          |Auto-tracing Supported                               |
 |----------------------------------------|---------------------------|-----------------------------------------------------|
 |[AWS Lambda](#aws-lambda)               |All                        |<ul><li>- [x] </li></ul>                             |
-|[Express](#express)                     |`>=3.0.0`                   |<ul><li>- [x] </li></ul>                             |
+|[Express](#express)                     |`>=3.0.0`                  |<ul><li>- [x] </li></ul>                             |
+|[Hapi](#hapi)                           |`>=16.0.0`                 |<ul><li>- [✓] </li></ul>                             |
 
 ## Integrations
 
@@ -322,6 +371,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST                           | string |        debug.thundra.io         |
 | THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME                          | string |             default             |
 | THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN                            | string |                -                |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HAPI_DISABLE                       |  bool  |              false              |
 
 
 

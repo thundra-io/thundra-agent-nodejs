@@ -40,9 +40,9 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         rootSpan,
     } = execContext;
 
-    const resourceName = request.route.method !== '_special' ?
+    const resourceName = request.route ? request.route.method !== '_special' ?
         WebWrapperUtils.mergePathAndRoute(request.path, request.route.path)
-        : request.path;
+        : request.path : undefined;
 
     const triggerOperationName = request.hostname + resourceName;
 

@@ -1,8 +1,8 @@
 import ModuleUtils from '../../utils/ModuleUtils';
 
-import { ApplicationManager } from '../../application/ApplicationManager';
 import Reporter from '../../Reporter';
 import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import ExecutionContext from '../../context/ExecutionContext';
 
@@ -10,64 +10,26 @@ import ThundraLogger from '../../ThundraLogger';
 import { ClassNames, DomainNames } from '../../Constants';
 import LambdaUtils from '../../utils/LambdaUtils';
 import WrapperUtils from '../WebWrapperUtils';
-
-import PluginContext from '../../plugins/PluginContext';
-import ThundraConfig from '../../plugins/config/ThundraConfig';
+import Utils from '../../utils/Utils';
 
 import * as HapiExecutor from './HapiExecutor';
+import WebWrapperUtils from '../WebWrapperUtils';
 
-/**
- * Create reporter instance
- * @param {string} apiKey
- * @return {Reporter} reporter
- */
-function createReporter(apiKey: string): Reporter {
-    return new Reporter(apiKey);
-}
+const modulesWillBepatched = [
+    { moduleName: '@hapi/hapi', methodName: 'Server' },
+    { moduleName: '@hapi/hapi', methodName: 'server' },
+    { moduleName: 'hapi', methodName: 'Server' },
+    { moduleName: 'hapi', methodName: 'server' },
+];
 
-/**
- * Create plugin context instance
- * @param {apiKey} apiKey
- * @return {PluginContext} pluging context
- */
-function createPluginContext(apiKey: string): PluginContext {
-    return WrapperUtils.createPluginContext(apiKey, HapiExecutor);
-}
-
-/**
- * Handle Hapi server creation process
- * @param {ThundraConfig} config
- * @param {pluginContext} PluginContext
- * @return {any[]} plugings
- */
-function createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
-    return WrapperUtils.createPlugins(config, pluginContext);
-}
+let _REPORTER: Reporter;
+let _PLUGINS: any[];
 
 /**
  * Handle Hapi server creation process
  * @param {Function} wrappedFunction
  */
 function hapiServerWrapper(wrappedFunction: Function) {
-
-    ThundraLogger.debug('<HapiWrapper> Creating Thundra middleware ...');
-
-    ApplicationManager.setApplicationInfoProvider().update({
-        applicationClassName: ClassNames.HAPI,
-        applicationDomainName: DomainNames.API,
-    });
-
-    const appInfo = ApplicationManager.getApplicationInfo();
-    ApplicationManager.getApplicationInfoProvider().update({
-        applicationId: WrapperUtils.getDefaultApplicationId(appInfo),
-    });
-
-    const config = ConfigProvider.thundraConfig;
-    const { apiKey } = config;
-
-    const pluginContext = createPluginContext(apiKey);
-    const reporter = __PRIVETE__.createReporter(apiKey);
-    const plugins = createPlugins(config, pluginContext);
 
     return function internalHapiServerWrapper() {
 
@@ -91,7 +53,7 @@ function hapiServerWrapper(wrappedFunction: Function) {
             };
 
             ThundraLogger.debug('<HapiWrapper> Before handling request');
-            await WrapperUtils.beforeRequest(request, request.response, plugins);
+            await WrapperUtils.beforeRequest(request, request.response, _PLUGINS);
         });
 
         /**
@@ -101,17 +63,19 @@ function hapiServerWrapper(wrappedFunction: Function) {
 
             ThundraLogger.debug('<HapiWrapper> Finish Instrumentation');
 
-            const context = request.thundra.executionContext;
-            context.response = response;
+            if (request.thundra && request.thundra.executionContext) {
+                const context = request.thundra.executionContext;
+                context.response = response;
 
-            ExecutionContextManager.set(context);
+                ExecutionContextManager.set(context);
 
-            if (response.isBoom) {
-                context.error = response;
+                if (response.isBoom) {
+                    context.error = Utils.buildError(response);
+                }
+
+                ThundraLogger.debug('<HapiWrapper> After handling request');
+                await WrapperUtils.afterRequest(request, response, _PLUGINS, __PRIVATE__.getReporter());
             }
-
-            ThundraLogger.debug('<HapiWrapper> After handling request');
-            await WrapperUtils.afterRequest(request, response, plugins, reporter);
         };
 
         /**
@@ -160,36 +124,58 @@ function hapiServerWrapper(wrappedFunction: Function) {
  * Initiate Hapi wrapper & wrap Hapi server process
  */
 export const init = () => {
-    ThundraLogger.debug('<HapiWrapper> Initializing ...');
+
+    const isHapiTracingDisabled = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE);
+
+    if (isHapiTracingDisabled) {
+
+        ThundraLogger.debug('<HapiWrapper> Hapi wrapper disabled ...');
+
+        return false;
+    }
+
     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
     if (!lambdaRuntime) {
-        ModuleUtils.patchModule(
-            '@hapi/hapi',
-            'Server',
-            hapiServerWrapper,
-        );
-        ModuleUtils.patchModule(
-            '@hapi/hapi',
-            'server',
-            hapiServerWrapper,
-        );
-        ModuleUtils.patchModule(
-            'hapi',
-            'server',
-            hapiServerWrapper,
-        );
-        ModuleUtils.patchModule(
-            'hapi',
-            'Server',
-            hapiServerWrapper,
-        );
+
+        let moduleWillBeInitilized: boolean;
+
+        modulesWillBepatched.forEach((patchModule) => {
+            const isPatched: boolean = ModuleUtils.patchModule(
+                patchModule.moduleName,
+                patchModule.methodName,
+                hapiServerWrapper,
+            );
+
+            if (!moduleWillBeInitilized) {
+                moduleWillBeInitilized = isPatched;
+            }
+        });
+
+        if (moduleWillBeInitilized) {
+
+            ThundraLogger.debug('<HapiWrapper> Initializing ...');
+
+            const {
+                reporter,
+                plugins,
+            } = WebWrapperUtils.initWrapper(ClassNames.HAPI, DomainNames.API, HapiExecutor);
+
+            _REPORTER = reporter;
+            _PLUGINS = plugins;
+        }
+
+        return moduleWillBeInitilized;
     } else {
         ThundraLogger.debug('<HapiWrapper> Skipping initializing due to running in lambda runtime ...');
+
+        return false;
     }
 };
 
 /* test-code */
-export const __PRIVETE__ = {
-    createReporter,
+export const __PRIVATE__ = {
+    getReporter: () => {
+        return _REPORTER;
+    },
 };
 /* end-test-code */

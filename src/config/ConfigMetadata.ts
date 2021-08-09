@@ -277,6 +277,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     [ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN]: {
         type: 'string',
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
 };
 
 export default ConfigMetadata;

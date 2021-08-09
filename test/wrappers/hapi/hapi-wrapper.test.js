@@ -26,10 +26,8 @@ describe('Hapijs Wrapper Tests', () => {
 
         ConfigProvider.init({ apiKey: 'foo' });
 
-        HapiWrapper.__PRIVETE__.createReporter = jest.fn(() => createMockReporterInstance());
-        HapiWrapper.init({
-            reporter: createMockReporterInstance(),
-        });
+        HapiWrapper.__PRIVATE__.getReporter = jest.fn(() => createMockReporterInstance());
+        HapiWrapper.init();
 
         server = await HapiMockServer.start(port);
     });
