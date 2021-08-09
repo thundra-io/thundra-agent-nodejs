@@ -160,6 +160,8 @@ export const init = () => {
                 plugins,
             } = WebWrapperUtils.initWrapper(ClassNames.HAPI, DomainNames.API, HapiExecutor);
 
+            WrapperUtils.initAsyncContextManager();
+
             _REPORTER = reporter;
             _PLUGINS = plugins;
         }
