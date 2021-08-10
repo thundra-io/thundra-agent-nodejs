@@ -153,6 +153,7 @@ export const ClassNames = {
     STEPFUNCTIONS: 'AWS-StepFunctions',
     EXPRESS: 'Express',
     KOA: 'Koa',
+    HAPI: 'Hapi',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';

@@ -578,6 +578,7 @@ class APIError extends Error {
 }
 
 module.exports = {
+    APIError,
     createMockContext,
     createMockExpressApp,
     createMockKoaApp,
