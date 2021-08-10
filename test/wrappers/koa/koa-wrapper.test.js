@@ -26,8 +26,8 @@ describe('koa wrapper', function () {
     })
 
     afterAll(() => {
-        if (app && app.server) {
-            app.server.close();
+        if (server) {
+            server.close();
         }
     });
 

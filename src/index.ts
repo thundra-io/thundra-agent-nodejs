@@ -14,7 +14,6 @@ import support from './plugins/support';
 import ConfigNames from './config/ConfigNames';
 import {loadHandler} from './wrappers/lambda/lambdaRuntimeSupport';
 import * as ExpressWrapper from './wrappers/express/ExpressWrapper';
-import * as KoaWrapper from './wrappers/koa/KoaWrapper';
 import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
@@ -81,17 +80,6 @@ function expressMW() {
         init();
     }
     return ExpressWrapper.expressMW();
-}
-
-/**
- * Creates an Koa.js middleware to integrate Thundra
- * @return the Thundra middleware
- */
-function koaMW(opts: any) {
-    if (!initialized) {
-        init();
-    }
-    return KoaWrapper.koaMiddleWare(opts);
 }
 
 /**
@@ -185,7 +173,6 @@ if (global.__thundraMasterModule__) {
         instrumentModule,
         uninstrumentModule,
         expressMW,
-        koaMW,
         InvocationSupport,
         InvocationTraceSupport,
         ...support,

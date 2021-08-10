@@ -234,6 +234,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_LOG_CONSOLE_DISABLE]: {
         type: 'boolean',
         defaultValue: false,

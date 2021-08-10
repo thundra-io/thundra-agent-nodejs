@@ -19,13 +19,17 @@ const METHODS = http.METHODS && http.METHODS.map((method: string) => {
 
 export function expressMW(opts: any = {}) {
 
-    const {
+    let {
         reporter,
         plugins,
     } = WrapperUtils.initWrapper(ClassNames.EXPRESS, DomainNames.API, ExpressExecutor);
 
     if (!opts.disableAsyncContextManager) {
         WrapperUtils.initAsyncContextManager();
+    }
+
+    if (opts.reporter) {
+        reporter = opts.reporter;
     }
 
     ThundraLogger.debug('<ExpressWrapper> Creating Thundra middleware ...');

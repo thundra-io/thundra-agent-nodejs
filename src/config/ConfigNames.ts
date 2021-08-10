@@ -175,6 +175,9 @@ class ConfigNames {
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE: string =
         'thundra.agent.trace.integrations.hapi.disable';
 
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE: string =
+        'thundra.agent.trace.integrations.koa.disable';
+
     /////////////////////////////////////////////////////////////////////////////
 
     public static readonly THUNDRA_LOG_CONSOLE_DISABLE: string =
