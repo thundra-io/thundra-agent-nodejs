@@ -13,10 +13,9 @@ import ConfigNames from '../../config/ConfigNames';
 
 export function koaMiddleWare(opts: any = {}) {
     ThundraLogger.debug('<KoaWrapper> koaMiddleWare running ...');
-    let {
-        reporter,
-        plugins,
-    } = WebWrapperUtils.initWrapper(ClassNames.KOA, DomainNames.API, KoaExecutor);
+    const wrapperInitObj = WebWrapperUtils.initWrapper(ClassNames.KOA, DomainNames.API, KoaExecutor);
+    const {plugins} = wrapperInitObj;
+    let {reporter} = wrapperInitObj;
 
     if (opts.reporter) {
         reporter = opts.reporter;

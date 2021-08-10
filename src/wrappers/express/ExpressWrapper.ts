@@ -1,12 +1,9 @@
-import Reporter from '../../Reporter';
-import ConfigProvider from '../../config/ConfigProvider';
-import { ApplicationManager } from '../../application/ApplicationManager';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import * as ExpressExecutor from './ExpressExecutor';
 import WrapperUtils from '../WebWrapperUtils';
 import ExecutionContext from '../../context/ExecutionContext';
 import ThundraLogger from '../../ThundraLogger';
-import { ClassNames, DomainNames } from '../../Constants';
+import {ClassNames, DomainNames} from '../../Constants';
 import ModuleUtils from '../../utils/ModuleUtils';
 import Utils from '../../utils/Utils';
 import LambdaUtils from '../../utils/LambdaUtils';
@@ -18,11 +15,9 @@ const METHODS = http.METHODS && http.METHODS.map((method: string) => {
 });
 
 export function expressMW(opts: any = {}) {
-
-    let {
-        reporter,
-        plugins,
-    } = WrapperUtils.initWrapper(ClassNames.EXPRESS, DomainNames.API, ExpressExecutor);
+    const wrapperInitObj = WrapperUtils.initWrapper(ClassNames.EXPRESS, DomainNames.API, ExpressExecutor);
+    const {plugins} = wrapperInitObj;
+    let {reporter} = wrapperInitObj;
 
     if (!opts.disableAsyncContextManager) {
         WrapperUtils.initAsyncContextManager();
