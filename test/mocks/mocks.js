@@ -2,8 +2,10 @@ import {LambdaContextProvider} from '../../dist/wrappers/lambda/LambdaContextPro
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import {expressMW} from '../../dist/wrappers/express/ExpressWrapper';
+import {koaMiddleWare} from '../../dist/wrappers/koa/KoaWrapper';
 
 const express = require('express');
+const Koa = require('koa');
 
 const createMockContext = () => {
     return {
@@ -513,6 +515,31 @@ const createMockClientContext = () => {
     };
 };
 
+const createMockKoaApp = () => {
+    const app = new Koa();
+
+    app.use(koaMiddleWare({
+        disableAsyncContextManager: true,
+        reporter: createMockReporterInstance(),
+    }));
+
+    app.use(async (ctx, next) => {
+        if (ctx.path !== '/') {
+            return await next();
+        }
+        ctx.body = 'Hello Thundra!';
+    });
+
+    app.use(async (ctx, next) => {
+        if (ctx.path !== '/error') {
+            return await next();
+        }
+        throw new APIError('Boom');
+    });
+
+    return app;
+};
+
 const createMockExpressApp = async () => {
     const app = express();
 
@@ -541,6 +568,7 @@ const createMockExpressApp = async () => {
     return app;
 };
 
+
 class APIError extends Error {
     constructor(message) {
         super(message);
@@ -553,6 +581,7 @@ module.exports = {
     APIError,
     createMockContext,
     createMockExpressApp,
+    createMockKoaApp,
     createMockReporterInstance,
     createMockWrapperInstance,
     createMockPluginContext,

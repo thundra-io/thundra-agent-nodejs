@@ -74,6 +74,15 @@ Check out the [configuration part](https://apm.docs.thundra.io/node.js/nodejs-co
 
 ### Integration Options for Containers and VMs  
 
+```shell
+export THUNDRA_APIKEY=<your_thundra_api_key>
+export THUNDRA_AGENT_APPLICATION_NAME=<your_application_name>
+```
+
+For `Dockerfile`, you just replace `export` with `ENV`.
+
+For more information see the  [doc](https://apm.docs.thundra.io/node.js/integration-options-for-containers-and-vms)
+
 #### Express
 
 ```js
@@ -88,15 +97,6 @@ app.get('/', function (req,res) {
 });
 app.listen(3000);
 ```
-
-```shell
-export THUNDRA_APIKEY=<your_thundra_api_key>
-export THUNDRA_AGENT_APPLICATION_NAME=<your_application_name>
-```
-
-For `Dockerfile`, you just replace `export` with `ENV`.
-
-For more information see the  [doc](https://apm.docs.thundra.io/node.js/integration-options-for-containers-and-vms)
 
 #### Hapi
 
@@ -125,14 +125,21 @@ const startServer = async () => {
 startServer();
 ```
 
-```shell
-export THUNDRA_APIKEY=<your_thundra_api_key>
-export THUNDRA_AGENT_APPLICATION_NAME=<your_application_name>
+#### Koa
+
+```js
+const thundra = require("@thundra/core");
+const Koa = require('koa');
+
+thundra.init();
+const app = new Koa();
+
+app.use(async (ctx, next) => {
+  await next();
+  ctx.body = 'Hello Thundra!';
+});
+app.listen(3000)
 ```
-
-For `Dockerfile`, you just replace `export` with `ENV`.
-
-For more information see the  [doc](https://apm.docs.thundra.io/node.js/integration-options-for-containers-and-vms)
 
 ### Integration Options for AWS Lambda
 
@@ -172,8 +179,9 @@ The following frameworks are supported by Thundra:
 |Framework                               |Supported Version          |Auto-tracing Supported                               |
 |----------------------------------------|---------------------------|-----------------------------------------------------|
 |[AWS Lambda](#aws-lambda)               |All                        |<ul><li>- [x] </li></ul>                             |
-|[Express](#express)                     |`>=3.0.0`                  |<ul><li>- [x] </li></ul>                             |
-|[Hapi](#hapi)                           |`>=16.0.0`                 |<ul><li>- [✓] </li></ul>                             |
+|[Express](https://expressjs.com/)       |`>=3.0.0`                  |<ul><li>- [x] </li></ul>                             |
+|[Hapi](https://hapi.dev/)               |`>=16.0.0`                 |<ul><li>- [✓] </li></ul>                             |
+|[Koa](https://koajs.com/)               |`>=2.0.0`                   |<ul><li>- [✓] </li></ul>                             |
 
 ## Integrations
 
@@ -374,6 +382,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME                          | string |             default             |
 | THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN                            | string |                -                |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_HAPI_DISABLE                       |  bool  |              false              |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_KOA_DISABLE                        |  bool  |              false              |
 
 
 

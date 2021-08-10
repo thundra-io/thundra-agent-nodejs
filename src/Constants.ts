@@ -152,6 +152,7 @@ export const ClassNames = {
     SES: 'AWS-SES',
     STEPFUNCTIONS: 'AWS-StepFunctions',
     EXPRESS: 'Express',
+    KOA: 'Koa',
     HAPI: 'Hapi',
 };
 

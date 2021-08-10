@@ -53,6 +53,7 @@ class TraceConfig extends BasePluginConfig {
     instrumentAWSOnLoad: boolean;
     tracer: ThundraTracer;
     hapiTraceDisabled: boolean;
+    koaTraceDisabled: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -153,6 +154,9 @@ class TraceConfig extends BasePluginConfig {
         this.hapiTraceDisabled = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE,
             options.hapiTraceDisabled);
+        this.koaTraceDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE,
+            options.koaTraceDisabled);
 
         for (const configName of ConfigProvider.names()) {
             if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG)) {
