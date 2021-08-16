@@ -136,7 +136,8 @@ class Reporter {
                     socket.setKeepAlive(true);
 
                     socket.setTimeout(REPORTER_HTTP_TIMEOUT, () => {
-                        ThundraLogger.error('<Reporter> Reporter socket timeout. Please be sure that your application has access to public internet.');
+                        ThundraLogger.error('<Reporter> Reporter socket timeout.'
+                        + 'Please be sure that your application has access to public internet.');
                     });
 
                     oncreate(null, socket);
@@ -253,8 +254,10 @@ class Reporter {
                 : request = http.request(this.requestOptions, responseHandler);
 
             request.setTimeout(REPORTER_HTTP_TIMEOUT, () => {
-                ThundraLogger.error('<Reporter> Reporter request timeout. Please be sure that your application has access to public internet.');
-                return reject(new Error('Reporter request timeout. Please be sure that your application has access to public internet.'));
+                ThundraLogger.error('<Reporter> Reporter request timeout.'
+                + ' Please be sure that your application has access to public internet.');
+                return reject(new Error('Reporter request timeout.'
+                + ' Please be sure that your application has access to public internet.'));
             });
 
             request.on('error', (error: any) => {
