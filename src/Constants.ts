@@ -753,3 +753,5 @@ export const THUNDRA_COLLECTOR_ENDPOINT_PATTERNS: any = {
 };
 
 export const MAX_HTTP_VALUE_SIZE: number = 10 * 1024;
+
+export const REPORTER_HTTP_TIMEOUT: number = 3000;

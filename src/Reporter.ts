@@ -3,8 +3,12 @@ import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
 import {
-    COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint, LOCAL_COLLECTOR_ENDPOINT,
-    SPAN_TAGS_TO_TRIM_1, SPAN_TAGS_TO_TRIM_2,
+    COMPOSITE_MONITORING_DATA_PATH,
+    getDefaultCollectorEndpoint,
+    LOCAL_COLLECTOR_ENDPOINT,
+    SPAN_TAGS_TO_TRIM_1,
+    SPAN_TAGS_TO_TRIM_2,
+    REPORTER_HTTP_TIMEOUT,
 } from './Constants';
 import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
@@ -115,6 +119,7 @@ class Reporter {
         const path = COMPOSITE_MONITORING_DATA_PATH;
 
         return {
+            timeout: REPORTER_HTTP_TIMEOUT,
             method: 'POST',
             hostname: u ? u.hostname : this.url.hostname,
             path: (u ? u.pathname : this.url.pathname) + path,
@@ -129,6 +134,12 @@ class Reporter {
                     const socket: net.Socket = net.createConnection(options.port as number, options.hostname);
                     socket.setNoDelay(true);
                     socket.setKeepAlive(true);
+
+                    socket.setTimeout(REPORTER_HTTP_TIMEOUT, () => {
+                        ThundraLogger.error('<Reporter> Reporter socket timeout.'
+                        + 'Please be sure that your application has access to public internet.');
+                    });
+
                     oncreate(null, socket);
                     return socket;
                 } catch (e) {
@@ -241,6 +252,13 @@ class Reporter {
             this.useHttps
                 ? request = https.request(this.requestOptions, responseHandler)
                 : request = http.request(this.requestOptions, responseHandler);
+
+            request.setTimeout(REPORTER_HTTP_TIMEOUT, () => {
+                ThundraLogger.error('<Reporter> Reporter request timeout.'
+                + ' Please be sure that your application has access to public internet.');
+                return reject(new Error('Reporter request timeout.'
+                + ' Please be sure that your application has access to public internet.'));
+            });
 
             request.on('error', (error: any) => {
                 ThundraLogger.debug('<Reporter> Request sent to collector has failed:', error);
