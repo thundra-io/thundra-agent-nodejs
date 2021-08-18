@@ -15,7 +15,7 @@ import ExecutionContextManager from "../context/ExecutionContextManager";
 
 const shimmer = require("shimmer");
 
-const MODULE_NAME = "amqplib";
+const MODULE_NAME = "amqplib/lib/channel.js";
 const MODULE_VERSION = ">=0.5";
 
 /**
@@ -43,7 +43,7 @@ class AMQPLIBIntegration implements Integration {
     );
   }
 
-  private getResourceName (method: any, fields?: any) {
+  private _getResourceName (method: any, fields?: any) {
     let resource_name = method;
     if ("exchange" in fields) {
       resource_name += " " + fields.exchange;
@@ -64,7 +64,7 @@ class AMQPLIBIntegration implements Integration {
   }
 
 
-  private handleTags = (channel: any, config: any, span: any, method: any, fields: any) => {
+  private _handleTags = (channel: any, config: any, span: any, method: any, fields: any) => {
     
     span.setTag(SpanTags.SPAN_TYPE, SpanTypes.AMQP);
 
@@ -81,17 +81,15 @@ class AMQPLIBIntegration implements Integration {
       DESTINATION: 'destination'
     }
 
-    type fieldKeyType = keyof typeof fieldNames;
-
     span.addTags({
       'service.name': config.service || `amqp-default-service`,
-      'resource.name': this.getResourceName(method, fields),
+      'resource.name': this._getResourceName(method, fields),
     })
   
     if (channel && channel.connection && channel.connection.stream) {
       span.addTags({
         [AMQPTags.HOST]: channel.connection.stream._host,
-        [AMQPTags.PORT]: channel.connection.stream.remotePort
+        [AMQPTags.PORT]: channel.connection.stream.remotePort,
       })
     }
 
@@ -101,6 +99,7 @@ class AMQPLIBIntegration implements Integration {
     });
 
     span.setTag(AMQPTags.METHOD, method);
+    span.setTag([SpanTags.OPERATION_TYPE], method);
 
   }
 
@@ -113,7 +112,7 @@ class AMQPLIBIntegration implements Integration {
             className: ClassNames.AMQP,
             disableActiveStart: true,
         });
-        this.handleTags(channel, config, span, method, fields);
+        this._handleTags(channel, config, span, method, fields);
         span._initialized();
         try {
             return originalfunc.apply(channel, args);
@@ -171,7 +170,7 @@ class AMQPLIBIntegration implements Integration {
 
     shimmer.wrap(lib.Channel.prototype, "sendMessage", wrapSendMessage);
     shimmer.wrap(lib.Channel.prototype, "sendImmediately", wrapSendImmediately);
-    // shimmer.wrap(lib.Channel.prototype, "dispatchMessage", wrapDispatchMessage);
+    //shimmer.wrap(lib.Channel.prototype, "dispatchMessage", wrapDispatchMessage);
   }
 
   /**
@@ -200,3 +199,5 @@ class AMQPLIBIntegration implements Integration {
     }
   }
 }
+
+export default AMQPLIBIntegration;
