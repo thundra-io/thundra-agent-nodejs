@@ -54,14 +54,12 @@ class AMQPLIBIntegration implements Integration {
     if ("queue" in fields) {
       resource_name += " " + fields.queue;
     }
-    if ("source" in fields) {
-      resource_name += " " + fields.source;
-    }
-    if ("destination" in fields) {
-      resource_name += " " + fields.destination;
+    if ("consumerTag" in fields) {
+      resource_name += " " + fields.consumerTag
     }
     return resource_name;
   }
+
 
 
   private _handleTags = (channel: any, config: any, span: any, method: any, fields: any) => {
@@ -77,8 +75,6 @@ class AMQPLIBIntegration implements Integration {
       EXCHANGE: 'exchange',
       ROUTING_KEY: 'routingKey',
       CONSUMER_TAG: 'consumerTag',
-      SOURCE: 'source',
-      DESTINATION: 'destination'
     }
 
     span.addTags({
@@ -98,41 +94,9 @@ class AMQPLIBIntegration implements Integration {
       fields[field] !== undefined && span.setTag(AMQPTags[key], fields[field])
     });
 
-    span.setTag(AMQPTags.METHOD, method);
-    span.setTag([SpanTags.OPERATION_TYPE], method);
+    span.setTag("amqp.method", method);
+    span.setTag([SpanTags.OPERATION_TYPE], method.split('.')[1]);
 
-  }
-
-  private sendWithTrace = (originalfunc: Function, channel: any, args: any, config: any, method: any, fields: any) => {
-        const { tracer } = ExecutionContextManager.get();
-        const parentSpan = tracer.getActiveSpan();
-        const span = tracer._startSpan('amqp.command'/* TODO */, {
-            childOf: parentSpan,
-            domainName: DomainNames.MESSAGING, //TODO
-            className: ClassNames.AMQP,
-            disableActiveStart: true,
-        });
-        this._handleTags(channel, config, span, method, fields);
-        span._initialized();
-        try {
-            return originalfunc.apply(channel, args);
-        } catch (error) {
-            ThundraLogger.error('<AMQPLIBIntegration> Error occurred while tracing AMQP ${method} method:', error);
-
-            if (span) {
-                ThundraLogger.debug(
-                    `<AMQPLIBIntegration> Because of error, closing AMQP span with name ${span.getOperationName()}`);
-                span.finish();
-            }
-
-            if (error instanceof ThundraChaosError) {
-                throw error;
-            } else { 
-                return originalfunc.apply(channel, args);
-            } 
-        } finally {
-            span.finish();
-        }
   }
 
   /**
@@ -145,32 +109,95 @@ class AMQPLIBIntegration implements Integration {
 
     function wrapSendMessage(sendMessage: Function) {
 
-      return function sendMessageWithTrace(fields: any,  properties: any, content: any) {
-        ThundraLogger.debug(`<AMQPLIBIntegration> Tracing sendMessage fields: ${fields}`);
-        return integration.sendWithTrace(sendMessage, this, arguments, config, 'basic.publish', fields);
+      /**
+       * Wrap the sendMessage
+       * @param args sendMessage function parameters in order fields, properties and content. 
+       */
+      return function sendMessageWithTrace(...args: any) {
+        ThundraLogger.debug(`<AMQPLIBIntegration> Tracing sendMessage args: ${args}`);
+        const method = 'basic.publish';
+        const [ fields, properties, content ] = args;
+        const { tracer } = ExecutionContextManager.get();
+        const parentSpan = tracer.getActiveSpan();
+        const span = tracer._startSpan('amqp.send', {
+            childOf: parentSpan,
+            domainName: DomainNames.MESSAGING,
+            className: ClassNames.AMQP,
+            disableActiveStart: true,
+        });
+        integration._handleTags(this, config, span, method, fields)
+        span._initialized();
+        try {
+            return sendMessage.apply(this, args);
+          } catch (error) {
+            ThundraLogger.error('<AMQPLIBIntegration> Error occurred while tracing AMQP ${method} method:', error);
 
-      };
-    }
+            if (span) {
+                ThundraLogger.debug(
+                    `<AMQPLIBIntegration> Because of error, closing AMQP span with name ${span.getOperationName()}`);
+                span.finish();
+            }
 
-    function wrapSendImmediately(sendImmediately: Function) {
-      return function sendImmediatelyWithTrace(method: any, fields: any) {
-        ThundraLogger.debug(`<AMQPLIBIntegration> Tracing sendImmediately method: ${method}, fields:${fields}`);
-        return integration.sendWithTrace(sendImmediately, this, arguments, config, method, fields);
+            if (error instanceof ThundraChaosError) {
+                throw error;
+            } else { 
+                return sendMessage.apply(this, args);
+            } 
+        } finally {
+            span.finish();
+        }
       };
     }
 
     function wrapDispatchMessage(dispatchMessage: Function) {
-      return function dispatchMessageWithTrace(fields: any, message: any) {
-        ThundraLogger.debug(`<AMQPLIBIntegration> Tracing dispatchMessage fields: ${fields}, message:${message}`);
-        return integration.sendWithTrace(dispatchMessage, this, arguments, config, 'basic.deliver', fields);
+      /**
+       * Wrap the dispatchMessage
+       * @param args dispatchMessage function parameters in order fields and message. 
+       */
+      return function dispatchMessageWithTrace(...args: any) {
+        ThundraLogger.debug(`<AMQPLIBIntegration> Tracing dispatchMessage args: ${args}`);
+        const method = 'basic.deliver';
+        const [ fields, message ] = args;
+        const { tracer } = ExecutionContextManager.get();
+        const parentSpan = tracer.getActiveSpan();
+        const span = tracer._startSpan('amqp.dispatch', {
+            childOf: parentSpan,
+            domainName: DomainNames.MESSAGING,
+            className: ClassNames.AMQP,
+            disableActiveStart: true,
+        });
+        integration._handleTags(this, config, span, method, fields);
+        try {
+          span.setTag("amqp.message", message.content.toString())
+        } catch(err) {
+          ThundraLogger.error('<AMQPLIBIntegration> Error occurred while converting message to string AMQP', err);
+        }
+        span._initialized();
+        try {
+            return dispatchMessage.apply(this, args);       
+        } catch (error) {
+            ThundraLogger.error('<AMQPLIBIntegration> Error occurred while tracing AMQP ${method} method:', error);
+
+            if (span) {
+                ThundraLogger.debug(
+                    `<AMQPLIBIntegration> Because of error, closing AMQP span with name ${span.getOperationName()}`);
+                span.finish();
+            }
+
+            if (error instanceof ThundraChaosError) {
+                throw error;
+            } else { 
+              return dispatchMessage.apply(this, args);
+            } 
+        } finally {
+            span.finish();
+        }
       };
     }
 
     ThundraLogger.debug('<AMQPLIBIntegration> Wrapping Channel.sendMessage, Channel.sendImmediately, BaseChannel.dispatchMessage');
-
     shimmer.wrap(lib.Channel.prototype, "sendMessage", wrapSendMessage);
-    shimmer.wrap(lib.Channel.prototype, "sendImmediately", wrapSendImmediately);
-    //shimmer.wrap(lib.Channel.prototype, "dispatchMessage", wrapDispatchMessage);
+    shimmer.wrap(lib.BaseChannel.prototype, "dispatchMessage", wrapDispatchMessage);
   }
 
   /**
@@ -184,8 +211,7 @@ class AMQPLIBIntegration implements Integration {
     );
 
     shimmer.unwrap(lib.Channel.prototype, "sendMessage");
-    shimmer.unwrap(lib.Channel.prototype, "sendImmediately");
-    // shimmer.unwrap(lib.BaseChannel.prototype, "dispatchMessage");
+    shimmer.unwrap(lib.BaseChannel.prototype, "dispatchMessage");
   }
 
   /**

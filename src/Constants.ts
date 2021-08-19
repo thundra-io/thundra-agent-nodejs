@@ -443,9 +443,6 @@ export const AMQPTags: AMQPLIBType =
     EXCHANGE: 'amqp.exchange',
     ROUTING_KEY: 'amqp.routingKey',
     CONSUMER_TAG: 'amqp.consumerTag',
-    SOURCE: 'amqp.source',
-    DESTINATION: 'amqp.destination',
-    METHOD: 'amqp.method',
 }
 
 export const AwsSDKTags = {
