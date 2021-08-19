@@ -27,16 +27,17 @@ module.exports.promise_model = (amqplib) => {
             });
         }).catch(err => resolve(err));
     });
-}
+};
 
 
 module.exports.callback_model = (amqplib) => {
     return new Promise((resolve) => {
 
-        const q = "tasks_callback"
+        const q = 'tasks_callback';
     
         function bail(err) {
-            return resolve(err);
+            resolve(err);
+            process.exit(1);
         }
     
         function publisher(conn){
@@ -56,16 +57,16 @@ module.exports.callback_model = (amqplib) => {
                 ch.consume(q, function(msg) {
                     if (msg !== null) {
                         ch.ack(msg);
-                        return resolve(msg.content.toString());
+                        resolve(msg.content.toString());
                     }
-                })
+                });
             }
         }
 
         amqplib.connect('amqp://user:bitnami@localhost:5672', function(err, conn) {
             if (err != null) bail(err);
             consumer(conn);
-            publisher(conn)
-        })
+            publisher(conn);
+        });
     });
-}
+};

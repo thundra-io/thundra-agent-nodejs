@@ -154,7 +154,7 @@ export const ClassNames = {
     EXPRESS: 'Express',
     KOA: 'Koa',
     HAPI: 'Hapi',
-    AMQP: 'AMQP'
+    AMQP: 'AMQP',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -431,19 +431,18 @@ export const ESTags = {
     ES_BODY: 'elasticsearch.body',
 };
 
-type AMQPLIBType = {
-    [key: string]: string,
+interface AMQPLIBType {
+    [key: string]: string;
 }
 
-export const AMQPTags: AMQPLIBType = 
-{
+export const AMQPTags: AMQPLIBType = {
     HOST: 'amqp.host',
     PORT: 'amqp.port',
     QUEUE: 'amqp.queue',
     EXCHANGE: 'amqp.exchange',
     ROUTING_KEY: 'amqp.routingKey',
     CONSUMER_TAG: 'amqp.consumerTag',
-}
+};
 
 export const AwsSDKTags = {
     SERVICE_NAME: 'aws.service.name',
@@ -554,7 +553,7 @@ export const SpanTypes = {
     AWS_EVENTBRIDGE: 'AWS-EventBridge',
     AWS_SES: 'AWS-SES',
     AWS_STEPFUNCTIONS: 'AWS-StepFunctions',
-    AMQP: 'Amqplib'
+    AMQP: 'Amqplib',
 };
 
 export const INTEGRATIONS: any = {
