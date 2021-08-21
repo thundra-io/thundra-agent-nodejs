@@ -19,6 +19,7 @@ import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
 import InitManager from './init/InitManager';
 import ModuleUtils from './utils/ModuleUtils';
+import * as Foresight from './wrappers/foresight';
 
 // Check if multiple instances of package exist
 if (!global.__thundraImports__) {
@@ -43,6 +44,7 @@ function init(options?: any) {
     if (!initialized) {
         ConfigProvider.init(options);
         InitManager.init();
+        Foresight.init();
         initialized = true;
     }
 }

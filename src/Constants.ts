@@ -755,3 +755,12 @@ export const THUNDRA_COLLECTOR_ENDPOINT_PATTERNS: any = {
 export const MAX_HTTP_VALUE_SIZE: number = 10 * 1024;
 
 export const REPORTER_HTTP_TIMEOUT: number = 3000;
+
+export const AGENT_UUID_CONST: string = '3cda958c-e704-56ff-b519-ab2e3dc3ccc2';
+
+export const enum TEST_STATUS {
+    SUCCESSFUL,
+    FAILED,
+    ABORTED,
+    SKIPPED,
+}

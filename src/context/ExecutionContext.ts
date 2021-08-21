@@ -88,4 +88,15 @@ export default class ExecutionContext {
         };
     }
 
+    getContextInformation(){
+        return {}
+    }
+
+    getAdditionalStartTags() {
+        return {}
+    }
+
+    getAdditionalFinishTags() {
+        return {}
+    }
 }

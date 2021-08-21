@@ -19,10 +19,11 @@ import ConfigProvider from './config/ConfigProvider';
 import CompositeMonitoringData from './plugins/data/composite/CompositeMonitoringData';
 import MonitorDataType from './plugins/data/base/MonitoringDataType';
 
-const httpAgent = new http.Agent({
+export const httpAgent = new http.Agent({
     keepAlive: true,
 });
-const httpsAgent = new https.Agent({
+
+export const httpsAgent = new https.Agent({
     maxCachedSessions: 1,
     keepAlive: true,
 });
@@ -32,11 +33,11 @@ const httpsAgent = new https.Agent({
  */
 class Reporter {
 
-    private useHttps: boolean;
+    protected useHttps: boolean;
     private requestOptions: http.RequestOptions;
-    private latestReportingLimitedMinute: number;
-    private url: url.UrlWithStringQuery;
-    private apiKey: string;
+    protected latestReportingLimitedMinute: number;
+    protected url: url.UrlWithStringQuery;
+    protected apiKey: string;
     private async: boolean;
     private trimmers: Trimmer[];
     private maxReportSize: number;
@@ -59,7 +60,7 @@ class Reporter {
         this.maxReportSize = opt.maxReportSize || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_MAX_SIZE);
     }
 
-    private static getCollectorURL(): string {
+    protected static getCollectorURL(): string {
         const useLocalCollector: boolean = ConfigProvider.get(ConfigNames.THUNDRA_REPORT_REST_LOCAL);
         if (useLocalCollector) {
             return 'http://' + LOCAL_COLLECTOR_ENDPOINT + '/v1';
@@ -115,7 +116,7 @@ class Reporter {
         });
     }
 
-    private createRequestOptions(u?: url.URL): http.RequestOptions {
+    protected createRequestOptions(u?: url.URL): http.RequestOptions {
         const path = COMPOSITE_MONITORING_DATA_PATH;
 
         return {
@@ -188,7 +189,7 @@ class Reporter {
         return monitoringData;
     }
 
-    private doReport(reportJson: string) {
+    protected doReport(reportJson: string) {
         ThundraLogger.debug('<Reporter> Reporting ...');
 
         const reportPromises: any[] = [];

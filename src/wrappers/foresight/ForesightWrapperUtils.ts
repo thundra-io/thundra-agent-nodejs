@@ -1,0 +1,354 @@
+import ConfigProvider from '../../config/ConfigProvider';
+import ThundraConfig from '../../plugins/config/ThundraConfig';
+import ConfigNames from '../../config/ConfigNames';
+import { ApplicationManager } from '../../application/ApplicationManager';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
+import ThundraLogger from '../../ThundraLogger';
+import Reporter from '../../Reporter';
+import ThundraSpanContext from '../../opentracing/SpanContext';
+import PluginContext from '../../plugins/PluginContext';
+import ExecutionContext from '../../context/ExecutionContext';
+import * as asyncContextProvider from '../../context/asyncContextProvider';
+import * as opentracing from 'opentracing';
+import InvocationSupport from '../../plugins/support/InvocationSupport';
+import Utils from '../../utils/Utils';
+import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
+import TracePlugin from '../../plugins/Trace';
+import LogPlugin from '../../plugins/Log';
+import { ApplicationInfo } from '../../application/ApplicationInfo';
+import InvocationPlugin from '../../plugins/Invocation';
+import InvocationData from '../../plugins/data/invocation/InvocationData';
+import MonitoringDataType from '../../plugins/data/base/MonitoringDataType';
+import ThundraTracer from '../../opentracing/Tracer';
+import TestSuiteExecutionContext from './model/TestSuiteExecutionContext';
+
+import * as EnvironmentSupport from './environment/EnvironmentSupport';
+import * as TestRunnerSupport from './TestRunnerSupport';
+import TestCaseExecutionContext from './model/TestCaseExecutionContext';
+import TestCaseScope from './model/TestCaseScope';
+import TestReporter from './reporter';
+
+const get = require('lodash.get');
+
+export default class ForesightWrapperUtils {
+    
+    static initWrapper( executor: any) {
+
+        ForesightWrapperUtils.setApplicationInfo('Test', 'TestSuite');
+
+        const config = ConfigProvider.thundraConfig;
+        const { apiKey } = config;
+        
+        const reporter = ForesightWrapperUtils.createReporter(apiKey);
+        const pluginContext = ForesightWrapperUtils.createPluginContext(apiKey, executor);
+        const plugins = ForesightWrapperUtils.createPlugins(config, pluginContext);
+
+        return {
+            reporter,
+            pluginContext,
+            plugins,
+        }
+    }
+
+    static setApplicationInfo(applicationClassName: string, applicationDomainName: string){
+        
+        ApplicationManager.setApplicationInfoProvider().update({
+            applicationClassName,
+            applicationDomainName,
+        });
+        
+        const appInfo = ApplicationManager.getApplicationInfo();
+        ApplicationManager.getApplicationInfoProvider().update({
+            applicationId: ForesightWrapperUtils.getDefaultApplicationId(appInfo),
+        });
+    }
+
+    static getDefaultApplicationId(appInfo: ApplicationInfo) {
+        return `test:${appInfo.applicationClassName}:${appInfo.applicationName}`;
+    }
+
+    static createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
+
+        const plugins: any[] = [];
+        if (config.disableMonitoring) {
+            return plugins;
+        }
+
+        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && config.traceConfig.enabled) {
+            const tracePlugin = new TracePlugin(config.traceConfig);
+            plugins.push(tracePlugin);
+        }
+
+        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
+            plugins.push(new LogPlugin(config.logConfig));
+        }
+
+        const invocationPlugin = new InvocationPlugin(config.invocationConfig);
+        plugins.push(invocationPlugin);
+
+        // Set plugin context for plugins
+        plugins.forEach((plugin: any) => { plugin.setPluginContext(pluginContext); });
+
+        return plugins;
+    }
+
+    static createPluginContext(apiKey: string, executor: any): PluginContext {
+        const applicationInfo = ApplicationManager.getApplicationInfo();
+
+        return new PluginContext({
+            applicationInfo,
+            apiKey,
+            executor,
+        });
+    }
+
+    static createReporter(apiKey: string): Reporter {
+        return new Reporter(apiKey);
+    }
+
+    /**
+     * will be removed & will use single reporter 
+     * when test run events with composite data supported by collector. 
+     */ 
+    static createTestRunReporter(): Reporter {
+
+        const { apiKey } = ConfigProvider.thundraConfig;
+
+        return new TestReporter(apiKey);
+    }
+
+    static createTestSuiteExecutionContext(testSuiteName: string): TestSuiteExecutionContext {
+        const { thundraConfig } = ConfigProvider;
+        const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
+        
+        const tracer = new ThundraTracer(tracerConfig);
+        const transactionId = Utils.generateId();
+        
+        tracer.setTransactionId(transactionId);
+        
+        const startTimestamp = Date.now();
+        
+        return new TestSuiteExecutionContext({
+            tracer,
+            transactionId,
+            startTimestamp,
+            testSuiteName,
+        });
+    }
+
+    static createTestCaseExecutionContext(testSuiteName: string, testCaseId: string): TestCaseExecutionContext {
+        const { thundraConfig } = ConfigProvider;
+        const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
+        
+        const tracer = new ThundraTracer(tracerConfig);
+        const transactionId = Utils.generateId();
+        
+        tracer.setTransactionId(transactionId);
+        
+        const startTimestamp = Date.now();
+        
+        return new TestCaseExecutionContext({
+            tracer,
+            transactionId,
+            startTimestamp,
+            testSuiteName,
+            testCaseId
+        });
+    }
+
+    static getTestCaseId(testEntry: any) {
+        if (!testEntry || !testEntry.parent) {
+            return;
+        }
+
+        const testName = testEntry.name;
+        const testSuiteName = testEntry.parent.name;
+
+        return testSuiteName + '-' + testName;
+    }
+
+    static createTestScope(event: any) {
+        const testEntry = event.test;
+        if (!testEntry){
+            return;
+        }
+
+        const testCaseId = ForesightWrapperUtils.getTestCaseId(testEntry);
+        if (!testCaseId) {
+            return;
+        }
+
+        const testName = testEntry.name;
+        const testSuiteName = testEntry.parent.name;
+
+        return new TestCaseScope(
+            testCaseId,
+            testName,
+            testName,
+            testSuiteName,
+        );
+    }
+
+    static async beforeTestSuit(plugins: any[], context: ExecutionContext) {
+
+        for (const plugin of plugins) {
+            await plugin.beforeInvocation(context);
+        }
+    }
+
+    static async afterTestSuit(plugins: any[], context: ExecutionContext, reporter: Reporter) {
+
+        console.log('afterTestSuit');
+
+        console.log(context.constructor.name);
+
+        context.finishTimestamp = Date.now();
+
+        let reports: any = [];
+
+        // Clear reports first
+        context.reports = [];
+        try {
+            // Run plugins and let them to generate reports
+            for (const plugin of plugins) {
+                await plugin.afterInvocation(context);
+            }
+
+            reports = context.reports;
+        } finally {
+            // Make sure generated reports are cleared
+            context.reports = [];
+        }
+
+        if (!context.reportingDisabled) {
+            try {
+                console.log(reports);
+                await reporter.sendReports(reports);
+            } catch (err) {
+                ThundraLogger.error('<WebWrapperUtils> Error occurred while reporting:', err);
+            }
+        } else {
+            ThundraLogger.debug('<WebWrapperUtils> Skipped reporting as reporting is disabled');
+        }
+    }
+
+    static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
+        const { tracer, request } = execContext;
+        const propagatedSpanContext: ThundraSpanContext =
+            tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
+
+        const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
+        // const normalizedPath = Utils.getNormalizedPath(request.path, depth);
+        // const triggerOperationName = get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`)
+        //     || request.hostname + normalizedPath;
+        const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
+        const incomingSpanID = get(propagatedSpanContext, 'spanId');
+
+        const contextInformation: any = execContext.getContextInformation();
+
+        const rootSpan = tracer._startSpan(contextInformation.operationName, {
+            propagated: propagatedSpanContext ? true : false,
+            parentContext: propagatedSpanContext,
+            rootTraceId: traceId,
+            domainName: contextInformation.applicationDomainName,
+            className: contextInformation.applicationClassName,
+        });
+
+        rootSpan.isRootSpan = true;
+
+        if (incomingSpanID) {
+            InvocationTraceSupport.addIncomingTraceLink(incomingSpanID);
+        }
+
+        execContext.traceId = traceId;
+        execContext.rootSpan = rootSpan;
+        execContext.spanId = execContext.rootSpan.spanContext.spanId;
+        execContext.rootSpan.startTime = execContext.startTimestamp;
+    }
+
+    static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
+        const { error, rootSpan, finishTimestamp } = execContext;
+
+        if (error) {
+            rootSpan.setErrorTag(error);
+        }
+
+        // If root span is already finished, it won't have any effect
+        rootSpan.finish(finishTimestamp);
+    }
+
+    static createInvocationData(execContext: ExecutionContext, pluginContext: PluginContext): InvocationData {
+
+        const applicationInfo = ApplicationManager.getApplicationInfo();
+
+        console.log(applicationInfo);
+
+        const invocationData = Utils.initMonitoringData(pluginContext,
+            MonitoringDataType.INVOCATION) as InvocationData;
+
+        console.log('createInvocationData');
+
+        invocationData.applicationPlatform = '';
+        invocationData.applicationRegion = pluginContext.applicationInfo.applicationRegion;
+        invocationData.tags = {};
+        invocationData.userTags = {};
+        invocationData.startTimestamp = execContext.startTimestamp;
+        invocationData.finishTimestamp = 0;
+        invocationData.duration = 0;
+        invocationData.erroneous = false;
+        invocationData.errorType = '';
+        invocationData.errorMessage = '';
+        invocationData.coldStart = pluginContext.requestCount === 0;
+        invocationData.timeout = false;
+
+        invocationData.traceId = execContext.traceId;
+        invocationData.transactionId = execContext.transactionId;
+        invocationData.spanId = execContext.spanId;
+
+        return invocationData;
+    }
+
+    static finishInvocationData(execContext: ExecutionContext, pluginContext: PluginContext) {
+        const { error, invocationData, applicationResourceName } = execContext;
+
+        if (error) {
+            const parsedErr = Utils.parseError(error);
+            invocationData.setError(parsedErr);
+            invocationData.tags.error = true;
+            invocationData.tags['error.message'] = parsedErr.errorMessage;
+            invocationData.tags['error.kind'] = parsedErr.errorType;
+            invocationData.tags['error.stack'] = parsedErr.stack;
+            if (parsedErr.code) {
+                invocationData.tags['error.code'] = error.code;
+            }
+            if (parsedErr.stack) {
+                invocationData.tags['error.stack'] = error.stack;
+            }
+        }
+
+        invocationData.setTags(InvocationSupport.getAgentTags());
+        invocationData.setUserTags(InvocationSupport.getTags());
+
+        const { startTimestamp, finishTimestamp, spanId, response } = execContext;
+
+        // Finish invocation if it is not finished yet
+        invocationData.finish(finishTimestamp);
+
+        invocationData.resources = InvocationTraceSupport.getResources(spanId);
+        invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
+        invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
+        invocationData.applicationResourceName = applicationResourceName;
+
+        // invocationData.tags['test.suite'] = execContext.testSuiteName;
+
+         //   'test.run.id': testRunScope.id,
+        //       //   'test.run.task.id': testRunScope.taskId,
+        //       //   'test.suite': context.testSuiteName
+
+
+
+        // if (Utils.isValidHTTPResponse(response)) {
+        //     invocationData.setUserTags({ [HttpTags.HTTP_STATUS]: response.statusCode });
+        // }
+    }
+}
