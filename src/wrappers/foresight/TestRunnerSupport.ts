@@ -3,15 +3,15 @@ import EnvironmentInfo from './environment/EnvironmentInfo';
 import Utils from '../../utils/Utils';
 import TestRunStart from './model/TestRunStart';
 import TestRunFinish from './model/TestRunFinish';
-import TestRunResult from './model/TestRunResult';
 import TestSuiteExecutionContext from './model/TestSuiteExecutionContext';
 import TestRunScope, { TestRunContext } from './model/TestRunScope';
-import TestCaseScope from './model/TestCaseScope';
 import TestCaseExecutionContext from './model/TestCaseExecutionContext';
 import os from 'os';
+import ExecutionContext from '../../context/ExecutionContext';
+import WrapperContext from '../WrapperContext';
 
 const findHostName = () => {
-    return os.hostname;
+    return os.hostname();
 }
 
 const getTestRunId = () => {
@@ -26,31 +26,46 @@ const getTestRunId = () => {
     return testRunId;
 }
 
-export let initialized: boolean = false;
 const hostName: string = findHostName();
 
+export let testSuiteName: string;
+export let wrapperContext: WrapperContext;
+export let initialized: boolean = false;
 export let testRunScope: TestRunScope;
-export const testSuiteContextMap = new Map<string, TestSuiteExecutionContext>();
-export const testCaseScopeMap = new Map<string, TestCaseExecutionContext>();
+export let testSuiteExecutionContext: TestSuiteExecutionContext;
+export let testCaseExecutionContext: TestCaseExecutionContext;
 
-export const getTestCaseContext = (id: string) => {
-    return testCaseScopeMap.get(id);
+export const setTestSuiteName = (name: string) => {
+    testSuiteName = name;
 }
 
-export const putTestCaseContext = (id: string, context: TestCaseExecutionContext) => {
-    return testCaseScopeMap.set(id, context);
+export const setWrapperContext = (context: WrapperContext) => {
+    wrapperContext = context;
 }
 
-export const removeTestCaseContext = (id: string) => {
-    return testCaseScopeMap.delete(id);
+export const setInitialized = (value: boolean) => {
+    initialized = value;
 }
+
+export const setTestSuiteContext = (context: ExecutionContext) => {
+    testSuiteExecutionContext = context as TestSuiteExecutionContext;
+}
+
+export const setTestCaseContext = (context: ExecutionContext) => {
+    testCaseExecutionContext = context as TestCaseExecutionContext;
+}
+
+/** if needed keep suite and cases contexts in here 
+    export const testSuiteContextMap = new Map<string, TestSuiteExecutionContext>();
+    export const testCaseScopeMap = new Map<string, TestCaseExecutionContext>();
+*/
 
 export const startTestRun = (): TestRunStart => {
-    if (initialized){
-        // todo: log & and return;
+    // if (initialized){
+    //     // todo: log & and return;
 
-        return;
-    }
+    //     return;
+    // }
 
     const testRunId = getTestRunId();
     const taskId = Utils.generateId();
@@ -76,28 +91,37 @@ export const startTestRun = (): TestRunStart => {
         .build();
 }
 
-export const finishTestRun = (testRunResult: TestRunResult): TestRunFinish => {
-    if (initialized){
+export const finishTestRun = (): TestRunFinish => {
+    if (!initialized || !testRunScope) {
         // todo: log & and return;
-
-        const finishTimestamp = new Date().getTime();
-
-        return TestRunFinish.
-            builder()
-                .withId(testRunScope.id)
-                .withProjectId('76cc8cde-f412-4e0f-892a-97e4b7a5fa36')
-                .withTaskId(testRunScope.taskId)
-                .withStartTimestamp(testRunScope.startTimestamp)
-                .withFinishTimestamp(finishTimestamp)
-                .withDuration(finishTimestamp - testRunScope.startTimestamp)
-                .withTotalCount(testRunResult.totalCount)
-                .withSuccessfulCount(testRunResult.successfulCount)
-                .withFailedCount(testRunResult.failedCount)
-                .withIgnoredCount(testRunResult.ignoredCount)
-                .withAbortedCount(testRunResult.abortedCount)
-                .withHostName(hostName)
-                .withEnvironmentInfo(EnvironmentSupport.getEnvironmentInfo())
-            .build();
+        return;
     }
+
+    const finishTimestamp = new Date().getTime();
+
+    const { 
+        totalCount,
+        successfulCount,
+        failedCount,
+        ignoredCount,
+        abortedCount,
+    } = testRunScope.context;
+
+    return TestRunFinish.
+        builder()
+            .withId(testRunScope.id)
+            .withProjectId('76cc8cde-f412-4e0f-892a-97e4b7a5fa36') // todo: get from config
+            .withTaskId(testRunScope.taskId)
+            .withStartTimestamp(testRunScope.startTimestamp)
+            .withFinishTimestamp(finishTimestamp)
+            .withDuration(finishTimestamp - testRunScope.startTimestamp)
+            .withTotalCount(totalCount)
+            .withSuccessfulCount(successfulCount)
+            .withFailedCount(failedCount)
+            .withIgnoredCount(ignoredCount)
+            .withAbortedCount(abortedCount)
+            .withHostName(hostName)
+            .withEnvironmentInfo(EnvironmentSupport.getEnvironmentInfo())
+        .build(); 
 }
 

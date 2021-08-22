@@ -13,14 +13,33 @@ export default class TestRunScope {
         this.id = id;
         this.taskId = taskId;
         this.startTimestamp = startTimestamp;
-        this.context = context;
+        this.context = context ? context : new TestRunContext();
+    }
+
+    increaseTotalCount() {
+        this.context.totalCount++;
+    }
+
+    increareSuccessfulCount() {
+        this.context.successfulCount++;
+        this.increaseTotalCount();
+    }
+
+    increaseFailedCount() {
+        this.context.failedCount++;
+        this.increaseTotalCount();
+    }
+
+    increaseIgnoredCount() {
+        this.context.ignoredCount++;
+        this.increaseTotalCount();
     }
 }
 
 export class TestRunContext {
-    totalCount: number;
-    successfulCount: number;
-    failedCount: number;
-    ignoredCount: number;
-    abortedCount: number;
+    totalCount: number = 0;
+    successfulCount: number = 0;
+    failedCount: number = 0;
+    ignoredCount: number = 0; // this uses for skipped test counts ?
+    abortedCount: number = 0; // this is not exists in Jest
 }

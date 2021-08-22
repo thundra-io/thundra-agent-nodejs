@@ -759,8 +759,20 @@ export const REPORTER_HTTP_TIMEOUT: number = 3000;
 export const AGENT_UUID_CONST: string = '3cda958c-e704-56ff-b519-ab2e3dc3ccc2';
 
 export const enum TEST_STATUS {
-    SUCCESSFUL,
-    FAILED,
-    ABORTED,
-    SKIPPED,
+    SUCCESSFUL = 'SUCCESSFUL',
+    FAILED = 'FAILED',
+    ABORTED = 'ABORTED',
+    SKIPPED = 'SKIPPED',
+}
+
+export const enum JEST_TEST_EVENTS {
+    SETUP = 'setup',
+    TEARDOWN = 'teardown',
+    TESTSTART = 'test_start',
+    TESTDONE = 'test_done',
+    TESTSKIP = 'test_skip',
+    BEFOREEACH = 'hook_start<beforeEach>',
+    AFTEREACH = 'hook_success<afterEach>',
+    BEFOREALL = 'hook_start<beforeAll>',
+    AFTERALL = 'hook_success<afterAll>',
 }

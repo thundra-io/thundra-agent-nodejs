@@ -3,10 +3,15 @@ import * as LocalEnvironmentInfoProvider from './local';
 
 export const environmentInfoProviders = {
     [GitEnvironmentInfoProvider.ENVIRONMENT]: GitEnvironmentInfoProvider,
-    // todo: add other environment info providers
+    
+    /**
+     * todo: add other environment info providers
+     */
 
-    // todo: will be removed
-    // [LocalEnvironmentInfoProvider.ENVIRONMENT]: LocalEnvironmentInfoProvider,
+     /**
+      * todo: will be removed
+      * [LocalEnvironmentInfoProvider.ENVIRONMENT]: LocalEnvironmentInfoProvider,
+      */
 }
 
 export const init = async () => {

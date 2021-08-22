@@ -1,24 +1,41 @@
 import ExecutionContext from '../../../context/ExecutionContext';
-import TestCaseScope from './TestCaseScope';
 
 import { TestRunnerTags } from '../model/TestRunnerTags';
 import { TEST_STATUS } from '../../../Constants';
 
 export default class TestCaseExecutionContext extends ExecutionContext {
     
-    testCaseId: string;
+    id: string;
+    name: string;
+    method: string;
+    testClass: string;
+    status: TEST_STATUS;
     testSuiteName: string;
-    testCaseScope: TestCaseScope;
 
     constructor(opts: any = {}) {
-        super(opts)
+        super(opts);
+
+        this.id = opts.id || '';
+        this.name = opts.name || '';
+        this.method = opts.method || '';
+        this.testClass = opts.testClass || '';
+        this.testSuiteName = opts.testSuiteName || '';
+    }
+
+    setStatus(status: TEST_STATUS) {
+        this.status = status;
     }
 
     getContextInformation(){
+
+        /** todo: take className and applicationClassName from current AppInfo object
+         *  they will take same value
+         */
+
         return {
             domainName: 'Test',
             applicationDomainName: 'Test',
-            operationName: this.testCaseScope.method,
+            operationName: this.method,
             className: 'Jest',
             applicationClassName: 'Jest'
         }
@@ -26,22 +43,18 @@ export default class TestCaseExecutionContext extends ExecutionContext {
 
     getAdditionalStartTags() {
 
-        console.log('getAdditionalStartTags test');
-
         return {
             [TestRunnerTags.TEST_SUITE]: this.testSuiteName,
-            [TestRunnerTags.TEST_NAME]: this.testCaseScope ? this.testCaseScope.name : undefined,
-            [TestRunnerTags.TEST_METHOD]: this.testCaseScope ? this.testCaseScope.method: undefined,
-            [TestRunnerTags.TEST_CLASS]: this.testCaseScope ? this.testCaseScope.testClass: undefined,
+            [TestRunnerTags.TEST_NAME]: this.name,
+            [TestRunnerTags.TEST_METHOD]: this.method,
+            [TestRunnerTags.TEST_CLASS]: this.testClass,
         }
     }
 
     getAdditionalFinishTags() {
 
-        console.log('getAdditionalFinishTags');
-
         return {
-            [TestRunnerTags.TEST_STATUS]: TEST_STATUS.SUCCESSFUL  // this.testCaseScope ? this.testCaseScope.status: undefined,
+            [TestRunnerTags.TEST_STATUS]: TEST_STATUS.SUCCESSFUL  // todo: this.testCaseScope ? this.testCaseScope.status: undefined,
         }
     }
 }

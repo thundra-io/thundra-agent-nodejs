@@ -10,6 +10,7 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
     failedCount: number;
     ignoredCount: number;
     abortedCount: number;
+    skippedCount: number;
     resourcesDuration: number;
     completed: boolean;
     closed: boolean;
@@ -18,17 +19,42 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
         super(opts)
 
         this.testSuiteName = opts.testSuiteName || '';
-        this.totalCount = opts.totalCount || '';
+        this.totalCount = opts.totalCount || 0;
         this.successfulCount = opts.successfulCount || 0;
         this.failedCount = opts.failedCount || 0;
-        this.ignoredCount = opts.ignoredCount || 0;
-        this.abortedCount = opts.abortedCount || 0;
+        this.ignoredCount = opts.ignoredCount || 0; // this is not exists in Jest
+        this.abortedCount = opts.abortedCount || 0; // this is not exists in Jest
+        this.skippedCount = opts.skippedCount || 0;
         this.resourcesDuration = opts.resourcesDuration || 0;
         this.completed = opts.completed || false;
         this.closed = opts.closed || false;
     }
 
+    increaseTotalCount() {
+        this.totalCount++;
+    }
+
+    increareSuccessfulCount() {
+        this.successfulCount++;
+        this.increaseTotalCount();
+    }
+
+    increaseFailedCount() {
+        this.failedCount++;
+        this.increaseTotalCount();
+    }
+
+    increaseSkippedCount() {
+        this.skippedCount++;
+        this.increaseTotalCount();
+    }
+
     getContextInformation(){
+
+        /** todo: take className and applicationClassName from current AppInfo object
+         *  they will take same value
+         */
+
         return {
             domainName: 'TestSuite',
             applicationDomainName: 'TestSuite',
@@ -39,14 +65,19 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
     }
 
     getAdditionalStartTags() {
-        console.log('TestSuiteExecutionContext')
 
         return {
-            [TestRunnerTags.TEST_SUITE]: this.testSuiteName
+            [TestRunnerTags.TEST_SUITE]: this.testSuiteName,
         }
     }
 
     getAdditionalFinishTags() {
-        return {}
+        return {
+            [TestRunnerTags.TEST_SUITE_FAILED_COUNT]: this.failedCount,
+            [TestRunnerTags.TEST_SUITE_TOTAL_COUNT]: this.totalCount,
+            [TestRunnerTags.TEST_SUITE_ABORTED_COUNT]: this.abortedCount,
+            [TestRunnerTags.TEST_SUITE_SKIPPED_COUNT]: this.skippedCount,
+            [TestRunnerTags.TEST_SUITE_SUCCESSFUL_COUNT]: this.successfulCount,
+        }
     }
 }

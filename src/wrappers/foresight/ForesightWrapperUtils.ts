@@ -2,13 +2,11 @@ import ConfigProvider from '../../config/ConfigProvider';
 import ThundraConfig from '../../plugins/config/ThundraConfig';
 import ConfigNames from '../../config/ConfigNames';
 import { ApplicationManager } from '../../application/ApplicationManager';
-import ExecutionContextManager from '../../context/ExecutionContextManager';
 import ThundraLogger from '../../ThundraLogger';
 import Reporter from '../../Reporter';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import PluginContext from '../../plugins/PluginContext';
 import ExecutionContext from '../../context/ExecutionContext';
-import * as asyncContextProvider from '../../context/asyncContextProvider';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
 import Utils from '../../utils/Utils';
@@ -22,19 +20,22 @@ import MonitoringDataType from '../../plugins/data/base/MonitoringDataType';
 import ThundraTracer from '../../opentracing/Tracer';
 import TestSuiteExecutionContext from './model/TestSuiteExecutionContext';
 
-import * as EnvironmentSupport from './environment/EnvironmentSupport';
 import * as TestRunnerSupport from './TestRunnerSupport';
 import TestCaseExecutionContext from './model/TestCaseExecutionContext';
-import TestCaseScope from './model/TestCaseScope';
 import TestReporter from './reporter';
+import WrapperContext from '../WrapperContext';
 
 const get = require('lodash.get');
 
+const TEST_SUIT_APPLICATION_DOMAIN_NAME = 'TestSuite';
+
+const TEST_CASE_APPLICATION_DOMAIN_NAME = 'Test';
+
 export default class ForesightWrapperUtils {
-    
+
     static initWrapper( executor: any) {
 
-        ForesightWrapperUtils.setApplicationInfo('Test', 'TestSuite');
+        ForesightWrapperUtils.setApplicationInfo('Jest', 'TestSuite', 'TestSuite');
 
         const config = ConfigProvider.thundraConfig;
         const { apiKey } = config;
@@ -43,18 +44,18 @@ export default class ForesightWrapperUtils {
         const pluginContext = ForesightWrapperUtils.createPluginContext(apiKey, executor);
         const plugins = ForesightWrapperUtils.createPlugins(config, pluginContext);
 
-        return {
-            reporter,
-            pluginContext,
-            plugins,
-        }
+        return new WrapperContext(reporter, pluginContext, plugins);
     }
 
-    static setApplicationInfo(applicationClassName: string, applicationDomainName: string){
+    static setApplicationInfo(
+        applicationClassName: string,
+        applicationDomainName: string,
+        applicationName: string){
         
         ApplicationManager.setApplicationInfoProvider().update({
             applicationClassName,
             applicationDomainName,
+            applicationName,
         });
         
         const appInfo = ApplicationManager.getApplicationInfo();
@@ -63,8 +64,30 @@ export default class ForesightWrapperUtils {
         });
     }
 
+    static changeAppInfoToTestSuite(applicationClassName: string){
+
+        if (TestRunnerSupport.testSuiteExecutionContext){
+          ForesightWrapperUtils.setApplicationInfo(
+            applicationClassName,
+            TEST_SUIT_APPLICATION_DOMAIN_NAME,
+            TestRunnerSupport.testSuiteName);
+        }  
+      }
+  
+    static changeAppInfoToTestCase(applicationClassName: string){
+
+        if (TestRunnerSupport.testSuiteExecutionContext){
+          ForesightWrapperUtils.setApplicationInfo(
+            applicationClassName,
+            TEST_CASE_APPLICATION_DOMAIN_NAME,
+            TestRunnerSupport.testSuiteName);
+        }  
+    }
+
     static getDefaultApplicationId(appInfo: ApplicationInfo) {
-        return `test:${appInfo.applicationClassName}:${appInfo.applicationName}`;
+
+        const applicationId = `node:test:${appInfo.applicationClassName}:${appInfo.applicationName}`;
+        return applicationId.toLowerCase();;
     }
 
     static createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
@@ -107,7 +130,7 @@ export default class ForesightWrapperUtils {
     }
 
     /**
-     * will be removed & will use single reporter 
+     * todo: will be removed & will use single reporter 
      * when test run events with composite data supported by collector. 
      */ 
     static createTestRunReporter(): Reporter {
@@ -152,55 +175,18 @@ export default class ForesightWrapperUtils {
             transactionId,
             startTimestamp,
             testSuiteName,
-            testCaseId
+            id: testCaseId
         });
     }
 
-    static getTestCaseId(testEntry: any) {
-        if (!testEntry || !testEntry.parent) {
-            return;
-        }
-
-        const testName = testEntry.name;
-        const testSuiteName = testEntry.parent.name;
-
-        return testSuiteName + '-' + testName;
-    }
-
-    static createTestScope(event: any) {
-        const testEntry = event.test;
-        if (!testEntry){
-            return;
-        }
-
-        const testCaseId = ForesightWrapperUtils.getTestCaseId(testEntry);
-        if (!testCaseId) {
-            return;
-        }
-
-        const testName = testEntry.name;
-        const testSuiteName = testEntry.parent.name;
-
-        return new TestCaseScope(
-            testCaseId,
-            testName,
-            testName,
-            testSuiteName,
-        );
-    }
-
-    static async beforeTestSuit(plugins: any[], context: ExecutionContext) {
+    static async beforeTestProcess(plugins: any[], context: ExecutionContext) {
 
         for (const plugin of plugins) {
             await plugin.beforeInvocation(context);
         }
     }
 
-    static async afterTestSuit(plugins: any[], context: ExecutionContext, reporter: Reporter) {
-
-        console.log('afterTestSuit');
-
-        console.log(context.constructor.name);
+    static async afterTestProcess(plugins: any[], context: ExecutionContext, reporter: Reporter) {
 
         context.finishTimestamp = Date.now();
 
@@ -222,7 +208,6 @@ export default class ForesightWrapperUtils {
 
         if (!context.reportingDisabled) {
             try {
-                console.log(reports);
                 await reporter.sendReports(reports);
             } catch (err) {
                 ThundraLogger.error('<WebWrapperUtils> Error occurred while reporting:', err);
@@ -233,6 +218,11 @@ export default class ForesightWrapperUtils {
     }
 
     static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
+
+        /**
+         * todo: remove redundant lines in this function
+         */
+
         const { tracer, request } = execContext;
         const propagatedSpanContext: ThundraSpanContext =
             tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
@@ -279,14 +269,8 @@ export default class ForesightWrapperUtils {
 
     static createInvocationData(execContext: ExecutionContext, pluginContext: PluginContext): InvocationData {
 
-        const applicationInfo = ApplicationManager.getApplicationInfo();
-
-        console.log(applicationInfo);
-
         const invocationData = Utils.initMonitoringData(pluginContext,
             MonitoringDataType.INVOCATION) as InvocationData;
-
-        console.log('createInvocationData');
 
         invocationData.applicationPlatform = '';
         invocationData.applicationRegion = pluginContext.applicationInfo.applicationRegion;
@@ -311,44 +295,39 @@ export default class ForesightWrapperUtils {
     static finishInvocationData(execContext: ExecutionContext, pluginContext: PluginContext) {
         const { error, invocationData, applicationResourceName } = execContext;
 
-        if (error) {
-            const parsedErr = Utils.parseError(error);
-            invocationData.setError(parsedErr);
-            invocationData.tags.error = true;
-            invocationData.tags['error.message'] = parsedErr.errorMessage;
-            invocationData.tags['error.kind'] = parsedErr.errorType;
-            invocationData.tags['error.stack'] = parsedErr.stack;
-            if (parsedErr.code) {
-                invocationData.tags['error.code'] = error.code;
-            }
-            if (parsedErr.stack) {
-                invocationData.tags['error.stack'] = error.stack;
-            }
-        }
+        /**
+         * todo: remove redundant lines in this function
+         * check java agent for how to report test errors in tags ?
+         */
+
+        // if (error) {
+        //     const parsedErr = Utils.parseError(error);
+        //     invocationData.setError(parsedErr);
+        //     invocationData.tags.error = true;
+        //     invocationData.tags['error.message'] = parsedErr.errorMessage;
+        //     invocationData.tags['error.kind'] = parsedErr.errorType;
+        //     invocationData.tags['error.stack'] = parsedErr.stack;
+        //     if (parsedErr.code) {
+        //         invocationData.tags['error.code'] = error.code;
+        //     }
+        //     if (parsedErr.stack) {
+        //         invocationData.tags['error.stack'] = error.stack;
+        //     }
+        // }
 
         invocationData.setTags(InvocationSupport.getAgentTags());
         invocationData.setUserTags(InvocationSupport.getTags());
 
-        const { startTimestamp, finishTimestamp, spanId, response } = execContext;
+        const { 
+            finishTimestamp,
+            spanId,
+        } = execContext;
 
-        // Finish invocation if it is not finished yet
         invocationData.finish(finishTimestamp);
 
         invocationData.resources = InvocationTraceSupport.getResources(spanId);
-        invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
-        invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
+        // invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
+        // invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
         invocationData.applicationResourceName = applicationResourceName;
-
-        // invocationData.tags['test.suite'] = execContext.testSuiteName;
-
-         //   'test.run.id': testRunScope.id,
-        //       //   'test.run.task.id': testRunScope.taskId,
-        //       //   'test.suite': context.testSuiteName
-
-
-
-        // if (Utils.isValidHTTPResponse(response)) {
-        //     invocationData.setUserTags({ [HttpTags.HTTP_STATUS]: response.statusCode });
-        // }
     }
 }
