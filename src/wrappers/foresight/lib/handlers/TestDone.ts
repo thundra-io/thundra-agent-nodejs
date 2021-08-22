@@ -51,8 +51,13 @@ export default async function run(event: TestSuiteEvent) {
     const testRunContext = TestRunnerSupport.testRunScope;
     const testSuiteContext = TestRunnerSupport.testSuiteExecutionContext;
 
-    testSuiteContext.increareSuccessfulCount();
-    testRunContext.increareSuccessfulCount();
+    if (testStatus === TEST_STATUS.SUCCESSFUL) {
+      testSuiteContext.increareSuccessfulCount();
+      testRunContext.increareSuccessfulCount();
+    } else {
+      testSuiteContext.increaseFailedCount();
+      testRunContext.increaseFailedCount();
+    }
 
     ExecutionContextManager.set(testSuiteContext);
     ForesightWrapperUtils.changeAppInfoToTestSuite('Jest');

@@ -1,60 +1,55 @@
 /* eslint-disable */
 
-import path from 'path';
+// import path from 'path';
 
 import hook from '../../hook';
 import libs from './lib';
 
-import ConfigProvider from '../../config/ConfigProvider';
-import TestReporter from './reporter';
-
-const libsMap = new Map();
-
-const pathSepExpr = new RegExp(`\\${path.sep}`, 'g');
-
-Object.keys(libs).forEach(key => {
-    libsMap.set(libs[key], { name: key, config: {} });
-})
+// const pathSepExpr = new RegExp(`\\${path.sep}`, 'g');
 
 export function init() {
 
-    const { apiKey } = ConfigProvider.thundraConfig;
-    
-    const reporter = new TestReporter(apiKey);
-
-    const instrumentations: any = Array.from(libsMap.keys())
-    .reduce((prev: any, current: any) => prev.concat(current), [])
+    const instrumentations: any = Array.from(libs.values())
+        .reduce((prev: any, current: any) => prev.concat(current), [])
     
     const instrumentedModules = instrumentations
-    .map(instrumentation => instrumentation.name)
+        .map(instrumentation => instrumentation.name);
     
     function __hookModule (moduleExports: any, moduleName: any, moduleBaseDir: any) {
 
-        moduleName = moduleName.replace(pathSepExpr, '/')
-        
-        if (moduleBaseDir) {
-            moduleBaseDir = moduleBaseDir.replace(pathSepExpr, '/')
-        }
-        
-        libsMap
-        .forEach((meta: any, plugin: any) => {
-            try {
-                [].concat(plugin)
-                // .filter(instrumentation => moduleName === filename(instrumentation))
-                // .filter(instrumentation => matchVersion(moduleVersion, instrumentation.versions))
-                .forEach(instrumentation => {
-                    const config = libsMap.get(plugin).config
-                                      
-                    if (config.enabled !== false) {   
-                        moduleExports = instrumentation.patch.call(this, moduleExports, reporter, config)
-                    }
-                })
-            } catch (e) {
-
-                // todo: log error here
-                console.error(e);
+        /** understand this code is needed for our structure
+            moduleName = moduleName.replace(pathSepExpr, '/')
+            
+            if (moduleBaseDir) {
+                moduleBaseDir = moduleBaseDir.replace(pathSepExpr, '/')
             }
-        })
+       
+            const moduleVersion = getVersion(moduleBaseDir)
+
+            Array.from(this._plugins.keys())
+            .filter(plugin => [].concat(plugin).some(instrumentation =>
+                filename(instrumentation) === moduleName && matchVersion(moduleVersion, instrumentation.versions)
+            ))
+            .forEach(plugin => this._validate(plugin, moduleName, moduleBaseDir, moduleVersion))
+         */
+        
+        libs
+            .forEach((value: any, key: any) => {
+                try {
+                    [].concat(value)
+                    /** understand this code is needed for our structure
+                        .filter(instrumentation => moduleName === filename(instrumentation))
+                        .filter(instrumentation => matchVersion(moduleVersion, instrumentation.versions))
+                     */
+                    .forEach(instrumentation => {
+                        moduleExports = instrumentation.patch.call(this, moduleExports);
+                    })
+                } catch (e) {
+
+                    // todo: log error here
+                    console.error(e);
+                }
+            });
         
         return moduleExports
     }

@@ -300,20 +300,22 @@ export default class ForesightWrapperUtils {
          * check java agent for how to report test errors in tags ?
          */
 
-        // if (error) {
-        //     const parsedErr = Utils.parseError(error);
-        //     invocationData.setError(parsedErr);
-        //     invocationData.tags.error = true;
-        //     invocationData.tags['error.message'] = parsedErr.errorMessage;
-        //     invocationData.tags['error.kind'] = parsedErr.errorType;
-        //     invocationData.tags['error.stack'] = parsedErr.stack;
-        //     if (parsedErr.code) {
-        //         invocationData.tags['error.code'] = error.code;
-        //     }
-        //     if (parsedErr.stack) {
-        //         invocationData.tags['error.stack'] = error.stack;
-        //     }
-        // }
+        /**
+            if (error) {
+                const parsedErr = Utils.parseError(error);
+                invocationData.setError(parsedErr);
+                invocationData.tags.error = true;
+                invocationData.tags['error.message'] = parsedErr.errorMessage;
+                invocationData.tags['error.kind'] = parsedErr.errorType;
+                invocationData.tags['error.stack'] = parsedErr.stack;
+                if (parsedErr.code) {
+                    invocationData.tags['error.code'] = error.code;
+                }
+                if (parsedErr.stack) {
+                    invocationData.tags['error.stack'] = error.stack;
+                }
+            }
+        */
 
         invocationData.setTags(InvocationSupport.getAgentTags());
         invocationData.setUserTags(InvocationSupport.getTags());
@@ -326,8 +328,8 @@ export default class ForesightWrapperUtils {
         invocationData.finish(finishTimestamp);
 
         invocationData.resources = InvocationTraceSupport.getResources(spanId);
-        // invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
-        // invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
+        invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
+        invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
         invocationData.applicationResourceName = applicationResourceName;
     }
 }

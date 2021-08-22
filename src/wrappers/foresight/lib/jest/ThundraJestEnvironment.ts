@@ -97,7 +97,7 @@ function wrapEnvironment (BaseEnvironment: any) {
 export default [{
     name: 'jest-environment-node',
     versions: ['>=24.8.0'],
-    patch: function(NodeEnvironment: any, reporter: any) {
+    patch: function(NodeEnvironment: any) {
 
       return wrapEnvironment(NodeEnvironment);
     }
@@ -105,7 +105,7 @@ export default [{
   {
     name: 'jest-environment-jsdom',
     versions: ['>=24.8.0'],
-    patch: function (JsdomEnvironment: any, reporter: any) {
+    patch: function (JsdomEnvironment: any) {
       
       return wrapEnvironment(JsdomEnvironment)
     }

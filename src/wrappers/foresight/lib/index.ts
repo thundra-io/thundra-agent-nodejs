@@ -1,5 +1,7 @@
 import ThundraJestEnvironment from './jest/ThundraJestEnvironment';
 
-export default {
-    'jest': ThundraJestEnvironment,
-};
+const Libs = new Map<string, any>([
+    ['jest', ThundraJestEnvironment]
+]);
+
+export default Libs;

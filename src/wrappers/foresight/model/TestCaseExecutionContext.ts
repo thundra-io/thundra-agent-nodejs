@@ -54,7 +54,7 @@ export default class TestCaseExecutionContext extends ExecutionContext {
     getAdditionalFinishTags() {
 
         return {
-            [TestRunnerTags.TEST_STATUS]: TEST_STATUS.SUCCESSFUL  // todo: this.testCaseScope ? this.testCaseScope.status: undefined,
+            [TestRunnerTags.TEST_STATUS]: this.status,
         }
     }
 }
