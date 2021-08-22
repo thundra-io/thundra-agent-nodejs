@@ -1,13 +1,12 @@
-import { Event, State } from 'jest-circus';
-
-import * as TestRunnerSupport from '../../../TestRunnerSupport';
-import ForesightWrapperUtils from '../../../ForesightWrapperUtils';
-import * as ForesightExecutor from '../../../ForesightExecutor';
-import * as EnvironmentSupport from '../../../environment/EnvironmentSupport';
-import ExecutionContextManager from '../../../../../context/ExecutionContextManager';
-import TestSuiteExecutionContext from '../../../model/TestSuiteExecutionContext';
-import WrapperContext from '../../../../WrapperContext';
-import TestReporter from '../../../reporter';
+import * as TestRunnerSupport from '../../TestRunnerSupport';
+import ForesightWrapperUtils from '../../ForesightWrapperUtils';
+import * as ForesightExecutor from '../../ForesightExecutor';
+import * as EnvironmentSupport from '../../environment/EnvironmentSupport';
+import ExecutionContextManager from '../../../../context/ExecutionContextManager';
+import TestSuiteExecutionContext from '../../model/TestSuiteExecutionContext';
+import WrapperContext from '../../../WrapperContext';
+import TestReporter from '../../reporter';
+import TestSuiteEvent from '../../model/TestSuiteEvent';
 
 async function globalSetup() {
         
@@ -111,7 +110,7 @@ async function startTestSuite() {
     await ForesightWrapperUtils.beforeTestProcess(TestRunnerSupport.wrapperContext.plugins, context);
 }
 
-export default async function run(event: Event, state: State) {
+export default async function run(event: TestSuiteEvent) {
      
     await initTestSuite();
     await startTestSuite();

@@ -6,7 +6,8 @@ import type { Config } from '@jest/types';
 
 import * as TestRunnerSupport from '../../TestRunnerSupport';
 
-import JestEventHandlers from './handlers';
+import { JestEventHandlers } from '../handlers';
+import TestSuiteEvent from '../../model/TestSuiteEvent';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -35,6 +36,31 @@ function wrapEnvironment (BaseEnvironment: any) {
       return eventName;
     }
 
+    createTestSuiteEvent(event: any, state: State) {
+
+      const { testSuite } = this;
+
+      if (!event) {
+        return;
+      }
+
+      let id: string;
+      const name: string = event.name;
+      const orginalEvent = event;
+
+      if (event.test && event.test.parent) {
+        id = testSuite + '-' + event.test.parent.name;
+      }
+
+      return TestSuiteEvent
+        .builder()
+          .withId(id)
+          .withName(name)
+          .withOrginalEvent(orginalEvent)
+          .withTestSuiteName(testSuite)
+        .build();
+    }
+
     async handleTestEvent(event: Event, state: State) {    
 
       /**
@@ -42,10 +68,27 @@ function wrapEnvironment (BaseEnvironment: any) {
        * create eventName with using event.hook
        */
       const eventName = this.createEventName(event);
+      if (!eventName){
+        /**
+         * log & return
+         */
+
+         return;
+      }
+
+      const testSuiteEvent = this.createTestSuiteEvent(event, state);
+
+      if (!testSuiteEvent){
+        /**
+         * log & return
+         */
+
+         return;
+      }
 
       const handler = JestEventHandlers.get(eventName);
       if (handler) {
-        await handler(event, state);
+        await handler(testSuiteEvent);
       }
     }
   }

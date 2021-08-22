@@ -1,12 +1,10 @@
-import { Event, State } from 'jest-circus';
+import * as TestRunnerSupport from '../../TestRunnerSupport';
+import ForesightWrapperUtils from '../../ForesightWrapperUtils';
+import ExecutionContextManager from '../../../../context/ExecutionContextManager';
+import { TEST_STATUS } from '../../../../Constants';
+import TestSuiteEvent from '../../model/TestSuiteEvent';
 
-import * as TestRunnerSupport from '../../../TestRunnerSupport';
-import ForesightWrapperUtils from '../../../ForesightWrapperUtils';
-import ExecutionContextManager from '../../../../../context/ExecutionContextManager';
-import TestCaseExecutionContext from '../../../model/TestCaseExecutionContext';
-import { TEST_STATUS } from '../../../../../Constants';
-
-export default async function run(event: Event, state: State) {
+export default async function run(event: TestSuiteEvent) {
 
     ForesightWrapperUtils.changeAppInfoToTestCase('Jest');
 

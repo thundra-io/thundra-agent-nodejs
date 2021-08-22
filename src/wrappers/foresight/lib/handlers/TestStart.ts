@@ -1,19 +1,28 @@
-import { Event, State } from 'jest-circus';
+import * as TestRunnerSupport from '../../TestRunnerSupport';
+import ForesightWrapperUtils from '../../ForesightWrapperUtils';
+import ExecutionContextManager from '../../../../context/ExecutionContextManager';
+import TestCaseExecutionContext from '../../model/TestCaseExecutionContext';
+import TestSuiteEvent from '../../model/TestSuiteEvent';
 
-import * as TestRunnerSupport from '../../../TestRunnerSupport';
-import ForesightWrapperUtils from '../../../ForesightWrapperUtils';
-import ExecutionContextManager from '../../../../../context/ExecutionContextManager';
-import TestCaseExecutionContext from '../../../model/TestCaseExecutionContext';
+export default async function run(event: TestSuiteEvent) {
 
-export default async function run(event: any, state: State) {
-
-    const testEntry = event.test;
-    if (!testEntry || !testEntry.parent){
+    const orginalEvent = event.orginalEvent;
+    if (!orginalEvent){
+      
         /**
          * log & return
          */
         return;
     }
+
+    const testEntry = orginalEvent.test;
+    if (!testEntry){
+
+      /**
+       * log & return
+       */
+      return;
+  }
 
     const testName = testEntry.name;
     const testSuiteName = testEntry.parent.name;

@@ -1,4 +1,4 @@
-import { JEST_TEST_EVENTS } from '../../../../../Constants';
+import { JEST_TEST_EVENTS } from '../../../../Constants';
 
 import setup from './Setup';
 import teardown from './Teardown';
@@ -10,7 +10,7 @@ import afterEach from './AfterEach';
 import beforeAll from './BeforeAll';
 import afterAll from './AfterAll';
 
-const JestEventHandlers = new Map<string, Function>([
+export const JestEventHandlers = new Map<string, Function>([
     [JEST_TEST_EVENTS.SETUP, setup],
     [JEST_TEST_EVENTS.TEARDOWN, teardown],
     [JEST_TEST_EVENTS.TESTSTART, testStart],
@@ -22,8 +22,10 @@ const JestEventHandlers = new Map<string, Function>([
     [JEST_TEST_EVENTS.AFTERALL, afterAll],
 
     /**
-     * todo: add other event handlers like before each, after each ...
+     * todo: add other jest event handlers here if needed ...
      */
 ])
 
-export default JestEventHandlers;
+/**
+ * todo: add other test frameworks handler router map here ...
+ */

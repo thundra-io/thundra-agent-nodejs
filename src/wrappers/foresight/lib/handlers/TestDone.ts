@@ -1,17 +1,21 @@
-import { Event, State } from 'jest-circus';
+import * as TestRunnerSupport from '../../TestRunnerSupport';
+import ForesightWrapperUtils from '../../ForesightWrapperUtils';
+import ExecutionContextManager from '../../../../context/ExecutionContextManager';
+import { TEST_STATUS } from '../../../../Constants';
+import TestSuiteEvent from '../../model/TestSuiteEvent';
 
-import * as TestRunnerSupport from '../../../TestRunnerSupport';
-import ForesightWrapperUtils from '../../../ForesightWrapperUtils';
-import ExecutionContextManager from '../../../../../context/ExecutionContextManager';
-import { TEST_STATUS } from '../../../../../Constants';
+export default async function run(event: TestSuiteEvent) {
 
-export default async function run(event: any, state: State) {
+    const orginalEvent = event.orginalEvent;
+    if (!orginalEvent){
+      
+        /**
+         * log & return
+         */
+        return;
+    }
 
-    ForesightWrapperUtils.changeAppInfoToTestCase('Jest');
-
-    const context = TestRunnerSupport.testCaseExecutionContext;
-
-    const testEntry = event.test;
+    const testEntry = orginalEvent.test;
     if (!testEntry) {
       /**
        * log & return
@@ -19,6 +23,10 @@ export default async function run(event: any, state: State) {
 
        return;
     }
+
+    ForesightWrapperUtils.changeAppInfoToTestCase('Jest');
+
+    const context = TestRunnerSupport.testCaseExecutionContext;
 
     let testStatus = TEST_STATUS.SUCCESSFUL;
     const errorArr = testEntry.errors;
