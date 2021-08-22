@@ -34,6 +34,7 @@ export default class ExecutionContext {
     captureLog: boolean;
     logs: LogData[];
     reportingDisabled: boolean;
+    timeout: boolean;
 
     constructor(opts: any = {}) {
         this.startTimestamp = opts.startTimestamp || 0;
@@ -59,6 +60,7 @@ export default class ExecutionContext {
         this.metrics = opts.metric || {};
         this.triggerOperationName = opts.triggerOperationName || '';
         this.applicationResourceName = opts.applicationResourceName || '';
+        this.timeout = false;
     }
 
     /**
@@ -86,6 +88,14 @@ export default class ExecutionContext {
             platformData: this.platformData,
             response: this.response,
         };
+    }
+
+    setError(error: any) {
+        this.error = error;
+    }
+
+    setExecutionTimeout(timeout: boolean) {
+        this.timeout = timeout;
     }
 
     getContextInformation(){

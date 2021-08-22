@@ -33,9 +33,9 @@ const TEST_CASE_APPLICATION_DOMAIN_NAME = 'Test';
 
 export default class ForesightWrapperUtils {
 
-    static initWrapper( executor: any) {
+    static initWrapper(executor: any, applicationClassName: string) {
 
-        ForesightWrapperUtils.setApplicationInfo('Jest', 'TestSuite', 'TestSuite');
+        ForesightWrapperUtils.setApplicationInfo(applicationClassName, 'TestSuite', 'TestSuite');
 
         const config = ConfigProvider.thundraConfig;
         const { apiKey } = config;
@@ -116,6 +116,7 @@ export default class ForesightWrapperUtils {
     }
 
     static createPluginContext(apiKey: string, executor: any): PluginContext {
+
         const applicationInfo = ApplicationManager.getApplicationInfo();
 
         return new PluginContext({
@@ -141,6 +142,7 @@ export default class ForesightWrapperUtils {
     }
 
     static createTestSuiteExecutionContext(testSuiteName: string): TestSuiteExecutionContext {
+
         const { thundraConfig } = ConfigProvider;
         const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
         
@@ -227,10 +229,6 @@ export default class ForesightWrapperUtils {
         const propagatedSpanContext: ThundraSpanContext =
             tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
 
-        const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
-        // const normalizedPath = Utils.getNormalizedPath(request.path, depth);
-        // const triggerOperationName = get(request, `headers.${TriggerHeaderTags.RESOURCE_NAME}`)
-        //     || request.hostname + normalizedPath;
         const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
         const incomingSpanID = get(propagatedSpanContext, 'spanId');
 
@@ -257,13 +255,17 @@ export default class ForesightWrapperUtils {
     }
 
     static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-        const { error, rootSpan, finishTimestamp } = execContext;
+
+        const { 
+            error,
+            rootSpan,
+            finishTimestamp,
+        } = execContext;
 
         if (error) {
             rootSpan.setErrorTag(error);
         }
 
-        // If root span is already finished, it won't have any effect
         rootSpan.finish(finishTimestamp);
     }
 
@@ -293,29 +295,37 @@ export default class ForesightWrapperUtils {
     }
 
     static finishInvocationData(execContext: ExecutionContext, pluginContext: PluginContext) {
-        const { error, invocationData, applicationResourceName } = execContext;
+
+        const { 
+            error,
+            invocationData,
+            applicationResourceName,
+            timeout
+        } = execContext;
 
         /**
          * todo: remove redundant lines in this function
          * check java agent for how to report test errors in tags ?
          */
 
-        /**
-            if (error) {
-                const parsedErr = Utils.parseError(error);
-                invocationData.setError(parsedErr);
-                invocationData.tags.error = true;
-                invocationData.tags['error.message'] = parsedErr.errorMessage;
-                invocationData.tags['error.kind'] = parsedErr.errorType;
-                invocationData.tags['error.stack'] = parsedErr.stack;
-                if (parsedErr.code) {
-                    invocationData.tags['error.code'] = error.code;
-                }
-                if (parsedErr.stack) {
-                    invocationData.tags['error.stack'] = error.stack;
-                }
+        if (error) {
+            const parsedErr = Utils.parseError(error);
+            invocationData.setError(parsedErr);
+            invocationData.tags.error = true;
+            invocationData.tags['error.message'] = parsedErr.errorMessage;
+            invocationData.tags['error.kind'] = parsedErr.errorType;
+            invocationData.tags['error.stack'] = parsedErr.stack;
+            if (parsedErr.code) {
+                invocationData.tags['error.code'] = error.code;
             }
-        */
+            if (parsedErr.stack) {
+                invocationData.tags['error.stack'] = error.stack;
+            }
+        }
+
+        if (timeout) {
+            invocationData.timeout = timeout;
+        }
 
         invocationData.setTags(InvocationSupport.getAgentTags());
         invocationData.setUserTags(InvocationSupport.getTags());
@@ -324,7 +334,7 @@ export default class ForesightWrapperUtils {
             finishTimestamp,
             spanId,
         } = execContext;
-
+      
         invocationData.finish(finishTimestamp);
 
         invocationData.resources = InvocationTraceSupport.getResources(spanId);

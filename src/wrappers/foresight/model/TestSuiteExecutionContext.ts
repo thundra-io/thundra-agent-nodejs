@@ -1,8 +1,11 @@
+import { ApplicationManager } from '../../../application/ApplicationManager';
 import ExecutionContext from '../../../context/ExecutionContext';
 
 import { TestRunnerTags } from '../model/TestRunnerTags';
 
 export default class TestSuiteExecutionContext extends ExecutionContext {
+
+    static APPLICATION_DOMAIN_NAME: string = 'TestSuite';
 
     testSuiteName: string;
     totalCount: number;
@@ -51,16 +54,14 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
 
     getContextInformation(){
 
-        /** todo: take className and applicationClassName from current AppInfo object
-         *  they will take same value
-         */
+        const { applicationClassName } = ApplicationManager.getApplicationInfo();
 
         return {
-            domainName: 'TestSuite',
-            applicationDomainName: 'TestSuite',
+            domainName: TestSuiteExecutionContext.APPLICATION_DOMAIN_NAME,
+            applicationDomainName: TestSuiteExecutionContext.APPLICATION_DOMAIN_NAME,
             operationName: this.testSuiteName,
-            className: 'Jest',
-            applicationClassName: 'Jest'
+            className: applicationClassName,
+            applicationClassName,
         }
     }
 
@@ -78,6 +79,7 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
             [TestRunnerTags.TEST_SUITE_ABORTED_COUNT]: this.abortedCount,
             [TestRunnerTags.TEST_SUITE_SKIPPED_COUNT]: this.skippedCount,
             [TestRunnerTags.TEST_SUITE_SUCCESSFUL_COUNT]: this.successfulCount,
+            ...(this.timeout ? { [TestRunnerTags.TEST_TIMEOUT]: this.timeout } : undefined),
         }
     }
 }

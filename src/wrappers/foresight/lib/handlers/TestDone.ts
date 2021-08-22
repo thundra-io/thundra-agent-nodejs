@@ -4,6 +4,16 @@ import ExecutionContextManager from '../../../../context/ExecutionContextManager
 import { TEST_STATUS } from '../../../../Constants';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
 
+const isErrorTimeout = (error: Error) => {
+
+  let result = false;
+  if (error.message && error.message.toLowerCase().includes('exceeded timeout')) {
+    result = true;
+  }
+
+  return result;
+}
+
 export default async function run(event: TestSuiteEvent) {
 
     const orginalEvent = event.orginalEvent;
@@ -32,16 +42,18 @@ export default async function run(event: TestSuiteEvent) {
     const errorArr = testEntry.errors;
     if (errorArr.length) {
       testStatus = TEST_STATUS.FAILED;
+
+      const error: Error = testEntry.asyncError ? testEntry.asyncError : new Error(errorArr[0]);
+      context.setError(error);
+
+      if (isErrorTimeout(error)) {
+        context.setExecutionTimeout(true);
+      }
     }
 
     context.setStatus(testStatus);
 
     ExecutionContextManager.set(context);
-
-    /**
-     * todo: handle test error state in here and set test status info
-     * according to status increase test counts
-     */
 
     await ForesightWrapperUtils.afterTestProcess(
       TestRunnerSupport.wrapperContext.plugins,

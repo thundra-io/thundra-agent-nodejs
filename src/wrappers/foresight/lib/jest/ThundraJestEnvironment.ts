@@ -9,8 +9,6 @@ import * as TestRunnerSupport from '../../TestRunnerSupport';
 import { JestEventHandlers } from '../handlers';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
 
-const APPLICATIONCLASSNAME = 'Jest';
-
 function wrapEnvironment (BaseEnvironment: any) {
   return class ThundraJestEnvironment extends BaseEnvironment {
 

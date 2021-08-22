@@ -8,9 +8,11 @@ import WrapperContext from '../../../WrapperContext';
 import TestReporter from '../../reporter';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
 
+const APPLICATIONCLASSNAME = 'Jest';
+
 async function globalSetup() {
         
-    const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(ForesightExecutor);
+    const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(ForesightExecutor, APPLICATIONCLASSNAME);
     TestRunnerSupport.setWrapperContext(wrapperContext);
     await EnvironmentSupport.init();
     

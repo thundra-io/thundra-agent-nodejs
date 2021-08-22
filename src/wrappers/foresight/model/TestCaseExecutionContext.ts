@@ -2,9 +2,12 @@ import ExecutionContext from '../../../context/ExecutionContext';
 
 import { TestRunnerTags } from '../model/TestRunnerTags';
 import { TEST_STATUS } from '../../../Constants';
+import { ApplicationManager } from '../../../application/ApplicationManager';
 
 export default class TestCaseExecutionContext extends ExecutionContext {
     
+    static APPLICATION_DOMAIN_NAME: string = 'Test';
+
     id: string;
     name: string;
     method: string;
@@ -28,16 +31,14 @@ export default class TestCaseExecutionContext extends ExecutionContext {
 
     getContextInformation(){
 
-        /** todo: take className and applicationClassName from current AppInfo object
-         *  they will take same value
-         */
+        const { applicationClassName } = ApplicationManager.getApplicationInfo();
 
         return {
-            domainName: 'Test',
-            applicationDomainName: 'Test',
+            domainName: TestCaseExecutionContext.APPLICATION_DOMAIN_NAME,
+            applicationDomainName: TestCaseExecutionContext.APPLICATION_DOMAIN_NAME,
             operationName: this.method,
-            className: 'Jest',
-            applicationClassName: 'Jest'
+            className: applicationClassName,
+            applicationClassName,
         }
     }
 
