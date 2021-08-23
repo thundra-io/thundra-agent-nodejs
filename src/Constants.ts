@@ -12,6 +12,7 @@ import MongoDBIntegration from './integrations/MongoDBIntegration';
 import IORedisIntegration from './integrations/IORedisIntegration';
 import { AWSIntegration } from './integrations/AWSIntegration';
 import ESIntegration from './integrations/ESIntegration';
+import AMQPLIBIntegration from './integrations/AmqplibIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './listeners/LatencyInjectorSpanListener';
@@ -567,6 +568,7 @@ export const INTEGRATIONS: any = {
     aws: AWSIntegration,
     es: ESIntegration,
     mongodb: MongoDBIntegration,
+    amqplib: AMQPLIBIntegration,
 };
 
 export const LISTENERS: any = {

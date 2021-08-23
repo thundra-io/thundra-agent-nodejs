@@ -29,7 +29,7 @@ describe('AMQP 0-9-1 integration', () => {
             
             expect(span_send.className).toBe('AMQP');
             expect(span_send.domainName).toBe('Messaging');
-            expect(span_send.operationName).toBe('amqp.send');
+            expect(span_send.operationName).toBe('tasks_promise');
             expect(span_send.spanContext.traceId).not.toBeUndefined();
             expect(span_send.spanContext.spanId).not.toBeUndefined();
             expect(span_send.tags['amqp.exchange']).toBe('');
@@ -45,7 +45,7 @@ describe('AMQP 0-9-1 integration', () => {
 
             expect(span_dispatch.className).toBe('AMQP');
             expect(span_dispatch.domainName).toBe('Messaging');
-            expect(span_dispatch.operationName).toBe('amqp.dispatch');
+            expect(span_dispatch.operationName).toBe('tasks_promise');
             expect(span_dispatch.spanContext.traceId).not.toBeUndefined();
             expect(span_dispatch.spanContext.spanId).not.toBeUndefined();
             expect(span_dispatch.tags['amqp.exchange']).toBe('');
@@ -70,7 +70,7 @@ describe('AMQP 0-9-1 integration', () => {
             
             expect(span_send.className).toBe('AMQP');
             expect(span_send.domainName).toBe('Messaging');
-            expect(span_send.operationName).toBe('amqp.send');
+            expect(span_send.operationName).toBe('tasks_callback');
             expect(span_send.spanContext.traceId).not.toBeUndefined();
             expect(span_send.spanContext.spanId).not.toBeUndefined();
             expect(span_send.tags['amqp.exchange']).toBe('');
@@ -84,7 +84,7 @@ describe('AMQP 0-9-1 integration', () => {
             
             expect(span_dispatch.className).toBe('AMQP');
             expect(span_dispatch.domainName).toBe('Messaging');
-            expect(span_dispatch.operationName).toBe('amqp.dispatch');
+            expect(span_dispatch.operationName).toBe('tasks_callback');
             expect(span_dispatch.spanContext.traceId).not.toBeUndefined();
             expect(span_dispatch.spanContext.spanId).not.toBeUndefined();
             expect(span_dispatch.tags['amqp.exchange']).toBe('');

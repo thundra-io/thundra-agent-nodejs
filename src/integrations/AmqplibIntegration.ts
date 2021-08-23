@@ -12,6 +12,7 @@ import ThundraLogger from '../ThundraLogger';
 import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
+import * as opentracing from 'opentracing';
 
 const shimmer = require('shimmer');
 
@@ -64,7 +65,7 @@ class AMQPLIBIntegration implements Integration {
         const [fields, properties, content] = args;
         const { tracer } = ExecutionContextManager.get();
         const parentSpan = tracer.getActiveSpan();
-        const span = tracer._startSpan('amqp.send', {
+        const span = tracer._startSpan(fields.routingKey, {
           childOf: parentSpan,
           domainName: DomainNames.MESSAGING,
           className: ClassNames.AMQP,
@@ -72,6 +73,7 @@ class AMQPLIBIntegration implements Integration {
         });
         integration.handleTags(this, config, span, method, fields);
         span._initialized();
+        tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, properties.headers);
         try {
           return sendMessage.apply(this, args);
         } catch (error) {
@@ -111,7 +113,7 @@ class AMQPLIBIntegration implements Integration {
         const [fields, message] = args;
         const { tracer } = ExecutionContextManager.get();
         const parentSpan = tracer.getActiveSpan();
-        const span = tracer._startSpan('amqp.dispatch', {
+        const span = tracer._startSpan(fields.routingKey, {
           childOf: parentSpan,
           domainName: DomainNames.MESSAGING,
           className: ClassNames.AMQP,
