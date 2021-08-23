@@ -29,7 +29,7 @@ export default async function run(event: TestSuiteEvent) {
 
     const testCaseId = testSuiteName + '-' + testName;
 
-    ForesightWrapperUtils.changeAppInfoToTestCase('Jest');
+    ForesightWrapperUtils.changeAppInfoToTestCase();
 
     const context: TestCaseExecutionContext = ForesightWrapperUtils.createTestCaseExecutionContext(
       TestRunnerSupport.testSuiteName,

@@ -34,7 +34,7 @@ export default async function run(event: TestSuiteEvent) {
        return;
     }
 
-    ForesightWrapperUtils.changeAppInfoToTestCase('Jest');
+    ForesightWrapperUtils.changeAppInfoToTestCase();
 
     const context = TestRunnerSupport.testCaseExecutionContext;
 
@@ -72,5 +72,5 @@ export default async function run(event: TestSuiteEvent) {
     }
 
     ExecutionContextManager.set(testSuiteContext);
-    ForesightWrapperUtils.changeAppInfoToTestSuite('Jest');
+    ForesightWrapperUtils.changeAppInfoToTestSuite();
 }

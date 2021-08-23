@@ -8,6 +8,11 @@ import * as TestRunnerSupport from '../../TestRunnerSupport';
 
 import { JestEventHandlers } from '../handlers';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
+import WrapperContext from '../../../WrapperContext';
+import ForesightWrapperUtils from '../../ForesightWrapperUtils';
+import * as ForesightExecutor from '../../ForesightExecutor';
+
+const APPLICATIONCLASSNAME = 'Jest';
 
 function wrapEnvironment (BaseEnvironment: any) {
   return class ThundraJestEnvironment extends BaseEnvironment {
@@ -22,6 +27,9 @@ function wrapEnvironment (BaseEnvironment: any) {
       this.testSuite = context.testPath.split("/").pop();
 
       TestRunnerSupport.setTestSuiteName(this.testSuite);
+
+      const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(ForesightExecutor, APPLICATIONCLASSNAME);
+      TestRunnerSupport.setWrapperContext(wrapperContext);
     }
 
     createEventName(event: any){

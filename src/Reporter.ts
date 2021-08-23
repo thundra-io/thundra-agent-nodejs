@@ -19,11 +19,11 @@ import ConfigProvider from './config/ConfigProvider';
 import CompositeMonitoringData from './plugins/data/composite/CompositeMonitoringData';
 import MonitorDataType from './plugins/data/base/MonitoringDataType';
 
-export const httpAgent = new http.Agent({
+const httpAgent = new http.Agent({
     keepAlive: true,
 });
 
-export const httpsAgent = new https.Agent({
+const httpsAgent = new https.Agent({
     maxCachedSessions: 1,
     keepAlive: true,
 });
@@ -33,11 +33,11 @@ export const httpsAgent = new https.Agent({
  */
 class Reporter {
 
-    protected useHttps: boolean;
+    private useHttps: boolean;
     private requestOptions: http.RequestOptions;
-    protected latestReportingLimitedMinute: number;
-    protected url: url.UrlWithStringQuery;
-    protected apiKey: string;
+    private latestReportingLimitedMinute: number;
+    private url: url.UrlWithStringQuery;
+    private apiKey: string;
     private async: boolean;
     private trimmers: Trimmer[];
     private maxReportSize: number;
@@ -60,7 +60,7 @@ class Reporter {
         this.maxReportSize = opt.maxReportSize || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_MAX_SIZE);
     }
 
-    protected static getCollectorURL(): string {
+    static getCollectorURL(): string {
         const useLocalCollector: boolean = ConfigProvider.get(ConfigNames.THUNDRA_REPORT_REST_LOCAL);
         if (useLocalCollector) {
             return 'http://' + LOCAL_COLLECTOR_ENDPOINT + '/v1';
@@ -116,7 +116,7 @@ class Reporter {
         });
     }
 
-    protected createRequestOptions(u?: url.URL): http.RequestOptions {
+    private createRequestOptions(u?: url.URL): http.RequestOptions {
         const path = COMPOSITE_MONITORING_DATA_PATH;
 
         return {
@@ -157,7 +157,7 @@ class Reporter {
         const compositeData = this.initCompositeMonitoringData();
         const batch: any[] = [];
         for (const report of reports) {
-            batch.push(this.stripCommonFields(report.data as BaseMonitoringData));
+            batch.push(this.stripCommonFields(report.data));
         }
         compositeData.allMonitoringData = batch;
 
@@ -173,23 +173,26 @@ class Reporter {
         return monitoringData as CompositeMonitoringData;
     }
 
-    private stripCommonFields(monitoringData: BaseMonitoringData) {
-        monitoringData.agentVersion = undefined;
-        monitoringData.dataModelVersion = undefined;
-        monitoringData.applicationId = undefined;
-        monitoringData.applicationClassName = undefined;
-        monitoringData.applicationDomainName = undefined;
-        monitoringData.applicationName = undefined;
-        monitoringData.applicationVersion = undefined;
-        monitoringData.applicationStage = undefined;
-        monitoringData.applicationRuntime = undefined;
-        monitoringData.applicationRuntimeVersion = undefined;
-        monitoringData.applicationTags = undefined;
+    private stripCommonFields(monitoringData: any) {
+
+        if (monitoringData instanceof BaseMonitoringData) {
+            monitoringData.agentVersion = undefined;
+            monitoringData.dataModelVersion = undefined;
+            monitoringData.applicationId = undefined;
+            monitoringData.applicationClassName = undefined;
+            monitoringData.applicationDomainName = undefined;
+            monitoringData.applicationName = undefined;
+            monitoringData.applicationVersion = undefined;
+            monitoringData.applicationStage = undefined;
+            monitoringData.applicationRuntime = undefined;
+            monitoringData.applicationRuntimeVersion = undefined;
+            monitoringData.applicationTags = undefined;
+        }
 
         return monitoringData;
     }
 
-    protected doReport(reportJson: string) {
+    private doReport(reportJson: string) {
         ThundraLogger.debug('<Reporter> Reporting ...');
 
         const reportPromises: any[] = [];

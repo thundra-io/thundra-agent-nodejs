@@ -1,19 +1,24 @@
 import * as TestRunnerSupport from '../../TestRunnerSupport';
 import ForesightWrapperUtils from '../../ForesightWrapperUtils';
-import * as ForesightExecutor from '../../ForesightExecutor';
 import * as EnvironmentSupport from '../../environment/EnvironmentSupport';
 import ExecutionContextManager from '../../../../context/ExecutionContextManager';
 import TestSuiteExecutionContext from '../../model/TestSuiteExecutionContext';
-import WrapperContext from '../../../WrapperContext';
-import TestReporter from '../../reporter';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
+import Utils from '../../../../utils/Utils';
+import ConfigProvider from '../../../../config/ConfigProvider';
 
-const APPLICATIONCLASSNAME = 'Jest';
+async function sendData(data: any) {
+
+    const config = ConfigProvider.thundraConfig;
+    const { apiKey } = config;
+
+    const { reporter } = TestRunnerSupport.wrapperContext;
+    
+    await reporter.sendReports([Utils.generateReport(data, apiKey)]);
+}
 
 async function globalSetup() {
         
-    const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(ForesightExecutor, APPLICATIONCLASSNAME);
-    TestRunnerSupport.setWrapperContext(wrapperContext);
     await EnvironmentSupport.init();
     
     const testRunStart = TestRunnerSupport.startTestRun();
@@ -27,26 +32,14 @@ async function globalSetup() {
     
     try {
 
-        /**
-        * todo: will be removed & will use single reporter (in wrapperContext)
-        * when test run events with composite data supported by collector. 
-        */ 
-        const reporter = ForesightWrapperUtils.createTestRunReporter() as TestReporter;
-        
-        /** todo: will ve remove after common reporter instance will be used
-        * still collector does not support composite data types.
-        */
-        const wrappedTestRunStart = {
-            dataModelVersion: '2.0',
-            type: 'TestRunStart',
-            data: testRunStart,
-        }
-        
-        await reporter.report(wrappedTestRunStart, '/testrun-start');
+        await sendData(testRunStart);
     } catch (error) {
+        /**
+         * thundra logger error
+         */
+
         console.error(error);
     }         
-    
 }
 
 async function globalTeardown() {
@@ -60,23 +53,12 @@ async function globalTeardown() {
                 return;
             }
 
-            /**
-            * todo: will be removed & will use single reporter (in wrapperContext)
-            * when test run events with composite data supported by collector. 
-            */ 
-            const reporter = ForesightWrapperUtils.createTestRunReporter() as TestReporter;
-            
-            /** todo: will ve remove after common reporter instance will be used
-            * still collector does not support composite data types.
-            */
-            const wrappedTestRunFinish = {
-                dataModelVersion: '2.0',
-                type: 'TestRunFinish',
-                data: testRunFinish,
-            }
-            
-            await reporter.report(wrappedTestRunFinish, '/testrun-finish');
+            await sendData(testRunFinish);
         } catch (e) {
+            /**
+             * thundra logger error
+             */
+
             console.error('EXIT HANDLER ERROR', e);
         }
         
@@ -106,7 +88,7 @@ async function startTestSuite() {
     const context: TestSuiteExecutionContext = ForesightWrapperUtils.createTestSuiteExecutionContext(TestRunnerSupport.testSuiteName);
     TestRunnerSupport.setTestSuiteContext(context);
     
-    ForesightWrapperUtils.changeAppInfoToTestSuite('Jest');
+    ForesightWrapperUtils.changeAppInfoToTestSuite();
     ExecutionContextManager.set(context);
     
     await ForesightWrapperUtils.beforeTestProcess(TestRunnerSupport.wrapperContext.plugins, context);

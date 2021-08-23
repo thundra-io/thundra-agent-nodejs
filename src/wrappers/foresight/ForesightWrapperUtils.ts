@@ -22,7 +22,6 @@ import TestSuiteExecutionContext from './model/TestSuiteExecutionContext';
 
 import * as TestRunnerSupport from './TestRunnerSupport';
 import TestCaseExecutionContext from './model/TestCaseExecutionContext';
-import TestReporter from './reporter';
 import WrapperContext from '../WrapperContext';
 
 const get = require('lodash.get');
@@ -64,23 +63,28 @@ export default class ForesightWrapperUtils {
         });
     }
 
-    static changeAppInfoToTestSuite(applicationClassName: string){
-
-        if (TestRunnerSupport.testSuiteExecutionContext){
-          ForesightWrapperUtils.setApplicationInfo(
-            applicationClassName,
-            TEST_SUIT_APPLICATION_DOMAIN_NAME,
-            TestRunnerSupport.testSuiteName);
-        }  
-      }
+    static changeAppInfoToTestSuite(){
   
-    static changeAppInfoToTestCase(applicationClassName: string){
+        if (TestRunnerSupport.testSuiteExecutionContext){
+
+            const { applicationClassName } = ApplicationManager.getApplicationInfo();
+
+            ForesightWrapperUtils.setApplicationInfo(
+                applicationClassName,
+                TEST_SUIT_APPLICATION_DOMAIN_NAME,
+                TestRunnerSupport.testSuiteName);
+        }  
+    }
+  
+    static changeAppInfoToTestCase(){
 
         if (TestRunnerSupport.testSuiteExecutionContext){
-          ForesightWrapperUtils.setApplicationInfo(
-            applicationClassName,
-            TEST_CASE_APPLICATION_DOMAIN_NAME,
-            TestRunnerSupport.testSuiteName);
+            const { applicationClassName } = ApplicationManager.getApplicationInfo();
+
+            ForesightWrapperUtils.setApplicationInfo(
+                applicationClassName,
+                TEST_CASE_APPLICATION_DOMAIN_NAME,
+                TestRunnerSupport.testSuiteName);
         }  
     }
 
@@ -128,17 +132,6 @@ export default class ForesightWrapperUtils {
 
     static createReporter(apiKey: string): Reporter {
         return new Reporter(apiKey);
-    }
-
-    /**
-     * todo: will be removed & will use single reporter 
-     * when test run events with composite data supported by collector. 
-     */ 
-    static createTestRunReporter(): Reporter {
-
-        const { apiKey } = ConfigProvider.thundraConfig;
-
-        return new TestReporter(apiKey);
     }
 
     static createTestSuiteExecutionContext(testSuiteName: string): TestSuiteExecutionContext {

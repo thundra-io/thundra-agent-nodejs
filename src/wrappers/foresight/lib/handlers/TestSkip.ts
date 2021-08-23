@@ -6,7 +6,7 @@ import TestSuiteEvent from '../../model/TestSuiteEvent';
 
 export default async function run(event: TestSuiteEvent) {
 
-    ForesightWrapperUtils.changeAppInfoToTestCase('Jest');
+    ForesightWrapperUtils.changeAppInfoToTestCase();
 
     const context = TestRunnerSupport.testCaseExecutionContext;
     context.setStatus(TEST_STATUS.SKIPPED)
@@ -30,5 +30,5 @@ export default async function run(event: TestSuiteEvent) {
     testRunContext.increaseIgnoredCount();
 
     ExecutionContextManager.set(testSuiteContext);
-    ForesightWrapperUtils.changeAppInfoToTestSuite('Jest');
+    ForesightWrapperUtils.changeAppInfoToTestSuite();
 }

@@ -5,7 +5,7 @@ import TestSuiteEvent from '../../model/TestSuiteEvent';
 
 export default async function run(event: TestSuiteEvent) {
 
-    ForesightWrapperUtils.changeAppInfoToTestSuite('Jest');
+    ForesightWrapperUtils.changeAppInfoToTestSuite();
     
     const context = TestRunnerSupport.testSuiteExecutionContext;
     ExecutionContextManager.set(context);
