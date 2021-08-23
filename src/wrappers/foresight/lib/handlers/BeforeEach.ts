@@ -4,7 +4,12 @@ import ExecutionContextManager from '../../../../context/ExecutionContextManager
 import TestCaseExecutionContext from '../../model/TestCaseExecutionContext';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
 
-export default async function run(event: TestSuiteEvent) {
+export async function start(event: TestSuiteEvent) {
 
-    console.log('beforeEach')
+    console.log('beforeEachStart')
+}
+
+export async function finish(event: TestSuiteEvent) {
+
+    console.log('beforeEachFinish')
 }
