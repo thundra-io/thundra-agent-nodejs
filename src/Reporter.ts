@@ -60,7 +60,7 @@ class Reporter {
         this.maxReportSize = opt.maxReportSize || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_MAX_SIZE);
     }
 
-    static getCollectorURL(): string {
+    private static getCollectorURL(): string {
         const useLocalCollector: boolean = ConfigProvider.get(ConfigNames.THUNDRA_REPORT_REST_LOCAL);
         if (useLocalCollector) {
             return 'http://' + LOCAL_COLLECTOR_ENDPOINT + '/v1';
