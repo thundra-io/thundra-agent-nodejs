@@ -228,6 +228,7 @@ class AMQPLIBIntegration implements Integration {
     span.addTags({
       'service.name': config.service || `amqp-default-service`,
       'resource.name': this._getResourceName(method, fields),
+      [SpanTags.TOPOLOGY_VERTEX]: true,
     });
 
     if (channel && channel.connection && channel.connection.stream) {
