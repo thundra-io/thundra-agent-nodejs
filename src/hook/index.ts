@@ -6,7 +6,7 @@ const path = require('path');
 const Module = require('module');
 const parse = require('module-details-from-path')
 
-export default function hook(modules: any, onrequire: any) {
+const hook: any = function (modules: any, onrequire: any) {
 
   if (!hook.orig) {
     hook.orig = Module.prototype.require
@@ -20,7 +20,7 @@ export default function hook(modules: any, onrequire: any) {
 
   const patching: any = {}
 
-  hook.require = function (request) {
+  hook.require = function (request: any) {
       const filename = Module._resolveFilename(request, this)
       const core = filename.indexOf(path.sep) === -1
       let name, basedir
@@ -85,4 +85,6 @@ export default function hook(modules: any, onrequire: any) {
       return hook.cache[filename].exports
   }
 }
+
+export default hook;
 

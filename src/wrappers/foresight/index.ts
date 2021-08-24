@@ -13,7 +13,7 @@ export function init() {
         .reduce((prev: any, current: any) => prev.concat(current), [])
     
     const instrumentedModules = instrumentations
-        .map(instrumentation => instrumentation.name);
+        .map((instrumentation: any) => instrumentation.name);
     
     function __hookModule (moduleExports: any, moduleName: any, moduleBaseDir: any) {
 
