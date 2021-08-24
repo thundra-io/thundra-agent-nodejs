@@ -50,26 +50,16 @@ const isErrorTimeout = (error: Error) => {
 
 export default async function run(event: TestSuiteEvent) {
 
-    const testEntry = HandlerUtils.getTestEntry(event);
-    if (!testEntry) {
-      /**
-       * log & return
-       */
-
-       return;
-    }
-
     ForesightWrapperUtils.changeAppInfoToTestCase();
 
     const context = TestRunnerSupport.testCaseExecutionContext;
 
     let testStatus = TEST_STATUS.SUCCESSFUL;
-    const errorArr = testEntry.errors;
-    if (errorArr.length) {
+    if (event.hasError()) {
       testStatus = TEST_STATUS.FAILED;
 
-      const error: Error = testEntry.asyncError ? testEntry.asyncError : new Error(errorArr[0]);
-      context.setError(error);
+      const error = event.error;
+      context.setError(event.error);
 
       if (isErrorTimeout(error)) {
         context.setExecutionTimeout(true);

@@ -25,6 +25,8 @@ class ThundraConfig {
     invocationConfig: InvocationConfig;
     logConfig: LogConfig;
     timeoutMargin: number;
+    testProjectId: string;
+    testRundId: string;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -45,6 +47,12 @@ class ThundraConfig {
         this.warmupAware = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_WARMUP_WARMUPAWARE,
             options.warmupAware);
+        this.testProjectId = ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID,
+            options.testProjectId);
+        this.testRundId = ConfigProvider.get<string>(
+            ConfigNames.THUNDRA_AGENT_TEST_RUN_ID,
+            options.testRundId);
         this.disableMonitoring = get(options, 'disableMonitoring', !(this.apiKey));
         this.traceConfig = new TraceConfig(options.traceConfig);
         this.metricConfig = new MetricConfig(options.metricConfig);

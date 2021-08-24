@@ -285,6 +285,12 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID]: {
+        type: 'string',
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_RUN_ID]: {
+        type: 'string',
+    },
 };
 
 export default ConfigMetadata;

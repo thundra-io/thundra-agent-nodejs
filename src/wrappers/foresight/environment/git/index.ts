@@ -1,19 +1,19 @@
 import EnvironmentInfo from '../EnvironmentInfo'
 import * as GitHelper from './helper';
+import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
+import ConfigNames from '../../../../config/ConfigNames';
+import ConfigProvider from '../../../../config/ConfigProvider';
 
 export const ENVIRONMENT = 'Git';
 
 let environmentInfo: EnvironmentInfo;
 
-/** remove after implementation of getTestRunId*/
-import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
-/** remove after implementation of  getTestRunId*/
-
 const getTestRunId = (repoURL: string, commitHash: string) => {
     
-    /** todo: check config for configuredTestRunId
-     *  if exists on config return it
-    */
+    const testRunId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_RUN_ID);
+    if (testRunId) {
+        return testRunId;
+    }
 
     return TestRunnerUtils.getDefaultTestRunId(ENVIRONMENT, repoURL, commitHash);
 }

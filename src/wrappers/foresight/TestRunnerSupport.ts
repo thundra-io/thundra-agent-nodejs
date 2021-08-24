@@ -27,6 +27,7 @@ const getTestRunId = () => {
 }
 
 const hostName: string = findHostName();
+let projectId: string;
 
 export let testSuiteName: string;
 export let wrapperContext: WrapperContext;
@@ -34,6 +35,10 @@ export let initialized: boolean = false;
 export let testRunScope: TestRunScope;
 export let testSuiteExecutionContext: TestSuiteExecutionContext;
 export let testCaseExecutionContext: TestCaseExecutionContext;
+
+export const setProjectId = (id: string) => {
+    projectId = id
+}
 
 export const setTestSuiteName = (name: string) => {
     testSuiteName = name;
@@ -61,11 +66,6 @@ export const setTestCaseContext = (context: ExecutionContext) => {
 */
 
 export const startTestRun = (): TestRunStart => {
-    // if (initialized){
-    //     // todo: log & and return;
-
-    //     return;
-    // }
 
     const testRunId = getTestRunId();
     const taskId = Utils.generateId();
@@ -83,7 +83,7 @@ export const startTestRun = (): TestRunStart => {
     return TestRunStart
         .builder()
             .withId(testRunId)
-            .withProjectId('76cc8cde-f412-4e0f-892a-97e4b7a5fa36') // todo: get from config
+            .withProjectId(projectId)
             .withTaskId(taskId)
             .withStartTimestamp(startTimestamp)
             .withHostName(hostName)
@@ -110,7 +110,7 @@ export const finishTestRun = (): TestRunFinish => {
     return TestRunFinish.
         builder()
             .withId(testRunScope.id)
-            .withProjectId('76cc8cde-f412-4e0f-892a-97e4b7a5fa36') // todo: get from config
+            .withProjectId(projectId)
             .withTaskId(testRunScope.taskId)
             .withStartTimestamp(testRunScope.startTimestamp)
             .withFinishTimestamp(finishTimestamp)

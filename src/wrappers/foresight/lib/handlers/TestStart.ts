@@ -7,17 +7,8 @@ import HandlerUtils from './utils/HandlerUtils';
 
 export default async function run(event: TestSuiteEvent) {
 
-    const testEntry = HandlerUtils.getTestEntry(event);
-    if (!testEntry) {
-      /**
-       * log & return
-       */
-
-      return;
-    }
-
-    const testName = testEntry.name;
-    const testSuiteName = testEntry.parent.name;
+    const testName = event.testName;
+    const testSuiteName = event.testSuiteName;
 
     const testCaseId = testSuiteName + '-' + testName;
 

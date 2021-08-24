@@ -43,16 +43,7 @@ export async function finish(event: TestSuiteEvent) {
         return;
     }
 
-    const testEntry = HandlerUtils.getTestEntry(event);
-    if (!testEntry) {
-      /**
-       * log & return
-       */
-
-       return;
-    }
-
-    span.tags[TestRunnerTags.TEST_NAME] = testEntry.name;
+    span.tags[TestRunnerTags.TEST_NAME] = event.testName;
 
     HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_AFTER_EACH_DURATION);
 }

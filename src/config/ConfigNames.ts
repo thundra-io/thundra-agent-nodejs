@@ -206,6 +206,12 @@ class ConfigNames {
     public static readonly THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN: string =
         'thundra.agent.lambda.debugger.auth.token';
 
+    /////////////////////////////////////////////////////////////////////////////
+
+    public static readonly THUNDRA_AGENT_TEST_PROJECT_ID: string =
+        'thundra.agent.test.project.id';
+    public static readonly THUNDRA_AGENT_TEST_RUN_ID: string =
+        'thundra.agent.test.run.id';
 }
 
 export default ConfigNames;

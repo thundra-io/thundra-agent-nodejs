@@ -11,6 +11,9 @@ import TestSuiteEvent from '../../model/TestSuiteEvent';
 import WrapperContext from '../../../WrapperContext';
 import ForesightWrapperUtils from '../../ForesightWrapperUtils';
 import * as ForesightExecutor from '../../ForesightExecutor';
+import ConfigNames from '../../../../config/ConfigNames';
+import ConfigProvider from '../../../../config/ConfigProvider';
+import ThundraLogger from '../../../../ThundraLogger';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -44,24 +47,44 @@ function wrapEnvironment (BaseEnvironment: any) {
 
     createTestSuiteEvent(event: any, state: State) {
 
-      const { testSuite } = this;
-
       if (!event) {
         return;
       }
 
-      let id: string;
+      const { testSuite } = this;
+
       const name: string = event.name;
       const orginalEvent = event;
 
+      let id: string;
+      let testName: string;
+      let testDuration: number;
+      let error: Error;
+
       if (event.test && event.test.parent) {
-        id = testSuite + '-' + event.test.parent.name;
+        const test = event.test;
+
+        id = testSuite + '-' + test.parent.name;
+        testName = test.name;
+        testDuration = test.duration;
+
+        const errorArr = test.errors;
+        if (errorArr.length) {
+
+          const stack = test.asyncError.stack;
+          const message = test.asyncError.message || test.errors[0];
+          error = new Error(message);
+          error.stack = stack;
+        }
       }
 
       return TestSuiteEvent
         .builder()
           .withId(id)
           .withName(name)
+          .withTestName(testName)
+          .withTestDuration(testDuration)
+          .withError(error)
           .withOrginalEvent(orginalEvent)
           .withTestSuiteName(testSuite)
         .build();
@@ -105,6 +128,15 @@ export default [{
     versions: ['>=24.8.0'],
     patch: function(NodeEnvironment: any) {
 
+      const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);
+      if (!projectId) {
+
+        ThundraLogger.error('<ThundraJestEnvironment> Test project id must be filled ...');
+        return NodeEnvironment;
+
+      }
+
+      TestRunnerSupport.setProjectId(projectId);
       return wrapEnvironment(NodeEnvironment);
     }
   },
@@ -113,7 +145,16 @@ export default [{
     versions: ['>=24.8.0'],
     patch: function (JsdomEnvironment: any) {
       
-      return wrapEnvironment(JsdomEnvironment)
+      const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);
+      if (!projectId) {
+
+        ThundraLogger.error('<ThundraJestEnvironment> Test project id must be filled ...');
+        return JsdomEnvironment;
+
+      }
+
+      TestRunnerSupport.setProjectId(projectId);
+      return wrapEnvironment(JsdomEnvironment);
     }
   }
 ]
