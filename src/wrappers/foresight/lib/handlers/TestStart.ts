@@ -3,26 +3,18 @@ import ForesightWrapperUtils from '../../ForesightWrapperUtils';
 import ExecutionContextManager from '../../../../context/ExecutionContextManager';
 import TestCaseExecutionContext from '../../model/TestCaseExecutionContext';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
+import HandlerUtils from './utils/HandlerUtils';
 
 export default async function run(event: TestSuiteEvent) {
 
-    const orginalEvent = event.orginalEvent;
-    if (!orginalEvent){
-      
-        /**
-         * log & return
-         */
-        return;
-    }
-
-    const testEntry = orginalEvent.test;
-    if (!testEntry){
-
+    const testEntry = HandlerUtils.getTestEntry(event);
+    if (!testEntry) {
       /**
        * log & return
        */
+
       return;
-  }
+    }
 
     const testName = testEntry.name;
     const testSuiteName = testEntry.parent.name;

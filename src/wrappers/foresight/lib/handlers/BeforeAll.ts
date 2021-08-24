@@ -1,15 +1,39 @@
 import * as TestRunnerSupport from '../../TestRunnerSupport';
-import ForesightWrapperUtils from '../../ForesightWrapperUtils';
 import ExecutionContextManager from '../../../../context/ExecutionContextManager';
-import TestCaseExecutionContext from '../../model/TestCaseExecutionContext';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
+import ThundraSpan from '../../../../opentracing/Span';
+import { TestRunnerTags } from '../../model/TestRunnerTags';
+import HandlerUtils from './utils/HandlerUtils';
+
+let span: ThundraSpan;
+
+const TEST_BEFORE_ALL_OPERATION_NAME = "beforeAll";
 
 export async function start(event: TestSuiteEvent) {
 
-    console.log('beforeAllStart')
+    const context = ExecutionContextManager.get();
+    if (!context) {
+        /**
+         * log & return
+         */
+
+        return;
+    }
+
+    span = HandlerUtils.createSpanForTest(TEST_BEFORE_ALL_OPERATION_NAME, context);
+    if (!span) {
+        /**
+         * log & return
+         */
+
+        return;
+    }
+
+    span.tags[TestRunnerTags.TEST_SUITE] = TestRunnerSupport.testSuiteName;
+    span._initialized();
 }
 
 export async function finish(event: TestSuiteEvent) {
 
-    console.log('beforeAllFinish')
+    HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_BEFORE_ALL_DURATION);
 }

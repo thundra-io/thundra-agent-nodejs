@@ -3,6 +3,40 @@ import ForesightWrapperUtils from '../../ForesightWrapperUtils';
 import ExecutionContextManager from '../../../../context/ExecutionContextManager';
 import { TEST_STATUS } from '../../../../Constants';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
+import HandlerUtils from './utils/HandlerUtils';
+
+const increareSuccessfulCount = () => {
+
+  const testRunContext = TestRunnerSupport.testRunScope;
+  const testSuiteContext = TestRunnerSupport.testSuiteExecutionContext;
+
+  testSuiteContext.increareSuccessfulCount();
+  testRunContext.increareSuccessfulCount();
+}
+
+const increaseFailedCount = () => {
+  
+  const testRunContext = TestRunnerSupport.testRunScope;
+  const testSuiteContext = TestRunnerSupport.testSuiteExecutionContext;
+
+  testSuiteContext.increaseFailedCount();
+  testRunContext.increaseFailedCount();
+}
+
+const increaseAbortedCount = () => {
+  
+  const testRunContext = TestRunnerSupport.testRunScope;
+  const testSuiteContext = TestRunnerSupport.testSuiteExecutionContext;
+
+  testSuiteContext.increaseAbortedCount();
+  testRunContext.increaseAbortedCount();
+}
+
+const increaseActions = {
+  [TEST_STATUS.SUCCESSFUL]: increareSuccessfulCount,
+  [TEST_STATUS.FAILED]: increaseFailedCount,
+  [TEST_STATUS.ABORTED]: increaseAbortedCount,
+}
 
 const isErrorTimeout = (error: Error) => {
 
@@ -16,16 +50,7 @@ const isErrorTimeout = (error: Error) => {
 
 export default async function run(event: TestSuiteEvent) {
 
-    const orginalEvent = event.orginalEvent;
-    if (!orginalEvent){
-      
-        /**
-         * log & return
-         */
-        return;
-    }
-
-    const testEntry = orginalEvent.test;
+    const testEntry = HandlerUtils.getTestEntry(event);
     if (!testEntry) {
       /**
        * log & return
@@ -48,6 +73,7 @@ export default async function run(event: TestSuiteEvent) {
 
       if (isErrorTimeout(error)) {
         context.setExecutionTimeout(true);
+        testStatus = TEST_STATUS.ABORTED;
       }
     }
 
@@ -60,16 +86,12 @@ export default async function run(event: TestSuiteEvent) {
       context,
       TestRunnerSupport.wrapperContext.reporter);
 
-    const testRunContext = TestRunnerSupport.testRunScope;
-    const testSuiteContext = TestRunnerSupport.testSuiteExecutionContext;
-
-    if (testStatus === TEST_STATUS.SUCCESSFUL) {
-      testSuiteContext.increareSuccessfulCount();
-      testRunContext.increareSuccessfulCount();
-    } else {
-      testSuiteContext.increaseFailedCount();
-      testRunContext.increaseFailedCount();
+    const increaseAction = increaseActions[testStatus];
+    if (increaseAction) {
+      increaseAction();
     }
+
+    const testSuiteContext = TestRunnerSupport.testSuiteExecutionContext;
 
     ExecutionContextManager.set(testSuiteContext);
     ForesightWrapperUtils.changeAppInfoToTestSuite();

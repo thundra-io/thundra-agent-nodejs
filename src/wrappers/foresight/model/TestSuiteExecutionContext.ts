@@ -52,6 +52,11 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
         this.increaseTotalCount();
     }
 
+    increaseAbortedCount() {
+        this.abortedCount++;
+        this.increaseTotalCount();
+    }
+
     getContextInformation(){
 
         const { applicationClassName } = ApplicationManager.getApplicationInfo();

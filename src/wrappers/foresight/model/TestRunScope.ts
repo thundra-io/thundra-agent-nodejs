@@ -34,6 +34,11 @@ export default class TestRunScope {
         this.context.ignoredCount++;
         this.increaseTotalCount();
     }
+
+    increaseAbortedCount() {
+        this.context.abortedCount++;
+        this.increaseTotalCount();
+    }
 }
 
 export class TestRunContext {

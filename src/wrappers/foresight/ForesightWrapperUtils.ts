@@ -27,7 +27,6 @@ import WrapperContext from '../WrapperContext';
 const get = require('lodash.get');
 
 const TEST_SUIT_APPLICATION_DOMAIN_NAME = 'TestSuite';
-
 const TEST_CASE_APPLICATION_DOMAIN_NAME = 'Test';
 
 export default class ForesightWrapperUtils {
