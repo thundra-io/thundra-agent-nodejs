@@ -84,7 +84,10 @@ class AMQPLIBIntegration implements Integration {
             disableActiveStart: true,
           });
           integration.handleTags(this, config, span, method, fields);
-          span.setTag(AMQPTags.MESSAGE, content.toString());
+          span.addTags({
+            [AMQPTags.MESSAGE]: content.toString(),
+            [AMQPTags.QUEUE]: integration.queueName,
+          });
           span._initialized();
           tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, properties.headers);
         } catch (error) {
@@ -243,7 +246,6 @@ class AMQPLIBIntegration implements Integration {
     }
 
     const fieldNames: FieldNameType = {
-      QUEUE: 'queue',
       EXCHANGE: 'exchange',
       ROUTING_KEY: 'routingKey',
     };
