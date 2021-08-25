@@ -122,6 +122,7 @@
     "require-in-the-middle": "^3.1.0",
     "semver": "^5.5.0",
     "shimmer": "^1.2.0",
+    "url-parse": "^1.5.3",
     "uuid": "^3.2.1",
     "ws": "^7.2.1"
   }

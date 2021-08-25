@@ -15,8 +15,10 @@ import ExecutionContextManager from '../context/ExecutionContextManager';
 import * as opentracing from 'opentracing';
 
 const shimmer = require('shimmer');
+const has = require('lodash.has');
+const URL = require('url-parse');
 
-const MODULE_NAME = 'amqplib/lib/channel.js';
+const MODULE_NAME = ['amqplib', 'amqplib/lib/callback_model.js', 'amqplib/lib/channel_model.js', 'amqplib/lib/channel.js'];
 const MODULE_VERSION = '>=0.5';
 
 /**
@@ -25,6 +27,8 @@ const MODULE_VERSION = '>=0.5';
  */
 class AMQPLIBIntegration implements Integration {
   config: any;
+  queueName: any;
+  vhost: any;
   private instrumentContext: any;
 
   constructor(config: any) {
@@ -32,7 +36,7 @@ class AMQPLIBIntegration implements Integration {
 
     this.config = config || {};
     this.instrumentContext = ModuleUtils.instrument(
-      [MODULE_NAME],
+      MODULE_NAME,
       MODULE_VERSION,
       (lib: any, cfg: any) => {
         this.wrap.call(this, lib, cfg);
@@ -61,106 +65,129 @@ class AMQPLIBIntegration implements Integration {
         ThundraLogger.debug(
           `<AMQPLIBIntegration> Tracing sendMessage args: ${args}`,
         );
-        const method = 'basic.publish';
-        const [fields, properties, content] = args;
-        const { tracer } = ExecutionContextManager.get();
-        const parentSpan = tracer.getActiveSpan();
-        const span = tracer._startSpan(fields.routingKey, {
-          childOf: parentSpan,
-          domainName: DomainNames.MESSAGING,
-          className: ClassNames.AMQP,
-          disableActiveStart: true,
-        });
-        integration.handleTags(this, config, span, method, fields);
-        span._initialized();
-        tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, properties.headers);
+        let span;
+        try {
+          const {tracer} = ExecutionContextManager.get();
+
+          if (!tracer) {
+            ThundraLogger.debug('<AMQPLIBIntegration> Skipped tracing command as no tracer is available');
+            return sendMessage.apply(this, args);
+          }
+
+          const method = 'basic.publish';
+          const [fields, properties, content] = args;
+          const parentSpan = tracer.getActiveSpan();
+          span = tracer._startSpan(integration.queueName + integration.vhost, {
+            childOf: parentSpan,
+            domainName: DomainNames.MESSAGING,
+            className: ClassNames.AMQP,
+            disableActiveStart: true,
+          });
+          integration.handleTags(this, config, span, method, fields);
+          span.setTag(AMQPTags.MESSAGE, content.toString());
+          span._initialized();
+          tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, properties.headers);
+        } catch (error) {
+          ThundraLogger.error(
+              '<AMQPLIBIntegration> Error occurred while tracing AMQP ${method} method:',
+              error,
+          );
+          if (span) {
+            ThundraLogger.debug(
+                `<AMQPLIBIntegration> Because of error, closing AMQP span with name ${span.getOperationName()}`,
+            );
+            span.setErrorTag(error);
+            span.close();
+            span = null;
+          }
+          if (error instanceof ThundraChaosError) {
+            throw error;
+          }
+        }
         try {
           return sendMessage.apply(this, args);
         } catch (error) {
-          ThundraLogger.error(
-            '<AMQPLIBIntegration> Error occurred while tracing AMQP ${method} method:',
-            error,
-          );
-
           if (span) {
-            ThundraLogger.debug(
-              `<AMQPLIBIntegration> Because of error, closing AMQP span with name ${span.getOperationName()}`,
-            );
-            span.finish();
-          }
-
-          if (error instanceof ThundraChaosError) {
-            throw error;
-          } else {
-            return sendMessage.apply(this, args);
+            span.setErrorTag(error);
           }
         } finally {
-          span.finish();
+          if (span) {
+            span.close();
+          }
         }
       };
     }
 
-    function wrapDispatchMessage(dispatchMessage: Function) {
+    function wrapAssertQueue(assertQueue: Function) {
       /**
-       * Wrap the dispatchMessage
-       * @param args dispatchMessage function parameters in order fields and message.
+       * Wrap AssertQueue to retrieve queueName
+       * @param args sendMessage function parameters in order queueName, opts.
        */
-      return function dispatchMessageWithTrace(...args: any) {
+      return function getQueueName(...args: any) {
         ThundraLogger.debug(
-          `<AMQPLIBIntegration> Tracing dispatchMessage args: ${args}`,
+          `<AMQPLIBIntegration> Tracing assertQueue args: ${args}`,
         );
-        const method = 'basic.deliver';
-        const [fields, message] = args;
-        const { tracer } = ExecutionContextManager.get();
-        const parentSpan = tracer.getActiveSpan();
-        const span = tracer._startSpan(fields.routingKey, {
-          childOf: parentSpan,
-          domainName: DomainNames.MESSAGING,
-          className: ClassNames.AMQP,
-          disableActiveStart: true,
-        });
-        integration.handleTags(this, config, span, method, fields);
         try {
-          span.setTag('amqp.message', message.content.toString());
+          const queue = args[0];
+          integration.queueName = queue;
         } catch (err) {
-          ThundraLogger.error(
-            '<AMQPLIBIntegration> Error occurred while converting message to string AMQP',
-            err,
+          ThundraLogger.debug(
+            `<AMQPLIBIntegration> Couldn't get queueName.`,
           );
+          integration.queueName = '';
         }
-        span._initialized();
+        return assertQueue.apply(this, args);
+      };
+    }
+
+    function wrapConnect(connect: Function) {
+      /**
+       * Wrap connection to retrieve vhost
+       * @param args sendMessage function parameters in order url, sockopts
+       */
+      return function getVhost(...args: any) {
+        ThundraLogger.debug(
+          `<AMQPLIBIntegration> Tracing connect args: ${args}`,
+        );
+        const url = args[0];
         try {
-          return dispatchMessage.apply(this, args);
-        } catch (error) {
-          ThundraLogger.error(
-            '<AMQPLIBIntegration> Error occurred while tracing AMQP ${method} method:',
-            error,
-          );
-
-          if (span) {
-            ThundraLogger.debug(
-              `<AMQPLIBIntegration> Because of error, closing AMQP span with name ${span.getOperationName()}`,
-            );
-            span.finish();
-          }
-
-          if (error instanceof ThundraChaosError) {
-            throw error;
+          if (typeof url === 'object') {
+            if (url.hasOwnProperty('vhost')) {
+              integration.vhost = url.vhost;
+            } else {
+              integration.vhost = '::/';
+            }
           } else {
-            return dispatchMessage.apply(this, args);
+            const parts = URL(url, true);
+            integration.vhost = parts.pathname ? parts.pathname.substr(1) : null;
+            if (integration.vhost === null || integration.vhost === undefined) {
+              integration.vhost = '::/';
+            } else {
+              integration.vhost = '::/' + integration.vhost;
+            }
           }
-        } finally {
-          span.finish();
+        } catch (err) {
+          ThundraLogger.debug(
+            `<AMQPLIBIntegration> Couldn't get vhost`,
+          );
+          integration.vhost = '';
         }
+        return connect.apply(this, args);
       };
     }
 
     ThundraLogger.debug(
-      '<AMQPLIBIntegration> Wrapping Channel.sendMessage, \
-	 		Channel.sendImmediately, BaseChannel.dispatchMessage',
+      '<AMQPLIBIntegration> Wrapping Channel.sendMessage',
     );
-    shimmer.wrap(lib.Channel.prototype, 'sendMessage', wrapSendMessage);
-    shimmer.wrap(lib.BaseChannel.prototype, 'dispatchMessage', wrapDispatchMessage);
+    if (has(lib, 'Channel.prototype.sendMessage')) {
+      shimmer.wrap(lib.Channel.prototype, 'sendMessage', wrapSendMessage);
+    }
+    if (has(lib, 'Channel.prototype.assertQueue')) {
+      shimmer.wrap(lib.Channel.prototype, 'assertQueue', wrapAssertQueue);
+    }
+    if (has(lib, 'connect')) {
+      shimmer.wrap(lib, 'connect', wrapConnect);
+    }
   }
 
   /**
@@ -170,11 +197,11 @@ class AMQPLIBIntegration implements Integration {
     ThundraLogger.debug('<AMQPLIBIntegration> Do unwrap');
 
     ThundraLogger.debug(
-      '<AMQPLIBIntegration> Unwrapping Channel.sendMessage, Channel.sendImmediately, BaseChannel.dispatchMessage',
+      '<AMQPLIBIntegration> Unwrapping Channel.sendMessage',
     );
 
     shimmer.unwrap(lib.Channel.prototype, 'sendMessage');
-    shimmer.unwrap(lib.BaseChannel.prototype, 'dispatchMessage');
+    shimmer.unwrap(lib.Channel.prototype, 'assertQueue');
   }
 
   /**
@@ -199,9 +226,6 @@ class AMQPLIBIntegration implements Integration {
     if ('queue' in fields) {
       resourceName += ' ' + fields.queue;
     }
-    if ('consumerTag' in fields) {
-      resourceName += ' ' + fields.consumerTag;
-    }
     return resourceName;
   }
 
@@ -222,7 +246,6 @@ class AMQPLIBIntegration implements Integration {
       QUEUE: 'queue',
       EXCHANGE: 'exchange',
       ROUTING_KEY: 'routingKey',
-      CONSUMER_TAG: 'consumerTag',
     };
 
     span.addTags({

@@ -441,8 +441,8 @@ export const AMQPTags: AMQPLIBType = {
     PORT: 'amqp.port',
     QUEUE: 'amqp.queue',
     EXCHANGE: 'amqp.exchange',
-    ROUTING_KEY: 'amqp.routingKey',
-    CONSUMER_TAG: 'amqp.consumerTag',
+    ROUTING_KEY: 'amqp.routing_key',
+    MESSAGE: 'amqp.message',
 };
 
 export const AwsSDKTags = {
