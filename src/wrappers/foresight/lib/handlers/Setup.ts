@@ -33,6 +33,7 @@ async function globalSetup() {
     try {
 
         await sendData(testRunStart);
+        TestRunnerSupport.startTestRunStatusEvent();
     } catch (error) {
         /**
          * thundra logger error
@@ -54,6 +55,8 @@ async function globalTeardown() {
             }
 
             await sendData(testRunFinish);
+            TestRunnerSupport.setInitialized(false);
+            TestRunnerSupport.finishTestRunStatusEvent();
         } catch (e) {
             /**
              * thundra logger error

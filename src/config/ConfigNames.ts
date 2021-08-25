@@ -212,6 +212,8 @@ class ConfigNames {
         'thundra.agent.test.project.id';
     public static readonly THUNDRA_AGENT_TEST_RUN_ID: string =
         'thundra.agent.test.run.id';
+    public static readonly THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ: string =
+        'thundra.agent.test.status.report.freq';
 }
 
 export default ConfigNames;

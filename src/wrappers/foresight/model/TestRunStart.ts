@@ -109,18 +109,4 @@ export default class TestRunStart extends TestRunMonitoringData {
                 this.tags);
         }
     }
-    
 } 
-
-// private final String id;
-// private final String projectId;
-// private final String taskId;
-// private final long startTimestamp;
-// private final String hostName;
-// private final String environment;
-// private final String repoURL;
-// private final String repoName;
-// private final String branch;
-// private final String commitHash;
-// private final String commitMessage;
-// private final Map<String, Object> tags;

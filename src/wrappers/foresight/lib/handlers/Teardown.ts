@@ -14,4 +14,6 @@ export default async function run(event: TestSuiteEvent) {
       TestRunnerSupport.wrapperContext.plugins,
       context,
       TestRunnerSupport.wrapperContext.reporter);
+
+    TestRunnerSupport.finishTestRunStatusEvent();
 }

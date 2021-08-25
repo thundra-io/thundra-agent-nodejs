@@ -33,6 +33,9 @@ function wrapEnvironment (BaseEnvironment: any) {
 
       const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(ForesightExecutor, APPLICATIONCLASSNAME);
       TestRunnerSupport.setWrapperContext(wrapperContext);
+
+      const testStatusReportFreq = ConfigProvider.get<number>(ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ, 10000);
+      TestRunnerSupport.setTestStatusReportFreq(testStatusReportFreq);
     }
 
     createEventName(event: any){

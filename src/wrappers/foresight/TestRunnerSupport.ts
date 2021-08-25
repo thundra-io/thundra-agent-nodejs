@@ -9,6 +9,9 @@ import TestCaseExecutionContext from './model/TestCaseExecutionContext';
 import os from 'os';
 import ExecutionContext from '../../context/ExecutionContext';
 import WrapperContext from '../WrapperContext';
+import TestRunStatus from './model/TestRunStatus';
+import ConfigProvider from '../../config/ConfigProvider';
+import ConfigNames from '../../config/ConfigNames';
 
 const findHostName = () => {
     return os.hostname();
@@ -28,6 +31,8 @@ const getTestRunId = () => {
 
 const hostName: string = findHostName();
 let projectId: string;
+let testStatusReportFreq: number;
+let testRunStatusWork: NodeJS.Timeout;
 
 export let testSuiteName: string;
 export let wrapperContext: WrapperContext;
@@ -60,10 +65,59 @@ export const setTestCaseContext = (context: ExecutionContext) => {
     testCaseExecutionContext = context as TestCaseExecutionContext;
 }
 
+export const setTestStatusReportFreq = (freq: number) => {
+    testStatusReportFreq = freq;
+}
+
 /** if needed keep suite and cases contexts in here 
     export const testSuiteContextMap = new Map<string, TestSuiteExecutionContext>();
     export const testCaseScopeMap = new Map<string, TestCaseExecutionContext>();
 */
+
+const sendTestRunStatus = async () => {
+    if (!testRunScope || !initialized) {
+        /**
+         * log & return
+         */
+
+        return;
+    }
+
+    const config = ConfigProvider.thundraConfig;
+    const { apiKey } = config;
+
+    const statusTimestamp = new Date().getTime();
+    const testRunStatus = TestRunStatus
+        .builder()
+            .withId(testRunScope.id)
+            .withProjectId(projectId)
+            .withTaskId(testRunScope.taskId)
+            .withStartTimestamp(testRunScope.startTimestamp)
+            .withStatusTimestamp(statusTimestamp)
+            .withTotalCount(testRunScope.context.totalCount)
+            .withSuccessfulCount(testRunScope.context.successfulCount)
+            .withFailedCount(testRunScope.context.failedCount)
+            .withIgnoredCount(testRunScope.context.ignoredCount)
+            .withAbortedCount(testRunScope.context.abortedCount)
+            .withHostName(hostName)
+            .withEnvironmentInfo(EnvironmentSupport.getEnvironmentInfo())
+        .build();
+    
+    await wrapperContext.reporter.sendReports([Utils.generateReport(testRunStatus, apiKey)]);
+    startTestRunStatusEvent();
+}
+
+export const startTestRunStatusEvent = () => {
+    
+    if (testStatusReportFreq) {
+        finishTestRunStatusEvent();
+        testRunStatusWork = setTimeout(sendTestRunStatus, testStatusReportFreq)
+    }
+}
+
+export const finishTestRunStatusEvent = () => {
+    clearInterval(testRunStatusWork);
+}
 
 export const startTestRun = (): TestRunStart => {
 
