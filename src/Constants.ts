@@ -556,7 +556,7 @@ export const SpanTypes = {
     AWS_EVENTBRIDGE: 'AWS-EventBridge',
     AWS_SES: 'AWS-SES',
     AWS_STEPFUNCTIONS: 'AWS-StepFunctions',
-    AMQP: 'Amqplib',
+    RABBITMQ: 'RabbitMQ',
 };
 
 export const INTEGRATIONS: any = {

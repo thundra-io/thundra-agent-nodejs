@@ -228,7 +228,7 @@ class AMQPLIBIntegration implements Integration {
     method: any,
     fields: any,
   ) => {
-    span.setTag(SpanTags.SPAN_TYPE, SpanTypes.AMQP);
+    span.setTag(SpanTags.SPAN_TYPE, SpanTypes.RABBITMQ);
 
     interface FieldNameType {
       [key: string]: string;
