@@ -53,7 +53,7 @@ describe('AMQP 0-9-1 integration', () => {
             
             expect(span_send.className).toBe('AMQP');
             expect(span_send.domainName).toBe('Messaging');
-            expect(span_send.operationName).toBe('tasks_callback');
+            expect(span_send.operationName).toBe('tasks_callback::/');
             expect(span_send.spanContext.traceId).not.toBeUndefined();
             expect(span_send.spanContext.spanId).not.toBeUndefined();
             expect(span_send.tags['amqp.exchange']).toBe('');
