@@ -282,7 +282,7 @@ class LambdaEventUtils {
      */
      static injectTriggerTagsForAmazonRMQ(span: ThundraSpan, originalEvent: any, originalContext: any): string {
         const domainName = DomainNames.MESSAGING;
-        const className = ClassNames.AMQP;
+        const className = ClassNames.RABBITMQ;
         const traceLinks: any[] = [];
         const queueNames: Set<string> = new Set<string>();
         let counterTraceLink = 0;

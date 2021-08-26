@@ -80,7 +80,7 @@ class AMQPLIBIntegration implements Integration {
           span = tracer._startSpan(integration.queueName + integration.vhost, {
             childOf: parentSpan,
             domainName: DomainNames.MESSAGING,
-            className: ClassNames.AMQP,
+            className: ClassNames.RABBITMQ,
             disableActiveStart: true,
           });
           integration.handleTags(this, config, span, method, fields);
