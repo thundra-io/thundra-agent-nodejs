@@ -22,7 +22,9 @@ jobs:
             - discovery.type=single-node
             - "ES_JAVA_OPTS=-Xms64m -Xmx64m"
 
-        - image: circleci/mongo
+        - image: circleci/
+        
+        - image: docker.io/bitnami/rabbitmq:3.8
 
       resource_class: large
       steps:
