@@ -660,13 +660,10 @@ class LambdaEventUtils {
                 if (!traceId) {
                     continue;
                 }
-                
                 const transactionIdBytes = get(data, 'basicProperties.headers.x-thundra-transaction-id.bytes', null);
                 const transactionId = transactionIdBytes ? Buffer.from(transactionIdBytes, 'base64').toString() : null;
-                
                 const spanIdBytes = get(data, 'basicProperties.headers.x-thundra-span-id.bytes', null);
                 const spanId = spanIdBytes ? Buffer.from(spanIdBytes, 'base64').toString() : null;
-                
                 sc = new ThundraSpanContext( {transactionId, spanId, traceId} );
                 if (sc) {
                     if (!spanContext) {

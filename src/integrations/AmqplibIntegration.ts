@@ -18,7 +18,8 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const URL = require('url-parse');
 
-const MODULE_NAME = ['amqplib', 'amqplib/callback_api.js' ,'amqplib/lib/callback_model.js', 'amqplib/lib/channel_model.js', 'amqplib/lib/channel.js'];
+const MODULE_NAME = ['amqplib', 'amqplib/callback_api.js' , 'amqplib/lib/callback_model.js',
+  'amqplib/lib/channel_model.js', 'amqplib/lib/channel.js'];
 const MODULE_VERSION = '>=0.5';
 const PUBLISH_METHOD = 'basic.publish';
 
