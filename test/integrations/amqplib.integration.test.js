@@ -51,7 +51,7 @@ describe('AMQP 0-9-1 integration', () => {
         return AMQP.callback_model(sdk).then((data) => {
             const span_send = tracer.getRecorder().spanList[0];
             
-            expect(span_send.className).toBe('AMQP');
+            expect(span_send.className).toBe('RabbitMQ');
             expect(span_send.domainName).toBe('Messaging');
             expect(span_send.operationName).toBe('tasks_callback::/');
             expect(span_send.spanContext.traceId).not.toBeUndefined();

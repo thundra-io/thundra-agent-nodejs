@@ -18,8 +18,9 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const URL = require('url-parse');
 
-const MODULE_NAME = ['amqplib', 'amqplib/lib/callback_model.js', 'amqplib/lib/channel_model.js', 'amqplib/lib/channel.js'];
+const MODULE_NAME = ['amqplib', 'amqplib/callback_api.js' ,'amqplib/lib/callback_model.js', 'amqplib/lib/channel_model.js', 'amqplib/lib/channel.js'];
 const MODULE_VERSION = '>=0.5';
+const PUBLISH_METHOD = 'basic.publish';
 
 /**
  * {@link Integration} implementation for AMQPLIB Integration
@@ -62,9 +63,7 @@ class AMQPLIBIntegration implements Integration {
        * @param args sendMessage function parameters in order fields, properties and content.
        */
       return function sendMessageWithTrace(...args: any) {
-        ThundraLogger.debug(
-          `<AMQPLIBIntegration> Tracing sendMessage args: ${args}`,
-        );
+        ThundraLogger.debug('<AMQPLIBIntegration> Tracing sendMessage args:', args);
         let span;
         try {
           const {tracer} = ExecutionContextManager.get();
@@ -74,7 +73,6 @@ class AMQPLIBIntegration implements Integration {
             return sendMessage.apply(this, args);
           }
 
-          const method = 'basic.publish';
           const [fields, properties, content] = args;
           const parentSpan = tracer.getActiveSpan();
           span = tracer._startSpan(integration.queueName + integration.vhost, {
@@ -83,9 +81,10 @@ class AMQPLIBIntegration implements Integration {
             className: ClassNames.RABBITMQ,
             disableActiveStart: true,
           });
-          integration.handleTags(this, config, span, method, fields);
+          integration.handleTags(this, config, span, PUBLISH_METHOD, fields);
           span.addTags({
-            [AMQPTags.MESSAGE]: content.toString(),
+            [AMQPTags.MESSAGE]: config.maskRabbitmqMessage ?
+            undefined : content.toString(),
             [AMQPTags.QUEUE]: integration.queueName,
             [AMQPTags.VHOST]: integration.vhost,
           });
@@ -128,9 +127,7 @@ class AMQPLIBIntegration implements Integration {
        * @param args sendMessage function parameters in order queueName, opts.
        */
       return function getQueueName(...args: any) {
-        ThundraLogger.debug(
-          `<AMQPLIBIntegration> Tracing assertQueue args: ${args}`,
-        );
+        ThundraLogger.debug('<AMQPLIBIntegration> Tracing assertQueue args:', args);
         try {
           const queue = args[0];
           integration.queueName = queue;
@@ -150,9 +147,7 @@ class AMQPLIBIntegration implements Integration {
        * @param args sendMessage function parameters in order url, sockopts
        */
       return function getVhost(...args: any) {
-        ThundraLogger.debug(
-          `<AMQPLIBIntegration> Tracing connect args: ${args}`,
-        );
+        ThundraLogger.debug('<AMQPLIBIntegration> Tracing connect args:', args);
         const url = args[0];
         try {
           if (typeof url === 'object') {
@@ -180,16 +175,22 @@ class AMQPLIBIntegration implements Integration {
       };
     }
 
-    ThundraLogger.debug(
-      '<AMQPLIBIntegration> Wrapping Channel.sendMessage',
-    );
     if (has(lib, 'Channel.prototype.sendMessage')) {
+      ThundraLogger.debug(
+        '<AMQPLIBIntegration> Wrapping Channel.sendMessage',
+      );
       shimmer.wrap(lib.Channel.prototype, 'sendMessage', wrapSendMessage);
     }
     if (has(lib, 'Channel.prototype.assertQueue')) {
+      ThundraLogger.debug(
+        '<AMQPLIBIntegration> Wrapping Channel.assertQueue',
+      );
       shimmer.wrap(lib.Channel.prototype, 'assertQueue', wrapAssertQueue);
     }
     if (has(lib, 'connect')) {
+      ThundraLogger.debug(
+        '<AMQPLIBIntegration> Wrapping connect',
+      );
       shimmer.wrap(lib, 'connect', wrapConnect);
     }
   }
@@ -200,12 +201,12 @@ class AMQPLIBIntegration implements Integration {
   doUnwrap(lib: any) {
     ThundraLogger.debug('<AMQPLIBIntegration> Do unwrap');
 
-    ThundraLogger.debug(
-      '<AMQPLIBIntegration> Unwrapping Channel.sendMessage',
-    );
-
+    ThundraLogger.debug('<AMQPLIBIntegration> Unwrapping Channel.sendMessage');
     shimmer.unwrap(lib.Channel.prototype, 'sendMessage');
+    ThundraLogger.debug('<AMQPLIBIntegration> Unwrapping Channel.assertQueue');
     shimmer.unwrap(lib.Channel.prototype, 'assertQueue');
+    ThundraLogger.debug('<AMQPLIBIntegration> Unwrapping connect');
+    shimmer.unwrap(lib, 'connect');
   }
 
   /**
@@ -261,7 +262,7 @@ class AMQPLIBIntegration implements Integration {
       }
     });
 
-    span.setTag('amqp.method', method);
+    span.setTag([AMQPTags.METHOD], method);
     span.setTag([SpanTags.OPERATION_TYPE], method.split('.')[1]);
   }
 }

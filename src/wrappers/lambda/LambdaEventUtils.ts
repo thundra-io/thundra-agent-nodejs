@@ -14,9 +14,10 @@ import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport
 import Utils from '../../utils/Utils';
 import {ApplicationManager} from '../../application/ApplicationManager';
 import {LambdaPlatformUtils} from './LambdaPlatformUtils';
-import { trace } from 'console';
 
 const get = require('lodash.get');
+const MAX_TRIGGER_RESOURCE_NAME_COUNT = 10;
+const MAX_TRACE_LINK_COUNT = 10;
 
 /**
  * Utility class for AWS Lambda event related stuff.
@@ -275,7 +276,7 @@ class LambdaEventUtils {
     }
 
     /**
-     * Injects trigger tags for AWS SQS events
+     * Injects trigger tags for AWS AmazonMQ events
      * @param {ThundraSpan} span the span to inject tags
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
@@ -283,46 +284,32 @@ class LambdaEventUtils {
      static injectTriggerTagsForAmazonRMQ(span: ThundraSpan, originalEvent: any, originalContext: any): string {
         const domainName = DomainNames.MESSAGING;
         const className = ClassNames.RABBITMQ;
-        const traceLinks: any[] = [];
         const queueNames: Set<string> = new Set<string>();
-        let counterTraceLink = 0;
+        const traceLinks: any[] = [];
+
         Object.keys(originalEvent.rmqMessagesByQueue).forEach((queue) => {
-            queueNames.add(queue);
-            if (queueNames.size === 10) {
-                this.injectTriggerTagsForInvocation(domainName, className, Array.from(queueNames));
-                this.injectTriggerTagsForSpan(span, domainName, className, Array.from(queueNames));
-                queueNames.clear();
+            if (queueNames.size < MAX_TRIGGER_RESOURCE_NAME_COUNT) {
+                queueNames.add(queue);
             }
             for (const record of originalEvent.rmqMessagesByQueue[`${queue}`]) {
-                if (record.hasOwnProperty('basicProperties')) {
-                    const basicProperties = record.basicProperties;
-                    if (basicProperties.hasOwnProperty('headers')) {
-                        const headers = basicProperties.headers;
-                        if (headers.hasOwnProperty('x-thundra-span-id')) {
-                            const spanIdBytes = get(get(headers, 'x-thundra-span-id'), 'bytes');
-                            const spanId = Buffer.from(spanIdBytes, 'base64').toString();
-                            traceLinks.push(spanId);
-                            counterTraceLink += 1;
-                            if (counterTraceLink === 10) {
-                                InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
-                                counterTraceLink = 0;
-                                traceLinks.splice(0, traceLinks.length);
-                            }
-                        }
+                const spanIdBytes = get(record, 'basicProperties.headers.x-thundra-span-id.bytes', false);
+                if (spanIdBytes) {
+                    const spanId = Buffer.from(spanIdBytes, 'base64').toString();
+                    if (traceLinks.length < MAX_TRACE_LINK_COUNT) {
+                        traceLinks.push(spanId);
                     }
                 }
             }
         });
-        if (counterTraceLink > 0) {
-            InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
-            counterTraceLink = 0;
-            traceLinks.splice(0, traceLinks.length);
-        }
+
         if (queueNames.size > 0) {
             this.injectTriggerTagsForInvocation(domainName, className, Array.from(queueNames));
             this.injectTriggerTagsForSpan(span, domainName, className, Array.from(queueNames));
-            queueNames.clear();
         }
+        if (traceLinks.length > 0) {
+            InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
+        }
+
         return className;
     }
 
@@ -668,15 +655,18 @@ class LambdaEventUtils {
         for (const queue of Object.keys(originalEvent.rmqMessagesByQueue)) {
             const queueData = originalEvent.rmqMessagesByQueue[queue];
             for (const data of queueData) {
-                const spanIdBytes = get(get(data.basicProperties.headers, 'x-thundra-span-id'), 'bytes');
-                const traceIdBytes = get(get(data.basicProperties.headers, 'x-thundra-trace-id'), 'bytes');
-                const spanId = Buffer.from(spanIdBytes, 'base64').toString();
-                const traceId = Buffer.from(traceIdBytes, 'base64').toString();
-                let transactionId: string;
-                if (data.basicProperties.headers.hasOwnProperty('x-thundra-transaction-id')) {
-                    const transactionIdBytes = get(get(data.basicProperties.headers, 'x-thundra-transaction-id'), 'bytes');
-                    transactionId = Buffer.from(transactionIdBytes, 'base64').toString();
+                const traceIdBytes = get(data, 'basicProperties.headers.x-thundra-trace-id.bytes', null);
+                const traceId = traceIdBytes ? Buffer.from(traceIdBytes, 'base64').toString() : null;
+                if (!traceId) {
+                    continue;
                 }
+                
+                const transactionIdBytes = get(data, 'basicProperties.headers.x-thundra-transaction-id.bytes', null);
+                const transactionId = transactionIdBytes ? Buffer.from(transactionIdBytes, 'base64').toString() : null;
+                
+                const spanIdBytes = get(data, 'basicProperties.headers.x-thundra-span-id.bytes', null);
+                const spanId = spanIdBytes ? Buffer.from(spanIdBytes, 'base64').toString() : null;
+                
                 sc = new ThundraSpanContext( {transactionId, spanId, traceId} );
                 if (sc) {
                     if (!spanContext) {
@@ -685,7 +675,6 @@ class LambdaEventUtils {
                         if (spanContext.traceId !== sc.traceId &&
                             spanContext.transactionId !== sc.transactionId &&
                             spanContext.spanId !== sc.spanId) {
-                            // TODO Currently we don't support batch of SNS messages from different traces/transactions/spans
                             return;
                         }
                     }

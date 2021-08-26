@@ -444,6 +444,7 @@ export const AMQPTags: AMQPLIBType = {
     ROUTING_KEY: 'amqp.routing_key',
     MESSAGE: 'amqp.message',
     VHOST: 'amqp.vhost',
+    METHOD: 'amqp.method',
 };
 
 export const AwsSDKTags = {
