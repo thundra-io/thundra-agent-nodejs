@@ -443,6 +443,7 @@ export const AMQPTags: AMQPLIBType = {
     EXCHANGE: 'amqp.exchange',
     ROUTING_KEY: 'amqp.routing_key',
     MESSAGE: 'amqp.message',
+    VHOST: 'amqp.vhost',
 };
 
 export const AwsSDKTags = {

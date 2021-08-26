@@ -87,6 +87,7 @@ class AMQPLIBIntegration implements Integration {
           span.addTags({
             [AMQPTags.MESSAGE]: content.toString(),
             [AMQPTags.QUEUE]: integration.queueName,
+            [AMQPTags.VHOST]: integration.vhost,
           });
           span._initialized();
           tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, properties.headers);
@@ -156,7 +157,7 @@ class AMQPLIBIntegration implements Integration {
         try {
           if (typeof url === 'object') {
             if (url.hasOwnProperty('vhost')) {
-              integration.vhost = url.vhost;
+              integration.vhost = '::/' + url.vhost;
             } else {
               integration.vhost = '::/';
             }
@@ -218,20 +219,6 @@ class AMQPLIBIntegration implements Integration {
     }
   }
 
-  private _getResourceName(method: any, fields?: any) {
-    let resourceName = method;
-    if ('exchange' in fields) {
-      resourceName += ' ' + fields.exchange;
-    }
-    if ('routingKey' in fields) {
-      resourceName += ' ' + fields.routingKey;
-    }
-    if ('queue' in fields) {
-      resourceName += ' ' + fields.queue;
-    }
-    return resourceName;
-  }
-
   private handleTags = (
     channel: any,
     config: any,
@@ -252,7 +239,6 @@ class AMQPLIBIntegration implements Integration {
 
     span.addTags({
       'service.name': config.service || `amqp-default-service`,
-      'resource.name': this._getResourceName(method, fields),
       [SpanTags.TOPOLOGY_VERTEX]: true,
     });
 
