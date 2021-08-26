@@ -155,7 +155,7 @@ export const ClassNames = {
     EXPRESS: 'Express',
     KOA: 'Koa',
     HAPI: 'Hapi',
-    AMQP: 'AMQP',
+    RABBITMQ: 'RabbitMQ',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
