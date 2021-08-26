@@ -9,7 +9,7 @@ module.exports.promise_model = (amqplib) => {
             var conn = await amqplib.connect(amqp_url, "heartbeat=60");
             var ch = await conn.createChannel()
             var exch = 'test_exchange';
-            var q = 'thundraQueue';
+            var q = 'tasks_promise';
             var rkey = 'test_route';
             var msg = 'amqplib promise';
             await ch.assertExchange(exch, 'direct', {durable: true}).catch(console.error);
