@@ -270,6 +270,8 @@ function extractSpanContext(tracer: ThundraTracer, lambdaEventType: LambdaEventT
         return LambdaEventUtils.extractSpanContextFromSNSEvent(tracer, originalEvent);
     } else if (lambdaEventType === LambdaEventType.SQS) {
         return LambdaEventUtils.extractSpanContextFromSQSEvent(tracer, originalEvent);
+    } else if (lambdaEventType === LambdaEventType.AmazonMQ) {
+        return LambdaEventUtils.extractSpanContextFromAmazonRMQEvent(tracer, originalEvent);
     }
 }
 
@@ -321,6 +323,8 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, exec
             return LambdaEventUtils.injectTriggerTagsForVercel(span, originalEvent, originalContext);
         } else if (lambdaEventType === LambdaEventType.Netlify) {
             return LambdaEventUtils.injectTriggerTagsForNetlify(span, originalEvent);
+        } else if (lambdaEventType === LambdaEventType.AmazonMQ) {
+            return LambdaEventUtils.injectTriggerTagsForAmazonRMQ(span, originalEvent, originalContext);
         } else {
             return LambdaEventUtils.injectTriggerTagsForCommon(span, originalEvent, originalContext);
         }
