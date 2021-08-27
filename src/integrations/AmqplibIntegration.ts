@@ -239,10 +239,7 @@ class AMQPLIBIntegration implements Integration {
       ROUTING_KEY: 'routingKey',
     };
 
-    span.addTags({
-      'service.name': config.service || `amqp-default-service`,
-      [SpanTags.TOPOLOGY_VERTEX]: true,
-    });
+    span.setTag([SpanTags.TOPOLOGY_VERTEX], true);
 
     if (channel && channel.connection && channel.connection.stream) {
       span.addTags({

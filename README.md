@@ -201,6 +201,7 @@ Thundra provides out-of-the-box instrumentation (tracing) for following librarie
 |mysql               |`>=2.0.0`                  |
 |mysql2              |`>=1.5.0`                  |
 |pg                  |`>=6.0.0`                  |
+|amqp 0.9.1          |`>=0.5.0`                  |
 
 
 
@@ -370,6 +371,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_EVENTBRIDGE_DETAIL_MASK        |  bool  |              false              |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SES_MAIL_MASK                  |  bool  |              false              |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK      |  bool  |              false              |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_RABBITMQ_MESSAGE_MASK              |  bool  |              false              |
 | THUNDRA_AGENT_LOG_CONSOLE_DISABLE                                   |  bool  |              false              |
 | THUNDRA_AGENT_LOG_LOGLEVEL                                          | string |              TRACE              |
 | THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE                                |  bool  |              false              |
