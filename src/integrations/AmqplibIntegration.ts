@@ -160,7 +160,7 @@ class AMQPLIBIntegration implements Integration {
           } else {
             const parts = URL(url, true);
             integration.vhost = parts.pathname ? parts.pathname.substr(1) : null;
-            if (integration.vhost === null || integration.vhost === undefined) {
+            if (integration.vhost) {
               integration.vhost = '::/';
             } else {
               integration.vhost = '::/' + integration.vhost;
