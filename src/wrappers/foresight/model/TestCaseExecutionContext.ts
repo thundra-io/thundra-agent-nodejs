@@ -5,7 +5,7 @@ import { TEST_STATUS } from '../../../Constants';
 import { ApplicationManager } from '../../../application/ApplicationManager';
 
 export default class TestCaseExecutionContext extends ExecutionContext {
-    
+
     static APPLICATION_DOMAIN_NAME: string = 'Test';
 
     id: string;
@@ -29,7 +29,7 @@ export default class TestCaseExecutionContext extends ExecutionContext {
         this.status = status;
     }
 
-    getContextInformation(){
+    getContextInformation() {
 
         const { applicationClassName } = ApplicationManager.getApplicationInfo();
 
@@ -39,7 +39,7 @@ export default class TestCaseExecutionContext extends ExecutionContext {
             operationName: this.method,
             className: applicationClassName,
             applicationClassName,
-        }
+        };
     }
 
     getAdditionalStartTags() {
@@ -49,13 +49,13 @@ export default class TestCaseExecutionContext extends ExecutionContext {
             [TestRunnerTags.TEST_NAME]: this.name,
             [TestRunnerTags.TEST_METHOD]: this.method,
             [TestRunnerTags.TEST_CLASS]: this.testClass,
-        }
+        };
     }
 
     getAdditionalFinishTags() {
 
         return {
             [TestRunnerTags.TEST_STATUS]: this.status,
-        }
+        };
     }
 }

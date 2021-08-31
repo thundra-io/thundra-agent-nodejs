@@ -6,7 +6,7 @@ import {
     PROC_STAT_PATH,
     EnvVariableKeys,
     LISTENERS, AGENT_VERSION,
-    AGENT_UUID_CONST
+    AGENT_UUID_CONST,
 } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';

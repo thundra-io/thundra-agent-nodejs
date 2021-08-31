@@ -11,8 +11,7 @@ export class GitEnvironmentInfo {
         repoName: string,
         branch: string,
         commitHash: string,
-        commitMessage: string,
-    ){
+        commitMessage: string ) {
         this.repoURL = repoURL;
         this.repoName = repoName;
         this.branch = branch;

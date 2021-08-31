@@ -7,7 +7,7 @@ import HandlerUtils from './utils/HandlerUtils';
 
 let span: ThundraSpan;
 
-const TEST_AFTER_ALL_OPERATION_NAME = "afterAll";
+const TEST_AFTER_ALL_OPERATION_NAME = 'afterAll';
 
 export async function start(event: TestSuiteEvent) {
 

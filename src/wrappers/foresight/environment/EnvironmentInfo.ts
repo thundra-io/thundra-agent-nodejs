@@ -1,4 +1,4 @@
-import { GitEnvironmentInfo } from "./git/GitEnvironmentInfo";
+import { GitEnvironmentInfo } from './git/GitEnvironmentInfo';
 
 export default class EnvironmentInfo extends GitEnvironmentInfo {
 
@@ -18,9 +18,9 @@ export default class EnvironmentInfo extends GitEnvironmentInfo {
         branch: string,
         commitHash: string,
         commitMessage: string,
-    ){
+    ) {
         super(repoURL, repoName, branch, commitHash, commitMessage);
-        
+
         this.testRunId = testRunId;
         this.environment = environment;
     }

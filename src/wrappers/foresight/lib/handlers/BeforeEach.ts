@@ -7,7 +7,7 @@ import HandlerUtils from './utils/HandlerUtils';
 
 let span: ThundraSpan;
 
-const TEST_BEFORE_EACH_OPERATION_NAME = "beforeEach";
+const TEST_BEFORE_EACH_OPERATION_NAME = 'beforeEach';
 
 export async function start(event: TestSuiteEvent) {
 

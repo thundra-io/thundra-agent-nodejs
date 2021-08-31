@@ -1,7 +1,7 @@
 import Path from 'path';
 
 import { Event, State } from 'jest-circus';
-import { EnvironmentContext } from '@jest/environment'
+import { EnvironmentContext } from '@jest/environment';
 import type { Config } from '@jest/types';
 
 import * as TestRunnerSupport from '../../TestRunnerSupport';
@@ -17,18 +17,18 @@ import LoadTestModules from './ModuleLoader';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
-function wrapEnvironment (BaseEnvironment: any) {
+function wrapEnvironment(BaseEnvironment: any) {
   return class ThundraJestEnvironment extends BaseEnvironment {
 
     testSuite: string;
 
     constructor (config: Config.ProjectConfig, context: EnvironmentContext) {
-      super(config, context)
-  
+      super(config, context);
+
       const setupFilePath = Path.join(__dirname, './wrappers/foresight/lib/jest/SetupFile.js');
       config.setupFiles.push(setupFilePath);
-      
-      this.testSuite = context.testPath.split("/").pop();
+
+      this.testSuite = context.testPath.split('/').pop();
 
       TestRunnerSupport.setTestSuiteName(this.testSuite);
 
@@ -39,11 +39,11 @@ function wrapEnvironment (BaseEnvironment: any) {
       TestRunnerSupport.setTestStatusReportFreq(testStatusReportFreq);
     }
 
-    createEventName(event: any){
-      
-      let eventName = event.name; 
+    createEventName(event: any) {
+
+      let eventName = event.name;
       if (eventName === 'hook_start' || eventName === 'hook_success') {
-        eventName = `${eventName}<${event.hook.type}>`
+        eventName = `${eventName}<${event.hook.type}>`;
       }
 
       return eventName;
@@ -96,16 +96,16 @@ function wrapEnvironment (BaseEnvironment: any) {
 
     getVmContext() {
       const vmContentext = super.getVmContext();
-      
+
       vmContentext.global.loadThundraTestModules = LoadTestModules;
-      
+
       return vmContentext;
     }
 
-    async handleTestEvent(event: Event, state: State) {    
+    async handleTestEvent(event: Event, state: State) {
 
       const eventName = this.createEventName(event);
-      if (!eventName){
+      if (!eventName) {
         /**
          * log & return
          */
@@ -115,7 +115,7 @@ function wrapEnvironment (BaseEnvironment: any) {
 
       const testSuiteEvent = this.createTestSuiteEvent(event, state);
 
-      if (!testSuiteEvent){
+      if (!testSuiteEvent) {
         /**
          * log & return
          */
@@ -128,13 +128,13 @@ function wrapEnvironment (BaseEnvironment: any) {
         await handler(testSuiteEvent);
       }
     }
-  }
+  };
 }
 
 export default [{
     name: 'jest-environment-node',
     versions: ['>=24.8.0'],
-    patch: function(NodeEnvironment: any) {
+    patch(NodeEnvironment: any) {
 
       const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);
       if (!projectId) {
@@ -146,13 +146,13 @@ export default [{
 
       TestRunnerSupport.setProjectId(projectId);
       return wrapEnvironment(NodeEnvironment);
-    }
+    },
    },
   // {
   //   name: 'jest-environment-jsdom',
   //   versions: ['>=24.8.0'],
   //   patch: function (JsdomEnvironment: any) {
-      
+
   //     const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);
   //     if (!projectId) {
 
@@ -164,5 +164,5 @@ export default [{
   //     TestRunnerSupport.setProjectId(projectId);
   //     return wrapEnvironment(JsdomEnvironment);
   //   }
-  //}
-]
+  // }
+];

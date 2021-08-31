@@ -2,48 +2,6 @@ import EnvironmentInfo from '../environment/EnvironmentInfo';
 import TestRunMonitoringData from './TestRunMonitoringData';
 
 export default class TestRunStart extends TestRunMonitoringData {
-    
-    id: string;
-    projectId: string;
-    taskId: string;
-    startTimestamp: number;
-    hostName: string;
-    environment: string;
-    repoURL: string;
-    repoName: string;
-    branch: string;
-    commitHash: string;
-    commitMessage: string;
-    tags: any;
-
-    constructor(
-        id: string,
-        projectId: string,
-        taskId: string,
-        startTimestamp: number,
-        hostName: string,
-        environment: EnvironmentInfo,
-        tags: any
-    ){
-        super('TestRunStart');
-
-        this.id = id;
-        this.projectId = projectId;
-        this.taskId = taskId;
-        this.startTimestamp = startTimestamp;
-        this.hostName = hostName;
-        this.environment = environment ? environment.environment: undefined;
-        this.repoURL = environment ?  environment.repoURL: undefined;
-        this.repoName = environment ?  environment.repoName: undefined;
-        this.branch = environment ?  environment.branch: undefined;
-        this.commitHash = environment ?  environment.commitHash: undefined;
-        this.commitMessage = environment ?  environment.commitMessage: undefined;
-        this.tags = tags;
-    }
-
-    static builder(){
-        return new TestRunStart.TestRunStartBuilder();
-    }
 
     static TestRunStartBuilder = class {
 
@@ -108,5 +66,47 @@ export default class TestRunStart extends TestRunMonitoringData {
                 this.environmentInfo,
                 this.tags);
         }
+    };
+
+    id: string;
+    projectId: string;
+    taskId: string;
+    startTimestamp: number;
+    hostName: string;
+    environment: string;
+    repoURL: string;
+    repoName: string;
+    branch: string;
+    commitHash: string;
+    commitMessage: string;
+    tags: any;
+
+    constructor(
+        id: string,
+        projectId: string,
+        taskId: string,
+        startTimestamp: number,
+        hostName: string,
+        environment: EnvironmentInfo,
+        tags: any,
+    ) {
+        super('TestRunStart');
+
+        this.id = id;
+        this.projectId = projectId;
+        this.taskId = taskId;
+        this.startTimestamp = startTimestamp;
+        this.hostName = hostName;
+        this.environment = environment ? environment.environment : undefined;
+        this.repoURL = environment ?  environment.repoURL : undefined;
+        this.repoName = environment ?  environment.repoName : undefined;
+        this.branch = environment ?  environment.branch : undefined;
+        this.commitHash = environment ?  environment.commitHash : undefined;
+        this.commitMessage = environment ?  environment.commitMessage : undefined;
+        this.tags = tags;
     }
-} 
+
+    static builder() {
+        return new TestRunStart.TestRunStartBuilder();
+    }
+}

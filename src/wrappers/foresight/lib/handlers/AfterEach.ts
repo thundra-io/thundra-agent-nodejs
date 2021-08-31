@@ -7,7 +7,7 @@ import ThundraSpan from '../../../../opentracing/Span';
 
 let span: ThundraSpan;
 
-const TEST_AFTER_EACH_OPERATION_NAME = "afterEach";
+const TEST_AFTER_EACH_OPERATION_NAME = 'afterEach';
 
 export async function start(event: TestSuiteEvent) {
 

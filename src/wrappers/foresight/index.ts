@@ -10,20 +10,20 @@ import libs from './lib';
 export function init() {
 
     const instrumentations: any = Array.from(libs.values())
-        .reduce((prev: any, current: any) => prev.concat(current), [])
-    
+        .reduce((prev: any, current: any) => prev.concat(current), []);
+
     const instrumentedModules = instrumentations
         .map((instrumentation: any) => instrumentation.name);
-    
-    function __hookModule (moduleExports: any, moduleName: any, moduleBaseDir: any) {
+
+    function __hookModule(moduleExports: any, moduleName: any, moduleBaseDir: any) {
 
         /** understand this code is needed for our structure
             moduleName = moduleName.replace(pathSepExpr, '/')
-            
+
             if (moduleBaseDir) {
                 moduleBaseDir = moduleBaseDir.replace(pathSepExpr, '/')
             }
-       
+
             const moduleVersion = getVersion(moduleBaseDir)
 
             Array.from(this._plugins.keys())
@@ -32,7 +32,7 @@ export function init() {
             ))
             .forEach(plugin => this._validate(plugin, moduleName, moduleBaseDir, moduleVersion))
          */
-        
+
         libs
             .forEach((value: any, key: any) => {
                 try {
@@ -41,19 +41,18 @@ export function init() {
                         .filter(instrumentation => moduleName === filename(instrumentation))
                         .filter(instrumentation => matchVersion(moduleVersion, instrumentation.versions))
                      */
-                    .forEach(instrumentation => {
+                    .forEach((instrumentation) => {
                         moduleExports = instrumentation.patch.call(this, moduleExports);
-                    })
+                    });
                 } catch (e) {
 
                     // todo: log error here
                     console.error(e);
                 }
             });
-        
-        return moduleExports
-    }
-    
-    hook(instrumentedModules, __hookModule.bind(this));
-};
 
+        return moduleExports;
+    }
+
+    hook(instrumentedModules, __hookModule.bind(this));
+}

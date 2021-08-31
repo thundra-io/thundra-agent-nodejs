@@ -9,7 +9,7 @@ export default class TestRunScope {
         taskId: string,
         startTimestamp: number,
         context: TestRunContext,
-    ){
+    ) {
         this.id = id;
         this.taskId = taskId;
         this.startTimestamp = startTimestamp;

@@ -23,5 +23,5 @@ export const INITIALIZERS: any = [
     {
         name: 'ForesightWrapper',
         impl: ForesightWrapper,
-    }
+    },
 ];

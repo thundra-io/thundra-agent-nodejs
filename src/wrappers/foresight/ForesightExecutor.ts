@@ -14,9 +14,9 @@ export function startInvocation(pluginContext: PluginContext, execContext: Execu
     const additionalTags: any = execContext.getAdditionalStartTags();
     if (additionalTags) {
 
-        Object.keys(additionalTags).forEach(tag => {
+        Object.keys(additionalTags).forEach((tag) => {
             execContext.invocationData.tags[tag] = additionalTags[tag];
-        })
+        });
     }
 }
 
@@ -39,9 +39,9 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
     const additionalTags: any = execContext.getAdditionalFinishTags();
     if (additionalTags) {
 
-        Object.keys(additionalTags).forEach(tag => {
+        Object.keys(additionalTags).forEach((tag) => {
             invocationData.tags[tag] = additionalTags[tag];
-        })
+        });
     }
 
     EnvironmentSupport.tagInvocation(invocationData);
@@ -61,9 +61,9 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     const additionalTags: any = execContext.getAdditionalStartTags();
     if (additionalTags) {
 
-        Object.keys(additionalTags).forEach(tag => {
+        Object.keys(additionalTags).forEach((tag) => {
             rootSpan.tags[tag] = additionalTags[tag];
-        })
+        });
     }
 
     EnvironmentSupport.tagSpan(rootSpan);
@@ -77,15 +77,14 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
 
     ForesightWrapperUtils.finishTrace(pluginContext, execContext);
-    
+
     const { rootSpan } = execContext;
 
     const additionalTags: any = execContext.getAdditionalFinishTags();
     if (additionalTags) {
 
-        Object.keys(additionalTags).forEach(tag => {
+        Object.keys(additionalTags).forEach((tag) => {
             rootSpan.tags[tag] = additionalTags[tag];
-        })
+        });
     }
 }
-

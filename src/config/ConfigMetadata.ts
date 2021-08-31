@@ -294,7 +294,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     [ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ]: {
         type: 'number',
         defaultValue: 10000,
-    }, 
+    },
 };
 
 export default ConfigMetadata;

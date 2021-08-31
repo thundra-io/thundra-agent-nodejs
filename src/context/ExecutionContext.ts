@@ -98,15 +98,15 @@ export default class ExecutionContext {
         this.timeout = timeout;
     }
 
-    getContextInformation(){
-        return {}
+    getContextInformation() {
+        return {};
     }
 
     getAdditionalStartTags() {
-        return {}
+        return {};
     }
 
     getAdditionalFinishTags() {
-        return {}
+        return {};
     }
 }

@@ -1,67 +1,7 @@
-import EnvironmentInfo from "../environment/EnvironmentInfo";
-import TestRunMonitoringData from "./TestRunMonitoringData";
+import EnvironmentInfo from '../environment/EnvironmentInfo';
+import TestRunMonitoringData from './TestRunMonitoringData';
 
 export default class TestRunStatus extends TestRunMonitoringData {
-    
-    id: string;
-    projectId: string;
-    taskId: string;
-    totalCount: number;
-    successfulCount: number;
-    failedCount: number;
-    ignoredCount: number;
-    abortedCount: number;
-    startTimestamp: number;
-    statusTimestamp: number;
-    hostName: string;
-    environment: string;
-    repoURL: string;
-    repoName: string;
-    branch: string;
-    commitHash: string;
-    commitMessage: string;
-    tags: any;
-
-    constructor(
-        id: string,
-        projectId: string,
-        taskId: string,
-        totalCount: number,
-        successfulCount: number,
-        failedCount: number,
-        ignoredCount: number,
-        abortedCount: number,
-        startTimestamp: number,
-        statusTimestamp: number,
-        hostName: string,
-        environment: EnvironmentInfo,
-        tags: any,
-    ) {
-        super('TestRunStatus');
-
-        this.id = id;
-        this.projectId = projectId;
-        this.taskId = taskId;
-        this.totalCount = totalCount;
-        this.successfulCount = successfulCount;
-        this.failedCount = failedCount;
-        this.ignoredCount = ignoredCount;
-        this.abortedCount = abortedCount;
-        this.startTimestamp = startTimestamp;
-        this.statusTimestamp = statusTimestamp;
-        this.hostName = hostName;
-        this.environment = environment != null ? environment.environment : undefined;
-        this.repoURL = environment != null ? environment.repoURL : undefined;
-        this.repoName = environment != null ? environment.repoName : undefined;
-        this.branch = environment != null ? environment.branch : undefined;
-        this.commitHash = environment != null ? environment.commitHash : undefined;
-        this.commitMessage = environment != null ? environment.commitMessage : undefined;
-        this.tags = tags;
-    }
-
-    static builder(){
-        return new TestRunStatus.TestRunStatusBuilder();
-    }
 
     static TestRunStatusBuilder = class {
 
@@ -168,5 +108,65 @@ export default class TestRunStatus extends TestRunMonitoringData {
                 this.environment,
                 this.tags);
         }
+    };
+
+    id: string;
+    projectId: string;
+    taskId: string;
+    totalCount: number;
+    successfulCount: number;
+    failedCount: number;
+    ignoredCount: number;
+    abortedCount: number;
+    startTimestamp: number;
+    statusTimestamp: number;
+    hostName: string;
+    environment: string;
+    repoURL: string;
+    repoName: string;
+    branch: string;
+    commitHash: string;
+    commitMessage: string;
+    tags: any;
+
+    constructor(
+        id: string,
+        projectId: string,
+        taskId: string,
+        totalCount: number,
+        successfulCount: number,
+        failedCount: number,
+        ignoredCount: number,
+        abortedCount: number,
+        startTimestamp: number,
+        statusTimestamp: number,
+        hostName: string,
+        environment: EnvironmentInfo,
+        tags: any,
+    ) {
+        super('TestRunStatus');
+
+        this.id = id;
+        this.projectId = projectId;
+        this.taskId = taskId;
+        this.totalCount = totalCount;
+        this.successfulCount = successfulCount;
+        this.failedCount = failedCount;
+        this.ignoredCount = ignoredCount;
+        this.abortedCount = abortedCount;
+        this.startTimestamp = startTimestamp;
+        this.statusTimestamp = statusTimestamp;
+        this.hostName = hostName;
+        this.environment = environment != null ? environment.environment : undefined;
+        this.repoURL = environment != null ? environment.repoURL : undefined;
+        this.repoName = environment != null ? environment.repoName : undefined;
+        this.branch = environment != null ? environment.branch : undefined;
+        this.commitHash = environment != null ? environment.commitHash : undefined;
+        this.commitMessage = environment != null ? environment.commitMessage : undefined;
+        this.tags = tags;
+    }
+
+    static builder() {
+        return new TestRunStatus.TestRunStatusBuilder();
     }
 }

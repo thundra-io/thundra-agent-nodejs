@@ -19,7 +19,7 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
     closed: boolean;
 
     constructor(opts: any = {}) {
-        super(opts)
+        super(opts);
 
         this.testSuiteName = opts.testSuiteName || '';
         this.totalCount = opts.totalCount || 0;
@@ -57,7 +57,7 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
         this.increaseTotalCount();
     }
 
-    getContextInformation(){
+    getContextInformation() {
 
         const { applicationClassName } = ApplicationManager.getApplicationInfo();
 
@@ -67,14 +67,14 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
             operationName: this.testSuiteName,
             className: applicationClassName,
             applicationClassName,
-        }
+        };
     }
 
     getAdditionalStartTags() {
 
         return {
             [TestRunnerTags.TEST_SUITE]: this.testSuiteName,
-        }
+        };
     }
 
     getAdditionalFinishTags() {
@@ -85,6 +85,6 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
             [TestRunnerTags.TEST_SUITE_SKIPPED_COUNT]: this.skippedCount,
             [TestRunnerTags.TEST_SUITE_SUCCESSFUL_COUNT]: this.successfulCount,
             ...(this.timeout ? { [TestRunnerTags.TEST_TIMEOUT]: this.timeout } : undefined),
-        }
+        };
     }
 }

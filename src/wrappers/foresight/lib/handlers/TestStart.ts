@@ -16,8 +16,8 @@ export default async function run(event: TestSuiteEvent) {
 
     const context: TestCaseExecutionContext = ForesightWrapperUtils.createTestCaseExecutionContext(
       TestRunnerSupport.testSuiteName,
-      testCaseId
-    ); 
+      testCaseId,
+    );
 
     context.name = testName;
     context.method = testName;

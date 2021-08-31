@@ -4,41 +4,7 @@ import * as TestRunnerSupport from '../TestRunnerSupport';
 
 export default class TestSuiteEvent {
 
-    id: string;
-    name: string;
-    testSuiteName: string;
-    testName: string;
-    testDuration: number;
-    error: Error;
-    orginalEvent: any;
-
-    constructor(
-        id: string,
-        name: string,
-        testSuiteName: string,
-        testName: string,
-        testDuration: number,
-        error: Error,
-        orginalEvent: any,
-    ){
-        this.id = id;
-        this.name = name;
-        this.testSuiteName = testSuiteName;
-        this.testName = testName;
-        this.testDuration = testDuration;
-        this.error = error,
-        this.orginalEvent = orginalEvent;
-    }
-
-    hasError(): boolean {
-        return this.error != undefined;
-    }
-
-    static builder(){
-        return new TestSuiteEvent.TestSuiteEventBuilder();
-    }
-
-    static TestSuiteEventBuilder = class { 
+    static TestSuiteEventBuilder = class {
 
         id: string;
         name: string;
@@ -91,8 +57,42 @@ export default class TestSuiteEvent {
                 this.testName,
                 this.testDuration,
                 this.error,
-                this.orginalEvent || {}
-            )
+                this.orginalEvent || {},
+            );
         }
+    };
+
+    id: string;
+    name: string;
+    testSuiteName: string;
+    testName: string;
+    testDuration: number;
+    error: Error;
+    orginalEvent: any;
+
+    constructor(
+        id: string,
+        name: string,
+        testSuiteName: string,
+        testName: string,
+        testDuration: number,
+        error: Error,
+        orginalEvent: any,
+    ) {
+        this.id = id;
+        this.name = name;
+        this.testSuiteName = testSuiteName;
+        this.testName = testName;
+        this.testDuration = testDuration;
+        this.error = error,
+        this.orginalEvent = orginalEvent;
+    }
+
+    static builder() {
+        return new TestSuiteEvent.TestSuiteEventBuilder();
+    }
+
+    hasError(): boolean {
+        return this.error !== undefined;
     }
 }

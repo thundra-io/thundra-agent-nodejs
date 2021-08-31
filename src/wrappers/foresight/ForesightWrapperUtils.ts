@@ -37,7 +37,7 @@ export default class ForesightWrapperUtils {
 
         const config = ConfigProvider.thundraConfig;
         const { apiKey } = config;
-        
+
         const reporter = ForesightWrapperUtils.createReporter(apiKey);
         const pluginContext = ForesightWrapperUtils.createPluginContext(apiKey, executor);
         const plugins = ForesightWrapperUtils.createPlugins(config, pluginContext);
@@ -48,23 +48,23 @@ export default class ForesightWrapperUtils {
     static setApplicationInfo(
         applicationClassName: string,
         applicationDomainName: string,
-        applicationName: string){
-        
+        applicationName: string) {
+
         ApplicationManager.setApplicationInfoProvider().update({
             applicationClassName,
             applicationDomainName,
             applicationName,
         });
-        
+
         const appInfo = ApplicationManager.getApplicationInfo();
         ApplicationManager.getApplicationInfoProvider().update({
             applicationId: ForesightWrapperUtils.getDefaultApplicationId(appInfo),
         });
     }
 
-    static changeAppInfoToTestSuite(){
-  
-        if (TestRunnerSupport.testSuiteExecutionContext){
+    static changeAppInfoToTestSuite() {
+
+        if (TestRunnerSupport.testSuiteExecutionContext) {
 
             const { applicationClassName } = ApplicationManager.getApplicationInfo();
 
@@ -72,25 +72,25 @@ export default class ForesightWrapperUtils {
                 applicationClassName,
                 TEST_SUIT_APPLICATION_DOMAIN_NAME,
                 TestRunnerSupport.testSuiteName);
-        }  
+        }
     }
-  
-    static changeAppInfoToTestCase(){
 
-        if (TestRunnerSupport.testSuiteExecutionContext){
+    static changeAppInfoToTestCase() {
+
+        if (TestRunnerSupport.testSuiteExecutionContext) {
             const { applicationClassName } = ApplicationManager.getApplicationInfo();
 
             ForesightWrapperUtils.setApplicationInfo(
                 applicationClassName,
                 TEST_CASE_APPLICATION_DOMAIN_NAME,
                 TestRunnerSupport.testSuiteName);
-        }  
+        }
     }
 
     static getDefaultApplicationId(appInfo: ApplicationInfo) {
 
         const applicationId = `node:test:${appInfo.applicationClassName}:${appInfo.applicationName}`;
-        return applicationId.toLowerCase();;
+        return applicationId.toLowerCase();
     }
 
     static createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
@@ -137,14 +137,14 @@ export default class ForesightWrapperUtils {
 
         const { thundraConfig } = ConfigProvider;
         const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
-        
+
         const tracer = new ThundraTracer(tracerConfig);
         const transactionId = Utils.generateId();
-        
+
         tracer.setTransactionId(transactionId);
-        
+
         const startTimestamp = Date.now();
-        
+
         return new TestSuiteExecutionContext({
             tracer,
             transactionId,
@@ -156,20 +156,20 @@ export default class ForesightWrapperUtils {
     static createTestCaseExecutionContext(testSuiteName: string, testCaseId: string): TestCaseExecutionContext {
         const { thundraConfig } = ConfigProvider;
         const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
-        
+
         const tracer = new ThundraTracer(tracerConfig);
         const transactionId = Utils.generateId();
-        
+
         tracer.setTransactionId(transactionId);
-        
+
         const startTimestamp = Date.now();
-        
+
         return new TestCaseExecutionContext({
             tracer,
             transactionId,
             startTimestamp,
             testSuiteName,
-            id: testCaseId
+            id: testCaseId,
         });
     }
 
@@ -248,7 +248,7 @@ export default class ForesightWrapperUtils {
 
     static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
 
-        const { 
+        const {
             error,
             rootSpan,
             finishTimestamp,
@@ -288,11 +288,11 @@ export default class ForesightWrapperUtils {
 
     static finishInvocationData(execContext: ExecutionContext, pluginContext: PluginContext) {
 
-        const { 
+        const {
             error,
             invocationData,
             applicationResourceName,
-            timeout
+            timeout,
         } = execContext;
 
         /**
@@ -322,11 +322,11 @@ export default class ForesightWrapperUtils {
         invocationData.setTags(InvocationSupport.getAgentTags());
         invocationData.setUserTags(InvocationSupport.getTags());
 
-        const { 
+        const {
             finishTimestamp,
             spanId,
         } = execContext;
-      
+
         invocationData.finish(finishTimestamp);
 
         invocationData.resources = InvocationTraceSupport.getResources(spanId);

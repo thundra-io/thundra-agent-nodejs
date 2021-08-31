@@ -1,6 +1,6 @@
-import ExecutionContext from "../../../../../context/ExecutionContext";
-import ExecutionContextManager from "../../../../../context/ExecutionContextManager";
-import ThundraSpan from "../../../../../opentracing/Span";
+import ExecutionContext from '../../../../../context/ExecutionContext';
+import ExecutionContextManager from '../../../../../context/ExecutionContextManager';
+import ThundraSpan from '../../../../../opentracing/Span';
 
 export default class HandlerUtils {
 
@@ -11,17 +11,17 @@ export default class HandlerUtils {
             /**
              * log & return
              */
-    
+
             return;
         }
-    
+
         const {
             domainName,
-            className
+            className,
         }: any = context.getContextInformation();
-    
+
         const parentSpan = tracer.getActiveSpan();
-    
+
         return tracer._startSpan(operationName, {
             childOf: parentSpan,
             domainName,
@@ -35,7 +35,7 @@ export default class HandlerUtils {
             /**
              * log & return
              */
-    
+
             return;
         }
 
@@ -46,7 +46,7 @@ export default class HandlerUtils {
             /**
              * log and return
              */
-            
+
             return;
         }
 
@@ -54,9 +54,9 @@ export default class HandlerUtils {
         if (invocationData) {
             let duration = span.getDuration();
 
-            let currentDuration = invocationData.tags[tagName];
+            const currentDuration = invocationData.tags[tagName];
             duration = duration + (currentDuration ? currentDuration : 0);
-    
+
             invocationData.tags[tagName] = duration;
         }
     }

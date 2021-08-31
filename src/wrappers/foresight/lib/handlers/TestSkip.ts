@@ -9,7 +9,7 @@ export default async function run(event: TestSuiteEvent) {
     ForesightWrapperUtils.changeAppInfoToTestCase();
 
     const context = TestRunnerSupport.testCaseExecutionContext;
-    context.setStatus(TEST_STATUS.SKIPPED)
+    context.setStatus(TEST_STATUS.SKIPPED);
 
     ExecutionContextManager.set(context);
 

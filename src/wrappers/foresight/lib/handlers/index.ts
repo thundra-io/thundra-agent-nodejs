@@ -28,7 +28,7 @@ export const JestEventHandlers = new Map<string, Function>([
     /**
      * todo: add other jest event handlers here if needed ...
      */
-])
+]);
 
 /**
  * todo: add other test frameworks handler router map here ...

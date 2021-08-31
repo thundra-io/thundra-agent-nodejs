@@ -12,31 +12,31 @@ const increareSuccessfulCount = () => {
 
   testSuiteContext.increareSuccessfulCount();
   testRunContext.increareSuccessfulCount();
-}
+};
 
 const increaseFailedCount = () => {
-  
+
   const testRunContext = TestRunnerSupport.testRunScope;
   const testSuiteContext = TestRunnerSupport.testSuiteExecutionContext;
 
   testSuiteContext.increaseFailedCount();
   testRunContext.increaseFailedCount();
-}
+};
 
 const increaseAbortedCount = () => {
-  
+
   const testRunContext = TestRunnerSupport.testRunScope;
   const testSuiteContext = TestRunnerSupport.testSuiteExecutionContext;
 
   testSuiteContext.increaseAbortedCount();
   testRunContext.increaseAbortedCount();
-}
+};
 
 const increaseActions = {
   [TEST_STATUS.SUCCESSFUL]: increareSuccessfulCount,
   [TEST_STATUS.FAILED]: increaseFailedCount,
   [TEST_STATUS.ABORTED]: increaseAbortedCount,
-}
+};
 
 const isErrorTimeout = (error: Error) => {
 
@@ -46,7 +46,7 @@ const isErrorTimeout = (error: Error) => {
   }
 
   return result;
-}
+};
 
 export default async function run(event: TestSuiteEvent) {
 

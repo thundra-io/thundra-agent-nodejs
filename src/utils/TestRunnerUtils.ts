@@ -10,11 +10,11 @@ class TestRunnerUtils {
         repoURL: string,
         commitHash: string,
         testRunKey: string) {
-        const testRunIdSeed = environment + "_" + repoURL + "_" + commitHash + "_" + testRunKey;
+        const testRunIdSeed = environment + '_' + repoURL + '_' + commitHash + '_' + testRunKey;
         return Utils.generareIdFrom(testRunIdSeed);
     }
 
-    static getDefaultTestRunId(    
+    static getDefaultTestRunId(
         environment: string,
         repoURL: string,
         commitHash: string) {
@@ -26,7 +26,7 @@ class TestRunnerUtils {
                 environment,
                 repoURL,
                 commitHash,
-                runId
+                runId,
             );
     }
 }
