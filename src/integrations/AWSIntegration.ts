@@ -5,7 +5,7 @@ import {
     AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
     AwsStepFunctionsTags, SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
-    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY,
+    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY, INTEGRATIONS,
 } from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
@@ -26,8 +26,7 @@ const has = require('lodash.has');
 const trim = require('lodash.trim');
 const get = require('lodash.get');
 
-const MODULE_NAMES = ['aws-sdk', 'aws-sdk/lib/core.js'];
-const MODULE_VERSION = '2.x';
+const INTEGRATION_NAME = 'aws';
 
 /**
  * {@link Integration} implementation for AWS integration
@@ -44,8 +43,9 @@ export class AWSIntegration implements Integration {
     constructor(config: any) {
         this.wrappedFuncs = {};
         this.config = config || {};
+        const awsIntegration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            MODULE_NAMES, MODULE_VERSION,
+            awsIntegration.moduleNames, awsIntegration.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

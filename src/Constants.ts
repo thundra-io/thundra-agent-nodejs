@@ -10,7 +10,7 @@ import MySQLIntegration from './integrations/MySQLIntegration';
 import RedisIntegration from './integrations/RedisIntegration';
 import MongoDBIntegration from './integrations/MongoDBIntegration';
 import IORedisIntegration from './integrations/IORedisIntegration';
-import { AWSIntegration } from './integrations/AWSIntegration';
+import {AWSIntegration} from './integrations/AWSIntegration';
 import ESIntegration from './integrations/ESIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './listeners/ErrorInjectorSpanListener';
@@ -18,7 +18,7 @@ import LatencyInjectorSpanListener from './listeners/LatencyInjectorSpanListener
 import TagInjectorSpanListener from './listeners/TagInjectorSpanListener';
 import SecurityAwareSpanListener from './listeners/SecurityAwareSpanListener';
 
-const { version } = require('../package.json');
+const {version} = require('../package.json');
 
 export const EnvVariableKeys = {
 
@@ -542,16 +542,16 @@ export const SpanTypes = {
 };
 
 export const INTEGRATIONS: any = {
-    http: HttpIntegration,
-    http2: Http2Integration,
-    pg: PostgreIntegration,
-    mysql2: MySQL2Integration,
-    mysql: MySQLIntegration,
-    redis: RedisIntegration,
-    ioredis: IORedisIntegration,
-    aws: AWSIntegration,
-    es: ESIntegration,
-    mongodb: MongoDBIntegration,
+    http: {class: HttpIntegration, moduleNames: ['http', 'https'], moduleVersion: null},
+    http2: {class: Http2Integration, moduleNames: ['http2'], moduleVersion: null},
+    pg: {class: PostgreIntegration, moduleNames: ['pg'], moduleVersion: '6.x || 7.x || 8.x'},
+    mysql2: {class: MySQL2Integration, moduleNames: ['mysql2'], moduleVersion: '>=1.5'},
+    mysql: {class: MySQLIntegration, moduleNames: ['mysql'], moduleVersion: '>=2'},
+    redis: {class: RedisIntegration, moduleNames: ['redis'], moduleVersion: '>=2.6'},
+    ioredis: {class: IORedisIntegration, moduleNames: ['ioredis'], moduleVersion: '>=2'},
+    aws: {class: AWSIntegration, moduleNames: ['aws-sdk', 'aws-sdk/lib/core.js'], moduleVersion: '2.x'},
+    es: {class: ESIntegration, moduleNames: ['elasticsearch'], moduleVersion: '>=10.5'},
+    mongodb: {class: MongoDBIntegration, moduleNames: ['mongodb'], moduleVersion: '>=1'},
 };
 
 export const LISTENERS: any = {

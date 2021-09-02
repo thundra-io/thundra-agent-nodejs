@@ -1,7 +1,7 @@
 import Integration from './Integration';
 import {
     SpanTags, RedisTags, RedisCommandTypes, SpanTypes, DomainNames,
-    ClassNames, DBTypes, DBTags } from '../Constants';
+    ClassNames, DBTypes, DBTags, INTEGRATIONS } from '../Constants';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -12,8 +12,7 @@ import ExecutionContextManager from '../context/ExecutionContextManager';
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 
-const MODULE_NAME = 'redis';
-const MODULE_VERSION = '>=2.6';
+const INTEGRATION_NAME = 'redis';
 
 /**
  * {@link Integration} implementation for Redis integration
@@ -28,8 +27,9 @@ class RedisIntegration implements Integration {
         ThundraLogger.debug('<RedisIntegration> Activating Redis integration');
 
         this.config = config || {};
+        const redisIntegration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            [MODULE_NAME], MODULE_VERSION,
+            redisIntegration.moduleNames, redisIntegration.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import * as opentracing from 'opentracing';
-import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, TriggerHeaderTags } from '../Constants';
+import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, TriggerHeaderTags, INTEGRATIONS } from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
 import * as url from 'url';
@@ -16,8 +16,7 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const semver = require('semver');
 
-const MODULE_NAME_HTTP = 'http';
-const MODULE_NAME_HTTPS = 'https';
+const INTEGRATION_NAME = 'http';
 
 /**
  * {@link Integration} implementation for HTTP integration
@@ -32,8 +31,9 @@ class HttpIntegration implements Integration {
         ThundraLogger.debug('<HTTPIntegration> Activating HTTP integration');
 
         this.config = config || {};
+        const httpIntegration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            [MODULE_NAME_HTTP, MODULE_NAME_HTTPS], null,
+            httpIntegration.moduleNames, httpIntegration.moduleVersion,
             (lib: any, cfg: any, moduleName: string) => {
                 this.wrap.call(this, lib, cfg, moduleName);
             },

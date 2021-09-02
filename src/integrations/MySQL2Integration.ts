@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, ClassNames,
+    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, ClassNames, INTEGRATIONS,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -11,9 +11,8 @@ import ExecutionContextManager from '../context/ExecutionContextManager';
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 
-const MODULE_NAME = 'mysql2';
 const FILE_NAME = 'lib/connection';
-const MODULE_VERSION = '>=1.5';
+const INTEGRATION_NAME = 'mysql2';
 
 /**
  * {@link Integration} implementation for MySQL integration
@@ -28,8 +27,9 @@ class MySQL2Integration implements Integration {
         ThundraLogger.debug('<MySQL2Integration> Activating MySQL2 integration');
 
         this.config = config || {};
+        const mysql2Integration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            [MODULE_NAME], MODULE_VERSION,
+            mysql2Integration.moduleNames, mysql2Integration.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes,
+    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, INTEGRATIONS,
 } from '../Constants';
 import ModuleUtils from '../utils/ModuleUtils';
 import ThundraLogger from '../ThundraLogger';
@@ -11,9 +11,7 @@ import ExecutionContextManager from '../context/ExecutionContextManager';
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 
-const MODULE_NAME = 'pg';
-const MODULE_VERSION = '6.x || 7.x || 8.x';
-
+const INTEGRATION_NAME = 'pg';
 /**
  * {@link Integration} implementation for Postgre integration
  * through {@code pg} library
@@ -27,8 +25,9 @@ class PostgreIntegration implements Integration {
         ThundraLogger.debug('<PostgreIntegration> Activating Postgre integration');
 
         this.config = config || {};
+        const pgIntegration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            [MODULE_NAME], MODULE_VERSION,
+            pgIntegration.moduleNames, pgIntegration.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

@@ -7,7 +7,7 @@ import {
     DomainNames,
     ClassNames,
     TriggerHeaderTags,
-    MAX_HTTP_VALUE_SIZE,
+    MAX_HTTP_VALUE_SIZE, INTEGRATIONS,
 } from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
@@ -24,6 +24,7 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 
 const MODULE_NAME_HTTP2 = 'http2';
+const INTEGRATION_NAME = 'http2';
 
 /**
  * {@link Integration} implementation for HTTP2 integration
@@ -38,8 +39,9 @@ class Http2Integration implements Integration {
         ThundraLogger.debug('<HTTP2Integration> Activating HTTP2 integration');
 
         this.config = config || {};
+        const http2Integration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            [MODULE_NAME_HTTP2], null,
+            http2Integration.moduleNames, http2Integration.moduleVersion,
             (lib: any, cfg: any, moduleName: string) => {
                 this.wrap.call(this, lib, cfg, moduleName);
             },
