@@ -214,6 +214,24 @@ class ConfigNames {
         'thundra.agent.test.run.id';
     public static readonly THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ: string =
         'thundra.agent.test.status.report.freq';
+
+    /////////////////////////////////////////////////////////////////////////////
+
+    public static readonly GITHUB_REPOSITORY_ENV_VAR_NAME: string =
+        'GITHUB_REPOSITORY';
+    public static readonly GITHUB_HEAD_REF_ENV_VAR_NAME: string =
+        'GITHUB_HEAD_REF';
+    public static readonly GITHUB_REF_ENV_VAR_NAME: string =
+        'GITHUB_REF';
+    public static readonly GITHUB_EVENT_PATH_ENV_VAR_NAME: string =
+        'GITHUB_EVENT_PATH';
+    public static readonly GITHUB_SHA_ENV_VAR_NAME: string =
+        'GITHUB_SHA';
+    public static readonly GITHUB_RUN_ID_ENV_VAR_NAME: string =
+        'GITHUB_RUN_ID';
+    public static readonly INVOCATION_ID_ENV_VAR_NAME: string =
+        'INVOCATION_ID';
+
 }
 
 export default ConfigNames;
