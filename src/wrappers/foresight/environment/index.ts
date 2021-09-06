@@ -9,11 +9,6 @@ export const environmentInfoProviders = {
     /**
      * todo: add other environment info providers
      */
-
-     /**
-      * todo: will be removed
-      * [LocalEnvironmentInfoProvider.ENVIRONMENT]: LocalEnvironmentInfoProvider,
-      */
 };
 
 export const init = async () => {

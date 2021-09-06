@@ -70,9 +70,9 @@ export const setTestStatusReportFreq = (freq: number) => {
 };
 
 /** if needed keep suite and cases contexts in here
-    export const testSuiteContextMap = new Map<string, TestSuiteExecutionContext>();
-    export const testCaseScopeMap = new Map<string, TestCaseExecutionContext>();
-*/
+ * export const testSuiteContextMap = new Map<string, TestSuiteExecutionContext>();
+ * export const testCaseScopeMap = new Map<string, TestCaseExecutionContext>();
+ */
 
 const sendTestRunStatus = async () => {
     if (!testRunScope || !initialized) {

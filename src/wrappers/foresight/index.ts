@@ -1,58 +1,51 @@
-/* eslint-disable */
-
-// import path from 'path';
-
-import hook from '../../hook';
+import ThundraLogger from '../../ThundraLogger';
+import ModuleVersionValidator from '../../utils/ModuleVersionValidator';
 import libs from './lib';
 
-// const pathSepExpr = new RegExp(`\\${path.sep}`, 'g');
+const path = require('path');
+const Hook = require('require-in-the-middle');
 
 export function init() {
 
-    const instrumentations: any = Array.from(libs.values())
-        .reduce((prev: any, current: any) => prev.concat(current), []);
+    libs.forEach((value: any, key: any) => {
 
-    const instrumentedModules = instrumentations
-        .map((instrumentation: any) => instrumentation.name);
+        [].concat(value)
+        .forEach((instrumentation) => {
 
-    function __hookModule(moduleExports: any, moduleName: any, moduleBaseDir: any) {
+            const moduleName = instrumentation.name;
+            const version = instrumentation.version;
+            let notSupportedVersion = '';
 
-        /** understand this code is needed for our structure
-            moduleName = moduleName.replace(pathSepExpr, '/')
+            try {
 
-            if (moduleBaseDir) {
-                moduleBaseDir = moduleBaseDir.replace(pathSepExpr, '/')
+                const hook = (lib: any, name: string, basedir: string) => {
+
+                    if (name === moduleName) {
+
+                        const isValidVersion = ModuleVersionValidator.validateModuleVersion(basedir, version);
+                        if (isValidVersion) {
+
+                            return instrumentation.patch.call(this, lib);
+                        }
+
+                        notSupportedVersion = require(path.join(basedir, 'package.json')).version;
+
+                        ThundraLogger.error(
+                            `<ForesightInit> Version ${notSupportedVersion} is invalid for module ${moduleName}.
+                            Supported version is ${version}`);
+                    }
+
+                    return lib;
+                };
+
+                Hook(moduleName, { }, hook);
+            } catch (e) {
+
+                ThundraLogger.error(
+                    `<ForesightInit> Foresight did not initialized module ${moduleName} for version ${notSupportedVersion}.`);
             }
+        });
+    });
 
-            const moduleVersion = getVersion(moduleBaseDir)
-
-            Array.from(this._plugins.keys())
-            .filter(plugin => [].concat(plugin).some(instrumentation =>
-                filename(instrumentation) === moduleName && matchVersion(moduleVersion, instrumentation.versions)
-            ))
-            .forEach(plugin => this._validate(plugin, moduleName, moduleBaseDir, moduleVersion))
-         */
-
-        libs
-            .forEach((value: any, key: any) => {
-                try {
-                    [].concat(value)
-                    /** understand this code is needed for our structure
-                        .filter(instrumentation => moduleName === filename(instrumentation))
-                        .filter(instrumentation => matchVersion(moduleVersion, instrumentation.versions))
-                     */
-                    .forEach((instrumentation) => {
-                        moduleExports = instrumentation.patch.call(this, moduleExports);
-                    });
-                } catch (e) {
-
-                    // todo: log error here
-                    console.error(e);
-                }
-            });
-
-        return moduleExports;
-    }
-
-    hook(instrumentedModules, __hookModule.bind(this));
+    return true;
 }

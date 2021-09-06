@@ -110,8 +110,6 @@
     "@thundra/warmup": "1.0.0",
     "fast-copy": "^2.1.0",
     "isomorphic-git": "^1.9.2",
-    "jest": "^25.5.4",
-    "jest-circus": "^25.5.4",
     "koalas": "^1.0.2",
     "lodash.flatten": "^4.4.0",
     "lodash.get": "^4.4.2",

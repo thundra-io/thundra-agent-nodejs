@@ -203,8 +203,7 @@ class ModuleUtils {
         ThundraLogger.debug(`<ModuleUtils> Instrumenting module ${moduleName} ...`);
         let isValid = false;
         if (version) {
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
+            const isValidVersion = ModuleVersionValidator.validateModuleVersion(basedir, version);
             if (!isValidVersion) {
                 ThundraLogger.error(
                     `<ModuleUtils> Invalid module version for ${moduleName} integration. Supported version is ${version}`);
