@@ -8,6 +8,29 @@ import ThundraLogger from '../../../../ThundraLogger';
 
 export let gitEnvironmentInfo: GitEnvironmentInfo;
 
+export const extractRepoName = (repoURL: string) => {
+    if (repoURL == null) {
+        return null;
+    }
+    const idx = repoURL.lastIndexOf('/');
+    if (idx >= 0) {
+        return normalizeRepoName(repoURL.substring(idx + 1));
+    } else {
+        return normalizeRepoName(repoURL);
+    }
+};
+
+const normalizeRepoName = (repoName: string) => {
+    if (repoName == null) {
+        return null;
+    }
+    const idx = repoName.indexOf('.');
+    if (idx >= 0) {
+        repoName = repoName.substring(0, idx);
+    }
+    return repoName;
+};
+
 export const init = async () => {
 
     let repoURL: string;
