@@ -1,9 +1,5 @@
 import Path from 'path';
 
-import { Event, State } from 'jest-circus';
-import { EnvironmentContext } from '@jest/environment';
-import type { Config } from '@jest/types';
-
 import * as TestRunnerSupport from '../../TestRunnerSupport';
 import { JestEventHandlers } from '../handlers';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
@@ -22,7 +18,7 @@ function wrapEnvironment(BaseEnvironment: any) {
 
     testSuite: string;
 
-    constructor (config: Config.ProjectConfig, context: EnvironmentContext) {
+    constructor (config: any, context: any) {
       super(config, context);
 
       const setupFilePath = Path.join(__dirname, './wrappers/foresight/lib/jest/SetupFile.js');
@@ -49,7 +45,7 @@ function wrapEnvironment(BaseEnvironment: any) {
       return eventName;
     }
 
-    createTestSuiteEvent(event: any, state: State) {
+    createTestSuiteEvent(event: any, state: any) {
 
       if (!event) {
         return;
@@ -102,7 +98,7 @@ function wrapEnvironment(BaseEnvironment: any) {
       return vmContentext;
     }
 
-    async handleTestEvent(event: Event, state: State) {
+    async handleTestEvent(event: any, state: any) {
 
       const eventName = this.createEventName(event);
       if (!eventName) {
@@ -131,38 +127,28 @@ function wrapEnvironment(BaseEnvironment: any) {
   };
 }
 
+const patch = (Environment: any) => {
+
+  const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);
+  if (!projectId) {
+
+    ThundraLogger.error('<ThundraJestEnvironment> Test project id must be filled ...');
+    return Environment;
+
+  }
+
+  TestRunnerSupport.setProjectId(projectId);
+  return wrapEnvironment(Environment);
+};
+
 export default [{
     name: 'jest-environment-node',
-    versions: ['>=24.8.0'],
-    patch(NodeEnvironment: any) {
-
-      const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);
-      if (!projectId) {
-
-        ThundraLogger.error('<ThundraJestEnvironment> Test project id must be filled ...');
-        return NodeEnvironment;
-
-      }
-
-      TestRunnerSupport.setProjectId(projectId);
-      return wrapEnvironment(NodeEnvironment);
-    },
-   },
-  // {
-  //   name: 'jest-environment-jsdom',
-  //   versions: ['>=24.8.0'],
-  //   patch: function (JsdomEnvironment: any) {
-
-  //     const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);
-  //     if (!projectId) {
-
-  //       ThundraLogger.error('<ThundraJestEnvironment> Test project id must be filled ...');
-  //       return JsdomEnvironment;
-
-  //     }
-
-  //     TestRunnerSupport.setProjectId(projectId);
-  //     return wrapEnvironment(JsdomEnvironment);
-  //   }
-  // }
+    version: '>=24.8.0',
+    patch,
+  },
+  {
+    name: 'jest-environment-jsdom',
+    version: '>=24.8.0',
+    patch,
+  },
 ];

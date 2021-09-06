@@ -70,10 +70,10 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 }
 
 /**
-* Finish trace
-* @param {PluginContext} pluginContext
-* @param {ExecutionContext} execContext
-*/
+ * Finish trace
+ * @param {PluginContext} pluginContext
+ * @param {ExecutionContext} execContext
+ */
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
 
     ForesightWrapperUtils.finishTrace(pluginContext, execContext);

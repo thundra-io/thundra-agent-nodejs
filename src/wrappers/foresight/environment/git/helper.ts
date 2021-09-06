@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 
 import * as git from 'isomorphic-git';
@@ -61,7 +60,7 @@ export const init = async () => {
 
         console.error(error);
         // todo: log erro in here
-    } finally {
-        return gitEnvironmentInfo;
     }
+
+    return gitEnvironmentInfo;
 };
