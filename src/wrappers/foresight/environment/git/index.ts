@@ -3,6 +3,7 @@ import * as GitHelper from './helper';
 import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
 import ConfigNames from '../../../../config/ConfigNames';
 import ConfigProvider from '../../../../config/ConfigProvider';
+import ThundraLogger from '../../../../ThundraLogger';
 
 export const ENVIRONMENT = 'Git';
 
@@ -25,7 +26,8 @@ export const getEnvironmentInfo = () => {
 
 export const init = async () => {
     if (environmentInfo == null) {
-        // todo: obtain required fields in here
+
+        ThundraLogger.debug('<GitEnvironmentProvider> Initializing git environment ...');
 
         const gitEnvironmentInfo = await GitHelper.init();
         if (gitEnvironmentInfo != null) {
@@ -46,6 +48,8 @@ export const init = async () => {
                 branch,
                 commitHash,
                 commitMessage);
+
+            ThundraLogger.debug('<GitEnvironmentProvider> Initialized git environment ...');
         }
     }
 };

@@ -13,6 +13,10 @@ import LoadTestModules from './ModuleLoader';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
+/**
+ * This method will create a class which extend from BaseEnvironment.
+ * @param BaseEnvironment BaseEnvironment
+ */
 function wrapEnvironment(BaseEnvironment: any) {
   return class ThundraJestEnvironment extends BaseEnvironment {
 
@@ -21,6 +25,11 @@ function wrapEnvironment(BaseEnvironment: any) {
     constructor (config: any, context: any) {
       super(config, context);
 
+      ThundraLogger.debug(`<ThundraJestEnvironment> Initializing ...`);
+
+      /**
+       * will add default SetupFile
+       */
       const setupFilePath = Path.join(__dirname, './wrappers/foresight/lib/jest/SetupFile.js');
       config.setupFiles.push(setupFilePath);
 
@@ -35,6 +44,11 @@ function wrapEnvironment(BaseEnvironment: any) {
       TestRunnerSupport.setTestStatusReportFreq(testStatusReportFreq);
     }
 
+    /**
+     * Create event name with event object for handle test events.
+     * Created value value will be used for select matched handler in JestEventHandlers
+     * @param event event
+     */
     createEventName(event: any) {
 
       let eventName = event.name;
@@ -45,6 +59,11 @@ function wrapEnvironment(BaseEnvironment: any) {
       return eventName;
     }
 
+    /**
+     * Create TestSuiteEvent object for related handlers.
+     * @param event event
+     * @param state state
+     */
     createTestSuiteEvent(event: any, state: any) {
 
       if (!event) {
@@ -90,6 +109,10 @@ function wrapEnvironment(BaseEnvironment: any) {
         .build();
     }
 
+    /**
+     * Override getVmContext for set loadThundraTestModules function to testsute global object.
+     * loadThundraTestModules function will be triggered per testcase.
+     */
     getVmContext() {
       const vmContentext = super.getVmContext();
 
@@ -98,35 +121,45 @@ function wrapEnvironment(BaseEnvironment: any) {
       return vmContentext;
     }
 
+    /**
+     * Override handleTestEvent method.
+     * All test actions handle on this method.
+     * @param event event
+     * @param state state
+     */
     async handleTestEvent(event: any, state: any) {
 
-      const eventName = this.createEventName(event);
-      if (!eventName) {
-        /**
-         * log & return
-         */
+      try {
+        const eventName = this.createEventName(event);
+        if (!eventName) {
 
-         return;
-      }
+          ThundraLogger.debug(`<ThundraJestEnvironment> Event name can not be empty. Testsuite name: ${this.testSuite}.`);
+          return;
+        }
 
-      const testSuiteEvent = this.createTestSuiteEvent(event, state);
+        const testSuiteEvent = this.createTestSuiteEvent(event, state);
 
-      if (!testSuiteEvent) {
-        /**
-         * log & return
-         */
+        if (!testSuiteEvent) {
 
-         return;
-      }
+          ThundraLogger.debug(`<ThundraJestEnvironment> Test suite event can not be empty. Testsuite name: ${this.testSuite}.`);
+          return;
+        }
 
-      const handler = JestEventHandlers.get(eventName);
-      if (handler) {
-        await handler(testSuiteEvent);
+        const handler = JestEventHandlers.get(eventName);
+        if (handler) {
+          await handler(testSuiteEvent);
+        }
+      } catch (error) {
+        ThundraLogger.error('<ThundraJestEnvironment> An error occured while handling test event.', error);
       }
     }
   };
 }
 
+/**
+ * Patch method of module.
+ * @param Environment Environment
+ */
 const patch = (Environment: any) => {
 
   const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);

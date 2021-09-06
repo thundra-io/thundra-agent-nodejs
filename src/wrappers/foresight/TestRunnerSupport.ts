@@ -11,7 +11,7 @@ import ExecutionContext from '../../context/ExecutionContext';
 import WrapperContext from '../WrapperContext';
 import TestRunStatus from './model/TestRunStatus';
 import ConfigProvider from '../../config/ConfigProvider';
-import ConfigNames from '../../config/ConfigNames';
+import ThundraLogger from '../../ThundraLogger';
 
 const findHostName = () => {
     return os.hostname();
@@ -76,10 +76,8 @@ export const setTestStatusReportFreq = (freq: number) => {
 
 const sendTestRunStatus = async () => {
     if (!testRunScope || !initialized) {
-        /**
-         * log & return
-         */
 
+        ThundraLogger.debug('<ThundraRunnerSupport> Test run not started. TestRunStatus will not send.');
         return;
     }
 
@@ -147,7 +145,8 @@ export const startTestRun = (): TestRunStart => {
 
 export const finishTestRun = (): TestRunFinish => {
     if (!initialized || !testRunScope) {
-        // todo: log & and return;
+
+        ThundraLogger.debug('<ThundraRunnerSupport> Test run not started. TestRunFinish will not send.');
         return;
     }
 

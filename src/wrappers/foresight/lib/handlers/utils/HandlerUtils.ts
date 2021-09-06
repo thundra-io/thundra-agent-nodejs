@@ -1,17 +1,19 @@
 import ExecutionContext from '../../../../../context/ExecutionContext';
 import ExecutionContextManager from '../../../../../context/ExecutionContextManager';
 import ThundraSpan from '../../../../../opentracing/Span';
+import ThundraLogger from '../../../../../ThundraLogger';
 
+/**
+ * Util class for test suite event handlers.
+ */
 export default class HandlerUtils {
 
     static createSpanForTest(operationName: string, context: ExecutionContext) {
         const { tracer } = context;
 
         if (!tracer) {
-            /**
-             * log & return
-             */
 
+            ThundraLogger.debug('<HandlerUtils> Tracer can not be empty.');
             return;
         }
 
@@ -32,10 +34,8 @@ export default class HandlerUtils {
 
     static finishSpanForTest(span: ThundraSpan, tagName: string) {
         if (!span) {
-            /**
-             * log & return
-             */
 
+            ThundraLogger.debug('<HandlerUtils> Span can not be empty.');
             return;
         }
 
@@ -43,10 +43,8 @@ export default class HandlerUtils {
 
         const context = ExecutionContextManager.get();
         if (!context || !context.invocationData) {
-            /**
-             * log and return
-             */
 
+            ThundraLogger.debug('<HandlerUtils> Execution context can not be empty.');
             return;
         }
 

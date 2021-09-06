@@ -7,6 +7,8 @@ const Hook = require('require-in-the-middle');
 
 export function init() {
 
+    ThundraLogger.debug(`<ForesightInit> Initializing ...`);
+
     libs.forEach((value: any, key: any) => {
 
         [].concat(value)

@@ -4,6 +4,8 @@ import * as git from 'isomorphic-git';
 
 import { GitEnvironmentInfo } from './GitEnvironmentInfo';
 
+import ThundraLogger from '../../../../ThundraLogger';
+
 export let gitEnvironmentInfo: GitEnvironmentInfo;
 
 export const init = async () => {
@@ -15,6 +17,9 @@ export const init = async () => {
     let commitMessage: string;
 
     try {
+
+        ThundraLogger.debug('<GitHelper> Obtaining git environment information ...');
+
         const gitroot = await git.findRoot({
             fs,
             filepath: __dirname,
@@ -56,10 +61,11 @@ export const init = async () => {
             commitHash,
             commitMessage,
         );
+
+        ThundraLogger.debug('<GitHelper> Obtained git environment information ...');
     } catch (error) {
 
-        console.error(error);
-        // todo: log erro in here
+        ThundraLogger.error('<GitHelper> Git environment did not created.', error);
     }
 
     return gitEnvironmentInfo;

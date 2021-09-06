@@ -1,3 +1,4 @@
+import ThundraLogger from '../../../ThundraLogger';
 import * as GitEnvironmentInfoProvider from './git';
 
 export const environmentInfoProviders = {
@@ -9,6 +10,8 @@ export const environmentInfoProviders = {
 };
 
 export const init = async () => {
+
+    ThundraLogger.debug('<EnvironmentProvider> Environments initilizing ...');
 
     for (const environmentInfoProvider of Object.values(environmentInfoProviders)) {
         await environmentInfoProvider.init();

@@ -4,28 +4,31 @@ import TestSuiteEvent from '../../model/TestSuiteEvent';
 import ThundraSpan from '../../../../opentracing/Span';
 import { TestRunnerTags } from '../../model/TestRunnerTags';
 import HandlerUtils from './utils/HandlerUtils';
+import ThundraLogger from '../../../../ThundraLogger';
 
 let span: ThundraSpan;
 
 const TEST_AFTER_ALL_OPERATION_NAME = 'afterAll';
 
+/**
+ * Start for handling afterAll event
+ * @param event event
+ */
 export async function start(event: TestSuiteEvent) {
+
+    ThundraLogger.debug('<AfterAll> Handling afterAll start event.');
 
     const context = ExecutionContextManager.get();
     if (!context) {
-        /**
-         * log & return
-         */
 
+        ThundraLogger.debug('<AfterAll> Execution context can not be empty.');
         return;
     }
 
     span = HandlerUtils.createSpanForTest(TEST_AFTER_ALL_OPERATION_NAME, context);
     if (!span) {
-        /**
-         * log & return
-         */
 
+        ThundraLogger.debug('<AfterAll> Span can not be empty.');
         return;
     }
 
@@ -33,7 +36,13 @@ export async function start(event: TestSuiteEvent) {
     span._initialized();
 }
 
+/**
+ * Finish for handling afterAll event
+ * @param event event
+ */
 export async function finish(event: TestSuiteEvent) {
+
+    ThundraLogger.debug('<AfterAll> Handling afterAll finish event.');
 
     HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_AFTER_ALL_DURATION);
 }

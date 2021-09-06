@@ -4,10 +4,8 @@ import ConfigNames from '../../config/ConfigNames';
 import { ApplicationManager } from '../../application/ApplicationManager';
 import ThundraLogger from '../../ThundraLogger';
 import Reporter from '../../Reporter';
-import ThundraSpanContext from '../../opentracing/SpanContext';
 import PluginContext from '../../plugins/PluginContext';
 import ExecutionContext from '../../context/ExecutionContext';
-import * as opentracing from 'opentracing';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
 import Utils from '../../utils/Utils';
 import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
@@ -213,32 +211,18 @@ export default class ForesightWrapperUtils {
 
     static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
 
-        /**
-         * todo: remove redundant lines in this function
-         */
-
-        const { tracer, request } = execContext;
-        const propagatedSpanContext: ThundraSpanContext =
-            tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
-
-        const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
-        const incomingSpanID = get(propagatedSpanContext, 'spanId');
-
+        const { tracer } = execContext;
+        const traceId = Utils.generateId();
         const contextInformation: any = execContext.getContextInformation();
 
         const rootSpan = tracer._startSpan(contextInformation.operationName, {
-            propagated: propagatedSpanContext ? true : false,
-            parentContext: propagatedSpanContext,
+            propagated: false,
             rootTraceId: traceId,
             domainName: contextInformation.applicationDomainName,
             className: contextInformation.applicationClassName,
         });
 
         rootSpan.isRootSpan = true;
-
-        if (incomingSpanID) {
-            InvocationTraceSupport.addIncomingTraceLink(incomingSpanID);
-        }
 
         execContext.traceId = traceId;
         execContext.rootSpan = rootSpan;
@@ -294,11 +278,6 @@ export default class ForesightWrapperUtils {
             applicationResourceName,
             timeout,
         } = execContext;
-
-        /**
-         * todo: remove redundant lines in this function
-         * check java agent for how to report test errors in tags ?
-         */
 
         if (error) {
             const parsedErr = Utils.parseError(error);

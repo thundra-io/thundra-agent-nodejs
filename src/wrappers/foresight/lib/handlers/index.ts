@@ -24,10 +24,6 @@ export const JestEventHandlers = new Map<string, Function>([
     [JEST_TEST_EVENTS.BEFOREALLFINISH, beforeAllFinish],
     [JEST_TEST_EVENTS.AFTERALLSTART, afterAllStart],
     [JEST_TEST_EVENTS.AFTERALLFINISH, afterAllFinish],
-
-    /**
-     * todo: add other jest event handlers here if needed ...
-     */
 ]);
 
 /**

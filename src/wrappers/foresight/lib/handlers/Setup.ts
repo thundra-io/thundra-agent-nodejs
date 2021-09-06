@@ -6,6 +6,7 @@ import TestSuiteExecutionContext from '../../model/TestSuiteExecutionContext';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
 import Utils from '../../../../utils/Utils';
 import ConfigProvider from '../../../../config/ConfigProvider';
+import ThundraLogger from '../../../../ThundraLogger';
 
 async function sendData(data: any) {
 
@@ -19,6 +20,8 @@ async function sendData(data: any) {
 
 async function globalSetup() {
 
+    ThundraLogger.debug(`<Setup> Global setup creating for test suite: ${TestRunnerSupport.testSuiteName}.`);
+
     await EnvironmentSupport.init();
 
     const testRunStart = TestRunnerSupport.startTestRun();
@@ -26,26 +29,28 @@ async function globalSetup() {
         return;
     }
 
-    console.log({
-        testRunId: testRunStart.id,
-    });
-
     try {
 
         await sendData(testRunStart);
+        ThundraLogger.debug(`
+            <Setup> Test run start event sended for test suite: ${TestRunnerSupport.testSuiteName}
+            with test run id: ${testRunStart.id}
+        `);
         TestRunnerSupport.startTestRunStatusEvent();
+        ThundraLogger.debug('<Setup> Test run status event interval started');
     } catch (error) {
-        /**
-         * thundra logger error
-         */
 
-        console.error(error);
+        ThundraLogger.error('<Setup> Test run start event did not send.', error);
     }
 }
 
 async function globalTeardown() {
 
+    ThundraLogger.debug(`<Setup> Global teardown creating for test suite: ${TestRunnerSupport.testSuiteName}.`);
+
     async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
+
+        ThundraLogger.debug(`<Setup> Test run fisining with code ${evtOrExitCodeOrError}.`);
 
         try {
 
@@ -55,14 +60,16 @@ async function globalTeardown() {
             }
 
             await sendData(testRunFinish);
+            ThundraLogger.debug(`
+                <Setup> Test run start event sended for test suite: ${TestRunnerSupport.testSuiteName}
+                with test run id: ${testRunFinish.id}
+            `);
             TestRunnerSupport.setInitialized(false);
             TestRunnerSupport.finishTestRunStatusEvent();
-        } catch (e) {
-            /**
-             * thundra logger error
-             */
+            ThundraLogger.debug('<Setup> Test run status event interval stopped.');
+        } catch (error) {
 
-            console.error('EXIT HANDLER ERROR', e);
+            ThundraLogger.error('<Setup> Test run finish event did not send.', error);
         }
 
         process.exit(isNaN(+evtOrExitCodeOrError) ? 1 : +evtOrExitCodeOrError);
@@ -79,6 +86,9 @@ async function globalTeardown() {
 async function initTestSuite() {
 
     if (!TestRunnerSupport.initialized) {
+
+        ThundraLogger.debug(`<Setup> Test suite initializing ...`);
+
         TestRunnerSupport.setInitialized(true);
 
         await globalSetup();
@@ -98,7 +108,13 @@ async function startTestSuite() {
     await ForesightWrapperUtils.beforeTestProcess(TestRunnerSupport.wrapperContext.plugins, context);
 }
 
+/**
+ * Function for handling setup event
+ * @param event event
+ */
 export default async function run(event: TestSuiteEvent) {
+
+    ThundraLogger.debug(`<Setup> Handling test setup event for test suite: ${TestRunnerSupport.testSuiteName}.`);
 
     await initTestSuite();
     await startTestSuite();

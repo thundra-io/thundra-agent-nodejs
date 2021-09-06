@@ -4,16 +4,21 @@ import EnvironmentInfo from './EnvironmentInfo';
 import { TestRunnerTags } from '../model/TestRunnerTags';
 
 import * as InfoProvider from './';
+import ThundraLogger from '../../../ThundraLogger';
 
 let environmentInfo: EnvironmentInfo;
 
 export const init = async () => {
+
+    ThundraLogger.debug('<EnvironmentSupport> Environments initilizing ...');
 
     await InfoProvider.init();
 
     Object.values(InfoProvider.environmentInfoProviders).forEach((environmentInfoProvider) => {
         const ei: EnvironmentInfo = environmentInfoProvider.getEnvironmentInfo();
         if (ei != null) {
+
+            ThundraLogger.debug(`<EnvironmentSupport> Environment loaded. ${ei.environment}`);
             environmentInfo = ei;
             return;
         }

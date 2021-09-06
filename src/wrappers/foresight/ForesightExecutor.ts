@@ -7,6 +7,11 @@ import * as TestRunnerSupport from './TestRunnerSupport';
 
 import { TestRunnerTags } from './model/TestRunnerTags';
 
+/**
+ * Start invocation process
+ * @param {PluginContext} pluginContext
+ * @param {ExecutionContext} execContext
+ */
 export function startInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
 
     execContext.invocationData = ForesightWrapperUtils.createInvocationData(execContext, pluginContext);
@@ -47,6 +52,11 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
     EnvironmentSupport.tagInvocation(invocationData);
 }
 
+/**
+ * Start trace
+ * @param {PluginContext} pluginContext
+ * @param {ExecutionContext} execContext
+ */
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
 
     ForesightWrapperUtils.startTrace(pluginContext, execContext);

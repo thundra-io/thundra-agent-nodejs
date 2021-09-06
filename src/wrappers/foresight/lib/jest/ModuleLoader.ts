@@ -2,6 +2,10 @@ import ModuleUtils from '../../../../utils/ModuleUtils';
 import {INTEGRATIONS} from '../../../../Constants';
 import ThundraLogger from '../../../../ThundraLogger';
 
+/**
+ * try to load test modules
+ * @param testRequire testRequire testsuite's context require
+ */
 const LoadTestModules = (testRequire: any) => {
     for (const key in INTEGRATIONS) {
         const integration = INTEGRATIONS[key];
@@ -9,9 +13,9 @@ const LoadTestModules = (testRequire: any) => {
             for (const module of integration.moduleNames) {
                 try {
                     ModuleUtils.instrumentModule(module, testRequire(module));
-                    ThundraLogger.info(`<ModuleLoader> Module instrumented: ${module}`);
+                    ThundraLogger.debug(`<ModuleLoader> Module instrumented: ${module}`);
                 } catch (e) {
-                    ThundraLogger.info(`<ModuleLoader> Cannot instrument module: ${module}`);
+                    ThundraLogger.debug(`<ModuleLoader> Cannot instrument module: ${module}`);
                 }
             }
         }
