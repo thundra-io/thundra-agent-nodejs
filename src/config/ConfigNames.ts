@@ -234,6 +234,80 @@ class ConfigNames {
     public static readonly INVOCATION_ID_ENV_VAR_NAME: string =
         'INVOCATION_ID';
 
+    public static readonly TRAVIS_ENV_VAR_NAME: string =
+        'TRAVIS';
+    public static readonly TRAVIS_REPO_SLUG_VAR_NAME: string =
+        'TRAVIS_REPO_SLUG';
+    public static readonly TRAVIS_PULL_REQUEST_BRANCH_ENV_VAR_NAME: string =
+        'TRAVIS_PULL_REQUEST_BRANCH';
+    public static readonly TRAVIS_BRANCH_ENV_VAR_NAME: string =
+        'TRAVIS_BRANCH';
+    public static readonly TRAVIS_COMMIT_ENV_VAR_NAME: string =
+        'TRAVIS_COMMIT';
+    public static readonly TRAVIS_COMMIT_MESSAGE_ENV_VAR_NAME: string =
+        'TRAVIS_COMMIT_MESSAGE';
+    public static readonly TRAVIS_BUILD_WEB_URL_ENV_VAR_NAME: string =
+        'TRAVIS_BUILD_WEB_URL';
+    public static readonly TRAVIS_BUILD_ID_ENV_VAR_NAME: string =
+        'TRAVIS_BUILD_ID';
+
+    public static readonly JENKINS_HOME_ENV_VAR_NAME: string =
+        'JENKINS_HOME';
+    public static readonly JENKINS_URL_ENV_VAR_NAME: string =
+        'JENKINS_URL';
+    public static readonly GIT_URL_ENV_VAR_NAME: string =
+        'GIT_URL';
+    public static readonly GIT_URL_1_ENV_VAR_NAME: string =
+        'GIT_URL_1';
+    public static readonly GIT_BRANCH_ENV_VAR_NAME: string =
+        'GIT_BRANCH';
+    public static readonly GIT_COMMIT_ENV_VAR_NAME: string =
+        'GIT_COMMIT';
+    public static readonly JOB_NAME_ENV_VAR_NAME: string =
+        'JOB_NAME';
+    public static readonly BUILD_ID_ENV_VAR_NAME: string =
+        'BUILD_ID';
+
+    public static readonly GITLAB_CI_ENV_VAR_NAME: string =
+        'GITLAB_CI';
+    public static readonly CI_REPOSITORY_URL_ENV_VAR_NAME: string =
+        'CI_REPOSITORY_URL';
+    public static readonly CI_COMMIT_BRANCH_ENV_VAR_NAME: string =
+        'CI_COMMIT_BRANCH';
+    public static readonly CI_COMMIT_REF_NAME_ENV_VAR_NAME: string =
+        'CI_COMMIT_REF_NAME';
+    public static readonly CI_COMMIT_SHA_ENV_VAR_NAME: string =
+        'CI_COMMIT_SHA';
+    public static readonly CI_COMMIT_MESSAGE_ENV_VAR_NAME: string =
+        'CI_COMMIT_MESSAGE';
+    public static readonly CI_JOB_ID_ENV_VAR_NAME: string =
+        'CI_JOB_ID';
+    public static readonly CI_JOB_URL_ENV_VAR_NAME: string =
+        'CI_JOB_URL';
+
+    public static readonly CIRCLECI_ENV_VAR_NAME: string =
+        'CIRCLECI';
+    public static readonly CIRCLE_REPOSITORY_URL_ENV_VAR_NAME: string =
+        'CIRCLE_REPOSITORY_URL';
+    public static readonly CIRCLE_BRANCH_ENV_VAR_NAME: string =
+        'CIRCLE_BRANCH';
+    public static readonly CIRCLE_SHA1_ENV_VAR_NAME: string =
+        'CIRCLE_SHA1';
+    public static readonly CIRCLE_BUILD_URL_ENV_VAR_NAME: string =
+        'CIRCLE_BUILD_URL';
+    public static readonly CIRCLE_BUILD_NUM_ENV_VAR_NAME: string =
+        'CIRCLE_BUILD_NUM';
+
+    public static readonly BITBUCKET_GIT_HTTP_ORIGIN_ENV_VAR_NAME: string =
+        'BITBUCKET_GIT_HTTP_ORIGIN';
+    public static readonly BITBUCKET_GIT_SSH_ORIGIN_ENV_VAR_NAME: string =
+        'BITBUCKET_GIT_SSH_ORIGIN';
+    public static readonly BITBUCKET_BRANCH_ENV_VAR_NAME: string =
+        'BITBUCKET_BRANCH';
+    public static readonly BITBUCKET_COMMIT_ENV_VAR_NAME: string =
+        'BITBUCKET_COMMIT';
+    public static readonly BITBUCKET_BUILD_NUMBER_ENV_VAR_NAME: string =
+        'BITBUCKET_BUILD_NUMBER';
 }
 
 export default ConfigNames;
