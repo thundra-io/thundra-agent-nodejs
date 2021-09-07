@@ -5,6 +5,28 @@ import libs from './lib';
 const path = require('path');
 const Hook = require('require-in-the-middle');
 
+export function globalSetup(clientGlobalSetupPath: string) {
+
+    /**
+     * will be used for start test event.
+     * After new test event logic implemented
+     * ... do something and return clientGlobalSetupPath
+     */
+
+    return clientGlobalSetupPath;
+}
+
+export function globalTeardown(clientGlobalSetupPath: string) {
+
+    /**
+     * will be used for fisinh test event.
+     * After new test event logic implemented
+     * ... do something and return clientGlobalSetupPath
+     */
+
+    return clientGlobalSetupPath;
+}
+
 export function init() {
 
     ThundraLogger.debug(`<ForesightInit> Initializing ...`);

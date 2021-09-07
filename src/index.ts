@@ -19,6 +19,10 @@ import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
 import InitManager from './init/InitManager';
 import ModuleUtils from './utils/ModuleUtils';
+import {
+    globalSetup,
+    globalTeardown,
+} from './wrappers/foresight';
 
 // Check if multiple instances of package exist
 if (!global.__thundraImports__) {
@@ -176,6 +180,8 @@ if (global.__thundraMasterModule__) {
         InvocationSupport,
         InvocationTraceSupport,
         ...support,
+        globalSetup,
+        globalTeardown,
     });
 
     global.__thundraMasterModule__ = {
