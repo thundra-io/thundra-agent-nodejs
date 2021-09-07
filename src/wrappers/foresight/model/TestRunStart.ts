@@ -1,4 +1,4 @@
-import EnvironmentInfo from '../environment/EnvironmentInfo';
+import EnvironmentInfo from './EnvironmentInfo';
 import TestRunMonitoringData from './TestRunMonitoringData';
 
 export default class TestRunStart extends TestRunMonitoringData {

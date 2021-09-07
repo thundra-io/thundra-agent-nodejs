@@ -1,6 +1,6 @@
 import InvocationData from '../../../plugins/data/invocation/InvocationData';
 import ThundraSpan from '../../../opentracing/Span';
-import EnvironmentInfo from './EnvironmentInfo';
+import EnvironmentInfo from '../model/EnvironmentInfo';
 import { TestRunnerTags } from '../model/TestRunnerTags';
 
 import * as InfoProvider from './';

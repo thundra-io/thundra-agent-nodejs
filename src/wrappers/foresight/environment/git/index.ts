@@ -1,4 +1,4 @@
-import EnvironmentInfo from '../EnvironmentInfo';
+import EnvironmentInfo from '../../model/EnvironmentInfo';
 import * as GitHelper from './helper';
 import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
 import ConfigNames from '../../../../config/ConfigNames';

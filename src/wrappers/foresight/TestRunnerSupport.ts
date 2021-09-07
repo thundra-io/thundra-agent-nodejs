@@ -1,5 +1,5 @@
 import * as EnvironmentSupport from './environment/EnvironmentSupport';
-import EnvironmentInfo from './environment/EnvironmentInfo';
+import EnvironmentInfo from './model/EnvironmentInfo';
 import Utils from '../../utils/Utils';
 import TestRunStart from './model/TestRunStart';
 import TestRunFinish from './model/TestRunFinish';

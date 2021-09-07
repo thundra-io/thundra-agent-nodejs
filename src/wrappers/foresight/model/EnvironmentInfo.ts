@@ -1,4 +1,4 @@
-import { GitEnvironmentInfo } from './git/GitEnvironmentInfo';
+import { GitEnvironmentInfo } from './GitEnvironmentInfo';
 
 export default class EnvironmentInfo extends GitEnvironmentInfo {
 

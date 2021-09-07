@@ -1,6 +1,6 @@
 import ConfigProvider from '../../../../config/ConfigProvider';
 import ConfigNames from '../../../../config/ConfigNames';
-import EnvironmentInfo from '../EnvironmentInfo';
+import EnvironmentInfo from '../../model/EnvironmentInfo';
 import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
 import ThundraLogger from '../../../../ThundraLogger';
 import * as GitHelper from '../git/helper';
