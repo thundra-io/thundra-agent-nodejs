@@ -2,7 +2,7 @@ import fs from 'fs';
 
 import * as git from 'isomorphic-git';
 
-import { GitEnvironmentInfo } from './GitEnvironmentInfo';
+import { GitEnvironmentInfo } from '../../model/GitEnvironmentInfo';
 
 import ThundraLogger from '../../../../ThundraLogger';
 
