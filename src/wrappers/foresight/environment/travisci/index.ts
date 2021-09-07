@@ -34,11 +34,17 @@ const isTravisCIEnvironment = () => {
         || process.env[ConfigNames.TRAVIS_ENV_VAR_NAME.toLowerCase()] != null);
 };
 
+/**
+ * Get environment info
+ */
 export const getEnvironmentInfo = () => {
 
     return environmentInfo;
 };
 
+/**
+ * Initiate TravisCI Environment Info
+ */
 export const init = async (): Promise<void> => {
     try {
         if (environmentInfo == null && isTravisCIEnvironment()) {

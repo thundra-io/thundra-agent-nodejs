@@ -32,11 +32,17 @@ const getTestRunId = (repoURL: string, commitHash: string) => {
     }
 };
 
+/**
+ * Get environment info
+ */
 export const getEnvironmentInfo = () => {
 
     return environmentInfo;
 };
 
+/**
+ * Initiate Github Environment Info
+ */
 export const init = async (): Promise<void> => {
     try {
         if (environmentInfo == null) {

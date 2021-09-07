@@ -8,6 +8,9 @@ import ThundraLogger from '../../../ThundraLogger';
 
 let environmentInfo: EnvironmentInfo;
 
+/**
+ * Initiate all environment providers and set non empty one
+ */
 export const init = async () => {
 
     ThundraLogger.debug('<EnvironmentSupport> Environments initilizing ...');
@@ -25,10 +28,17 @@ export const init = async () => {
     });
 };
 
+/**
+ * Get environment info
+ */
 export const getEnvironmentInfo = () => {
     return environmentInfo;
 };
 
+/**
+ * Add environment information to invocation data as tag
+ * @param invocationData invocationData
+ */
 export const tagInvocation = (invocationData: InvocationData) => {
 
     if (environmentInfo) {
@@ -41,6 +51,10 @@ export const tagInvocation = (invocationData: InvocationData) => {
     }
 };
 
+/**
+ * Add environment information to span data as tag
+ * @param span span
+ */
 export const tagSpan = (span: ThundraSpan) => {
 
     if (environmentInfo) {

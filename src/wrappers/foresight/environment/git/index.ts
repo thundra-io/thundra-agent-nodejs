@@ -19,11 +19,17 @@ const getTestRunId = (repoURL: string, commitHash: string) => {
     return TestRunnerUtils.getDefaultTestRunId(ENVIRONMENT, repoURL, commitHash);
 };
 
+/**
+ * Get environment info
+ */
 export const getEnvironmentInfo = () => {
 
     return environmentInfo;
 };
 
+/**
+ * Initiate Git Environment Info
+ */
 export const init = async () => {
     if (environmentInfo == null) {
 

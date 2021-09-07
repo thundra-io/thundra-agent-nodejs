@@ -7,6 +7,10 @@ import libs from './lib';
 const path = require('path');
 const Hook = require('require-in-the-middle');
 
+/**
+ * Handler method for global setup process
+ * @param clientGlobalSetupPath clientGlobalSetupPath
+ */
 export function globalSetup(clientGlobalSetupPath: string) {
 
     /**
@@ -18,6 +22,10 @@ export function globalSetup(clientGlobalSetupPath: string) {
     return clientGlobalSetupPath;
 }
 
+/**
+ * Handler method for global teardown process
+ * @param clientGlobalSetupPath clientGlobalSetupPath
+ */
 export function globalTeardown(clientGlobalSetupPath: string) {
 
     /**
@@ -29,6 +37,9 @@ export function globalTeardown(clientGlobalSetupPath: string) {
     return clientGlobalSetupPath;
 }
 
+/**
+ * Foresight wrapper init function
+ */
 export function init() {
 
     const testWrapperDisabled = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_DISABLE);

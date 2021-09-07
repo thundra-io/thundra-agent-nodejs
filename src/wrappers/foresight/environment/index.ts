@@ -17,6 +17,9 @@ export const environmentInfoProviders = {
     [TravisCIEnvironmentInfoProvider.ENVIRONMENT]: TravisCIEnvironmentInfoProvider,
 };
 
+/**
+ * Initiate all environment providers
+ */
 export const init = async () => {
 
     ThundraLogger.debug('<EnvironmentProvider> Environments initilizing ...');

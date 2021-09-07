@@ -34,11 +34,17 @@ const isCircleCIEnvironment = () => {
         || process.env[ConfigNames.CIRCLECI_ENV_VAR_NAME.toLowerCase()] != null);
 };
 
+/**
+ * Get environment info
+ */
 export const getEnvironmentInfo = () => {
 
     return environmentInfo;
 };
 
+/**
+ * Initiate CircleCI Environment Info
+ */
 export const init = async (): Promise<void> => {
     try {
         if (environmentInfo == null && isCircleCIEnvironment()) {

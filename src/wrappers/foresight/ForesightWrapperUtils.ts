@@ -27,8 +27,16 @@ const get = require('lodash.get');
 const TEST_SUIT_APPLICATION_DOMAIN_NAME = 'TestSuite';
 const TEST_CASE_APPLICATION_DOMAIN_NAME = 'Test';
 
+/**
+ * Utility class for Foresight wrapper
+ */
 export default class ForesightWrapperUtils {
 
+    /**
+     * Initiate test wrapper context
+     * @param executor executor
+     * @param applicationClassName applicationClassName
+     */
     static initWrapper(executor: any, applicationClassName: string) {
 
         ForesightWrapperUtils.setApplicationInfo(applicationClassName, 'TestSuite', 'TestSuite');
@@ -43,6 +51,12 @@ export default class ForesightWrapperUtils {
         return new WrapperContext(reporter, pluginContext, plugins);
     }
 
+    /**
+     * Update current application info provider properties
+     * @param applicationClassName applicationClassName
+     * @param applicationDomainName applicationDomainName
+     * @param applicationName applicationName
+     */
     static setApplicationInfo(
         applicationClassName: string,
         applicationDomainName: string,
@@ -60,6 +74,9 @@ export default class ForesightWrapperUtils {
         });
     }
 
+    /**
+     * Change application info to test suite
+     */
     static changeAppInfoToTestSuite() {
 
         if (TestRunnerSupport.testSuiteExecutionContext) {
@@ -73,6 +90,9 @@ export default class ForesightWrapperUtils {
         }
     }
 
+    /**
+     * Change application info to test case
+     */
     static changeAppInfoToTestCase() {
 
         if (TestRunnerSupport.testSuiteExecutionContext) {
@@ -85,12 +105,21 @@ export default class ForesightWrapperUtils {
         }
     }
 
+    /**
+     * Generate application id value
+     * @param appInfo appInfo
+     */
     static getDefaultApplicationId(appInfo: ApplicationInfo) {
 
         const applicationId = `node:test:${appInfo.applicationClassName}:${appInfo.applicationName}`;
         return applicationId.toLowerCase();
     }
 
+    /**
+     * Create plugins
+     * @param config config
+     * @param pluginContext pluginContext
+     */
     static createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
 
         const plugins: any[] = [];
@@ -116,6 +145,11 @@ export default class ForesightWrapperUtils {
         return plugins;
     }
 
+    /**
+     * Create plugin context
+     * @param apiKey apiKey
+     * @param executor executor
+     */
     static createPluginContext(apiKey: string, executor: any): PluginContext {
 
         const applicationInfo = ApplicationManager.getApplicationInfo();
@@ -127,10 +161,18 @@ export default class ForesightWrapperUtils {
         });
     }
 
+    /**
+     * Create reporter
+     * @param apiKey apiKey
+     */
     static createReporter(apiKey: string): Reporter {
         return new Reporter(apiKey);
     }
 
+    /**
+     * Create execution context for test suite
+     * @param testSuiteName testSuiteName
+     */
     static createTestSuiteExecutionContext(testSuiteName: string): TestSuiteExecutionContext {
 
         const { thundraConfig } = ConfigProvider;
@@ -151,6 +193,11 @@ export default class ForesightWrapperUtils {
         });
     }
 
+    /**
+     * Create execution context for test case
+     * @param testSuiteName testSuiteName
+     * @param testCaseId testCaseId
+     */
     static createTestCaseExecutionContext(testSuiteName: string, testCaseId: string): TestCaseExecutionContext {
         const { thundraConfig } = ConfigProvider;
         const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
@@ -171,6 +218,11 @@ export default class ForesightWrapperUtils {
         });
     }
 
+    /**
+     * Invoke plugins before invocation methods
+     * @param plugins plugins
+     * @param context context
+     */
     static async beforeTestProcess(plugins: any[], context: ExecutionContext) {
 
         for (const plugin of plugins) {
@@ -178,6 +230,12 @@ export default class ForesightWrapperUtils {
         }
     }
 
+    /**
+     * Invoke plugins after invocation methods
+     * @param plugins plugins
+     * @param context context
+     * @param reporter reporter
+     */
     static async afterTestProcess(plugins: any[], context: ExecutionContext, reporter: Reporter) {
 
         context.finishTimestamp = Date.now();
@@ -209,6 +267,11 @@ export default class ForesightWrapperUtils {
         }
     }
 
+    /**
+     * Start trace
+     * @param pluginContext pluginContext
+     * @param execContext execContext
+     */
     static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
 
         const { tracer } = execContext;
@@ -230,6 +293,11 @@ export default class ForesightWrapperUtils {
         execContext.rootSpan.startTime = execContext.startTimestamp;
     }
 
+    /**
+     * Finish trace
+     * @param pluginContext pluginContext
+     * @param execContext execContext
+     */
     static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
 
         const {
@@ -245,6 +313,11 @@ export default class ForesightWrapperUtils {
         rootSpan.finish(finishTimestamp);
     }
 
+    /**
+     * Create invocation data
+     * @param execContext execContext
+     * @param pluginContext pluginContext
+     */
     static createInvocationData(execContext: ExecutionContext, pluginContext: PluginContext): InvocationData {
 
         const invocationData = Utils.initMonitoringData(pluginContext,
@@ -270,6 +343,11 @@ export default class ForesightWrapperUtils {
         return invocationData;
     }
 
+    /**
+     * Finish invocation data
+     * @param execContext execContext
+     * @param pluginContext pluginContext
+     */
     static finishInvocationData(execContext: ExecutionContext, pluginContext: PluginContext) {
 
         const {
