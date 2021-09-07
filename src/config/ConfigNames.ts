@@ -214,6 +214,8 @@ class ConfigNames {
         'thundra.agent.test.run.id';
     public static readonly THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ: string =
         'thundra.agent.test.status.report.freq';
+    public static readonly THUNDRA_AGENT_TEST_DISABLE: string =
+        'thundra.agent.test.disable';
 
     /////////////////////////////////////////////////////////////////////////////
 

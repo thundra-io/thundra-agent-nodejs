@@ -27,7 +27,6 @@ class ThundraConfig {
     timeoutMargin: number;
     testProjectId: string;
     testRundId: string;
-    testStatusReportFreq: number;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -54,9 +53,6 @@ class ThundraConfig {
         this.testRundId = ConfigProvider.get<string>(
             ConfigNames.THUNDRA_AGENT_TEST_RUN_ID,
             options.testRundId);
-        this.testStatusReportFreq = ConfigProvider.get<number>(
-            ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ,
-            options.testStatusReportFreq);
         this.disableMonitoring = get(options, 'disableMonitoring', !(this.apiKey));
         this.traceConfig = new TraceConfig(options.traceConfig);
         this.metricConfig = new MetricConfig(options.metricConfig);

@@ -1,3 +1,5 @@
+import ConfigNames from '../../config/ConfigNames';
+import ConfigProvider from '../../config/ConfigProvider';
 import ThundraLogger from '../../ThundraLogger';
 import ModuleVersionValidator from '../../utils/ModuleVersionValidator';
 import libs from './lib';
@@ -28,6 +30,13 @@ export function globalTeardown(clientGlobalSetupPath: string) {
 }
 
 export function init() {
+
+    const testWrapperDisabled = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_DISABLE);
+    if (testWrapperDisabled) {
+
+        ThundraLogger.debug(`<ForesightInit> Foresight disabled.`);
+        return;
+    }
 
     ThundraLogger.debug(`<ForesightInit> Initializing ...`);
 

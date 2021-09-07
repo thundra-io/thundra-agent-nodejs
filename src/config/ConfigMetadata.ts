@@ -295,6 +295,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'number',
         defaultValue: 10000,
     },
+    [ConfigNames.THUNDRA_AGENT_TEST_DISABLE]: {
+        type: 'boolean',
+        defaultValue: false,
+    }, 
 };
 
 export default ConfigMetadata;
