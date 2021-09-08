@@ -45,6 +45,6 @@ export class TestRunContext {
     totalCount: number = 0;
     successfulCount: number = 0;
     failedCount: number = 0;
-    ignoredCount: number = 0;
-    abortedCount: number = 0;
+    ignoredCount: number = 0; // this uses for skipped test counts ?
+    abortedCount: number = 0; // this is not exists in Jest
 }
