@@ -109,28 +109,4 @@ describe('reporter', () => {
             expect(JSON.stringify(allHttpSentDataObj)).toEqual(JSON.stringify(reports.map(r => r.data)));
         });
     });
-
-    describe('send reports failure', () => {
-        const consoleLogOriginal = console.log;
-        try {
-            let consoleOutput;
-
-            const reporter = new Reporter('apiKey');
-            const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
-            const mockReport2 = {data: {type: 'Span', data: 'data2'}};
-
-            const reports = [];
-            reports.push(mockReport1);
-            reports.push(mockReport2);
-
-            console.log = jest.fn(input => (consoleOutput = input));
-
-            return reporter.sendReports(reports).then(() => {
-                expect(consoleOutput).toEqual(JSON.stringify(reports));
-            });
-        } finally {
-            console.log = consoleLogOriginal;
-        }
-    });
-
 });
