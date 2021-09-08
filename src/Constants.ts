@@ -12,6 +12,7 @@ import MongoDBIntegration from './integrations/MongoDBIntegration';
 import IORedisIntegration from './integrations/IORedisIntegration';
 import {AWSIntegration} from './integrations/AWSIntegration';
 import ESIntegration from './integrations/ESIntegration';
+import AMQPLIBIntegration from './integrations/AmqplibIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './listeners/LatencyInjectorSpanListener';
@@ -154,6 +155,7 @@ export const ClassNames = {
     EXPRESS: 'Express',
     KOA: 'Koa',
     HAPI: 'Hapi',
+    RABBITMQ: 'RabbitMQ',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -430,6 +432,21 @@ export const ESTags = {
     ES_BODY: 'elasticsearch.body',
 };
 
+interface AMQPLIBType {
+    [key: string]: string;
+}
+
+export const AMQPTags: AMQPLIBType = {
+    HOST: 'amqp.host',
+    PORT: 'amqp.port',
+    QUEUE: 'amqp.queue',
+    EXCHANGE: 'amqp.exchange',
+    ROUTING_KEY: 'amqp.routing_key',
+    MESSAGE: 'amqp.message',
+    VHOST: 'amqp.vhost',
+    METHOD: 'amqp.method',
+};
+
 export const AwsSDKTags = {
     SERVICE_NAME: 'aws.service.name',
     REQUEST_NAME: 'aws.request.name',
@@ -539,6 +556,7 @@ export const SpanTypes = {
     AWS_EVENTBRIDGE: 'AWS-EventBridge',
     AWS_SES: 'AWS-SES',
     AWS_STEPFUNCTIONS: 'AWS-StepFunctions',
+    RABBITMQ: 'RabbitMQ',
 };
 
 export const INTEGRATIONS: any = {
@@ -552,6 +570,14 @@ export const INTEGRATIONS: any = {
     aws: {class: AWSIntegration, moduleNames: ['aws-sdk', 'aws-sdk/lib/core.js'], moduleVersion: '2.x'},
     es: {class: ESIntegration, moduleNames: ['elasticsearch'], moduleVersion: '>=10.5'},
     mongodb: {class: MongoDBIntegration, moduleNames: ['mongodb'], moduleVersion: '>=1'},
+    amqplib: {class: AMQPLIBIntegration, moduleNames: [
+        'amqplib',
+        'amqplib/callback_api.js',
+        'amqplib/lib/callback_model.js',
+        'amqplib/lib/channel_model.js',
+        'amqplib/lib/channel.js',
+    ],
+    moduleVersion: '>=0.5'},
 };
 
 export const LISTENERS: any = {

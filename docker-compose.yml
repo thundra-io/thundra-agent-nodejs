@@ -34,3 +34,8 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=example
     ports:
       - "127.0.0.1:27017:27017"
+  rabbitmq:
+    image: docker.io/bitnami/rabbitmq:3.8
+    ports:
+      - '5672:5672'
+      - '15672:15672'

@@ -1,6 +1,6 @@
 {
   "name": "@thundra/core",
-  "version": "2.12.17",
+  "version": "2.12.18",
   "description": "Thundra Node.js Agent",
   "main": "dist/thundra.js",
   "scripts": {
@@ -63,9 +63,11 @@
     "@babel/polyfill": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
     "@babel/runtime-corejs2": "^7.0.0",
+    "@hapi/hapi": "^20.1.5",
     "@types/minimatch": "^3.0.3",
     "@types/node": "^10.5.0",
     "@types/uuid": "^3.4.3",
+    "amqplib": "^0.8.0",
     "aws-sdk": "^2.610.0",
     "aws-xray-sdk-core": "^2.0.1",
     "babel-core": "^7.0.0-bridge.0",
@@ -76,7 +78,6 @@
     "eslint": "^4.19.1",
     "eslint-plugin-babel": "^5.1.0",
     "express": "^4.17.1",
-    "@hapi/hapi": "^20.1.5",
     "gaze-run-interrupt": "^1.0.1",
     "i": "^0.3.6",
     "ioredis": "^4.10.0",
@@ -123,6 +124,7 @@
     "require-in-the-middle": "^3.1.0",
     "semver": "^5.5.0",
     "shimmer": "^1.2.0",
+    "url-parse": "^1.5.3",
     "uuid": "^3.2.1",
     "ws": "^7.2.1"
   }
