@@ -30,7 +30,7 @@ function wrapEnvironment(BaseEnvironment: any) {
       /**
        * will add default SetupFile
        */
-      const setupFilePath = Path.join(__dirname, './wrappers/foresight/lib/jest/SetupFile.js');
+      const setupFilePath = Path.join(__dirname, __PRIVATE__.getSetupFilePath());
       config.setupFiles.push(setupFilePath);
 
       this.testSuite = context.testPath.split('/').pop();
@@ -116,7 +116,12 @@ function wrapEnvironment(BaseEnvironment: any) {
     getVmContext() {
       const vmContentext = super.getVmContext();
 
-      vmContentext.global.loadThundraTestModules = LoadTestModules;
+      vmContentext.global.__THUNDRA__ = {
+        loadThundraTestModules: LoadTestModules,
+        /* test-code */
+        testRunnerSupport: TestRunnerSupport,
+        /* test-code */
+      };
 
       return vmContentext;
     }
@@ -185,3 +190,11 @@ export default [{
     patch,
   },
 ];
+
+/* test-code */
+export const __PRIVATE__ = {
+  getSetupFilePath: () => {
+      return './wrappers/foresight/lib/jest/SetupFile.js';
+  },
+};
+/* end-test-code */

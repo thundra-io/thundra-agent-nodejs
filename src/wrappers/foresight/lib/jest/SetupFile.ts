@@ -7,6 +7,6 @@
 
 const globalObj: any = global;
 
-if (globalObj.loadThundraTestModules) {
-    globalObj.loadThundraTestModules(require);
+if (globalObj && globalObj.__THUNDRA__ && globalObj.__THUNDRA__.loadThundraTestModules) {
+    globalObj.__THUNDRA__.loadThundraTestModules(require);
 }
