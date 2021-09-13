@@ -9,6 +9,8 @@ import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 
+const shimmer = require('shimmer');
+
 const get = require('lodash.get');
 
 const MODULE_NAME = 'mongodb';
@@ -172,13 +174,62 @@ class MongoDBIntegration implements Integration {
         ThundraLogger.debug('<MongoDBIntegration> Wrap');
 
         if (lib) {
-            this.listener = lib.instrument();
-            ThundraLogger.debug('<MongoDBIntegration> Registering to "started" event');
-            this.listener.on('started', (this.onStarted.bind(this)));
-            ThundraLogger.debug('<MongoDBIntegration> Registering to "succeeded" event');
-            this.listener.on('succeeded', this.onSucceeded.bind(this));
-            ThundraLogger.debug('<MongoDBIntegration> Registering to "failed" event');
-            this.listener.on('failed', this.onFailed.bind(this));
+
+            if (!lib.instrument) {
+
+                /**
+                 * Use events for mongodb > 4 versions insturumentation process
+                 *  Mongo.instrument method removed from mongodb >= 4
+                 */
+
+                const currentClassInstance = this;
+
+                function wrapMongoClientConnect(internalSendCommand: any) {
+
+                    return function internalSendCommandWrapper(options: any) {
+
+                        /**
+                         * client.monitorCommands must be true for monitor events
+                         */
+                        this.monitorCommands = true;
+
+                        const eventAdaptor = (event: any, eventHandler: Function) => {
+                            const commandName: string = get(event, 'commandName', '').toUpperCase();
+                            const operationType = get(MongoDBCommandTypes, commandName, undefined);
+                            if (operationType) {
+                                eventHandler.call(currentClassInstance, event);
+                            }
+                        };
+
+                        this.on('commandStarted', (event: any) => eventAdaptor(event, currentClassInstance.onStarted));
+                        ThundraLogger.debug('<MongoDBIntegration> Subscribed to "commandStarted" event');
+                        this.on('commandSucceeded', (event: any) => eventAdaptor(event, currentClassInstance.onSucceeded));
+                        ThundraLogger.debug('<MongoDBIntegration> Subscribed to "commandSucceeded" event');
+                        this.on('commandFailed', (event: any) => eventAdaptor(event, currentClassInstance.onFailed));
+                        ThundraLogger.debug('<MongoDBIntegration> Subscribed to "commandFailed" event');
+
+                        return internalSendCommand.call(this, options);
+                    };
+                }
+
+                shimmer.wrap(lib.MongoClient.prototype, 'connect', wrapMongoClientConnect);
+                ThundraLogger.debug('<MongoDBIntegration> Wrapping "MongoClient.connect"');
+            } else {
+
+                /**
+                 * Use Mongo.instrument method for mongodb < 4 versions insturumentation process
+                 * Events are not supported for mongodb < 4 versions
+                 * Mongo.instrument method removed from mongodb >= 4
+                 */
+
+                this.listener = lib.instrument();
+                ThundraLogger.debug('<MongoDBIntegration> Registering to "started" event');
+                this.listener.on('started', (this.onStarted.bind(this)));
+                ThundraLogger.debug('<MongoDBIntegration> Registering to "succeeded" event');
+                this.listener.on('succeeded', this.onSucceeded.bind(this));
+                ThundraLogger.debug('<MongoDBIntegration> Registering to "failed" event');
+                this.listener.on('failed', this.onFailed.bind(this));
+            }
         }
     }
 
