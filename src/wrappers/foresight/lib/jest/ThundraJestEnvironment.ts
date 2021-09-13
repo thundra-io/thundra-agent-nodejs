@@ -27,6 +27,7 @@ function wrapEnvironment(BaseEnvironment: any) {
 
       ThundraLogger.debug(`<ThundraJestEnvironment> Initializing ...`);
 
+      this.setModuleLoader();
       /**
        * will add default SetupFile
        */
@@ -110,20 +111,17 @@ function wrapEnvironment(BaseEnvironment: any) {
     }
 
     /**
-     * Override getVmContext for set loadThundraTestModules function to testsute global object.
+     * set loadThundraTestModules function to testsute global object.
      * loadThundraTestModules function will be triggered per testcase.
      */
-    getVmContext() {
-      const vmContentext = super.getVmContext();
+    setModuleLoader() {
 
-      vmContentext.global.__THUNDRA__ = {
+      this.global.__THUNDRA__ = {
         loadThundraTestModules: LoadTestModules,
         /* test-code */
         testRunnerSupport: TestRunnerSupport,
         /* test-code */
       };
-
-      return vmContentext;
     }
 
     /**

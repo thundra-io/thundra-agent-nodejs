@@ -24,7 +24,7 @@ describe('Foresight Wrapper Tests', () => {
         successfulCount: 0,
         failedCount: 0,
         abortedCount: 0,
-        skippedCount: 1 // onlt one skipped test case in this file
+        skippedCount: 1 // only one skipped test case in this file
     };
 
     let afterTestStatus;
