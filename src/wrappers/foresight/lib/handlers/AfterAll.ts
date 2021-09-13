@@ -44,5 +44,8 @@ export async function finish(event: TestSuiteEvent) {
 
     ThundraLogger.debug('<AfterAll> Handling afterAll finish event.');
 
-    HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_AFTER_ALL_DURATION);
+    if (span) {
+        HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_AFTER_ALL_DURATION);
+        span = null;
+    }
 }

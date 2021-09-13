@@ -36,11 +36,13 @@ async function globalSetup() {
             <Setup> Test run start event sended for test suite: ${TestRunnerSupport.testSuiteName}
             with test run id: ${testRunStart.id}
         `);
-        TestRunnerSupport.startTestRunStatusEvent();
-        ThundraLogger.debug('<Setup> Test run status event interval started');
     } catch (error) {
 
         ThundraLogger.error('<Setup> Test run start event did not send.', error);
+    } finally {
+
+        TestRunnerSupport.startTestRunStatusEvent();
+        ThundraLogger.debug('<Setup> Test run status event interval started');
     }
 }
 
@@ -64,8 +66,10 @@ async function globalTeardown() {
                 <Setup> Test run start event sended for test suite: ${TestRunnerSupport.testSuiteName}
                 with test run id: ${testRunFinish.id}
             `);
+
             TestRunnerSupport.setInitialized(false);
             TestRunnerSupport.finishTestRunStatusEvent();
+
             ThundraLogger.debug('<Setup> Test run status event interval stopped.');
         } catch (error) {
 

@@ -1,19 +1,37 @@
 import Utils from './Utils';
 
+/**
+ * Util class for test run process
+ */
 class TestRunnerUtils {
 
     private constructor() {
     }
 
+    /**
+     * Generate and return test run id
+     * @param environment environment
+     * @param repoURL repoURL
+     * @param commitHash commitHash
+     * @param testRunKey testRunKey
+     */
     static getTestRunId(
         environment: string,
         repoURL: string,
         commitHash: string,
         testRunKey: string) {
+
         const testRunIdSeed = environment + '_' + repoURL + '_' + commitHash + '_' + testRunKey;
+
         return Utils.generareIdFrom(testRunIdSeed);
     }
 
+    /**
+     * Generate and return test run id according to default behaviour
+     * @param environment environment
+     * @param repoURL repoURL
+     * @param commitHash commitHash
+     */
     static getDefaultTestRunId(
         environment: string,
         repoURL: string,

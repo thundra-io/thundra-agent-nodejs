@@ -49,6 +49,10 @@ class Utils {
         return uuidv4();
     }
 
+    /**
+     * Generates id in UUID format with given value
+     * @param value value
+     */
     static generareIdFrom(value: string): string {
         return uuidv5(value, AGENT_UUID_CONST);
     }

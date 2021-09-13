@@ -54,4 +54,5 @@ export async function finish(event: TestSuiteEvent) {
     span.tags[TestRunnerTags.TEST_NAME] = event.testName;
 
     HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_BEFORE_EACH_DURATION);
+    span = null;
 }

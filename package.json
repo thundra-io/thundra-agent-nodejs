@@ -120,7 +120,6 @@
     "module-details-from-path": "^1.0.3",
     "object-sizeof": "^1.6.1",
     "opentracing": "0.14.1",
-    "pidusage": "^2.0.21",
     "require-in-the-middle": "^3.1.0",
     "semver": "^5.5.0",
     "shimmer": "^1.2.0",

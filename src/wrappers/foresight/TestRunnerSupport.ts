@@ -101,8 +101,13 @@ const sendTestRunStatus = async () => {
             .withEnvironmentInfo(EnvironmentSupport.getEnvironmentInfo())
         .build();
 
-    await wrapperContext.reporter.sendReports([Utils.generateReport(testRunStatus, apiKey)]);
-    startTestRunStatusEvent();
+    try {
+        await wrapperContext.reporter.sendReports([Utils.generateReport(testRunStatus, apiKey)]);
+    } catch (error) {
+        ThundraLogger.error('<ThundraRunnerSupport> Test run status event did not sent.', error);
+    } finally {
+        startTestRunStatusEvent();
+    }
 };
 
 export const startTestRunStatusEvent = () => {
@@ -114,7 +119,11 @@ export const startTestRunStatusEvent = () => {
 };
 
 export const finishTestRunStatusEvent = () => {
-    clearInterval(testRunStatusWork);
+
+    if (testRunStatusWork) {
+        clearInterval(testRunStatusWork);
+        testRunStatusWork = null;
+    }
 };
 
 export const startTestRun = (): TestRunStart => {
