@@ -4,6 +4,8 @@ import { TestRunnerTags } from '../model/TestRunnerTags';
 import { TEST_STATUS } from '../../../Constants';
 import { ApplicationManager } from '../../../application/ApplicationManager';
 
+import * as TestRunnerSupport from '../TestRunnerSupport';
+
 export default class TestCaseExecutionContext extends ExecutionContext {
 
     static APPLICATION_DOMAIN_NAME: string = 'Test';
@@ -56,6 +58,13 @@ export default class TestCaseExecutionContext extends ExecutionContext {
 
         return {
             [TestRunnerTags.TEST_STATUS]: this.status,
+            ...(TestRunnerSupport.testSuiteExecutionContext && TestRunnerSupport.testSuiteExecutionContext.invocationData
+                ?
+                {
+                    [TestRunnerTags.TEST_SUITE_TRANSACTION_ID]:
+                        TestRunnerSupport.testSuiteExecutionContext.invocationData.transactionId,
+                }
+                : undefined),
         };
     }
 }
