@@ -69,6 +69,7 @@
     "@types/uuid": "^3.4.3",
     "amqplib": "^0.8.0",
     "aws-sdk": "^2.610.0",
+    "@aws-sdk/client-sqs": "^3.31.0",
     "aws-xray-sdk-core": "^2.0.1",
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^9.0.0",

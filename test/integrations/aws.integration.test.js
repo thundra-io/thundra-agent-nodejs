@@ -1,5 +1,6 @@
 import AWS from './utils/aws.integration.utils';
 import { AWSIntegration } from '../../dist/integrations/AWSIntegration';
+import { AWSServiceIntegration } from '../../dist/integrations/AWSServiceIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
@@ -796,8 +797,8 @@ describe('AWS integration', () => {
     });
 
     test('should get correct operationTypes', () => {
-        if (!AWSIntegration.AWSOperationTypes) {
-            AWSIntegration.parseAWSOperationTypes();
+        if (!AWSServiceIntegration.AWSOperationTypes) {
+            AWSServiceIntegration.parseAWSOperationTypes();
         }
         const testCases = [
             // Exception cases
@@ -842,7 +843,7 @@ describe('AWS integration', () => {
         ];
 
         for (const testCase of testCases) {
-            expect(AWSIntegration.getOperationType(testCase.operationName, testCase.className)).toBe(testCase.expected);
+            expect(AWSServiceIntegration.getOperationType(testCase.operationName, testCase.className)).toBe(testCase.expected);
         }
     });
 });
