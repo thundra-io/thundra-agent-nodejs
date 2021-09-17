@@ -11,8 +11,8 @@ import Utils from '../../utils/Utils';
 import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
 import TracePlugin from '../../plugins/Trace';
 import LogPlugin from '../../plugins/Log';
-import { ApplicationInfo } from '../../application/ApplicationInfo';
 import InvocationPlugin from '../../plugins/Invocation';
+import { ApplicationInfo } from '../../application/ApplicationInfo';
 import InvocationData from '../../plugins/data/invocation/InvocationData';
 import MonitoringDataType from '../../plugins/data/base/MonitoringDataType';
 import ThundraTracer from '../../opentracing/Tracer';
@@ -37,7 +37,14 @@ export default class ForesightWrapperUtils {
      * @param executor executor
      * @param applicationClassName applicationClassName
      */
-    static initWrapper(executor: any, applicationClassName: string) {
+    static initWrapper(
+        executor: any,
+        applicationClassName: string,
+        pluginsWillBeLoaded: string[] = [
+            TracePlugin.name,
+            LogPlugin.name,
+            InvocationPlugin.name,
+        ]) {
 
         ForesightWrapperUtils.setApplicationInfo(applicationClassName, 'TestSuite', 'TestSuite');
 
@@ -46,7 +53,7 @@ export default class ForesightWrapperUtils {
 
         const reporter = ForesightWrapperUtils.createReporter(apiKey);
         const pluginContext = ForesightWrapperUtils.createPluginContext(apiKey, executor);
-        const plugins = ForesightWrapperUtils.createPlugins(config, pluginContext);
+        const plugins = ForesightWrapperUtils.createPlugins(config, pluginContext, pluginsWillBeLoaded);
 
         return new WrapperContext(reporter, pluginContext, plugins);
     }
@@ -120,29 +127,54 @@ export default class ForesightWrapperUtils {
      * @param config config
      * @param pluginContext pluginContext
      */
-    static createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
+    static createPlugins(config: ThundraConfig, pluginContext: PluginContext, pluginsWillBeLoaded: string[]): any[] {
 
         const plugins: any[] = [];
         if (config.disableMonitoring) {
             return plugins;
         }
 
-        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE) && config.traceConfig.enabled) {
+        if (pluginsWillBeLoaded.includes(TracePlugin.name)
+            && !ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE)
+            && config.traceConfig.enabled) {
+
             const tracePlugin = new TracePlugin(config.traceConfig);
             plugins.push(tracePlugin);
         }
 
-        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
-            plugins.push(new LogPlugin(config.logConfig));
+        if (pluginsWillBeLoaded.includes(LogPlugin.name)
+            && !ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE)
+            && config.logConfig.enabled) {
+
+            const logPlugin = new LogPlugin(config.logConfig);
+            plugins.push(logPlugin);
         }
 
-        const invocationPlugin = new InvocationPlugin(config.invocationConfig);
-        plugins.push(invocationPlugin);
+        if (pluginsWillBeLoaded.includes(InvocationPlugin.name)) {
+
+            const invocationPlugin = new InvocationPlugin(config.invocationConfig);
+            plugins.push(invocationPlugin);
+        }
 
         // Set plugin context for plugins
         plugins.forEach((plugin: any) => { plugin.setPluginContext(pluginContext); });
 
         return plugins;
+    }
+
+    /**
+     * Create log plugin
+     * @param consoleRef consoleRef
+     */
+    static createLogPlugin(consoleRef: any) {
+
+        const config = ConfigProvider.thundraConfig;
+
+        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
+            return new LogPlugin(config.logConfig, consoleRef);
+        }
+
+        return null;
     }
 
     /**

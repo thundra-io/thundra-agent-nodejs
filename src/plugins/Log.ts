@@ -26,13 +26,13 @@ export default class Log {
     hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
              'after-invocation': (execContext: ExecutionContext) => void; };
     enabled: boolean;
-    consoleReference: any = console;
+    consoleReference: any;
     config: LogConfig;
     logLevelFilter: number = 0;
     baseLogData: LogData;
     debugEnabled: boolean;
 
-    constructor(options?: LogConfig) {
+    constructor(options?: LogConfig, consoleReference: any = console) {
         LogManager.addListener(this);
 
         this.hooks = {
@@ -46,6 +46,8 @@ export default class Log {
         this.logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
 
         this.debugEnabled = ThundraLogger.isDebugEnabled();
+
+        this.consoleReference = consoleReference;
 
         if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_CONSOLE_DISABLE)) {
             this.shimConsole();

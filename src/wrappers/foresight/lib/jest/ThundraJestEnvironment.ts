@@ -10,6 +10,8 @@ import ConfigNames from '../../../../config/ConfigNames';
 import ConfigProvider from '../../../../config/ConfigProvider';
 import ThundraLogger from '../../../../ThundraLogger';
 import LoadTestModules from './ModuleLoader';
+import TracePlugin from '../../../../plugins/Trace';
+import InvocationPlugin from '../../../../plugins/Invocation';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -27,7 +29,7 @@ function wrapEnvironment(BaseEnvironment: any) {
 
       ThundraLogger.debug(`<ThundraJestEnvironment> Initializing ...`);
 
-      this.setModuleLoader();
+      this.toBeAttachedToJestTestScope();
       /**
        * will add default SetupFile
        */
@@ -38,7 +40,15 @@ function wrapEnvironment(BaseEnvironment: any) {
 
       TestRunnerSupport.setTestSuiteName(this.testSuite);
 
-      const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(ForesightExecutor, APPLICATIONCLASSNAME);
+      const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(
+        ForesightExecutor,
+        APPLICATIONCLASSNAME,
+        [
+          TracePlugin.name,
+          InvocationPlugin.name,
+        ],
+      );
+
       TestRunnerSupport.setWrapperContext(wrapperContext);
 
       const testStatusReportFreq = ConfigProvider.get<number>(ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ, 10000);
@@ -111,13 +121,25 @@ function wrapEnvironment(BaseEnvironment: any) {
     }
 
     /**
+     * set test suite context console to current global console.
      * set loadThundraTestModules function to testsute global object.
      * loadThundraTestModules function will be triggered per testcase.
      */
-    setModuleLoader() {
+    toBeAttachedToJestTestScope() {
 
       this.global.__THUNDRA__ = {
-        loadThundraTestModules: LoadTestModules,
+        testScopeLoaded: (testRequire: any) => {
+
+          LoadTestModules(testRequire);
+
+          const logPlugin = ForesightWrapperUtils.createLogPlugin(this.global.console);
+          if (logPlugin && TestRunnerSupport.wrapperContext
+              && TestRunnerSupport.wrapperContext.plugins && TestRunnerSupport.wrapperContext.pluginContext) {
+
+            logPlugin.setPluginContext(TestRunnerSupport.wrapperContext.pluginContext);
+            TestRunnerSupport.wrapperContext.plugins.push(logPlugin);
+          }
+        },
         /* test-code */
         testRunnerSupport: TestRunnerSupport,
         /* test-code */
