@@ -219,6 +219,10 @@ class ConfigNames {
         'thundra.agent.test.status.report.freq';
     public static readonly THUNDRA_AGENT_TEST_DISABLE: string =
         'thundra.agent.test.disable';
+    public static readonly THUNDRA_AGENT_TEST_LOG_ENABLE: string =
+        'thundra.agent.test.log.enable';
+    public static readonly THUNDRA_AGENT_TEST_LOG_COUNT_MAX: string =
+        'thundra.agent.test.log.count.max';
 
     /////////////////////////////////////////////////////////////////////////////
 

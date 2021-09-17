@@ -13,6 +13,7 @@ import ConfigNames from '../config/ConfigNames';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
 import LogManager from './LogManager';
 import ExecutionContext from '../context/ExecutionContext';
+import TestTraceAwareSampler from '../wrappers/foresight/sampler/TestTraceAwareSampler';
 
 const get = require('lodash.get');
 
@@ -86,7 +87,7 @@ export default class Log {
 
         ThundraLogger.debug('<Log> Checked sampling of transaction', execContext.transactionId, ':', sampled);
 
-        if (logs && sampled) {
+        if (logs && (sampler instanceof TestTraceAwareSampler || sampled)) {
             for (const log of logs) {
                 const { apiKey } = this.pluginContext;
                 const logReportData = Utils.generateReport(log, apiKey);
@@ -185,7 +186,15 @@ export default class Log {
                                 logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
                                 logTimestamp: Date.now(),
                             };
-                            this.reportLog(logInfo, execContext, true);
+
+                            const sampler = get(this.config, 'sampler', { isSampled: () => true });
+                            if (sampler instanceof TestTraceAwareSampler) {
+                                if (sampler.isSampled()) {
+                                    this.reportLog(logInfo, execContext, true);
+                                }
+                            } else {
+                                this.reportLog(logInfo, execContext, true);
+                            }
                         } else {
                             if (this.debugEnabled) {
                                 ThundraLogger.debug('<Log> Skipped log from console because log level', logLevel,

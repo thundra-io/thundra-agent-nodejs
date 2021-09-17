@@ -143,7 +143,7 @@ export default class ForesightWrapperUtils {
         }
 
         if (pluginsWillBeLoaded.includes(LogPlugin.name)
-            && !ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE)
+            && ConfigProvider.get<boolean>(ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE)
             && config.logConfig.enabled) {
 
             const logPlugin = new LogPlugin(config.logConfig);
@@ -170,7 +170,7 @@ export default class ForesightWrapperUtils {
 
         const config = ConfigProvider.thundraConfig;
 
-        if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
+        if (ConfigProvider.get<boolean>(ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE) && config.logConfig.enabled) {
             return new LogPlugin(config.logConfig, consoleRef);
         }
 

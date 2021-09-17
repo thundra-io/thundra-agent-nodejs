@@ -303,6 +303,14 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE]: {
+        type: 'boolean',
+        defaultValue: true,
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_LOG_COUNT_MAX]: {
+        type: 'number',
+        defaultValue: 100,
+    },
 };
 
 export default ConfigMetadata;

@@ -12,6 +12,9 @@ import ThundraLogger from '../../../../ThundraLogger';
 import LoadTestModules from './ModuleLoader';
 import TracePlugin from '../../../../plugins/Trace';
 import InvocationPlugin from '../../../../plugins/Invocation';
+import ThundraConfig from '../../../../plugins/config/ThundraConfig';
+import MaxCountAwareSampler from '../../sampler/MaxCountAwareSampler';
+import TestTraceAwareSampler from '../../sampler/TestTraceAwareSampler';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -30,6 +33,8 @@ function wrapEnvironment(BaseEnvironment: any) {
       ThundraLogger.debug(`<ThundraJestEnvironment> Initializing ...`);
 
       this.toBeAttachedToJestTestScope();
+      this.setSamplersToConfig();
+
       /**
        * will add default SetupFile
        */
@@ -53,6 +58,16 @@ function wrapEnvironment(BaseEnvironment: any) {
 
       const testStatusReportFreq = ConfigProvider.get<number>(ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ, 10000);
       TestRunnerSupport.setTestStatusReportFreq(testStatusReportFreq);
+    }
+
+    setSamplersToConfig() {
+
+      const thundraConfig: ThundraConfig = ConfigProvider.thundraConfig;
+      if (thundraConfig && thundraConfig.logConfig && !thundraConfig.logConfig.sampler) {
+
+        const maxCount = ConfigProvider.get<number>(ConfigNames.THUNDRA_AGENT_TEST_LOG_COUNT_MAX);
+        thundraConfig.logConfig.sampler = new TestTraceAwareSampler({ create: () => new MaxCountAwareSampler(maxCount) });
+      }
     }
 
     /**
