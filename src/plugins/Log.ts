@@ -13,7 +13,6 @@ import ConfigNames from '../config/ConfigNames';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
 import LogManager from './LogManager';
 import ExecutionContext from '../context/ExecutionContext';
-import TestTraceAwareSampler from '../wrappers/foresight/sampler/TestTraceAwareSampler';
 
 const get = require('lodash.get');
 
@@ -42,13 +41,12 @@ export default class Log {
         };
         this.enabled = get(options, 'enabled', true);
         this.config = options;
+        this.consoleReference = consoleReference;
 
         const levelConfig = ConfigProvider.get<string>(ConfigNames.THUNDRA_LOG_LOGLEVEL);
         this.logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
 
         this.debugEnabled = ThundraLogger.isDebugEnabled();
-
-        this.consoleReference = consoleReference;
 
         if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_CONSOLE_DISABLE)) {
             this.shimConsole();
@@ -81,13 +79,12 @@ export default class Log {
     afterInvocation = (execContext: ExecutionContext) => {
         ThundraLogger.debug('<Log> After invocation of transaction', execContext.transactionId);
 
-        const sampler = get(this.config, 'sampler', { isSampled: () => true });
-        const sampled = sampler.isSampled();
+        const sampled = this.isSampled();
         const { logs } = execContext;
 
         ThundraLogger.debug('<Log> Checked sampling of transaction', execContext.transactionId, ':', sampled);
 
-        if (logs && (sampler instanceof TestTraceAwareSampler || sampled)) {
+        if (logs && sampled) {
             for (const log of logs) {
                 const { apiKey } = this.pluginContext;
                 const logReportData = Utils.generateReport(log, apiKey);
@@ -132,7 +129,7 @@ export default class Log {
      * @param {boolean} fromConsole indicates whether the log is reported from shimmed console method
      */
     reportLog(logInfo: any, execContext: ExecutionContext, fromConsole: boolean = false): void {
-        if (!this.enabled) {
+        if (!this.enabled) {
             if (this.debugEnabled) {
                 ThundraLogger.debug('<Log> Skipping reporting log because logging is disabled:', logInfo);
             }
@@ -157,6 +154,11 @@ export default class Log {
                 ThundraLogger.debug('<Log> Captured log:', logData);
             }
         }
+    }
+
+    protected isSampled(): boolean {
+        const sampler = get(this.config, 'sampler', { isSampled: () => true });
+        return sampler.isSampled();
     }
 
     private shimConsole(): void {
@@ -186,15 +188,7 @@ export default class Log {
                                 logContextName: method === 'error' ? StdErrorLogContext : StdOutLogContext,
                                 logTimestamp: Date.now(),
                             };
-
-                            const sampler = get(this.config, 'sampler', { isSampled: () => true });
-                            if (sampler instanceof TestTraceAwareSampler) {
-                                if (sampler.isSampled()) {
-                                    this.reportLog(logInfo, execContext, true);
-                                }
-                            } else {
-                                this.reportLog(logInfo, execContext, true);
-                            }
+                            this.reportLog(logInfo, execContext, true);
                         } else {
                             if (this.debugEnabled) {
                                 ThundraLogger.debug('<Log> Skipped log from console because log level', logLevel,
@@ -213,5 +207,4 @@ export default class Log {
             }
         });
     }
-
 }

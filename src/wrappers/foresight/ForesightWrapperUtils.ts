@@ -21,6 +21,7 @@ import TestSuiteExecutionContext from './model/TestSuiteExecutionContext';
 import * as TestRunnerSupport from './TestRunnerSupport';
 import TestCaseExecutionContext from './model/TestCaseExecutionContext';
 import WrapperContext from '../WrapperContext';
+import ForesightLog from './plugin/ForesightLog';
 
 const get = require('lodash.get');
 
@@ -171,7 +172,7 @@ export default class ForesightWrapperUtils {
         const config = ConfigProvider.thundraConfig;
 
         if (ConfigProvider.get<boolean>(ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE) && config.logConfig.enabled) {
-            return new LogPlugin(config.logConfig, consoleRef);
+            return new ForesightLog(config.logConfig, consoleRef);
         }
 
         return null;
