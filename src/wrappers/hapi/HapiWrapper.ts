@@ -21,7 +21,7 @@ const ApplicationDomainName = DomainNames.API;
 const modulesWillBepatched: any = {
     '@hapi/hapi': [ 'Server', 'server' ],
     'hapi': [ 'Server', 'server' ],
-}
+};
 
 let _REPORTER: Reporter;
 let _PLUGINS: any[];
