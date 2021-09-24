@@ -112,7 +112,6 @@
     "fast-copy": "^2.1.0",
     "isomorphic-git": "^1.9.2",
     "koalas": "^1.0.2",
-    "lodash": "^4.17.21",
     "lodash.flatten": "^4.4.0",
     "lodash.get": "^4.4.2",
     "lodash.has": "^4.5.2",

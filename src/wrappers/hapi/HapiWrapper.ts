@@ -15,17 +15,13 @@ import Utils from '../../utils/Utils';
 import * as HapiExecutor from './HapiExecutor';
 import WebWrapperUtils from '../WebWrapperUtils';
 
-const lodash = require('lodash');
-
 const ApplicationClassName = ClassNames.HAPI;
 const ApplicationDomainName = DomainNames.API;
 
-const modulesWillBepatched = [
-    { moduleName: '@hapi/hapi', methodName: 'Server' },
-    { moduleName: '@hapi/hapi', methodName: 'server' },
-    { moduleName: 'hapi', methodName: 'Server' },
-    { moduleName: 'hapi', methodName: 'server' },
-];
+const modulesWillBepatched: any = {
+    '@hapi/hapi': [ 'Server', 'server' ],
+    'hapi': [ 'Server', 'server' ],
+}
 
 let _REPORTER: Reporter;
 let _PLUGINS: any[];
@@ -145,11 +141,6 @@ export const init = () => {
     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
     if (!lambdaRuntime) {
 
-        const moduleGroup = lodash(modulesWillBepatched)
-            .groupBy((x: any) => x.moduleName)
-            .map((value: any, key: any) => ({ key, values: value}))
-            .value();
-
         ThundraLogger.debug('<HapiWrapper> Initializing ...');
 
         const {
@@ -165,17 +156,17 @@ export const init = () => {
         _REPORTER = reporter;
         _PLUGINS = plugins;
 
-        moduleGroup.forEach((module: any) => {
+        Object.keys(modulesWillBepatched).forEach((moduleName: any) => {
             ModuleUtils.instrument(
-                [module.key], undefined,
+                [moduleName], undefined,
                 (lib: any, cfg: any) => {
 
                     let moduleWillBeInitilized = false;
-                    module.values.forEach((value: any) => {
+                    modulesWillBepatched[moduleName].forEach((methodName: any) => {
 
                         const isPatched: boolean = ModuleUtils.patchModule(
-                            value.moduleName,
-                            value.methodName,
+                            moduleName,
+                            methodName,
                             hapiServerWrapper,
                             (Hapi: any) => Hapi,
                             lib);
