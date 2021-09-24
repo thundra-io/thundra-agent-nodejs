@@ -67,6 +67,7 @@
     "@types/minimatch": "^3.0.3",
     "@types/node": "^10.5.0",
     "@types/uuid": "^3.4.3",
+    "@types/strip-ansi": "^5.0.0",
     "amqplib": "^0.8.0",
     "aws-sdk": "^2.610.0",
     "aws-xray-sdk-core": "^2.0.1",
@@ -123,7 +124,7 @@
     "require-in-the-middle": "^3.1.0",
     "semver": "^5.5.0",
     "shimmer": "^1.2.0",
-    "strip-ansi": "^7.0.1",
+    "strip-ansi": "^5.0.0",
     "url-parse": "^1.5.3",
     "uuid": "^3.2.1",
     "ws": "^7.2.1"
