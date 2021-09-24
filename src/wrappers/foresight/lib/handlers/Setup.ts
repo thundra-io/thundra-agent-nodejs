@@ -2,7 +2,7 @@ import * as TestRunnerSupport from '../../TestRunnerSupport';
 import ForesightWrapperUtils from '../../ForesightWrapperUtils';
 import * as EnvironmentSupport from '../../environment/EnvironmentSupport';
 import ExecutionContextManager from '../../../../context/ExecutionContextManager';
-import TestSuiteExecutionContext from '../../model/TestSuiteExecutionContext';
+import TestSuiteExecutionContext from '../../context/TestSuiteExecutionContext';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
 import Utils from '../../../../utils/Utils';
 import ConfigProvider from '../../../../config/ConfigProvider';
@@ -106,7 +106,6 @@ async function startTestSuite() {
         .createTestSuiteExecutionContext(TestRunnerSupport.testSuiteName);
     TestRunnerSupport.setTestSuiteContext(context);
 
-    ForesightWrapperUtils.changeAppInfoToTestSuite();
     ExecutionContextManager.set(context);
 
     await ForesightWrapperUtils.beforeTestProcess(TestRunnerSupport.wrapperContext.plugins, context);

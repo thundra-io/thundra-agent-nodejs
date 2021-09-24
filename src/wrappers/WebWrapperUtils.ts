@@ -22,6 +22,7 @@ import { HttpTags, SpanTags, TriggerHeaderTags } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import HttpError from '../error/HttpError';
+import WrapperContext from './WrapperContext';
 
 const get = require('lodash.get');
 
@@ -45,15 +46,23 @@ export default class WebWrapperUtils {
         const pluginContext = WebWrapperUtils.createPluginContext(apiKey, executor);
         const plugins = WebWrapperUtils.createPlugins(config, pluginContext);
 
-        return {
-            reporter,
-            pluginContext,
-            plugins,
-        };
+        return new WrapperContext(reporter, pluginContext, plugins);
     }
 
     static getDefaultApplicationId(appInfo: ApplicationInfo) {
-        return `node:${appInfo.applicationClassName}:${appInfo.applicationRegion}:${appInfo.applicationName}`;
+        return WebWrapperUtils.createApplicationId(
+            appInfo.applicationClassName,
+            appInfo.applicationRegion,
+            appInfo.applicationName,
+        );
+    }
+
+    static createApplicationId(
+        applicationClassName: string,
+        applicationRegion: string,
+        applicationName: string,
+        ) {
+            return `node:${applicationClassName}:${applicationRegion}:${applicationName}`;
     }
 
     static async beforeRequest(request: any, response: any, plugins: any[]) {
@@ -101,6 +110,10 @@ export default class WebWrapperUtils {
         } else {
             ThundraLogger.debug('<WebWrapperUtils> Skipped reporting as reporting is disabled');
         }
+
+        if (context.parentContext) {
+            ExecutionContextManager.set(context.parentContext);
+        }
     }
 
     static createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {
@@ -146,7 +159,10 @@ export default class WebWrapperUtils {
         ExecutionContextManager.init();
     }
 
-    static createExecContext(): ExecutionContext {
+    static createExecContext(
+        applicationClassName?: string,
+        applicationDomainName?: string,
+    ): ExecutionContext {
         const { thundraConfig } = ConfigProvider;
         const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
 
@@ -157,7 +173,16 @@ export default class WebWrapperUtils {
 
         const startTimestamp = Date.now();
 
+        const appInfo = ApplicationManager.getApplicationInfo();
+
         return new ExecutionContext({
+            applicationId: WebWrapperUtils.createApplicationId(
+                applicationClassName,
+                appInfo.applicationRegion,
+                applicationDomainName,
+            ),
+            applicationClassName,
+            applicationDomainName,
             tracer,
             transactionId,
             startTimestamp,
@@ -225,7 +250,11 @@ export default class WebWrapperUtils {
     }
 
     static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-        const { tracer, request } = execContext;
+        const {
+            tracer,
+            request,
+        } = execContext;
+
         const propagatedSpanContext: ThundraSpanContext =
             tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
 

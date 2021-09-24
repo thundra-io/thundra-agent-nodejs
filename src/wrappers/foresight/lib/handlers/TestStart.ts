@@ -1,7 +1,7 @@
 import * as TestRunnerSupport from '../../TestRunnerSupport';
 import ForesightWrapperUtils from '../../ForesightWrapperUtils';
 import ExecutionContextManager from '../../../../context/ExecutionContextManager';
-import TestCaseExecutionContext from '../../model/TestCaseExecutionContext';
+import TestCaseExecutionContext from '../../context/TestCaseExecutionContext';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
 import ThundraLogger from '../../../../ThundraLogger';
 
@@ -17,8 +17,6 @@ export default async function run(event: TestSuiteEvent) {
     const testSuiteName = event.testSuiteName;
 
     const testCaseId = testSuiteName + '-' + testName;
-
-    ForesightWrapperUtils.changeAppInfoToTestCase();
 
     const context: TestCaseExecutionContext = ForesightWrapperUtils.createTestCaseExecutionContext(
       TestRunnerSupport.testSuiteName,

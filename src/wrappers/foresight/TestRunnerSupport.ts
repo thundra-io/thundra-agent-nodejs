@@ -3,9 +3,9 @@ import EnvironmentInfo from './model/EnvironmentInfo';
 import Utils from '../../utils/Utils';
 import TestRunStart from './model/TestRunStart';
 import TestRunFinish from './model/TestRunFinish';
-import TestSuiteExecutionContext from './model/TestSuiteExecutionContext';
+import TestSuiteExecutionContext from './context/TestSuiteExecutionContext';
 import TestRunScope, { TestRunContext } from './model/TestRunScope';
-import TestCaseExecutionContext from './model/TestCaseExecutionContext';
+import TestCaseExecutionContext from './context/TestCaseExecutionContext';
 import os from 'os';
 import ExecutionContext from '../../context/ExecutionContext';
 import WrapperContext from '../WrapperContext';
@@ -34,6 +34,7 @@ let projectId: string;
 let testStatusReportFreq: number;
 let testRunStatusWork: NodeJS.Timeout;
 
+export let applicationClassName: string;
 export let testSuiteName: string;
 export let wrapperContext: WrapperContext;
 export let initialized: boolean = false;
@@ -43,6 +44,10 @@ export let testCaseExecutionContext: TestCaseExecutionContext;
 
 export const setProjectId = (id: string) => {
     projectId = id;
+};
+
+export const setApplicationClassName = (appClassName: string) => {
+    applicationClassName = appClassName;
 };
 
 export const setTestSuiteName = (name: string) => {

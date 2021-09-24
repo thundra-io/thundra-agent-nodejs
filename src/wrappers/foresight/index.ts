@@ -82,7 +82,7 @@ export function init() {
                     return lib;
                 };
 
-                Hook(moduleName, { }, hook);
+                Hook([moduleName], { }, hook);
             } catch (e) {
 
                 ThundraLogger.error(

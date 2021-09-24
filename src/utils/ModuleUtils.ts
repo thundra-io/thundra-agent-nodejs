@@ -170,14 +170,22 @@ class ModuleUtils {
      *                   from given module to patch
      */
     static patchModule(moduleName: string, methodName: string,
-                       wrapper: Function, extractor: Function = (mod: any) => mod): boolean {
+                       wrapper: Function, extractor: Function = (mod: any) => mod, module?: any): boolean {
         ThundraLogger.debug(`<ModuleUtils> Patching module ${moduleName}`);
-        const module = ModuleUtils.tryRequire(moduleName);
+
         if (module) {
             shimmer.wrap(extractor(module), methodName, wrapper);
             ThundraLogger.debug(`<ModuleUtils> Patched module ${moduleName}`);
             return true;
         } else {
+
+            const requiredModule = ModuleUtils.tryRequire(moduleName);
+            if (requiredModule) {
+                shimmer.wrap(extractor(requiredModule), methodName, wrapper);
+                ThundraLogger.debug(`<ModuleUtils> Patched module ${moduleName}`);
+                return true;
+            }
+
             ThundraLogger.debug(`<ModuleUtils> Couldn't find module ${moduleName} to patch`);
             return false;
         }

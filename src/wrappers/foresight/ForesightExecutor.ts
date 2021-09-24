@@ -3,9 +3,6 @@ import PluginContext from '../../plugins/PluginContext';
 import ExecutionContext from '../../context/ExecutionContext';
 
 import * as EnvironmentSupport from './environment/EnvironmentSupport';
-import * as TestRunnerSupport from './TestRunnerSupport';
-
-import { TestRunnerTags } from './model/TestRunnerTags';
 
 /**
  * Start invocation process
@@ -36,11 +33,6 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
 
     ForesightWrapperUtils.finishInvocationData(execContext, pluginContext);
 
-    const testRunScope = TestRunnerSupport.testRunScope;
-
-    invocationData.tags[TestRunnerTags.TEST_RUN_ID] = testRunScope.id;
-    invocationData.tags[TestRunnerTags.TEST_RUN_TASK_ID] = testRunScope.taskId;
-
     const additionalTags: any = execContext.getAdditionalFinishTags();
     if (additionalTags) {
 
@@ -62,11 +54,6 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     ForesightWrapperUtils.startTrace(pluginContext, execContext);
 
     const { rootSpan } = execContext;
-
-    const testRunScope = TestRunnerSupport.testRunScope;
-
-    rootSpan.tags[TestRunnerTags.TEST_RUN_ID] = testRunScope.id;
-    rootSpan.tags[TestRunnerTags.TEST_RUN_TASK_ID] = testRunScope.taskId;
 
     const additionalTags: any = execContext.getAdditionalStartTags();
     if (additionalTags) {

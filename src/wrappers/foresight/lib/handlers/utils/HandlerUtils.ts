@@ -32,7 +32,7 @@ export default class HandlerUtils {
         });
     }
 
-    static finishSpanForTest(span: ThundraSpan, tagName: string) {
+    static finishSpanForTest(span: ThundraSpan, tagName: string, context: ExecutionContext) {
         if (!span) {
 
             ThundraLogger.debug('<HandlerUtils> Span can not be empty.');
@@ -41,7 +41,6 @@ export default class HandlerUtils {
 
         span.close();
 
-        const context = ExecutionContextManager.get();
         if (!context || !context.invocationData) {
 
             ThundraLogger.debug('<HandlerUtils> Execution context can not be empty.');

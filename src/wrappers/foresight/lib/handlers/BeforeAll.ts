@@ -18,12 +18,14 @@ export async function start(event: TestSuiteEvent) {
 
     ThundraLogger.debug('<beforeAll> Handling beforeAll start event.');
 
-    const context = ExecutionContextManager.get();
+    const context = TestRunnerSupport.testSuiteExecutionContext;
     if (!context) {
 
         ThundraLogger.debug('<beforeAll> Execution context can not be empty.');
         return;
     }
+
+    ExecutionContextManager.set(context);
 
     span = HandlerUtils.createSpanForTest(TEST_BEFORE_ALL_OPERATION_NAME, context);
     if (!span) {
@@ -44,8 +46,17 @@ export async function finish(event: TestSuiteEvent) {
 
     ThundraLogger.debug('<beforeAll> Handling beforeAll finish event.');
 
+    const context = TestRunnerSupport.testSuiteExecutionContext;
+    if (!context) {
+
+        ThundraLogger.debug('<beforeAll> Execution context can not be empty.');
+        return;
+    }
+
+    ExecutionContextManager.set(context);
+
     if (span) {
-        HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_BEFORE_ALL_DURATION);
+        HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_BEFORE_ALL_DURATION, context);
         span = null;
     }
 }

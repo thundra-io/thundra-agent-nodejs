@@ -11,10 +11,13 @@ import ConfigProvider from '../../../../config/ConfigProvider';
 import ThundraLogger from '../../../../ThundraLogger';
 import LoadTestModules from './ModuleLoader';
 import TracePlugin from '../../../../plugins/Trace';
+import LogPlugin from '../../../../plugins/Log';
 import InvocationPlugin from '../../../../plugins/Invocation';
 import ThundraConfig from '../../../../plugins/config/ThundraConfig';
 import MaxCountAwareSampler from '../../sampler/MaxCountAwareSampler';
 import TestTraceAwareSampler from '../../sampler/TestTraceAwareSampler';
+
+const stripAnsi = require('strip-ansi');
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -45,6 +48,8 @@ function wrapEnvironment(BaseEnvironment: any) {
 
       TestRunnerSupport.setTestSuiteName(this.testSuite);
 
+      TestRunnerSupport.setApplicationClassName(APPLICATIONCLASSNAME);
+
       const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(
         ForesightExecutor,
         APPLICATIONCLASSNAME,
@@ -55,6 +60,8 @@ function wrapEnvironment(BaseEnvironment: any) {
       );
 
       TestRunnerSupport.setWrapperContext(wrapperContext);
+
+      ForesightWrapperUtils.initForesightContextManager();
 
       const testStatusReportFreq = ConfigProvider.get<number>(ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ, 10000);
       TestRunnerSupport.setTestStatusReportFreq(testStatusReportFreq);
@@ -116,9 +123,29 @@ function wrapEnvironment(BaseEnvironment: any) {
         const errorArr = test.errors;
         if (errorArr.length) {
 
-          const stack = test.asyncError.stack;
-          const message = test.asyncError.message || test.errors[0];
-          error = new Error(message);
+          let stack;
+          let spareStack;
+          let message;
+
+          if (test.errors) {
+
+            const errObj = test.errors[0];
+            if (errObj) {
+              message = typeof errObj[0] === 'object' ? errObj[0].message : errObj[0];
+            }
+
+            if (errObj.length > 1) {
+              spareStack = typeof errObj[1] === 'object' ? errObj[1].stack : errObj[1];
+            }
+          }
+
+          if (test.asyncError && test.asyncError.stack) {
+            stack = test.asyncError.stack;
+          } else {
+            stack = spareStack;
+          }
+
+          error = new Error(stripAnsi(message));
           error.stack = stack;
         }
       }

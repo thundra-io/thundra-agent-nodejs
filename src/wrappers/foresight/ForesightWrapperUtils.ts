@@ -16,15 +16,19 @@ import { ApplicationInfo } from '../../application/ApplicationInfo';
 import InvocationData from '../../plugins/data/invocation/InvocationData';
 import MonitoringDataType from '../../plugins/data/base/MonitoringDataType';
 import ThundraTracer from '../../opentracing/Tracer';
-import TestSuiteExecutionContext from './model/TestSuiteExecutionContext';
+import TestSuiteExecutionContext from './context/TestSuiteExecutionContext';
 
 import * as TestRunnerSupport from './TestRunnerSupport';
-import TestCaseExecutionContext from './model/TestCaseExecutionContext';
+import TestCaseExecutionContext from './context/TestCaseExecutionContext';
 import WrapperContext from '../WrapperContext';
 import ForesightLog from './plugin/ForesightLog';
+import ExecutionContextManager from '../../context/ExecutionContextManager';
+
+import * as ForesightContextProvider from './context/ForesightContextProvider';
 
 const get = require('lodash.get');
 
+const TEST_APPLICATION_CLASS_NAME = 'TestSuite';
 const TEST_SUIT_APPLICATION_DOMAIN_NAME = 'TestSuite';
 const TEST_CASE_APPLICATION_DOMAIN_NAME = 'Test';
 
@@ -47,7 +51,10 @@ export default class ForesightWrapperUtils {
             InvocationPlugin.name,
         ]) {
 
-        ForesightWrapperUtils.setApplicationInfo(applicationClassName, 'TestSuite', 'TestSuite');
+        ForesightWrapperUtils.setApplicationInfo(
+            applicationClassName,
+            TEST_APPLICATION_CLASS_NAME,
+            TEST_APPLICATION_CLASS_NAME);
 
         const config = ConfigProvider.thundraConfig;
         const { apiKey } = config;
@@ -57,6 +64,11 @@ export default class ForesightWrapperUtils {
         const plugins = ForesightWrapperUtils.createPlugins(config, pluginContext, pluginsWillBeLoaded);
 
         return new WrapperContext(reporter, pluginContext, plugins);
+    }
+
+    static initForesightContextManager() {
+        ExecutionContextManager.setProvider(ForesightContextProvider);
+        ExecutionContextManager.init();
     }
 
     /**
@@ -83,44 +95,23 @@ export default class ForesightWrapperUtils {
     }
 
     /**
-     * Change application info to test suite
-     */
-    static changeAppInfoToTestSuite() {
-
-        if (TestRunnerSupport.testSuiteExecutionContext) {
-
-            const { applicationClassName } = ApplicationManager.getApplicationInfo();
-
-            ForesightWrapperUtils.setApplicationInfo(
-                applicationClassName,
-                TEST_SUIT_APPLICATION_DOMAIN_NAME,
-                TestRunnerSupport.testSuiteName);
-        }
-    }
-
-    /**
-     * Change application info to test case
-     */
-    static changeAppInfoToTestCase() {
-
-        if (TestRunnerSupport.testSuiteExecutionContext) {
-            const { applicationClassName } = ApplicationManager.getApplicationInfo();
-
-            ForesightWrapperUtils.setApplicationInfo(
-                applicationClassName,
-                TEST_CASE_APPLICATION_DOMAIN_NAME,
-                TestRunnerSupport.testSuiteName);
-        }
-    }
-
-    /**
      * Generate application id value
      * @param appInfo appInfo
      */
     static getDefaultApplicationId(appInfo: ApplicationInfo) {
 
-        const applicationId = `node:test:${appInfo.applicationClassName}:${appInfo.applicationName}`;
-        return applicationId.toLowerCase();
+        return ForesightWrapperUtils.createApplicationId(
+            appInfo.applicationClassName,
+            appInfo.applicationName,
+        );
+    }
+
+    static createApplicationId(
+        applicationClassName: string,
+        applicationName: string,
+        ) {
+            const applicationId = `node:test:${applicationClassName}:${applicationName}`;
+            return applicationId.toLowerCase();
     }
 
     /**
@@ -219,6 +210,13 @@ export default class ForesightWrapperUtils {
         const startTimestamp = Date.now();
 
         return new TestSuiteExecutionContext({
+            applicationId: ForesightWrapperUtils.createApplicationId(
+                TestRunnerSupport.applicationClassName,
+                TestRunnerSupport.testSuiteName,
+            ),
+            applicationClassName: TestRunnerSupport.applicationClassName,
+            applicationDomainName: TEST_SUIT_APPLICATION_DOMAIN_NAME,
+            applicationName: TestRunnerSupport.testSuiteName,
             tracer,
             transactionId,
             startTimestamp,
@@ -243,6 +241,13 @@ export default class ForesightWrapperUtils {
         const startTimestamp = Date.now();
 
         return new TestCaseExecutionContext({
+            applicationId: ForesightWrapperUtils.createApplicationId(
+                TestRunnerSupport.applicationClassName,
+                TestRunnerSupport.testSuiteName,
+            ),
+            applicationClassName: TestRunnerSupport.applicationClassName,
+            applicationDomainName: TEST_CASE_APPLICATION_DOMAIN_NAME,
+            applicationName: TestRunnerSupport.testSuiteName,
             tracer,
             transactionId,
             startTimestamp,

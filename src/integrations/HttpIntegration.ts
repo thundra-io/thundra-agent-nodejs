@@ -74,6 +74,12 @@ class HttpIntegration implements Integration {
 
                     path = splittedPath[0];
 
+                    if (HTTPUtils.isTestContainersRequest(options, host)) {
+                        ThundraLogger.debug(
+                            `<HTTPIntegration> Skipped tracing request as test containers docker request`);
+                        return request.apply(this, [options, callback]);
+                    }
+
                     if (!HTTPUtils.isValidUrl(host)) {
                         ThundraLogger.debug(
                             `<HTTPIntegration> Skipped tracing request as target host is blacklisted: ${host}`);

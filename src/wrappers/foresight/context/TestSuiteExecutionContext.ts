@@ -1,7 +1,9 @@
-import { ApplicationManager } from '../../../application/ApplicationManager';
+import { ContextMode } from '../../../Constants';
 import ExecutionContext from '../../../context/ExecutionContext';
 
 import { TestRunnerTags } from '../model/TestRunnerTags';
+
+import * as TestRunnerSupport from '../TestRunnerSupport';
 
 export default class TestSuiteExecutionContext extends ExecutionContext {
 
@@ -25,8 +27,8 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
         this.totalCount = opts.totalCount || 0;
         this.successfulCount = opts.successfulCount || 0;
         this.failedCount = opts.failedCount || 0;
-        this.ignoredCount = opts.ignoredCount || 0; // this is not exists in Jest
-        this.abortedCount = opts.abortedCount || 0; // this is not exists in Jest
+        this.ignoredCount = opts.ignoredCount || 0;
+        this.abortedCount = opts.abortedCount || 0;
         this.skippedCount = opts.skippedCount || 0;
         this.resourcesDuration = opts.resourcesDuration || 0;
         this.completed = opts.completed || false;
@@ -59,20 +61,24 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
 
     getContextInformation() {
 
-        const { applicationClassName } = ApplicationManager.getApplicationInfo();
+        const baseContextInformation = super.getContextInformation();
 
         return {
-            domainName: TestSuiteExecutionContext.APPLICATION_DOMAIN_NAME,
-            applicationDomainName: TestSuiteExecutionContext.APPLICATION_DOMAIN_NAME,
+            ...( baseContextInformation ? baseContextInformation : undefined ),
+            domainName: this.applicationDomainName,
             operationName: this.testSuiteName,
-            className: applicationClassName,
-            applicationClassName,
+            className: this.applicationClassName,
+            applicationName: this.testSuiteName,
         };
     }
 
     getAdditionalStartTags() {
 
+        const testRunScope = TestRunnerSupport.testRunScope;
+
         return {
+            [TestRunnerTags.TEST_RUN_ID]: testRunScope.id,
+            [TestRunnerTags.TEST_RUN_TASK_ID]: testRunScope.taskId,
             [TestRunnerTags.TEST_SUITE]: this.testSuiteName,
         };
     }
@@ -86,5 +92,10 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
             [TestRunnerTags.TEST_SUITE_SUCCESSFUL_COUNT]: this.successfulCount,
             ...(this.timeout ? { [TestRunnerTags.TEST_TIMEOUT]: this.timeout } : undefined),
         };
+    }
+
+    protected initContextMode() {
+
+        this.compatibleContextModes.push(ContextMode.GlobalMode);
     }
 }

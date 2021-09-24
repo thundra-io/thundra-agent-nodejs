@@ -12,8 +12,6 @@ export default async function run(event: TestSuiteEvent) {
 
     ThundraLogger.debug(`<Teardown> Handling teardown event for test: ${TestRunnerSupport.testSuiteName}`);
 
-    ForesightWrapperUtils.changeAppInfoToTestSuite();
-
     const context = TestRunnerSupport.testSuiteExecutionContext;
     ExecutionContextManager.set(context);
 

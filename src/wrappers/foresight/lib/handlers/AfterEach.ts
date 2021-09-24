@@ -18,12 +18,14 @@ export async function start(event: TestSuiteEvent) {
 
     ThundraLogger.debug('<AfterEach> Handling afterEach start event.');
 
-    const context = ExecutionContextManager.get();
+    const context = TestRunnerSupport.testCaseExecutionContext;
     if (!context) {
 
         ThundraLogger.debug('<AfterEach> Execution context can not be empty.');
         return;
     }
+
+    ExecutionContextManager.set(context);
 
     span = HandlerUtils.createSpanForTest(TEST_AFTER_EACH_OPERATION_NAME, context);
     if (!span) {
@@ -50,8 +52,17 @@ export async function finish(event: TestSuiteEvent) {
         return;
     }
 
+    const context = TestRunnerSupport.testCaseExecutionContext;
+    if (!context) {
+
+        ThundraLogger.debug('<AfterEach> Execution context can not be empty.');
+        return;
+    }
+
+    ExecutionContextManager.set(context);
+
     span.tags[TestRunnerTags.TEST_NAME] = event.testName;
 
-    HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_AFTER_EACH_DURATION);
+    HandlerUtils.finishSpanForTest(span, TestRunnerTags.TEST_AFTER_EACH_DURATION, context);
     span = null;
 }

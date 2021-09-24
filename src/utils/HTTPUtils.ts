@@ -1,5 +1,6 @@
 import {
     THUNDRA_COLLECTOR_ENDPOINT_PATTERNS,
+    TESTCONTAINERS_HTTP_PATH_PATTERNS,
     ClassNames,
     TraceHeaderTags,
     TriggerHeaderTags,
@@ -11,6 +12,37 @@ import {
 class HTTPUtils {
 
     private constructor() {
+    }
+
+    static isTestContainersRequest(options: any, host: string): boolean {
+
+        if (!options || !host) {
+            return false;
+        }
+
+        const {
+            path,
+            socketPath,
+        } = options;
+
+        if (!path || !socketPath) {
+            return false;
+        }
+
+        if (host !== 'localhost'
+            || socketPath !== '/var/run/docker.sock') {
+            return false;
+        }
+
+        if (TESTCONTAINERS_HTTP_PATH_PATTERNS.PATTERN1.test(path)
+            || TESTCONTAINERS_HTTP_PATH_PATTERNS.PATTERN2.test(path)
+            || TESTCONTAINERS_HTTP_PATH_PATTERNS.PATTERN3.test(path)
+            || TESTCONTAINERS_HTTP_PATH_PATTERNS.PATTERN4.test(path)
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

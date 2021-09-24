@@ -57,8 +57,6 @@ export default async function run(event: TestSuiteEvent) {
 
     ThundraLogger.debug(`<TestDone> Handling test done event for test: ${event.testName}`);
 
-    ForesightWrapperUtils.changeAppInfoToTestCase();
-
     const context = TestRunnerSupport.testCaseExecutionContext;
 
     let testStatus = TEST_STATUS.SUCCESSFUL;
@@ -100,7 +98,6 @@ export default async function run(event: TestSuiteEvent) {
     const testSuiteContext = TestRunnerSupport.testSuiteExecutionContext;
 
     ExecutionContextManager.set(testSuiteContext);
-    ForesightWrapperUtils.changeAppInfoToTestSuite();
 
     ThundraLogger.debug(`<TestSkip> Execution context switched to testsute.`);
 }

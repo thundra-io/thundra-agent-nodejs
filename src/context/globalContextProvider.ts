@@ -6,6 +6,10 @@ import ExecutionContext from './ExecutionContext';
 
 let globalContext: ExecutionContext;
 
+export function canChangeablebleContext() {
+    return true;
+}
+
 export function runWithContext(createExecContext: Function, fn: Function) {
     globalContext = createExecContext();
 

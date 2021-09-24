@@ -560,8 +560,18 @@ export const SpanTypes = {
 };
 
 export const INTEGRATIONS: any = {
-    http: {class: HttpIntegration, moduleNames: ['http', 'https'], moduleVersion: null},
-    http2: {class: Http2Integration, moduleNames: ['http2'], moduleVersion: null},
+    http: {
+        class: HttpIntegration,
+        moduleNames: ['http', 'https'],
+        moduleVersion: null,
+        buildInIntegration: true,
+    },
+    http2: {
+        class: Http2Integration,
+        moduleNames: ['http2'],
+        moduleVersion: null,
+        buildInIntegration: true,
+    },
     pg: {class: PostgreIntegration, moduleNames: ['pg'], moduleVersion: '6.x || 7.x || 8.x'},
     mysql2: {class: MySQL2Integration, moduleNames: ['mysql2'], moduleVersion: '>=1.5'},
     mysql: {class: MySQLIntegration, moduleNames: ['mysql'], moduleVersion: '>=2'},
@@ -578,6 +588,22 @@ export const INTEGRATIONS: any = {
         'amqplib/lib/channel.js',
     ],
     moduleVersion: '>=0.5'},
+};
+
+export const WRAPPERS: any = {
+    hapi: {
+        moduleNames: [
+            '@hapi/hapi',
+            'hapi',
+    ]},
+    express: {
+        moduleNames: [
+            'express',
+    ]},
+    koa: {
+        moduleNames: [
+            'koa/lib/application.js',
+    ]},
 };
 
 export const LISTENERS: any = {
@@ -778,6 +804,13 @@ export const THUNDRA_COLLECTOR_ENDPOINT_PATTERNS: any = {
     PATTERN2: /^([\w-]+\.)?collector\.thundra\.io$/,
 };
 
+export const TESTCONTAINERS_HTTP_PATH_PATTERNS: any = {
+    PATTERN1: /info\w*/,
+    PATTERN2: /exec\/\w*/,
+    PATTERN3: /containers\/\w*/,
+    PATTERN4: /images\/\w*/,
+};
+
 export const MAX_HTTP_VALUE_SIZE: number = 10 * 1024;
 
 export const REPORTER_HTTP_TIMEOUT: number = 3000;
@@ -805,4 +838,9 @@ export const enum JEST_TEST_EVENTS {
     BEFOREALLFINISH = 'hook_success<beforeAll>',
     AFTERALLSTART = 'hook_start<afterAll>',
     AFTERALLFINISH = 'hook_success<afterAll>',
+}
+
+export const enum ContextMode {
+    GlobalMode,
+    AsyncMode,
 }

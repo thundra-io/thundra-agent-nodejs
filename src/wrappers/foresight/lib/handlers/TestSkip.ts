@@ -13,8 +13,6 @@ export default async function run(event: TestSuiteEvent) {
 
     ThundraLogger.debug(`<TestSkip> Handling test skip event for test: ${event.testName}`);
 
-    ForesightWrapperUtils.changeAppInfoToTestCase();
-
     const context = TestRunnerSupport.testCaseExecutionContext;
     context.setStatus(TEST_STATUS.SKIPPED);
 
@@ -34,7 +32,6 @@ export default async function run(event: TestSuiteEvent) {
     ThundraLogger.debug(`<TestSkip> Handled test skip event for test: ${event.testName}`);
 
     ExecutionContextManager.set(testSuiteContext);
-    ForesightWrapperUtils.changeAppInfoToTestSuite();
 
     ThundraLogger.debug(`<TestSkip> Execution context switched to testsute.`);
 }

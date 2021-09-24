@@ -1,7 +1,8 @@
+import ThundraLogger from '../ThundraLogger';
 import ExecutionContext from './ExecutionContext';
 import * as globalContextProvider from './globalContextProvider';
 
-let contextProvider = globalContextProvider;
+let contextProvider: any = globalContextProvider;
 
 /**
  * Manages {@link ExecutionContext} and
@@ -21,6 +22,16 @@ export default class ExecutionContextManager {
      * @param provided the {@link ExecutionContext} provider to be set
      */
     static setProvider(provider: any) {
+
+        const contextCanChangeable = contextProvider.canChangeablebleContext();
+        if (!contextCanChangeable) {
+
+            ThundraLogger.debug('<ExecutionContextManager> Default context provider set as ForesightContextProvider.'
+            + 'It is not changeable.');
+
+            return;
+        }
+
         contextProvider = provider;
     }
 
