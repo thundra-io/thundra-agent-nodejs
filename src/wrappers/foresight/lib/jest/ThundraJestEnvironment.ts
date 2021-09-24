@@ -17,7 +17,7 @@ import ThundraConfig from '../../../../plugins/config/ThundraConfig';
 import MaxCountAwareSampler from '../../sampler/MaxCountAwareSampler';
 import TestTraceAwareSampler from '../../sampler/TestTraceAwareSampler';
 
-const stripAnsi = require('strip-ansi');
+import stripAnsi from 'strip-ansi';
 
 const APPLICATIONCLASSNAME = 'Jest';
 

@@ -112,6 +112,7 @@
     "fast-copy": "^2.1.0",
     "isomorphic-git": "^1.9.2",
     "koalas": "^1.0.2",
+    "lodash": "^4.17.21",
     "lodash.flatten": "^4.4.0",
     "lodash.get": "^4.4.2",
     "lodash.has": "^4.5.2",
@@ -123,6 +124,7 @@
     "require-in-the-middle": "^3.1.0",
     "semver": "^5.5.0",
     "shimmer": "^1.2.0",
+    "strip-ansi": "^7.0.1",
     "url-parse": "^1.5.3",
     "uuid": "^3.2.1",
     "ws": "^7.2.1"
