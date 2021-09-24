@@ -30,6 +30,8 @@ function initAsync(asyncId: number, type: string, triggerAsyncId: number, resour
     }
 }
 
+export const PROVIDER_NAME = 'Async Context Provider';
+
 export function canChangeablebleContext() {
     return true;
 }

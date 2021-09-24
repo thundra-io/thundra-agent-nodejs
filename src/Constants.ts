@@ -560,18 +560,8 @@ export const SpanTypes = {
 };
 
 export const INTEGRATIONS: any = {
-    http: {
-        class: HttpIntegration,
-        moduleNames: ['http', 'https'],
-        moduleVersion: null,
-        buildInIntegration: true,
-    },
-    http2: {
-        class: Http2Integration,
-        moduleNames: ['http2'],
-        moduleVersion: null,
-        buildInIntegration: true,
-    },
+    http: {class: HttpIntegration, moduleNames: ['http', 'https'], moduleVersion: null},
+    http2: {class: Http2Integration, moduleNames: ['http2'], moduleVersion: null},
     pg: {class: PostgreIntegration, moduleNames: ['pg'], moduleVersion: '6.x || 7.x || 8.x'},
     mysql2: {class: MySQL2Integration, moduleNames: ['mysql2'], moduleVersion: '>=1.5'},
     mysql: {class: MySQLIntegration, moduleNames: ['mysql'], moduleVersion: '>=2'},

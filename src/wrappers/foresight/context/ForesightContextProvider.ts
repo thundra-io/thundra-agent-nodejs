@@ -64,6 +64,8 @@ function _setContext(execContext: ExecutionContext) {
     });
 }
 
+export const PROVIDER_NAME = 'Foresight Context Provider';
+
 export function canChangeablebleContext() {
     return false;
 }

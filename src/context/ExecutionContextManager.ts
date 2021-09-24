@@ -26,7 +26,7 @@ export default class ExecutionContextManager {
         const contextCanChangeable = contextProvider.canChangeablebleContext();
         if (!contextCanChangeable) {
 
-            ThundraLogger.debug('<ExecutionContextManager> Default context provider set as ForesightContextProvider.'
+            ThundraLogger.debug(`<ExecutionContextManager> Default context provider set as ${contextProvider.PROVIDER_NAME}.`
             + 'It is not changeable.');
 
             return;

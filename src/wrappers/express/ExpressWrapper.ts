@@ -199,42 +199,7 @@ function wrapListen(originalListen: Function) {
     };
 }
 
-export function init() {
-    ThundraLogger.debug('<ExpressWrapper> Initializing ...');
-    const lambdaRuntime = LambdaUtils.isLambdaRuntime();
-    if (!lambdaRuntime) {
-        ModuleUtils.patchModule(
-            'express',
-            'init',
-            initWrapper,
-            (express: any) => express.application);
-        ModuleUtils.patchModule(
-            'express',
-            'use',
-            wrapUse,
-            (express: any) => express.Router);
-        ModuleUtils.patchModule(
-            'express',
-            'listen',
-            wrapListen,
-            (express: any) => express.application);
-        METHODS.forEach((method: string) => {
-            ModuleUtils.patchModule(
-                'express',
-                method,
-                wrapMethod,
-                (express: any) => express.Route.prototype);
-        });
-
-        return true;
-    } else {
-        ThundraLogger.debug('<ExpressWrapper> Skipping initializing due to running in lambda runtime ...');
-
-        return false;
-    }
-}
-
-export const instrument = () => {
+export const init = () => {
 
     ThundraLogger.debug('<ExpressWrapper> Initializing ...');
 

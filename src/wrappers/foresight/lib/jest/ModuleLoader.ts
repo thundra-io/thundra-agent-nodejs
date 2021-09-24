@@ -19,7 +19,7 @@ const loadIntegrations = (testRequire: any) => {
 
     for (const key in INTEGRATIONS) {
         const integration = INTEGRATIONS[key];
-        if (integration && !integration.buildInIntegration) {
+        if (integration) {
             for (const module of integration.moduleNames) {
 
                 try {

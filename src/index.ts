@@ -50,10 +50,8 @@ function init(options?: any) {
 
 function foresightInit(options?: any) {
     if (!initialized) {
-        ConfigProvider.init(options);
-        InitManager.instrument();
+        init(options);
         Foresight.init();
-        initialized = true;
     }
 }
 

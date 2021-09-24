@@ -6,6 +6,8 @@ import ExecutionContext from './ExecutionContext';
 
 let globalContext: ExecutionContext;
 
+export const PROVIDER_NAME = 'Global Context Provider';
+
 export function canChangeablebleContext() {
     return true;
 }

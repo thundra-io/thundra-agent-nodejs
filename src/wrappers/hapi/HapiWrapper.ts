@@ -129,66 +129,9 @@ function hapiServerWrapper(wrappedFunction: Function) {
 }
 
 /**
- * Initiate Hapi wrapper & wrap Hapi server process
- */
-export const init = () => {
-
-    const isHapiTracingDisabled = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE);
-
-    if (isHapiTracingDisabled) {
-
-        ThundraLogger.debug('<HapiWrapper> Hapi wrapper disabled ...');
-
-        return false;
-    }
-
-    const lambdaRuntime = LambdaUtils.isLambdaRuntime();
-    if (!lambdaRuntime) {
-
-        let moduleWillBeInitilized: boolean;
-
-        modulesWillBepatched.forEach((patchModule) => {
-            const isPatched: boolean = ModuleUtils.patchModule(
-                patchModule.moduleName,
-                patchModule.methodName,
-                hapiServerWrapper,
-            );
-
-            if (!moduleWillBeInitilized) {
-                moduleWillBeInitilized = isPatched;
-            }
-        });
-
-        if (moduleWillBeInitilized) {
-
-            ThundraLogger.debug('<HapiWrapper> Initializing ...');
-
-            const {
-                reporter,
-                plugins,
-            } = WebWrapperUtils.initWrapper(
-                ApplicationClassName,
-                ApplicationDomainName,
-                HapiExecutor);
-
-            WrapperUtils.initAsyncContextManager();
-
-            _REPORTER = reporter;
-            _PLUGINS = plugins;
-        }
-
-        return moduleWillBeInitilized;
-    } else {
-        ThundraLogger.debug('<HapiWrapper> Skipping initializing due to running in lambda runtime ...');
-
-        return false;
-    }
-};
-
-/**
  * Instrument Hapi wrapper & wrap Hapi server process
  */
-export const instrument = () => {
+export const init = () => {
 
     const isHapiTracingDisabled = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE);
 

@@ -1,7 +1,7 @@
 /**
  * Manages initialization process
  */
-import {INITIALIZERS} from './Initializers';
+import { INITIALIZERS } from './Initializers';
 import ThundraLogger from '../ThundraLogger';
 
 /**
@@ -11,10 +11,6 @@ class InitManager {
 
     private static initialized: boolean = false;
 
-    private static initMethodName: string = 'init';
-
-    private static instrumentMethodName: string = 'instrument';
-
     private constructor() {
     }
 
@@ -22,23 +18,12 @@ class InitManager {
      * Triggers initialization process
      */
     static init(): void {
-        InitManager.process(InitManager.initMethodName);
-    }
-
-    /**
-     * Triggers instrumentation process
-     */
-    static instrument(): void {
-        InitManager.process(InitManager.instrumentMethodName);
-    }
-
-    private static process(methodName: string): void {
         ThundraLogger.debug(`<InitManager> Initializing initializers ...`);
         if (!InitManager.initialized) {
             INITIALIZERS.forEach((initializer: any) => {
                 ThundraLogger.debug(`<InitManager> Initializing ${initializer.name} ...`);
                 if (!initializer.initialized) {
-                    const init = initializer.impl[methodName];
+                    const init = initializer.impl.init;
                     if (init && typeof init === 'function') {
                         try {
                             const initializationResult = init.apply(this);
@@ -53,7 +38,7 @@ class InitManager {
                     } else {
                         ThundraLogger.error(
                             `<InitManager> Couldn't initialize ${initializer.name} \
-                            because no "${methodName}" method is either defined or exported`);
+                            because no init method is either defined or exported`);
                     }
                 } else {
                     ThundraLogger.debug(
