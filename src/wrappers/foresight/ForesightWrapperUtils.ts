@@ -21,7 +21,7 @@ import TestSuiteExecutionContext from './context/TestSuiteExecutionContext';
 import * as TestRunnerSupport from './TestRunnerSupport';
 import TestCaseExecutionContext from './context/TestCaseExecutionContext';
 import WrapperContext from '../WrapperContext';
-import ForesightLog from './plugin/ForesightLog';
+import ForesightLogPlugin from './plugin/ForesightLogPlugin';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 import * as ForesightContextProvider from './context/ForesightContextProvider';
@@ -163,7 +163,7 @@ export default class ForesightWrapperUtils {
         const config = ConfigProvider.thundraConfig;
 
         if (ConfigProvider.get<boolean>(ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE) && config.logConfig.enabled) {
-            return new ForesightLog(config.logConfig, consoleRef);
+            return new ForesightLogPlugin(config.logConfig, consoleRef);
         }
 
         return null;

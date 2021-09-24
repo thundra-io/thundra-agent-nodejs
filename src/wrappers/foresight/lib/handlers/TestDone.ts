@@ -99,5 +99,9 @@ export default async function run(event: TestSuiteEvent) {
 
     ExecutionContextManager.set(testSuiteContext);
 
-    ThundraLogger.debug(`<TestSkip> Execution context switched to testsute.`);
+    ThundraLogger.debug(`<TestDone> Execution context switched to testsute.`);
+
+    TestRunnerSupport.setTestCaseContext(null);
+
+    ThundraLogger.debug(`<TestDone> Test execution context removed.`);
 }

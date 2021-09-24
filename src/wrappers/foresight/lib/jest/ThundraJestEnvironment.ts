@@ -174,12 +174,14 @@ function wrapEnvironment(BaseEnvironment: any) {
 
           LoadTestModules(testRequire);
 
-          const logPlugin = ForesightWrapperUtils.createLogPlugin(this.global.console);
-          if (logPlugin && TestRunnerSupport.wrapperContext
+          const foresightLogPlugin = ForesightWrapperUtils.createLogPlugin(this.global.console);
+          if (foresightLogPlugin && TestRunnerSupport.wrapperContext
               && TestRunnerSupport.wrapperContext.plugins && TestRunnerSupport.wrapperContext.pluginContext) {
 
-            logPlugin.setPluginContext(TestRunnerSupport.wrapperContext.pluginContext);
-            TestRunnerSupport.wrapperContext.plugins.push(logPlugin);
+            foresightLogPlugin.setPluginContext(TestRunnerSupport.wrapperContext.pluginContext);
+            TestRunnerSupport.wrapperContext.plugins.push(foresightLogPlugin);
+
+            WrapperContext.addIgnoredPlugin(LogPlugin.name);
           }
         },
         /* test-code */

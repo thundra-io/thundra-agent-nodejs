@@ -110,10 +110,6 @@ export default class WebWrapperUtils {
         } else {
             ThundraLogger.debug('<WebWrapperUtils> Skipped reporting as reporting is disabled');
         }
-
-        if (context.parentContext) {
-            ExecutionContextManager.set(context.parentContext);
-        }
     }
 
     static createPlugins(config: ThundraConfig, pluginContext: PluginContext): any[] {

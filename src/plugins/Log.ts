@@ -156,12 +156,17 @@ export default class Log {
         }
     }
 
-    protected isSampled(): boolean {
-        const sampler = get(this.config, 'sampler', { isSampled: () => true });
-        return sampler.isSampled();
+    protected getSampler(): any {
+
+        return get(this.config, 'sampler', { isSampled: () => true });
     }
 
-    private shimConsole(): void {
+    protected isSampled(): boolean {
+
+        return this.getSampler().isSampled();
+    }
+
+    protected shimConsole(): void {
         ConsoleShimmedMethods.forEach((method) => {
             const consoleMethod = this.consoleReference[method];
             // If console method is valid and it is not patched by Thundra

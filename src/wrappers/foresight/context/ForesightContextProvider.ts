@@ -74,8 +74,7 @@ export function runWithContext(createExecContext: Function, fn: Function) {
 
     const execContext: ExecutionContext = createExecContext();
 
-    if (currentContextModel === ContextMode.GlobalMode
-        && activeGlobalExecutionContext != null
+    if (activeGlobalExecutionContext != null
         && execContext.isContextCompatibleWith(ContextMode.AsyncMode)) {
         execContext.parentContext = activeGlobalExecutionContext;
     }
