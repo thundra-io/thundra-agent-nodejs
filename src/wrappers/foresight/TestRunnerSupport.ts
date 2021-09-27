@@ -191,3 +191,13 @@ export const finishTestRun = (): TestRunFinish => {
             .withEnvironmentInfo(EnvironmentSupport.getEnvironmentInfo())
         .build();
 };
+
+export const clearTestRun = () => {
+
+    setInitialized(false);
+    finishTestRunStatusEvent();
+    setWrapperContext(null);
+    setTestCaseContext(null);
+    setTestSuiteContext(null);
+    testRunScope = null;
+};

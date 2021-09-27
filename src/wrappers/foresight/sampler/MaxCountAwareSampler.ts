@@ -8,7 +8,7 @@ export default class MaxCountAwareSampler implements Sampler<null> {
     private count: number;
     private counter: number = 0;
 
-    constructor(count?: number) {
+    constructor(count: number) {
         this.count = count;
     }
 

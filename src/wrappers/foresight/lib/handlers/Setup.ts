@@ -67,8 +67,7 @@ async function globalTeardown() {
                 with test run id: ${testRunFinish.id}
             `);
 
-            TestRunnerSupport.setInitialized(false);
-            TestRunnerSupport.finishTestRunStatusEvent();
+            TestRunnerSupport.clearTestRun();
 
             ThundraLogger.debug('<Setup> Test run status event interval stopped.');
         } catch (error) {
