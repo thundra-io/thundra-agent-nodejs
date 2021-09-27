@@ -35,7 +35,7 @@ class LogData extends BaseMonitoringData {
         this.traceId = traceId;
         this.transactionId = transactionId;
         this.spanId = spanId;
-        this.logMessage = logInfo.logMessage;
+        this.logMessage = `${logInfo.logMessage}\n`;
         this.logTimestamp =  logInfo.logTimestamp;
         this.logLevel = logInfo.logLevel;
         this.logLevelCode = logInfo.logLevelCode;
