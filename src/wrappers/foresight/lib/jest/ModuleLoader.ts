@@ -5,14 +5,43 @@ import {
 } from '../../../../Constants';
 import ThundraLogger from '../../../../ThundraLogger';
 
+const shimmer = require('shimmer');
+
 /**
  * try to load test modules
  * @param testRequire testRequire testsuite's context require
  */
-const LoadTestModules = (testRequire: any) => {
+export const LoadTestModules = (testRequire: any) => {
 
     loadIntegrations(testRequire);
     loadWrappers(testRequire);
+};
+
+export const WrapTestRequireModule = () => {
+
+    function requireModuleWrapper(internalRequireModule: any) {
+        return function internalRequireModuleWrapper(from: any, moduleName: any, options: any, isRequireActual: any) {
+
+          ThundraLogger.debug('<ModuleLoader> Require module wrapped.');
+
+          if (moduleName === '@thundra/core'
+              && global && global.__thundraMasterModule__
+              && global.__thundraMasterModule__.moduleExports) {
+
+            ThundraLogger.debug('<ModuleLoader> "@thundra/core" returned from global.');
+            return global.__thundraMasterModule__.moduleExports;
+          }
+
+          return internalRequireModule.call(this, from, moduleName, options, isRequireActual);
+        };
+    }
+
+    const jestRuntime = require('jest-runtime');
+    if (jestRuntime) {
+
+        shimmer.wrap(jestRuntime.prototype || jestRuntime.default.prototype, 'requireModule', requireModuleWrapper);
+        ThundraLogger.debug('<ModuleLoader> Wrapping "jest-runtime.requireModule"');
+    }
 };
 
 const loadIntegrations = (testRequire: any) => {
@@ -50,5 +79,3 @@ const loadWrappers = (testRequire: any) => {
         }
     }
 };
-
-export default LoadTestModules;

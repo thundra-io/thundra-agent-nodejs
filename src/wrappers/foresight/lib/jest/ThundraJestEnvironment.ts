@@ -9,7 +9,10 @@ import * as ForesightExecutor from '../../ForesightExecutor';
 import ConfigNames from '../../../../config/ConfigNames';
 import ConfigProvider from '../../../../config/ConfigProvider';
 import ThundraLogger from '../../../../ThundraLogger';
-import LoadTestModules from './ModuleLoader';
+import {
+  LoadTestModules,
+  WrapTestRequireModule,
+} from './ModuleLoader';
 import TracePlugin from '../../../../plugins/Trace';
 import LogPlugin from '../../../../plugins/Log';
 import InvocationPlugin from '../../../../plugins/Invocation';
@@ -173,6 +176,7 @@ function wrapEnvironment(BaseEnvironment: any) {
         testScopeLoaded: (testRequire: any) => {
 
           LoadTestModules(testRequire);
+          WrapTestRequireModule();
 
           const foresightLogPlugin = ForesightWrapperUtils.createLogPlugin(this.global.console);
           if (foresightLogPlugin && TestRunnerSupport.wrapperContext
