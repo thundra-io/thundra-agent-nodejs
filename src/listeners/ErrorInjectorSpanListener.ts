@@ -1,6 +1,7 @@
 import ThundraSpanListener from './ThundraSpanListener';
 import ThundraSpan from '../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
+import Utils from '../utils/Utils';
 
 const get = require('lodash.get');
 
@@ -14,22 +15,20 @@ const get = require('lodash.get');
 class ErrorInjectorSpanListener implements ThundraSpanListener {
 
     private readonly DEFAULT_ERROR_MESSAGE: string = 'Error injected by Thundra!';
-    private readonly DEFAULT_INJECT_COUNT_FREQ: number = 1;
+    private readonly DEFAULT_INJECT_PERCENTAGE: number = 100;
     private readonly DEFAULT_INJECT_ON_FINISH: boolean = false;
     private readonly DEFAULT_ERROR_TYPE: string = 'Error';
 
-    private injectCountFreq: number;
-    private counter: number;
+    private injectPercentage: number;
     private injectOnFinish: boolean;
     private errorType: string;
     private errorMessage: string;
 
     constructor(opt: any = {}) {
-        this.injectCountFreq = get(opt, 'injectCountFreq', this.DEFAULT_INJECT_COUNT_FREQ);
+        this.injectPercentage = get(opt, 'injectPercentage', this.DEFAULT_INJECT_PERCENTAGE);
         this.injectOnFinish = get(opt, 'injectOnFinish', this.DEFAULT_INJECT_ON_FINISH);
         this.errorType = get(opt, 'errorType', this.DEFAULT_ERROR_TYPE);
         this.errorMessage = get(opt, 'errorMessage', this.DEFAULT_ERROR_MESSAGE);
-        this.counter = 0;
     }
 
     /**
@@ -85,7 +84,9 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
     }
 
     private _injectErrorWithCallback(span: ThundraSpan,  me: any, callback: () => any): void {
-        if (this.counter % this.injectCountFreq === 0) {
+
+        const perc = Utils.getRandomNumber(100);
+        if (this.injectPercentage > (100 - perc)) {
             const error = new ThundraChaosError(this.errorMessage);
             error.name = this.errorType;
             span.setErrorTag(error);
@@ -93,22 +94,18 @@ class ErrorInjectorSpanListener implements ThundraSpanListener {
                 callback.apply(me, [error]);
             }
         }
-
-        this.counter++;
     }
 
     private _injectError(span: ThundraSpan,  me: any): void {
-        if (this.counter % this.injectCountFreq === 0) {
+
+        const perc = Utils.getRandomNumber(100);
+        if (this.injectPercentage > (100 - perc)) {
             const error = new ThundraChaosError(this.errorMessage);
             error.name = this.errorType;
             span.setErrorTag(error);
-            this.counter++;
             throw error;
         }
-
-        this.counter++;
     }
-
 }
 
 export default ErrorInjectorSpanListener;
