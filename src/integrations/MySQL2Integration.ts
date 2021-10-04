@@ -11,7 +11,6 @@ import ExecutionContextManager from '../context/ExecutionContextManager';
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 
-const FILE_NAME = 'lib/connection';
 const INTEGRATION_NAME = 'mysql2';
 
 /**
@@ -36,9 +35,7 @@ class MySQL2Integration implements Integration {
             (lib: any, cfg: any) => {
                 this.doUnwrap.call(this, lib);
             },
-            this.config,
-            null,
-            FILE_NAME);
+            this.config);
     }
 
     /**
@@ -137,10 +134,16 @@ class MySQL2Integration implements Integration {
             };
         }
 
-        if (has(lib, 'prototype.query')) {
+        if (has(lib, 'Connection.prototype.query')) {
             ThundraLogger.debug('<MySQL2Integration> Wrapping "mysql2.query"');
 
-            shimmer.wrap(lib.prototype, 'query', wrapper);
+            shimmer.wrap(lib.Connection.prototype, 'query', wrapper);
+        }
+
+        if (has(lib, 'Connection.prototype.execute')) {
+            ThundraLogger.debug('<MySQL2Integration> Wrapping "mysql2.execute"');
+
+            shimmer.wrap(lib.Connection.prototype, 'execute', wrapper);
         }
     }
 

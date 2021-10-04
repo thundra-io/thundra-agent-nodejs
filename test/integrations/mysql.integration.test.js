@@ -6,6 +6,7 @@ import ExecutionContextManager from '../../dist/context/ExecutionContextManager'
 import ExecutionContext from '../../dist/context/ExecutionContext';
 
 describe('MySQL2 integration', () => {
+
     let tracer;
     let integration;
 
@@ -17,6 +18,66 @@ describe('MySQL2 integration', () => {
 
     afterEach(() => {
         tracer.destroy();
+    });
+
+    test('should instrument mysql2/promise client query call', async () => {
+
+        const mysql2 = require('mysql2/promise');
+
+        const connection = await mysql2.createConnection({
+            host: 'localhost',
+            user: 'user',
+            database: 'db',
+            password: 'userpass',
+        });
+
+        await connection.query("SELECT 1 + 1 AS solution");
+
+        const span = tracer.getRecorder().spanList[0];
+        expect(span.className).toBe('MYSQL');
+        expect(span.domainName).toBe('DB');
+
+        expect(span.tags['operation.type']).toBe('READ');
+        expect(span.tags['db.instance']).toBe('db');
+        expect(span.tags['db.user']).toBe('user');
+        expect(span.tags['db.host']).toBe('localhost');
+        expect(span.tags['db.port']).toBe(3306);
+        expect(span.tags['db.type']).toBe('mysql');
+        expect(span.tags['db.statement.type']).toBe('SELECT');
+        expect(span.tags['db.statement']).toBe('SELECT 1 + 1 AS solution');
+        expect(span.tags['topology.vertex']).toEqual(true);
+
+        await connection.end();
+    });
+
+    test('should instrument mysql2/promise client execute call', async () => {
+
+        const mysql2 = require('mysql2/promise');
+
+        const connection = await mysql2.createConnection({
+            host: 'localhost',
+            user: 'user',
+            database: 'db',
+            password: 'userpass',
+        });
+
+        await connection.execute("SELECT 1 + 1 AS solution");
+
+        const span = tracer.getRecorder().spanList[0];
+        expect(span.className).toBe('MYSQL');
+        expect(span.domainName).toBe('DB');
+
+        expect(span.tags['operation.type']).toBe('READ');
+        expect(span.tags['db.instance']).toBe('db');
+        expect(span.tags['db.user']).toBe('user');
+        expect(span.tags['db.host']).toBe('localhost');
+        expect(span.tags['db.port']).toBe(3306);
+        expect(span.tags['db.type']).toBe('mysql');
+        expect(span.tags['db.statement.type']).toBe('SELECT');
+        expect(span.tags['db.statement']).toBe('SELECT 1 + 1 AS solution');
+        expect(span.tags['topology.vertex']).toEqual(true);
+
+        await connection.end();
     });
 
     test('should instrument MySQL calls with mysql2 client', () => {
@@ -40,8 +101,10 @@ describe('MySQL2 integration', () => {
     });
 
     test('should mask MySQL statements with mysql2 client', () => {
+
         integration.config.disableInstrumentation = true;
         integration.config.maskRdbStatement = true;
+
         const sdk = require('mysql2');
 
         return mysql.selectMySql2(sdk).then((data) => {
