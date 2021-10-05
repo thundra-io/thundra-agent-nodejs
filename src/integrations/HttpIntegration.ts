@@ -125,13 +125,16 @@ class HttpIntegration implements Integration {
 
                     const me = this;
 
-                    const wrappedCallback = (err: any, res: any) => {
+                    const wrappedCallback = (res: any) => {
+
                         if (span) {
-                            if (err) {
-                                span.setErrorTag(err);
+
+                            if (res && res.headers) {
+                                res.headers = HTTPUtils.extractHeaders(res.headers);
                             }
+
                             ThundraLogger.debug(`<HTTPIntegration> Closing HTTP span with name ${operationName}`);
-                            span.closeWithCallback(me, callback, [err, res]);
+                            span.closeWithCallback(me, callback, [res]);
                         }
                     };
 
@@ -179,6 +182,22 @@ class HttpIntegration implements Integration {
                                         `<HTTPIntegration> Unable to get body of HTTP span with name ${operationName}:`,
                                         error);
                                 }
+                            }
+                        }
+
+                        // timeout & abort & error handled here
+                        if (eventName === 'error') {
+
+                            if (span) {
+                                ThundraLogger.debug(
+                                    `<HTTPIntegration> Because of error, closing HTTP span with name
+                                    ${span.getOperationName()}`, arg.message);
+
+                                const err = new Error(arg.message);
+                                err.stack = arg.stack;
+
+                                span.setErrorTag(err);
+                                span.close();
                             }
                         }
 

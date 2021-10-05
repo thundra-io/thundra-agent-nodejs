@@ -4,19 +4,9 @@ import * as EnvironmentSupport from '../../environment/EnvironmentSupport';
 import ExecutionContextManager from '../../../../context/ExecutionContextManager';
 import TestSuiteExecutionContext from '../../context/TestSuiteExecutionContext';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
-import Utils from '../../../../utils/Utils';
-import ConfigProvider from '../../../../config/ConfigProvider';
 import ThundraLogger from '../../../../ThundraLogger';
-
-async function sendData(data: any) {
-
-    const config = ConfigProvider.thundraConfig;
-    const { apiKey } = config;
-
-    const { reporter } = TestRunnerSupport.wrapperContext;
-
-    await reporter.sendReports([Utils.generateReport(data, apiKey)]);
-}
+import HandlerUtils from './utils/HandlerUtils';
+import { PROCESS_EXIT_EVENTS } from '../../../../Constants';
 
 async function globalSetup() {
 
@@ -24,66 +14,32 @@ async function globalSetup() {
 
     await EnvironmentSupport.init();
 
-    const testRunStart = TestRunnerSupport.startTestRun();
-    if (!testRunStart) {
-        return;
-    }
-
-    try {
-
-        await sendData(testRunStart);
-        ThundraLogger.debug(`
-            <Setup> Test run start event sended for test suite: ${TestRunnerSupport.testSuiteName}
-            with test run id: ${testRunStart.id}
-        `);
-    } catch (error) {
-
-        ThundraLogger.error('<Setup> Test run start event did not send.', error);
-    } finally {
-
-        TestRunnerSupport.startTestRunStatusEvent();
-        ThundraLogger.debug('<Setup> Test run status event interval started');
-    }
+    await HandlerUtils.sendTestRunStart();
 }
 
 async function globalTeardown() {
 
     ThundraLogger.debug(`<Setup> Global teardown creating for test suite: ${TestRunnerSupport.testSuiteName}.`);
 
-    async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
+    const exitHandler = async function (evtOrExitCodeOrError: number | string | Error) {
 
-        ThundraLogger.debug(`<Setup> Test run fisining with code ${evtOrExitCodeOrError}.`);
+        if (!TestRunnerSupport.initialized) {
 
-        try {
+            ThundraLogger.debug(`<Setup> Test run fisining with code ${evtOrExitCodeOrError}.`);
 
-            const testRunFinish = TestRunnerSupport.finishTestRun();
-            if (!testRunFinish) {
-                return;
-            }
+            await HandlerUtils.sendTestRunFinish();
 
-            await sendData(testRunFinish);
-            ThundraLogger.debug(`
-                <Setup> Test run start event sended for test suite: ${TestRunnerSupport.testSuiteName}
-                with test run id: ${testRunFinish.id}
-            `);
-
-            TestRunnerSupport.clearTestRun();
-
-            ThundraLogger.debug('<Setup> Test run status event interval stopped.');
-        } catch (error) {
-
-            ThundraLogger.error('<Setup> Test run finish event did not send.', error);
+            process.exit(isNaN(+evtOrExitCodeOrError) ? 1 : +evtOrExitCodeOrError);
         }
+    };
 
-        process.exit(isNaN(+evtOrExitCodeOrError) ? 1 : +evtOrExitCodeOrError);
-    }
+    PROCESS_EXIT_EVENTS.forEach((evt: any) => {
 
-    [
-        'beforeExit', 'uncaughtException', 'unhandledRejection',
-        'SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP',
-        'SIGABRT', 'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV',
-        'SIGUSR2', 'SIGTERM',
-    ].forEach((evt) => process.on(evt, exitHandler));
+        if (!process.listenerCount(evt)) {
+
+            process.once(evt, exitHandler);
+        }
+    });
 }
 
 async function initTestSuite() {

@@ -52,20 +52,25 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
             [HttpTags.BODY],
         );
     }
-
-    if (triggerOperationName) {
-        response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
-    }
 }
 
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
     WrapperUtils.finishTrace(pluginContext, execContext);
 
-    const { rootSpan, response, request } = execContext;
+    const {
+        rootSpan,
+        response,
+        request,
+        triggerOperationName,
+    } = execContext;
 
     InvocationSupport.setAgentTag(HttpTags.HTTP_STATUS, response.statusCode);
     Utils.copyProperties(response, ['statusCode'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
     Utils.copyProperties(request.route, ['path'], rootSpan.tags, [HttpTags.HTTP_ROUTE_PATH]);
+
+    if (triggerOperationName) {
+        response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
+    }
 }
 
 function handleRoutePath(context: ExecutionContext, resourceName: string) {
@@ -77,7 +82,6 @@ function handleRoutePath(context: ExecutionContext, resourceName: string) {
 
     // Change root span name and response header
     rootSpan.operationName = resourceName;
-    response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
     InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
 }
 

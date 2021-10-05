@@ -1,4 +1,7 @@
+import Path from 'path';
+
 import Utils from './Utils';
+import { KNOWN_TEST_FILE_PATHS } from '../Constants';
 
 /**
  * Util class for test run process
@@ -46,6 +49,28 @@ class TestRunnerUtils {
                 commitHash,
                 runId,
             );
+    }
+
+    /**
+     * Generate and return test file name
+     * @param testPath testPath
+     * @param rootDir rootDir
+     */
+    static getTestFileName(testPath: string, rootDir: string) {
+
+        const relativePath = testPath.replace(
+            rootDir.endsWith('/')
+            ? rootDir
+            : rootDir + '/', '')
+            .split('/');
+
+        if (relativePath.length > 1 && KNOWN_TEST_FILE_PATHS.has(relativePath[0].toLowerCase())) {
+            relativePath.shift();
+
+            return Path.join(...relativePath);
+        }
+
+        return relativePath.pop();
     }
 }
 

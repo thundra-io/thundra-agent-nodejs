@@ -21,6 +21,7 @@ import MaxCountAwareSampler from '../../sampler/MaxCountAwareSampler';
 import TestTraceAwareSampler from '../../sampler/TestTraceAwareSampler';
 
 import stripAnsi from 'strip-ansi';
+import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -47,7 +48,7 @@ function wrapEnvironment(BaseEnvironment: any) {
       const setupFilePath = Path.join(__dirname, __PRIVATE__.getSetupFilePath());
       config.setupFiles.push(setupFilePath);
 
-      this.testSuite = context.testPath.split('/').pop();
+      this.testSuite = TestRunnerUtils.getTestFileName(context.testPath, config.rootDir);
 
       TestRunnerSupport.setTestSuiteName(this.testSuite);
 

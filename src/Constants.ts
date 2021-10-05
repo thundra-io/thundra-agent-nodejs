@@ -834,3 +834,20 @@ export const enum ContextMode {
     GlobalMode,
     AsyncMode,
 }
+
+export const PROCESS_EXIT_EVENTS = [
+    'beforeExit', 'uncaughtException', 'unhandledRejection',
+    'SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP',
+    'SIGABRT', 'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV',
+    'SIGUSR2', 'SIGTERM',
+];
+
+export const KNOWN_TEST_FILE_PATHS = new Set([
+    'src',
+    'test',
+    'tests',
+    '_test_',
+    '_tests_',
+    '__test__',
+    '__tests__',
+]);

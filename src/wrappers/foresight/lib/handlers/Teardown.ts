@@ -3,6 +3,7 @@ import ForesightWrapperUtils from '../../ForesightWrapperUtils';
 import ExecutionContextManager from '../../../../context/ExecutionContextManager';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
 import ThundraLogger from '../../../../ThundraLogger';
+import HandlerUtils from './utils/HandlerUtils';
 
 /**
  * Function for handling teardown event
@@ -21,6 +22,6 @@ export default async function run(event: TestSuiteEvent) {
       TestRunnerSupport.wrapperContext.reporter);
 
     ThundraLogger.debug(`<Teardown> Handled teardown event for test: ${TestRunnerSupport.testSuiteName}`);
-    TestRunnerSupport.finishTestRunStatusEvent();
-    ThundraLogger.debug('<Teardown> Test run status event interval stopped.');
+
+    await HandlerUtils.sendTestRunFinish();
 }
