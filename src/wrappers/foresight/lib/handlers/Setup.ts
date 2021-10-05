@@ -25,19 +25,20 @@ async function globalTeardown() {
 
         if (!TestRunnerSupport.initialized) {
 
-            ThundraLogger.debug(`<Setup> Test run fisining with code ${evtOrExitCodeOrError}.`);
-
-            await HandlerUtils.sendTestRunFinish();
-
-            process.exit(isNaN(+evtOrExitCodeOrError) ? 1 : +evtOrExitCodeOrError);
+            try {
+                await HandlerUtils.sendTestRunFinish();
+            } catch (error) {
+                ThundraLogger.error('<Setup> Test run finish did not send.', error);
+            }
         }
     };
 
     PROCESS_EXIT_EVENTS.forEach((evt: any) => {
 
-        if (!process.listenerCount(evt)) {
+        const exists = process.listeners(evt).some((listener) => listener === exitHandler);
+        if (!exists) {
 
-            process.once(evt, exitHandler);
+            process.prependOnceListener(evt, exitHandler);
         }
     });
 }
