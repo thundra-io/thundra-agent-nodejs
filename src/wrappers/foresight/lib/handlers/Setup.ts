@@ -8,6 +8,14 @@ import ThundraLogger from '../../../../ThundraLogger';
 import HandlerUtils from './utils/HandlerUtils';
 import { PROCESS_EXIT_EVENTS } from '../../../../Constants';
 
+async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
+
+    if (TestRunnerSupport.initialized) {
+
+        await HandlerUtils.sendTestRunFinish();
+    }
+}
+
 async function globalSetup() {
 
     ThundraLogger.debug(`<Setup> Global setup creating for test suite: ${TestRunnerSupport.testSuiteName}.`);
@@ -20,18 +28,6 @@ async function globalSetup() {
 async function globalTeardown() {
 
     ThundraLogger.debug(`<Setup> Global teardown creating for test suite: ${TestRunnerSupport.testSuiteName}.`);
-
-    const exitHandler = async function (evtOrExitCodeOrError: number | string | Error) {
-
-        if (!TestRunnerSupport.initialized) {
-
-            try {
-                await HandlerUtils.sendTestRunFinish();
-            } catch (error) {
-                ThundraLogger.error('<Setup> Test run finish did not send.', error);
-            }
-        }
-    };
 
     PROCESS_EXIT_EVENTS.forEach((evt: any) => {
 
