@@ -13,7 +13,7 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const get = require('lodash.get');
 
-const MODULE_NAMES = ['@aws-sdk/smithy-client']; // /dist-cjs/client.js
+const MODULE_NAMES = ['@aws-sdk/smithy-client'];
 const MODULE_VERSION = '3.x';
 
 /**
@@ -88,6 +88,8 @@ export class AWSv3Integration implements Integration {
                     currentInstance.middlewareStack.add(
                         (next: any, context: any) => async (args: any) => {
 
+                            ThundraLogger.debug('<AWSv3Integration> Build middleware working...');
+
                             if (args && args.request) {
                                 const httpRequest = args.request;
                                 const headers = httpRequest.headers ? httpRequest.headers : {};
@@ -110,6 +112,8 @@ export class AWSv3Integration implements Integration {
                     currentInstance.middlewareStack.add(
                         (next: any, context: any) => async (args: any) => {
 
+                            ThundraLogger.debug('<AWSv3Integration> Deserialize middleware working...');
+
                             currentInstance.__thundra__.service.config.region = await currentInstance.config.region();
                             currentInstance.__thundra__.service.config.endpoint = await currentInstance.config.endpoint();
 
@@ -130,6 +134,9 @@ export class AWSv3Integration implements Integration {
                     if (originalCallback) {
 
                         const wrappedCallback = function (err: any, data: any) {
+
+                            ThundraLogger.debug('<AWSv3Integration> WrappedCallback working...');
+
                             if (err && activeSpan) {
                                 activeSpan.setErrorTag(err);
                             }
@@ -158,7 +165,7 @@ export class AWSv3Integration implements Integration {
                                         config,
                                     );
                                 } catch (error) {
-                                    ThundraLogger.error(error);
+                                    ThundraLogger.error('<AWSv3Integration> Response data did not processed.', error);
                                 }
                             }
 
@@ -197,7 +204,7 @@ export class AWSv3Integration implements Integration {
                                         config,
                                     );
                                 } catch (error) {
-                                    ThundraLogger.error(error);
+                                    ThundraLogger.error('<AWSv3Integration> Response data did not processed.', error);
                                 } finally {
 
                                     if (activeSpan) {
@@ -205,6 +212,8 @@ export class AWSv3Integration implements Integration {
                                     }
                                 }
                             }).catch((error: any) => {
+
+                                ThundraLogger.error('<AWSv3Integration> An error occured while sending request.', error);
 
                                 if (activeSpan) {
 
@@ -230,7 +239,7 @@ export class AWSv3Integration implements Integration {
                         throw error;
                     } else {
 
-                        ThundraLogger.error(error);
+                        ThundraLogger.error('<AWSv3Integration> An error occured while tracing.', error);
                         const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
                         return originalFunction.apply(this, [command, optionsOrCb, cb]);
                     }
