@@ -218,8 +218,6 @@ export class AWSv3Integration implements Integration {
                     }
 
                     if (error instanceof ThundraChaosError) {
-
-                        this.response.error = error;
                         throw error;
                     } else {
 
