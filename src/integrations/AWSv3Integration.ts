@@ -131,86 +131,70 @@ export class AWSv3Integration implements Integration {
                         },
                     );
 
-                    if (originalCallback) {
+                    const wrappedCallback = function (err: any, data: any, closeWithCallback = false) {
 
-                        const wrappedCallback = function (err: any, data: any) {
+                        ThundraLogger.debug('<AWSv3Integration> WrappedCallback working...');
 
-                            ThundraLogger.debug('<AWSv3Integration> WrappedCallback working...');
+                        if (err && activeSpan) {
+                            activeSpan.setErrorTag(err);
+                        }
 
-                            if (err && activeSpan) {
-                                activeSpan.setErrorTag(err);
-                            }
+                        currentInstance.middlewareStack.removeByTag('__thundra__');
 
-                            currentInstance.middlewareStack.removeByTag('__thundra__');
-
-                            currentInstance.__thundra__.response = {
-                                ...currentInstance.__thundra__.response,
-                                ...( data ? { data } : undefined ),
-                                httpResponse: { ...currentInstance.__thundra__.response },
-                            };
-
-                            if (data) {
-                                try {
-                                    AWSServiceIntegration.doProcessResponse(
-                                        activeSpan,
-                                        currentInstance.__thundra__,
-                                        currentInstance.__thundra__.response,
-                                        config,
-                                    );
-
-                                    AWSServiceIntegration.injectTraceLink(
-                                        activeSpan,
-                                        currentInstance.__thundra__,
-                                        currentInstance.__thundra__.response,
-                                        config,
-                                    );
-                                } catch (error) {
-                                    ThundraLogger.error('<AWSv3Integration> Response data did not processed.', error);
-                                }
-                            }
-
-                            if (activeSpan) {
-                                activeSpan.closeWithCallback(this, originalCallback, [err, data]);
-                            }
+                        currentInstance.__thundra__.response = {
+                            ...currentInstance.__thundra__.response,
+                            ...( data ? { data } : undefined ),
+                            httpResponse: { ...currentInstance.__thundra__.response },
                         };
 
-                        return originalFunction.apply(this, [command, orginalOptions, wrappedCallback]);
+                        if (data) {
+                            try {
+                                AWSServiceIntegration.doProcessResponse(
+                                    activeSpan,
+                                    currentInstance.__thundra__,
+                                    currentInstance.__thundra__.response,
+                                    config,
+                                );
+
+                                AWSServiceIntegration.injectTraceLink(
+                                    activeSpan,
+                                    currentInstance.__thundra__,
+                                    currentInstance.__thundra__.response,
+                                    config,
+                                );
+                            } catch (error) {
+                                ThundraLogger.error('<AWSv3Integration> Response data did not processed.', error);
+                            } finally {
+
+                                if (activeSpan) {
+                                    if (closeWithCallback) {
+                                        activeSpan.closeWithCallback(this, originalCallback, [err, data]);
+                                    } else {
+                                        activeSpan.close();
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    if (originalCallback) {
+
+                        return originalFunction.apply(
+                            this,
+                            [
+                                command,
+                                orginalOptions,
+                                function (err: any, data: any) {
+                                    wrappedCallback(err, data, true);
+                                },
+                            ]);
                     } else {
 
                         const result = originalFunction.apply(this, [command, orginalOptions, cb]);
                         if (typeof result.then === 'function') {
                             result.then((data: any) => {
 
-                                currentInstance.middlewareStack.removeByTag('__thundra__');
-
-                                currentInstance.__thundra__.response = {
-                                    ...currentInstance.__thundra__.response,
-                                    ...( currentInstance.__thundra__ ? { data } : undefined ),
-                                    httpResponse: { ...currentInstance.__thundra__.response },
-                                };
-
-                                try {
-                                    AWSServiceIntegration.doProcessResponse(
-                                        activeSpan,
-                                        currentInstance.__thundra__,
-                                        currentInstance.__thundra__.response,
-                                        config,
-                                    );
-
-                                    AWSServiceIntegration.injectTraceLink(
-                                        activeSpan,
-                                        currentInstance.__thundra__,
-                                        currentInstance.__thundra__.response,
-                                        config,
-                                    );
-                                } catch (error) {
-                                    ThundraLogger.error('<AWSv3Integration> Response data did not processed.', error);
-                                } finally {
-
-                                    if (activeSpan) {
-                                        activeSpan.close();
-                                    }
-                                }
+                               wrappedCallback(null, data);
                             }).catch((error: any) => {
 
                                 ThundraLogger.error('<AWSv3Integration> An error occured while sending request.', error);
