@@ -4,6 +4,7 @@ import ThundraTracer from '../../dist/opentracing/Tracer';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import { AwsStepFunctionsTags } from '../../dist/Constants';
+import { AWSServiceIntegration } from '../../dist/integrations/AWSServiceIntegration';
 
 const md5 = require('md5');
 const sdk = require('aws-sdk');
@@ -17,8 +18,6 @@ beforeAll(() => {
 });
 
 describe('AWS integration', () => {
-
-    jest.setTimeout(600000000);
 
     let tracer;
     let integration;
@@ -799,8 +798,8 @@ describe('AWS integration', () => {
     });
 
     test('should get correct operationTypes', () => {
-        if (!AWSIntegration.AWSOperationTypes) {
-            AWSIntegration.parseAWSOperationTypes();
+        if (!AWSServiceIntegration.AWSOperationTypes) {
+            AWSServiceIntegration.parseAWSOperationTypes();
         }
         const testCases = [
             // Exception cases
@@ -845,7 +844,7 @@ describe('AWS integration', () => {
         ];
 
         for (const testCase of testCases) {
-            expect(AWSIntegration.getOperationType(testCase.operationName, testCase.className)).toBe(testCase.expected);
+            expect(AWSServiceIntegration.getOperationType(testCase.operationName, testCase.className)).toBe(testCase.expected);
         }
     });
 });

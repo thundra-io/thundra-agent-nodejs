@@ -60,6 +60,7 @@ export class AWSServiceIntegration {
                 return AWSEventBridgeIntegration;
             case 'ses':
                 return AWSSESIntegration;
+            case 'sfn':
             case 'stepfunctions':
                 return AWSStepFunctionsIntegration;
             default:
@@ -96,7 +97,8 @@ export class AWSServiceIntegration {
     }
 
     public static getServiceName(request: any): string {
-        return get(request, 'service.constructor.prototype.serviceIdentifier', '');
+        return get(request, 'service.constructor.prototype.serviceIdentifier', '')
+            || get(request, 'service.serviceIdentifier', '');
     }
 
     public static getServiceRegion(request: any): string {
@@ -318,28 +320,28 @@ export class AWSAthenaIntegration {
         if (AWSServiceIntegration.hasInResponseData(response, 'QueryExecutionIds')) {
             span.setTag(
                 AwsAthenaTags.RESPONSE_QUERY_EXECUTION_IDS,
-                AWSServiceIntegration.getFromResponseData(response, 'QueryExecutionIds')
+                AWSServiceIntegration.getFromResponseData(response, 'QueryExecutionIds'),
             );
         }
         if (AWSServiceIntegration.hasInResponseData(response, 'QueryExecutionId')) {
             span.setTag(
                 AwsAthenaTags.REQUEST_QUERY_EXECUTION_IDS,
                 [
-                    AWSServiceIntegration.getFromResponseData(response, 'QueryExecutionId')
+                    AWSServiceIntegration.getFromResponseData(response, 'QueryExecutionId'),
                 ]);
         }
         if (AWSServiceIntegration.hasInResponseData(response, 'NamedQueryIds')) {
             span.setTag(
                 AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS,
-                AWSServiceIntegration.getFromResponseData(response, 'NamedQueryIds')
+                AWSServiceIntegration.getFromResponseData(response, 'NamedQueryIds'),
             );
         }
         if (AWSServiceIntegration.hasInResponseData(response, 'NamedQueryId')) {
             span.setTag(
                 AwsAthenaTags.RESPONSE_NAMED_QUERY_IDS,
                 [
-                    AWSServiceIntegration.getFromResponseData(response, 'NamedQueryId')
-                ]
+                    AWSServiceIntegration.getFromResponseData(response, 'NamedQueryId'),
+                ],
             );
         }
     }
@@ -887,7 +889,8 @@ export class AWSDynamoDBIntegration {
         } else if (operationName === 'updateItem') {
             traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(params.Key, 'SAVE', tableName, region, timestamp);
         } else if (operationName === 'deleteItem') {
-            if (config.dynamoDBTraceInjectionEnabled && AWSServiceIntegration.hasInResponseData(response, 'Attributes.x-thundra-span-id')) {
+            if (config.dynamoDBTraceInjectionEnabled &&
+                AWSServiceIntegration.hasInResponseData(response, 'Attributes.x-thundra-span-id')) {
                 const spanId = AWSServiceIntegration.getFromResponseData(response, 'Attributes.x-thundra-span-id');
                 traceLinks = [`DELETE:${spanId}`];
             } else {
