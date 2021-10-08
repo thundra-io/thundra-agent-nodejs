@@ -55,7 +55,10 @@ export class AWSv3Integration implements Integration {
 
                 ThundraLogger.debug('<AWSv3Integration> Tracing HTTP request:', command);
 
+                const currentInstance = this;
+
                 let activeSpan: ThundraSpan;
+                let reachedToCallOriginalFunc: boolean = false;
                 try {
                     const { tracer } = ExecutionContextManager.get();
 
@@ -63,10 +66,9 @@ export class AWSv3Integration implements Integration {
                         return wrappedFunction.apply(this, [command, optionsOrCb, cb]);
                     }
 
-                    const orginalOptions = typeof optionsOrCb !== 'function' ? optionsOrCb : undefined;
+                    const originalOptions = typeof optionsOrCb !== 'function' ? optionsOrCb : undefined;
                     const originalCallback = typeof optionsOrCb === 'function' ? optionsOrCb : cb;
 
-                    const currentInstance = this;
                     currentInstance.__thundra__ = {
                         operation: Utils.makeLowerCase(command.constructor.name.replace('Command', '')),
                         params: command.input,
@@ -117,7 +119,9 @@ export class AWSv3Integration implements Integration {
                             currentInstance.__thundra__.service.config.region = await currentInstance.config.region();
                             currentInstance.__thundra__.service.config.endpoint = await currentInstance.config.endpoint();
 
-                            activeSpan.tags[DB_INSTANCE] = currentInstance.__thundra__.service.config.endpoint.hostname;
+                            if (activeSpan.tags[DB_INSTANCE] === '') {
+                                activeSpan.tags[DB_INSTANCE] = currentInstance.__thundra__.service.config.endpoint.hostname;
+                            }
 
                             const result = await next(args);
 
@@ -135,11 +139,11 @@ export class AWSv3Integration implements Integration {
 
                         ThundraLogger.debug('<AWSv3Integration> WrappedCallback working...');
 
-                        if (err && activeSpan) {
-                            activeSpan.setErrorTag(err);
-                        }
-
                         currentInstance.middlewareStack.removeByTag('__thundra__');
+
+                        if (!activeSpan) {
+                            return;
+                        }
 
                         currentInstance.__thundra__.response = {
                             ...currentInstance.__thundra__.response,
@@ -164,64 +168,65 @@ export class AWSv3Integration implements Integration {
                                 );
                             } catch (error) {
                                 ThundraLogger.error('<AWSv3Integration> Response data did not processed.', error);
-                            } finally {
-
-                                if (activeSpan) {
-                                    if (closeWithCallback) {
-                                        activeSpan.closeWithCallback(this, originalCallback, [err, data]);
-                                    } else {
-                                        activeSpan.close();
-                                    }
-                                }
                             }
+                        }
+
+                        if (err) {
+                            ThundraLogger.debug('<AWSv3Integration> WrappedCallback with error:', err);
+                            activeSpan.setErrorTag(err);
+                        }
+
+                        if (closeWithCallback) {
+                            activeSpan.closeWithCallback(this, originalCallback, [err, data]);
+                        } else {
+                            activeSpan.close();
                         }
                     };
 
+                    reachedToCallOriginalFunc = true;
                     if (originalCallback) {
 
                         return originalFunction.apply(
                             this,
                             [
                                 command,
-                                orginalOptions,
+                                originalOptions,
                                 function (err: any, data: any) {
                                     wrappedCallback(err, data, true);
                                 },
                             ]);
                     } else {
 
-                        const result = originalFunction.apply(this, [command, orginalOptions, cb]);
-                        if (typeof result.then === 'function') {
+                        const result = originalFunction.apply(this, [command, originalOptions, cb]);
+                        if (result && typeof result.then === 'function') {
                             result.then((data: any) => {
 
-                               wrappedCallback(null, data);
+                                wrappedCallback(null, data);
                             }).catch((error: any) => {
 
-                                ThundraLogger.error('<AWSv3Integration> An error occured while sending request.', error);
-
-                                if (activeSpan) {
-
-                                    activeSpan.setErrorTag(error);
-                                    if (error.injectedByThundra) {
-                                        activeSpan.close();
-                                    }
-                                }
+                                wrappedCallback(error, null);
                             });
+                        } else {
+                            if (activeSpan) {
+                                activeSpan.close();
+                            }
                         }
 
                         return result;
                     }
                 } catch (error) {
 
+                    currentInstance.middlewareStack.removeByTag('__thundra__');
+
                     if (activeSpan) {
                         activeSpan.close();
                     }
 
-                    if (error instanceof ThundraChaosError) {
+                    if (reachedToCallOriginalFunc || error instanceof ThundraChaosError) {
                         throw error;
                     } else {
 
-                        ThundraLogger.error('<AWSv3Integration> An error occured while tracing.', error);
+                        ThundraLogger.error('<AWSv3Integration> An error occurred while tracing.', error);
                         const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
                         return originalFunction.apply(this, [command, optionsOrCb, cb]);
                     }

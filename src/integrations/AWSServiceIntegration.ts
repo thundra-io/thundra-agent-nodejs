@@ -201,7 +201,7 @@ export class AWSServiceIntegration {
                 span.setTag(SpanTags.TRACE_LINKS, traceLinks);
             }
         } catch (error) {
-            ThundraLogger.error(`Error while injecting trace links, ${error}`);
+            ThundraLogger.error('Error while injecting trace links:', error);
         }
     }
 
@@ -930,8 +930,15 @@ export class AWSDynamoDBIntegration {
 
     private static serializeAttributes(attributes: any): string {
         return Object.keys(attributes).sort().map((attrKey) => {
-            const attrType = Object.keys(attributes[attrKey])[0];
-            const attrVal = trim(JSON.stringify(attributes[attrKey][attrType]), '"');
+
+            let attrType = '';
+            let attrVal = '';
+            if (attributes[attrKey]) {
+                attrType = Object.keys(attributes[attrKey])[0];
+                attrVal = attributes[attrKey][attrType];
+                attrVal = attrVal ? trim(JSON.stringify(attrVal), '"') : '';
+            }
+
             return `${attrKey}={${attrType}: ${attrVal}}`;
         }).join(', ');
     }
