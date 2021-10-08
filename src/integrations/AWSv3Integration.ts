@@ -87,7 +87,7 @@ export class AWSv3Integration implements Integration {
                         config,
                     );
 
-                    currentInstance.middlewareStack.add(
+                    command.middlewareStack.add(
                         (next: any, context: any) => async (args: any) => {
 
                             ThundraLogger.debug('<AWSv3Integration> Build middleware working...');
@@ -111,7 +111,7 @@ export class AWSv3Integration implements Integration {
                         },
                     );
 
-                    currentInstance.middlewareStack.add(
+                    command.middlewareStack.add(
                         (next: any, context: any) => async (args: any) => {
 
                             ThundraLogger.debug('<AWSv3Integration> Deserialize middleware working...');
@@ -138,8 +138,6 @@ export class AWSv3Integration implements Integration {
                     const wrappedCallback = function (err: any, data: any, closeWithCallback = false) {
 
                         ThundraLogger.debug('<AWSv3Integration> WrappedCallback working...');
-
-                        currentInstance.middlewareStack.removeByTag('__thundra__');
 
                         if (!activeSpan) {
                             return;
@@ -208,8 +206,6 @@ export class AWSv3Integration implements Integration {
                             });
                         } else {
 
-                            currentInstance.middlewareStack.removeByTag('__thundra__');
-
                             if (activeSpan) {
                                 activeSpan.close();
                             }
@@ -218,8 +214,6 @@ export class AWSv3Integration implements Integration {
                         return result;
                     }
                 } catch (error) {
-
-                    currentInstance.middlewareStack.removeByTag('__thundra__');
 
                     if (activeSpan) {
                         activeSpan.close();
