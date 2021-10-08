@@ -207,6 +207,9 @@ export class AWSv3Integration implements Integration {
                                 wrappedCallback(error, null);
                             });
                         } else {
+
+                            currentInstance.middlewareStack.removeByTag('__thundra__');
+
                             if (activeSpan) {
                                 activeSpan.close();
                             }
