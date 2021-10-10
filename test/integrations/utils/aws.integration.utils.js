@@ -1,12 +1,16 @@
+module.exports.sdk3Promisify = (client, command) => {
+
+    return new Promise((resolve, reject) => {
+
+        client.send(command, (err, data) => err ? reject(err) : resolve(data));
+    });
+}
+
 module.exports.dynamo = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
         const ddb = new AWS.DynamoDB({ apiVersion: '2012-10-08', dynamoDbCrc32: false });
-        const params = {
-            Item: { 'id': { S: '1' } },
-            TableName: 'test-table',
-        };
-        ddb.putItem(params, function (err, data) {
+        ddb.putItem(module.exports.dynamo.params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);
@@ -16,16 +20,16 @@ module.exports.dynamo = (AWS) => {
     });
 };
 
+module.exports.dynamo.params = {
+    Item: { 'id': { S: '1' } },
+    TableName: 'test-table',
+}
+
 module.exports.stepfn = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
         const stepfn = new AWS.StepFunctions();
-        const params = {
-            stateMachineArn: 'arn:aws:states:us-west-2:123123123123:stateMachine:FooStateMachine',
-            input: '{}',
-            name: 'execName'
-        };
-        stepfn.startExecution(params, function (err, data) {
+        stepfn.startExecution(module.exports.stepfn.params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);
@@ -35,16 +39,17 @@ module.exports.stepfn = (AWS) => {
     });
 }
 
+module.exports.stepfn.params = {
+    stateMachineArn: 'arn:aws:states:us-west-2:123123123123:stateMachine:FooStateMachine',
+    input: '{}',
+    name: 'execName'
+}
+
 module.exports.s3GetObject = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2', maxRetries: 0 });
         const s3 = new AWS.S3();
-        var getParams = {
-            Bucket: 'test',
-            Key: 'test.txt'
-        };
-
-        s3.getObject(getParams, function (err, data) {
+        s3.getObject(module.exports.s3GetObject.params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);
@@ -53,6 +58,11 @@ module.exports.s3GetObject = (AWS) => {
         });
     });
 };
+
+module.exports.s3GetObject.params = {
+    Bucket: 'test',
+    Key: 'test.txt'
+}
 
 module.exports.s3ListBuckets = (AWS) => {
     return new Promise((resolve) => {
@@ -74,13 +84,7 @@ module.exports.lambda = (AWS) => {
     return new Promise((resolve, reject) => {
         AWS.config.update({ region: 'us-west-2' });
         const lambda = new AWS.Lambda();
-        const params = {
-            FunctionName: 'Test',
-            InvocationType: 'RequestResponse',
-            Payload: '{ "name" : "thundra" }'
-        };
-
-        lambda.invoke(params, function (err, data) {
+        lambda.invoke(module.exports.lambda.params, function (err, data) {
             if (err) {
                 return reject(err);
             }
@@ -88,6 +92,12 @@ module.exports.lambda = (AWS) => {
         });
     });
 };
+
+module.exports.lambda.params = {
+    FunctionName: 'Test',
+    InvocationType: 'RequestResponse',
+    Payload: '{ "name" : "thundra" }'
+}
 
 module.exports.lambdaAsync = (AWS) => {
     return new Promise((resolve, reject) => {
@@ -124,14 +134,9 @@ module.exports.lambdaGetAccountSettings = (AWS) => {
 module.exports.sqs = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
-        const sqs = new AWS.SQS();
-        const params = {
-            MessageBody: 'Hello Thundra!',
-            QueueUrl: 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
-            DelaySeconds: 0
-        };
+        const sqs = new AWS.SQS();;
 
-        sqs.sendMessage(params, function (err, data) {
+        sqs.sendMessage(module.exports.sqs.params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);
@@ -140,6 +145,13 @@ module.exports.sqs = (AWS) => {
         });
     });
 };
+
+module.exports.sqs.params = {
+    QueueName: 'MyQueue',
+    MessageBody: 'Hello Thundra!',
+    QueueUrl: 'https://sqs.us-east-2.amazonaws.com/123456789012/MyQueue',
+    DelaySeconds: 0
+}
 
 module.exports.sqs_list_queue = (AWS) => {
     return new Promise((resolve) => {
@@ -160,12 +172,8 @@ module.exports.sns_topic = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
         const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
-        const params = {
-            Message: 'Hello Thundra!',
-            TopicArn: 'TEST_TOPIC'
-        };
 
-        sns.publish(params, function (err, data) {
+        sns.publish(module.exports.sns_topic.params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);
@@ -174,6 +182,11 @@ module.exports.sns_topic = (AWS) => {
         });
     });
 };
+
+module.exports.sns_topic.params = {
+    Message: 'Hello Thundra!',
+    TopicArn: 'TEST_TOPIC'
+}
 
 module.exports.sns_target = (AWS) => {
     return new Promise((resolve) => {
@@ -235,15 +248,7 @@ module.exports.kinesis = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
         const kinesis = new AWS.Kinesis({ apiVersion: '2013-12-02' });
-        const params = {
-            Data: 'STRING_VALUE',
-            PartitionKey: 'STRING_VALUE',
-            StreamName: 'STRING_VALUE',
-            ExplicitHashKey: 'STRING_VALUE',
-            SequenceNumberForOrdering: 'STRING_VALUE'
-        };
-
-        kinesis.putRecord(params, function (err, data) {
+        kinesis.putRecord(module.exports.kinesis.params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);
@@ -252,19 +257,20 @@ module.exports.kinesis = (AWS) => {
         });
     });
 };
+
+module.exports.kinesis.params = {
+    Data: 'STRING_VALUE',
+    PartitionKey: 'STRING_VALUE',
+    StreamName: 'STRING_VALUE',
+    ExplicitHashKey: 'STRING_VALUE',
+    SequenceNumberForOrdering: 'STRING_VALUE'
+}
 
 module.exports.firehose = (AWS) => {
     return new Promise((resolve) => {
         AWS.config.update({ region: 'us-west-2' });
         const firehose = new AWS.Firehose({ apiVersion: '2015-08-04' });
-        const params = {
-            DeliveryStreamName: 'STRING_VALUE',
-            Record: {
-                Data: 'STRING_VALUE'
-            }
-        };
-
-        firehose.putRecord(params, function (err, data) {
+        firehose.putRecord(module.exports.firehose.params, function (err, data) {
             if (err) {
                 // Resolve even though there is an error.
                 return resolve(err);
@@ -273,6 +279,13 @@ module.exports.firehose = (AWS) => {
         });
     });
 };
+
+module.exports.firehose.params = {
+    DeliveryStreamName: 'STRING_VALUE',
+    Record: {
+        Data: 'STRING_VALUE'
+    }
+}
 
 module.exports.kms = (AWS) => {
     return new Promise((resolve) => {
@@ -321,17 +334,7 @@ module.exports.athenaStartQueryExec = (AWS) => {
     return new Promise((resolve, reject) => {
         AWS.config.update({ region: 'us-west-2' });
         const athena = new AWS.Athena();
-        var params = {
-            QueryString: 'sample-query',
-            QueryExecutionContext: {
-                Database: 'sample-db',
-            },
-            ResultConfiguration: {
-                OutputLocation: 'sample-output-location',
-            },
-        };
-
-        athena.startQueryExecution(params, (err, data) => {
+        athena.startQueryExecution(module.exports.athenaStartQueryExec.params, (err, data) => {
             if (err) {
                 return resolve(err);
             }
@@ -339,6 +342,16 @@ module.exports.athenaStartQueryExec = (AWS) => {
         });
     });
 };
+
+module.exports.athenaStartQueryExec.params = {
+    QueryString: 'sample-query',
+    QueryExecutionContext: {
+        Database: 'sample-db',
+    },
+    ResultConfiguration: {
+        OutputLocation: 'sample-output-location',
+    },
+}
 
 module.exports.athenaStopQueryExec = (AWS) => {
     return new Promise((resolve, reject) => {
@@ -414,43 +427,42 @@ module.exports.eventBridgePutEvent = (AWS) => {
     return new Promise((resolve, reject) => {
         AWS.config.update({ region: 'us-west-2' });
         const eventBridge = new AWS.EventBridge();
-
-        var params = {
-            Entries: [
-                {
-                    Detail: '{\n        \"severity\": \"info\"\n    }',
-                    DetailType: 'detail-type-1',
-                    EventBusName: 'default',
-                    Resources: [
-                        'Resources',
-
-                    ],
-                    Source: 'Source-1',
-                    Time: new Date || 'Wed Dec 31 1969 16:00:00 GMT-0800 (PST)' || 123456789
-                },
-                {
-                    Detail: '{\n        \"severity\": \"error\"\n    }',
-                    DetailType: 'detail-type-2',
-                    EventBusName: 'default',
-                    Resources: [
-                        'Resources',
-
-                    ],
-                    Source: 'Source-2',
-                    Time: new Date || 'Wed Dec 31 1969 16:00:00 GMT-0800 (PST)' || 123456789
-                },
-
-            ]
-        };
-        eventBridge.putEvents(params, (err, data) => {
+        eventBridge.putEvents(module.exports.eventBridgePutEvent.params, (err, data) => {
             if (err) {
                 return resolve(err);
             }
             return resolve(data);
         });
     });
-
 };
+
+module.exports.eventBridgePutEvent.params = {
+    Entries: [
+        {
+            Detail: '{\n        \"severity\": \"info\"\n    }',
+            DetailType: 'detail-type-1',
+            EventBusName: 'default',
+            Resources: [
+                'Resources',
+
+            ],
+            Source: 'Source-1',
+            Time: new Date || 'Wed Dec 31 1969 16:00:00 GMT-0800 (PST)' || 123456789
+        },
+        {
+            Detail: '{\n        \"severity\": \"error\"\n    }',
+            DetailType: 'detail-type-2',
+            EventBusName: 'default',
+            Resources: [
+                'Resources',
+
+            ],
+            Source: 'Source-2',
+            Time: new Date || 'Wed Dec 31 1969 16:00:00 GMT-0800 (PST)' || 123456789
+        },
+
+    ]
+}
 
 module.exports.eventBridgePutEventDifferentBus = (AWS) => {
     return new Promise((resolve, reject) => {
@@ -510,21 +522,23 @@ module.exports.sesSendEmail = (AWS) => {
     return new Promise((resolve, reject) => {
         AWS.config.update({ region: 'us-west-2' });
         const ses = new AWS.SES();
-        ses.sendEmail({
-            Source: 'demo@thundra.io',
-            Destination: { ToAddresses: ['test@thundra.io'], CcAddresses: ['test-cc@thundra.io'], },
-            Message: {
-                Subject: { Data: 'Test Subject', Charset: 'UTF-8' },
-                Body: {
-                    Text: { Data: 'Test Body', Charset: 'UTF-8' },
-                    Html: { Data: '<html><body>test</body></html>', Charset: 'UTF-8' }
-                }
-            }
-        }, (err, data) => {
+        ses.sendEmail(module.exports.sesSendEmail.params, (err, data) => {
             resolve(err || data);
         });
     });
 };
+
+module.exports.sesSendEmail.params = {
+    Source: 'demo@thundra.io',
+    Destination: { ToAddresses: ['test@thundra.io'], CcAddresses: ['test-cc@thundra.io'], },
+    Message: {
+        Subject: { Data: 'Test Subject', Charset: 'UTF-8' },
+        Body: {
+            Text: { Data: 'Test Body', Charset: 'UTF-8' },
+            Html: { Data: '<html><body>test</body></html>', Charset: 'UTF-8' }
+        }
+    }
+}
 
 module.exports.sesSendRawEmail = (AWS) => {
     return new Promise((resolve, reject) => {

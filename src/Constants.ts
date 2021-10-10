@@ -11,6 +11,7 @@ import RedisIntegration from './integrations/RedisIntegration';
 import MongoDBIntegration from './integrations/MongoDBIntegration';
 import IORedisIntegration from './integrations/IORedisIntegration';
 import { AWSIntegration } from './integrations/AWSIntegration';
+import { AWSv3Integration } from './integrations/AWSv3Integration';
 import ESIntegration from './integrations/ESIntegration';
 import AMQPLIBIntegration from './integrations/AmqplibIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
@@ -568,6 +569,7 @@ export const INTEGRATIONS: any = {
     redis: RedisIntegration,
     ioredis: IORedisIntegration,
     aws: AWSIntegration,
+    aws3: AWSv3Integration,
     es: ESIntegration,
     mongodb: MongoDBIntegration,
     amqplib: AMQPLIBIntegration,
