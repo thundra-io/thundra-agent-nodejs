@@ -1,34 +1,38 @@
-import ESIntegrations from '../../dist/integrations/ESIntegration';
+import ESScopedIntegration from '../../dist/integrations/ESScopedIntegration';
 import ThundraTracer from '../../dist/opentracing/Tracer';
 import ES from './utils/es.integration.utils';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 
-describe('ES integration', () => {
+describe('ESScopedIntegration integration', () => {
+
     let tracer;
     let integration;
 
     beforeAll(() => {
         tracer = new ThundraTracer();
         ExecutionContextManager.set(new ExecutionContext({ tracer }));
-        integration = new ESIntegrations();
+        integration = new ESScopedIntegration();
     });
 
     afterEach(() => {
         tracer.destroy();
     });
 
-    test('should instrument ES calls with single host', () => {
+    test('should instrument @elastic/elasticsearch calls with single host', async () => {
+        
         integration.config.esPathDepth = 2;
 
-        const es = require('elasticsearch');
+        const es = require('@elastic/elasticsearch');
 
         const client = new es.Client({
-            host: 'http://localhost:9200'
+            node: 'http://localhost:9200'
         });
 
         return ES.query(client).then((data) => {
+
             const span = tracer.getRecorder().spanList[0];
+
             expect(span.operationName).toBe('/twitter/tweets');
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
@@ -49,20 +53,23 @@ describe('ES integration', () => {
         });
     });
 
-    test('should instrument ES calls with single host', () => {
+    test('should instrument @elastic/elasticsearch calls with multiple nodes', () => {
+
         integration.config.esPathDepth = 1;
 
         const hostList = ['localhost', 'test.elastic.io'];
         const portList = [9200, 9201];
 
-        const es = require('elasticsearch');
+        const es = require('@elastic/elasticsearch');
 
         const client = new es.Client({
-            hosts: ['http://localhost:9200', 'http://test.elastic.io:9200', 'http://test.elastic.io:9201']
+            nodes: ['http://localhost:9200', 'http://test.elastic.io:9200', 'http://test.elastic.io:9201']
         });
 
         return ES.queryWithMultipleHost(client).then((data) => {
+
             const span = tracer.getRecorder().spanList[0];
+
             expect(span.operationName).toBe('/twitter');
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
@@ -83,18 +90,20 @@ describe('ES integration', () => {
         });
     });
 
-    test('should mask ES body', () => {
+    test('should mask @elastic/elasticsearch body', () => {
+
         integration.config.esPathDepth = 2;
         integration.config.disableInstrumentation = true;
         integration.config.maskElasticSearchBody = true;
 
-        const es = require('elasticsearch');
+        const es = require('@elastic/elasticsearch');
 
         const client = new es.Client({
-            host: 'http://localhost:9200'
+            node: 'http://localhost:9200'
         });
 
         return ES.query(client).then((data) => {
+
             const span = tracer.getRecorder().spanList[0];
 
             expect(span.tags['elasticsearch.params']).not.toBeTruthy();

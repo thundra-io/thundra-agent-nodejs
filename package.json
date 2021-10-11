@@ -67,6 +67,7 @@
     "@types/minimatch": "^3.0.3",
     "@types/node": "^10.5.0",
     "@types/uuid": "^3.4.3",
+    "@elastic/elasticsearch": "^6.2.4",
     "amqplib": "^0.8.0",
     "aws-sdk": "^2.610.0",
     "@aws-sdk/client-sqs": "^3.32.0",
