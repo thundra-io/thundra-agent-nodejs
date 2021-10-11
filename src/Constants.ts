@@ -12,8 +12,8 @@ import MongoDBIntegration from './integrations/MongoDBIntegration';
 import IORedisIntegration from './integrations/IORedisIntegration';
 import { AWSIntegration } from './integrations/AWSIntegration';
 import { AWSv3Integration } from './integrations/AWSv3Integration';
+import ESLegacyIntegration from './integrations/ESLegacyIntegration';
 import ESIntegration from './integrations/ESIntegration';
-import ESScopedIntegration from './integrations/ESScopedIntegration';
 import AMQPLIBIntegration from './integrations/AmqplibIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './listeners/ErrorInjectorSpanListener';
@@ -571,8 +571,8 @@ export const INTEGRATIONS: any = {
     ioredis: IORedisIntegration,
     aws: AWSIntegration,
     aws3: AWSv3Integration,
+    esLegacy: ESLegacyIntegration,
     es: ESIntegration,
-    esScoped: ESScopedIntegration,
     mongodb: MongoDBIntegration,
     amqplib: AMQPLIBIntegration,
 };

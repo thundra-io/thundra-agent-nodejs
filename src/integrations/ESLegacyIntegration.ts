@@ -8,25 +8,24 @@ import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
-import { Url } from 'url';
 
 const has = require('lodash.has');
 const shimmer = require('shimmer');
 
-const MODULE_NAME = '@elastic/elasticsearch';
-const MODULE_VERSION = '>=5.6.16';
+const MODULE_NAME = 'elasticsearch';
+const MODULE_VERSION = '>=10.5';
 
 /**
  * {@link Integration} implementation for Elasticsearch integration
  * through {@code elasticsearch} library
  */
-class ESIntegration implements Integration {
+class ESLegacyIntegration implements Integration {
 
     config: any;
     private instrumentContext: any;
 
     constructor(config: any) {
-        ThundraLogger.debug('<ESIntegration> Activating ES integration');
+        ThundraLogger.debug('<ESLegacyIntegration> Activating ES integration');
 
         this.config = config || {};
         this.instrumentContext = ModuleUtils.instrument(
@@ -40,42 +39,55 @@ class ESIntegration implements Integration {
             this.config);
     }
 
+    private static hostSelect(me: any): Promise<any> {
+        const defaultHost = {
+            host: 'unknown',
+            port: 0,
+        };
+
+        return new Promise((resolve, reject) => {
+            if (!me || !me.connectionPool || !me.connectionPool.select) {
+                return resolve(defaultHost);
+            }
+            me.connectionPool.select((err: any, data: any) => {
+                if (err) {
+                    ThundraLogger.error('<ESLegacyIntegration> Could not get host information:', err);
+                    return resolve(defaultHost);
+                }
+                return resolve(data.host);
+            });
+        });
+    }
+
     /**
      * @inheritDoc
      */
     wrap(lib: any, config: any) {
-        ThundraLogger.debug('<ESIntegration> Wrap');
+        ThundraLogger.debug('<ESLegacyIntegration> Wrap');
+
+        const integration = this;
 
         function wrapRequest(request: any) {
+            let span: ThundraSpan;
 
-            return function requestWithTrace(params: any, options: any, cb: any) {
-
-                let span: ThundraSpan;
-
+            return async function requestWithTrace(params: any, cb: any) {
                 try {
-                    ThundraLogger.debug('<ESIntegration> Tracing Elasticsearch request:', params);
+                    ThundraLogger.debug('<ESLegacyIntegration> Tracing Elasticsearch request:', params);
 
                     const { tracer } = ExecutionContextManager.get();
 
                     if (!tracer) {
-                        ThundraLogger.debug('<ESIntegration> Skipped tracing request as no tracer is available');
-                        return request.call(this, params, options, cb);
+                        ThundraLogger.debug('<ESLegacyIntegration> Skipped tracing request as no tracer is available');
+                        return request.call(this, params, cb);
                     }
 
-                    const originalCallback = request.length === 2 || typeof options === 'function' ?
-                        options : cb;
-
-                    if (typeof originalCallback !== 'function') {
-
-                        return request.apply(this, arguments);
-                    }
-
-                    const currentInstace = this;
+                    const me = this;
                     const parentSpan = tracer.getActiveSpan();
+                    const host = await ESLegacyIntegration.hostSelect(me);
 
                     const normalizedPath = Utils.getNormalizedPath(params.path, config.esPathDepth);
 
-                    ThundraLogger.debug(`<ESIntegration> Starting Elasticsearch span with name ${normalizedPath}`);
+                    ThundraLogger.debug(`<ESLegacyIntegration> Starting Elasticsearch span with name ${normalizedPath}`);
 
                     span = tracer._startSpan(normalizedPath, {
                         childOf: parentSpan,
@@ -86,15 +98,15 @@ class ESIntegration implements Integration {
 
                     span.addTags({
                         [SpanTags.SPAN_TYPE]: SpanTypes.ELASTIC,
+                        [DBTags.DB_HOST]: host ? host.host : undefined,
+                        [DBTags.DB_PORT]: host ? host.port : undefined,
                         [DBTags.DB_TYPE]: DBTypes.ELASTICSEARCH,
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                         [ESTags.ES_URI]: params.path,
                         [ESTags.ES_NORMALIZED_URI]: normalizedPath,
                         [ESTags.ES_METHOD]: params.method,
                         [ESTags.ES_PARAMS]: config.maskElasticSearchBody ?
-                            undefined : JSON.stringify(params.querystring),
-                        [DBTags.DB_STATEMENT_TYPE]: params.method,
-                        [SpanTags.OPERATION_TYPE]: params.method,
+                            undefined : JSON.stringify(params.query),
                     });
 
                     if (!config.maskElasticSearchBody) {
@@ -113,36 +125,49 @@ class ESIntegration implements Integration {
                         }
                     }
 
+                    span.addTags({
+                        [DBTags.DB_STATEMENT_TYPE]: params.method,
+                        [SpanTags.OPERATION_TYPE]: params.method,
+                    });
+
                     span._initialized();
 
-                    const wrappedCallback = (err: any, res: any) => {
+                    const originalCallback = cb;
 
+                    const wrappedCallback = (err: any, res: any) => {
                         if (err) {
                             span.setErrorTag(err);
                         }
-
-                        if (res && res.meta && res.meta.connection && res.meta.connection.url) {
-
-                            const connectionUrl: Url = res.meta.connection.url;
-                            span.addTags({
-                                [DBTags.DB_HOST]: connectionUrl.hostname,
-                                [DBTags.DB_PORT]: connectionUrl.port ? Number(connectionUrl.port) : undefined,
-                            });
-                        }
-
                         ThundraLogger.debug(
-                            `<ESIntegration> Closing Elasticsearch span with name ${span.getOperationName()}`);
-
-                        span.closeWithCallback(currentInstace, originalCallback, [err, res]);
+                            `<ESLegacyIntegration> Closing Elasticsearch span with name ${span.getOperationName()}`);
+                        span.closeWithCallback(me, originalCallback, [err, res]);
                     };
 
-                    return request.call(this, params, options, wrappedCallback);
+                    if (typeof cb === 'function') {
+                        return request.call(this, params, wrappedCallback);
+                    } else {
+                        const promise = request.apply(this, arguments);
+
+                        promise.then(() => {
+                            ThundraLogger.debug(
+                                `<ESLegacyIntegration> Closing Elasticsearch span with name ${span.getOperationName()}`);
+                            span.finish();
+                        }).catch((err: any) => {
+                            span.setErrorTag(err);
+                            ThundraLogger.debug(
+                                `<ESLegacyIntegration> Closing Elasticsearch span with name ${span.getOperationName()}`);
+                            span.finish();
+                        });
+
+                        return promise;
+                    }
+
                 } catch (error) {
-                    ThundraLogger.error('<ESIntegration> Error occurred while tracing Elasticsearch request:', error);
+                    ThundraLogger.error('<ESLegacyIntegration> Error occurred while tracing Elasticsearch request:', error);
 
                     if (span) {
                         ThundraLogger.debug(
-                            `<ESIntegration> Because of error, closing Elasticsearch span with name
+                            `<ESLegacyIntegration> Because of error, closing Elasticsearch span with name
                             ${span.getOperationName()}`);
                         span.close();
                     }
@@ -150,14 +175,14 @@ class ESIntegration implements Integration {
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        return request.call(this, params, options, cb);
+                        return request.call(this, params, cb);
                     }
                 }
             };
         }
 
         if (has(lib, 'Transport.prototype.request')) {
-            ThundraLogger.debug('<ESIntegration> Wrapping "elasticsearch.request"');
+            ThundraLogger.debug('<ESLegacyIntegration> Wrapping "elasticsearch.request"');
 
             shimmer.wrap(lib.Transport.prototype, 'request', wrapRequest);
         }
@@ -168,9 +193,9 @@ class ESIntegration implements Integration {
      * @param lib the library to be unwrapped
      */
     doUnwrap(lib: any) {
-        ThundraLogger.debug('<ESIntegration> Do unwrap');
+        ThundraLogger.debug('<ESLegacyIntegration> Do unwrap');
 
-        ThundraLogger.debug('<ESIntegration> Unwrapping "elasticsearch.request"');
+        ThundraLogger.debug('<ESLegacyIntegration> Unwrapping "elasticsearch.request"');
 
         shimmer.unwrap(lib.Transport.prototype, 'request');
     }
@@ -179,7 +204,7 @@ class ESIntegration implements Integration {
      * @inheritDoc
      */
     unwrap() {
-        ThundraLogger.debug('<ESIntegration> Unwrap');
+        ThundraLogger.debug('<ESLegacyIntegration> Unwrap');
 
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
@@ -187,4 +212,4 @@ class ESIntegration implements Integration {
     }
 }
 
-export default ESIntegration;
+export default ESLegacyIntegration;
