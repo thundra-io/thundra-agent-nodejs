@@ -69,9 +69,10 @@ export class AWSv3Integration implements Integration {
                     const originalOptions = typeof optionsOrCb !== 'function' ? optionsOrCb : undefined;
                     const originalCallback = typeof optionsOrCb === 'function' ? optionsOrCb : cb;
 
-                    currentInstance.__thundra__ = {
+                    const request: any = {
                         operation: Utils.makeLowerCase(command.constructor.name.replace('Command', '')),
-                        params: command.input,
+                        /** if needed use deep copy instead of shallow */
+                        params: { ...command.input },
                         service: {
                             serviceIdentifier: currentInstance.config.serviceId.toLowerCase(),
                             config: {},
@@ -83,9 +84,11 @@ export class AWSv3Integration implements Integration {
 
                     activeSpan = AWSServiceIntegration.doCreateSpan(
                         tracer,
-                        currentInstance.__thundra__,
+                        request,
                         config,
                     );
+
+                    command.middlewareStack.removeByTag('__thundra__');
 
                     command.middlewareStack.add(
                         (next: any, context: any) => async (args: any) => {
@@ -116,16 +119,16 @@ export class AWSv3Integration implements Integration {
 
                             ThundraLogger.debug('<AWSv3Integration> Deserialize middleware working...');
 
-                            currentInstance.__thundra__.service.config.region = await currentInstance.config.region();
-                            currentInstance.__thundra__.service.config.endpoint = await currentInstance.config.endpoint();
+                            request.service.config.region = await currentInstance.config.region();
+                            request.service.config.endpoint = await currentInstance.config.endpoint();
 
                             if (activeSpan.tags[DB_INSTANCE] === '') {
-                                activeSpan.tags[DB_INSTANCE] = currentInstance.__thundra__.service.config.endpoint.hostname;
+                                activeSpan.tags[DB_INSTANCE] = request.service.config.endpoint.hostname;
                             }
 
                             const result = await next(args);
 
-                            currentInstance.__thundra__.response = result.response;
+                            request.response = result.response;
                             return result;
                         }, {
                             step: 'deserialize',
@@ -143,25 +146,44 @@ export class AWSv3Integration implements Integration {
                             return;
                         }
 
-                        currentInstance.__thundra__.response = {
-                            ...currentInstance.__thundra__.response,
+                        request.response = {
+                            ...request.response,
                             ...( data ? { data } : undefined ),
-                            httpResponse: { ...currentInstance.__thundra__.response },
+                            httpResponse: { ...request.response },
                         };
+
+                        /* test-code */
+                        if (currentInstance.__TESTMOCK__) {
+                            request.response = {
+                                ...request.response,
+                                ...currentInstance.__TESTMOCK__.response,
+                            };
+
+                            request.response.httpResponse = {
+                                ...request.response.httpResponse,
+                                ...currentInstance.__TESTMOCK__.response,
+                            };
+
+                            request.service = {
+                                ...request.service,
+                                ...currentInstance.__TESTMOCK__.service,
+                            };
+                        }
+                        /* test-code */
 
                         if (data) {
                             try {
                                 AWSServiceIntegration.doProcessResponse(
                                     activeSpan,
-                                    currentInstance.__thundra__,
-                                    currentInstance.__thundra__.response,
+                                    request,
+                                    request.response,
                                     config,
                                 );
 
                                 AWSServiceIntegration.injectTraceLink(
                                     activeSpan,
-                                    currentInstance.__thundra__,
-                                    currentInstance.__thundra__.response,
+                                    request,
+                                    request.response,
                                     config,
                                 );
                             } catch (error) {
