@@ -71,7 +71,8 @@ export class AWSv3Integration implements Integration {
 
                     const request: any = {
                         operation: Utils.makeLowerCase(command.constructor.name.replace('Command', '')),
-                        params: JSON.parse(JSON.stringify(command.input)),
+                        /** if needed use deep copy instead of shallow */
+                        params: { ...command.input },
                         service: {
                             serviceIdentifier: currentInstance.config.serviceId.toLowerCase(),
                             config: {},
