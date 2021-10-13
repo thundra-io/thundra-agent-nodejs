@@ -47,9 +47,14 @@ describe('AWS integration', () => {
 
             let currentInstance = mockSend.mock.instances[0];
 
-            const thundraScope = currentInstance.__thundra__;
-            if (thundraScope && thundraScope.response) {
-                thundraScope.response.headers = {'x-amz-request-id': 'EXAMPLE_REQUEST_ID'};     
+            if (currentInstance) {
+                currentInstance.__TESTMOCK__ = {
+                    response: {
+                        headers : {
+                            'x-amz-request-id': 'EXAMPLE_REQUEST_ID'
+                        }
+                    }
+                };
             }
 
             cb(null, {});
@@ -211,9 +216,14 @@ describe('AWS integration', () => {
 
             let currentInstance = mockSend.mock.instances[0];
 
-            const thundraScope = currentInstance.__thundra__;
-            if (thundraScope && thundraScope.response) {
-                thundraScope.response.headers = {'x-amz-request-id': 'EXAMPLE_REQUEST_ID'};     
+            if (currentInstance) {
+                currentInstance.__TESTMOCK__ = {
+                    response: {
+                        headers : {
+                            'x-amz-request-id': 'EXAMPLE_REQUEST_ID'
+                        }
+                    }
+                };    
             }
 
             cb(null, {});
@@ -251,12 +261,15 @@ describe('AWS integration', () => {
 
             let currentInstance = mockSend.mock.instances[0];
 
-            const thundraScope = currentInstance.__thundra__;
-            if (thundraScope && thundraScope.service) {
-                thundraScope.service.config = {
-                    region,
-                    endpoint: `kinesis.${region}.amazonaws.com`,
-                }
+            if ((currentInstance) ) {
+                currentInstance.__TESTMOCK__ = {
+                    service : {
+                        config: {
+                            region,
+                            endpoint: `kinesis.${region}.amazonaws.com`,
+                        }
+                    }
+                };
             }
 
             cb(null, { ShardId: 'SHARD_ID_1', SequenceNumber: 'SEQUENCE_NUMBER_1' });
@@ -294,18 +307,20 @@ describe('AWS integration', () => {
 
             let currentInstance = mockSend.mock.instances[0];
 
-            const thundraScope = currentInstance.__thundra__;
-            if (thundraScope) {
-                if (thundraScope.response) {
-                    thundraScope.response.headers = { date };     
-                }
-    
-                if (thundraScope.service) {
-                    thundraScope.service.config = {
-                        region,
-                        endpoint: `kinesis.${region}.amazonaws.com`,
+            if (currentInstance) {
+                currentInstance.__TESTMOCK__ = {
+                    response: {
+                        headers : {
+                            date
+                        }
+                    }, 
+                    service: {
+                        config: {
+                            region,
+                            endpoint: `kinesis.${region}.amazonaws.com`,
+                        }
                     }
-                }
+                };
             }
 
             cb(null, {});
