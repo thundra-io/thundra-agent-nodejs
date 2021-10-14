@@ -76,14 +76,14 @@ function initWrapper(wrappedFunction: any) {
 
     return function internalExpressWrapper() {
 
-        let thundraExporessMW;
+        let thundraExpressMW;
         if (!this._thundra) {
 
             this._thundra = true;
 
-            thundraExporessMW = expressMW();
+            thundraExpressMW = expressMW();
 
-            Object.defineProperty(thundraExporessMW, '_thundra', {
+            Object.defineProperty(thundraExpressMW, '_thundra', {
                 value: true,
                 writable: false,
             });
@@ -91,8 +91,8 @@ function initWrapper(wrappedFunction: any) {
 
         const result = wrappedFunction.apply(this, arguments);
 
-        if (thundraExporessMW) {
-            this.use(thundraExporessMW);
+        if (thundraExpressMW) {
+            this.use(thundraExpressMW);
         }
 
         return result;

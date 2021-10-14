@@ -7,8 +7,6 @@ import * as TestRunnerSupport from '../TestRunnerSupport';
 
 export default class TestSuiteExecutionContext extends ExecutionContext {
 
-    static APPLICATION_DOMAIN_NAME: string = 'TestSuite';
-
     testSuiteName: string;
     totalCount: number;
     successfulCount: number;

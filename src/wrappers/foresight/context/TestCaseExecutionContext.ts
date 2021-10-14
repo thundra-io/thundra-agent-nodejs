@@ -7,8 +7,6 @@ import * as TestRunnerSupport from '../TestRunnerSupport';
 
 export default class TestCaseExecutionContext extends ExecutionContext {
 
-    static APPLICATION_DOMAIN_NAME: string = 'Test';
-
     id: string;
     name: string;
     method: string;
