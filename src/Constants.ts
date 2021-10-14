@@ -10,7 +10,9 @@ import MySQLIntegration from './integrations/MySQLIntegration';
 import RedisIntegration from './integrations/RedisIntegration';
 import MongoDBIntegration from './integrations/MongoDBIntegration';
 import IORedisIntegration from './integrations/IORedisIntegration';
-import {AWSIntegration} from './integrations/AWSIntegration';
+import { AWSIntegration } from './integrations/AWSIntegration';
+import { AWSv3Integration } from './integrations/AWSv3Integration';
+import ESLegacyIntegration from './integrations/ESLegacyIntegration';
 import ESIntegration from './integrations/ESIntegration';
 import AMQPLIBIntegration from './integrations/AmqplibIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
@@ -568,7 +570,9 @@ export const INTEGRATIONS: any = {
     redis: {class: RedisIntegration, moduleNames: ['redis'], moduleVersion: '>=2.6'},
     ioredis: {class: IORedisIntegration, moduleNames: ['ioredis'], moduleVersion: '>=2'},
     aws: {class: AWSIntegration, moduleNames: ['aws-sdk', 'aws-sdk/lib/core.js'], moduleVersion: '2.x'},
-    es: {class: ESIntegration, moduleNames: ['elasticsearch'], moduleVersion: '>=10.5'},
+    aws3: {class: AWSv3Integration, moduleNames: ['@aws-sdk/smithy-client'], moduleVersion: '3.x'},
+    es: {class: ESIntegration, moduleNames: ['@elastic/elasticsearch'], moduleVersion: '>=5.6.16'},
+    esLegacy: {class: ESLegacyIntegration, moduleNames: ['elasticsearch'], moduleVersion: '>=10.5'},
     mongodb: {class: MongoDBIntegration, moduleNames: ['mongodb'], moduleVersion: '>=1'},
     amqplib: {class: AMQPLIBIntegration, moduleNames: [
         'amqplib',

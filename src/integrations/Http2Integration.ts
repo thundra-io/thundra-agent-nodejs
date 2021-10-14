@@ -130,7 +130,7 @@ class Http2Integration implements Integration {
                     const clientRequest = request.apply(this, [headers, options]);
 
                     const chunks: any = [];
-                    let responseHeaders: any;
+                    let responseHeaders: any = {};
 
                     clientRequest.once('data', (chunk: any) => {
                         if (config.maskHttpBody || !chunk) {

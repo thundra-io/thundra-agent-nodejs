@@ -128,12 +128,12 @@ class ModuleUtils {
             const requiredLib = ModuleUtils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
             if (requiredLib) {
                 if (version) {
-                    const { basedir } = ModuleUtils.getModuleInfo(moduleName);
-                    if (!basedir) {
-                        ThundraLogger.error(`<Utils> Base directory is not found for the package ${moduleName}`);
+                    const moduleInfo = ModuleUtils.getModuleInfo(moduleName);
+                    if (!moduleInfo) {
+                        ThundraLogger.debug(`<Utils> Base directory is not found for the package ${moduleName}`);
                         return;
                     }
-                    ModuleUtils.doInstrument(requiredLib, libs, basedir, moduleName, version, wrapper, config);
+                    ModuleUtils.doInstrument(requiredLib, libs, moduleInfo.basedir, moduleName, version, wrapper, config);
                 } else {
                     ModuleUtils.doInstrument(requiredLib, libs, null, moduleName, null, wrapper, config);
                 }

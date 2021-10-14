@@ -207,6 +207,15 @@ class Utils {
     }
 
     /**
+     * To make lower case the given {@link string} value
+     * @param {string} value the {@link string} value to be lower case
+     * @return {string} the lower cased {@link string} value
+     */
+    static makeLowerCase(value: string): string {
+        return value.charAt(0).toLowerCase() + value.slice(1);
+    }
+
+    /**
      * Capitalizes the given {@link string} value
      * @param {string} value the {@link string} value to be capitalized
      * @return {string} the capitalized {@link string} value
