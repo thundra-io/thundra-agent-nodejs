@@ -52,6 +52,10 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
             [HttpTags.BODY],
         );
     }
+
+    if (triggerOperationName) {
+        response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
+    }
 }
 
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
@@ -61,16 +65,11 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
         rootSpan,
         response,
         request,
-        triggerOperationName,
     } = execContext;
 
     InvocationSupport.setAgentTag(HttpTags.HTTP_STATUS, response.statusCode);
     Utils.copyProperties(response, ['statusCode'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
     Utils.copyProperties(request.route, ['path'], rootSpan.tags, [HttpTags.HTTP_ROUTE_PATH]);
-
-    if (triggerOperationName) {
-        response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
-    }
 }
 
 function handleRoutePath(context: ExecutionContext, resourceName: string) {

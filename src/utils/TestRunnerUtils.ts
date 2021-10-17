@@ -54,23 +54,24 @@ class TestRunnerUtils {
     /**
      * Generate and return test file name
      * @param testPath testPath
-     * @param rootDir rootDir
+     * @param cwdDir cwdDir
      */
-    static getTestFileName(testPath: string, rootDir: string) {
+    static getTestFileName(testPath: string, cwdDir: string) {
 
         const relativePath = testPath.replace(
-            rootDir.endsWith('/')
-            ? rootDir
-            : rootDir + '/', '')
+            cwdDir.endsWith('/')
+            ? cwdDir
+            : cwdDir + '/', '')
             .split('/');
 
-        if (relativePath.length > 1 && KNOWN_TEST_FILE_PATHS.has(relativePath[0].toLowerCase())) {
-            relativePath.shift();
+        for (let i = 0; i < relativePath.length; i++) {
 
-            return Path.join(...relativePath);
+            if (KNOWN_TEST_FILE_PATHS.has(relativePath[i])) {
+                relativePath.splice(i, 1);
+            }
         }
 
-        return relativePath.pop();
+        return Path.join(...relativePath);
     }
 }
 

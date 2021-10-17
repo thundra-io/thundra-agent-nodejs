@@ -48,7 +48,7 @@ function wrapEnvironment(BaseEnvironment: any) {
       const setupFilePath = Path.join(__dirname, __PRIVATE__.getSetupFilePath());
       config.setupFiles.push(setupFilePath);
 
-      this.testSuite = TestRunnerUtils.getTestFileName(context.testPath, config.rootDir);
+      this.testSuite = TestRunnerUtils.getTestFileName(context.testPath, config.cwd);
 
       TestRunnerSupport.setTestSuiteName(this.testSuite);
 
