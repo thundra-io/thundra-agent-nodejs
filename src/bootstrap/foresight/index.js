@@ -1,3 +1,3 @@
 const ThundraCore = require('@thundra/core');
 
-ThundraCore.foresightInit();
+ThundraCore.Foresight.init();
