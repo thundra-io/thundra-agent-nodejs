@@ -4,7 +4,7 @@ const resolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
 const json = require('rollup-plugin-json');
 const replace = require('rollup-plugin-re');
-
+const copy = require('rollup-plugin-copy');
 
 module.exports = [
     {
@@ -40,6 +40,11 @@ module.exports = [
                 replaces: {
                     'import * as opentracing from \'opentracing\';': 'import opentracing from \'opentracing\';',
                 }
+            }),
+            copy({
+                targets: [
+                  { src: 'src/bootstrap/*', dest: 'dist/bootstrap' },
+                ]
             })
         ]
     },
