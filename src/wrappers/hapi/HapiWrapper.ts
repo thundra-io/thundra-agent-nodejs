@@ -15,12 +15,13 @@ import Utils from '../../utils/Utils';
 import * as HapiExecutor from './HapiExecutor';
 import WebWrapperUtils from '../WebWrapperUtils';
 
-const modulesWillBepatched = [
-    { moduleName: '@hapi/hapi', methodName: 'Server' },
-    { moduleName: '@hapi/hapi', methodName: 'server' },
-    { moduleName: 'hapi', methodName: 'Server' },
-    { moduleName: 'hapi', methodName: 'server' },
-];
+const ApplicationClassName = ClassNames.HAPI;
+const ApplicationDomainName = DomainNames.API;
+
+const modulesWillBepatched: any = {
+    '@hapi/hapi': [ 'Server', 'server' ],
+    'hapi': [ 'Server', 'server' ],
+};
 
 let _REPORTER: Reporter;
 let _PLUGINS: any[];
@@ -41,7 +42,10 @@ function hapiServerWrapper(wrappedFunction: Function) {
          * Handler method for incoming requests & start instrumentation process
          */
         const startInstrument = (request: any) => ExecutionContextManager.runWithContext(
-            WrapperUtils.createExecContext, async function () {
+            () => {
+                return WrapperUtils.createExecContext(ApplicationClassName, ApplicationDomainName);
+            },
+            async function () {
 
             ThundraLogger.debug('<HapiWrapper> Running with execution context');
 
@@ -121,7 +125,7 @@ function hapiServerWrapper(wrappedFunction: Function) {
 }
 
 /**
- * Initiate Hapi wrapper & wrap Hapi server process
+ * Instrument Hapi wrapper & wrap Hapi server process
  */
 export const init = () => {
 
@@ -137,36 +141,47 @@ export const init = () => {
     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
     if (!lambdaRuntime) {
 
-        let moduleWillBeInitilized: boolean;
+        ThundraLogger.debug('<HapiWrapper> Initializing ...');
 
-        modulesWillBepatched.forEach((patchModule) => {
-            const isPatched: boolean = ModuleUtils.patchModule(
-                patchModule.moduleName,
-                patchModule.methodName,
-                hapiServerWrapper,
-            );
+        const {
+            reporter,
+            plugins,
+        } = WebWrapperUtils.initWrapper(
+            ApplicationClassName,
+            ApplicationDomainName,
+            HapiExecutor);
 
-            if (!moduleWillBeInitilized) {
-                moduleWillBeInitilized = isPatched;
-            }
+        WrapperUtils.initAsyncContextManager();
+
+        _REPORTER = reporter;
+        _PLUGINS = plugins;
+
+        Object.keys(modulesWillBepatched).forEach((moduleName: any) => {
+            ModuleUtils.instrument(
+                [moduleName], undefined,
+                (lib: any, cfg: any) => {
+
+                    let moduleWillBeInitilized = false;
+                    modulesWillBepatched[moduleName].forEach((methodName: any) => {
+
+                        const isPatched: boolean = ModuleUtils.patchModule(
+                            moduleName,
+                            methodName,
+                            hapiServerWrapper,
+                            (Hapi: any) => Hapi,
+                            lib);
+
+                        if (!moduleWillBeInitilized) {
+                            moduleWillBeInitilized = isPatched;
+                            return;
+                        }
+                    });
+                },
+                (lib: any, cfg: any) => { /* empty */ },
+                {});
         });
 
-        if (moduleWillBeInitilized) {
-
-            ThundraLogger.debug('<HapiWrapper> Initializing ...');
-
-            const {
-                reporter,
-                plugins,
-            } = WebWrapperUtils.initWrapper(ClassNames.HAPI, DomainNames.API, HapiExecutor);
-
-            WrapperUtils.initAsyncContextManager();
-
-            _REPORTER = reporter;
-            _PLUGINS = plugins;
-        }
-
-        return moduleWillBeInitilized;
+        return true;
     } else {
         ThundraLogger.debug('<HapiWrapper> Skipping initializing due to running in lambda runtime ...');
 

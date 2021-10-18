@@ -22,6 +22,7 @@ import MonitorDataType from './plugins/data/base/MonitoringDataType';
 const httpAgent = new http.Agent({
     keepAlive: true,
 });
+
 const httpsAgent = new https.Agent({
     maxCachedSessions: 1,
     keepAlive: true,
@@ -156,7 +157,7 @@ class Reporter {
         const compositeData = this.initCompositeMonitoringData();
         const batch: any[] = [];
         for (const report of reports) {
-            batch.push(this.stripCommonFields(report.data as BaseMonitoringData));
+            batch.push(this.stripCommonFields(report.data));
         }
         compositeData.allMonitoringData = batch;
 
@@ -172,18 +173,21 @@ class Reporter {
         return monitoringData as CompositeMonitoringData;
     }
 
-    private stripCommonFields(monitoringData: BaseMonitoringData) {
-        monitoringData.agentVersion = undefined;
-        monitoringData.dataModelVersion = undefined;
-        monitoringData.applicationId = undefined;
-        monitoringData.applicationClassName = undefined;
-        monitoringData.applicationDomainName = undefined;
-        monitoringData.applicationName = undefined;
-        monitoringData.applicationVersion = undefined;
-        monitoringData.applicationStage = undefined;
-        monitoringData.applicationRuntime = undefined;
-        monitoringData.applicationRuntimeVersion = undefined;
-        monitoringData.applicationTags = undefined;
+    private stripCommonFields(monitoringData: any) {
+
+        if (monitoringData instanceof BaseMonitoringData) {
+            monitoringData.agentVersion = undefined;
+            monitoringData.dataModelVersion = undefined;
+            monitoringData.applicationId = undefined;
+            monitoringData.applicationClassName = undefined;
+            monitoringData.applicationDomainName = undefined;
+            monitoringData.applicationName = undefined;
+            monitoringData.applicationVersion = undefined;
+            monitoringData.applicationStage = undefined;
+            monitoringData.applicationRuntime = undefined;
+            monitoringData.applicationRuntimeVersion = undefined;
+            monitoringData.applicationTags = undefined;
+        }
 
         return monitoringData;
     }

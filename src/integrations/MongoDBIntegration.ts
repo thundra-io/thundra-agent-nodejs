@@ -1,7 +1,7 @@
 import Integration from './Integration';
 import {
     DBTags, SpanTags, DomainNames, DBTypes, MongoDBTags, MongoDBCommandTypes,
-    ClassNames, DefaultMongoCommandSizeLimit,
+    ClassNames, DefaultMongoCommandSizeLimit, INTEGRATIONS,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -13,8 +13,7 @@ const shimmer = require('shimmer');
 
 const get = require('lodash.get');
 
-const MODULE_NAME = 'mongodb';
-const MODULE_VERSION = '>=1';
+const INTEGRATION_NAME = 'mongodb';
 
 /**
  * {@link Integration} implementation for MongoDB integration
@@ -31,9 +30,10 @@ class MongoDBIntegration implements Integration {
         ThundraLogger.debug('<MongoDBIntegration> Activating MongoDB integration');
 
         this.config = config || {};
+        const mongoInstrumentation = INTEGRATIONS[INTEGRATION_NAME];
         this.spans = {};
         this.instrumentContext = ModuleUtils.instrument(
-            [MODULE_NAME], MODULE_VERSION,
+            mongoInstrumentation.moduleNames, mongoInstrumentation.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

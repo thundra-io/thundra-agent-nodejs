@@ -130,14 +130,17 @@ export default class Trace {
             this.integrationsMap = new Map<string, Integration>();
 
             for (const key of Object.keys(INTEGRATIONS)) {
-                const clazz = INTEGRATIONS[key];
-                if (clazz) {
-                    if (!this.integrationsMap.get(key)) {
-                        if (!this.config.isIntegrationDisabled(key)) {
-                            const instance = new clazz(this.config);
-                            this.integrationsMap.set(key, instance);
-                        } else {
-                            ThundraLogger.debug(`<Trace> Disabled integration ${key}`);
+                const integration = INTEGRATIONS[key];
+                if (integration) {
+                    const clazz = integration.class;
+                    if (clazz) {
+                        if (!this.integrationsMap.get(key)) {
+                            if (!this.config.isIntegrationDisabled(key)) {
+                                const instance = new clazz(this.config);
+                                this.integrationsMap.set(key, instance);
+                            } else {
+                                ThundraLogger.debug(`<Trace> Disabled integration ${key}`);
+                            }
                         }
                     }
                 }

@@ -289,6 +289,28 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID]: {
+        type: 'string',
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_RUN_ID]: {
+        type: 'string',
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ]: {
+        type: 'number',
+        defaultValue: 10000,
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_DISABLE]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE]: {
+        type: 'boolean',
+        defaultValue: true,
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_LOG_COUNT_MAX]: {
+        type: 'number',
+        defaultValue: 100,
+    },
 };
 
 export default ConfigMetadata;

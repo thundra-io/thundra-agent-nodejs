@@ -10,25 +10,34 @@ import LambdaUtils from '../../utils/LambdaUtils';
 import ModuleUtils from '../../utils/ModuleUtils';
 import Utils from '../../utils/Utils';
 import ConfigNames from '../../config/ConfigNames';
+import Reporter from '../../Reporter';
+
+const ApplicationClassName = ClassNames.KOA;
+const ApplicationDomainName = DomainNames.API;
+
+let _REPORTER: Reporter;
+let _PLUGINS: any[];
 
 export function koaMiddleWare(opts: any = {}) {
+
     ThundraLogger.debug('<KoaWrapper> koaMiddleWare running ...');
-    const wrapperInitObj = WebWrapperUtils.initWrapper(ClassNames.KOA, DomainNames.API, KoaExecutor);
-    const {plugins} = wrapperInitObj;
-    let {reporter} = wrapperInitObj;
 
-    if (opts.reporter) {
-        reporter = opts.reporter;
-    }
+    const {
+        reporter,
+        plugins,
+    } = WebWrapperUtils.initWrapper(ApplicationClassName, ApplicationDomainName, KoaExecutor);
 
-    if (!opts.disableAsyncContextManager) {
-        WrapperUtils.initAsyncContextManager();
-    }
+    _REPORTER = reporter;
+    _PLUGINS = plugins;
+
+    WrapperUtils.initAsyncContextManager();
 
     ThundraLogger.debug('<KoaWrapper> Creating Thundra middleware ...');
 
     return async (ctx: any, next: any) => ExecutionContextManager.runWithContext(
-        WrapperUtils.createExecContext,
+        () => {
+            return WrapperUtils.createExecContext(ApplicationClassName, ApplicationDomainName);
+        },
         async function () {
             ThundraLogger.debug('<KoaWrapper> Running with execution context');
             const context: ExecutionContext = this;
@@ -40,17 +49,17 @@ export function koaMiddleWare(opts: any = {}) {
                 report() {
                     ExecutionContextManager.set(context);
                     ThundraLogger.debug('<KoaWrapper> Reporting request');
-                    WrapperUtils.afterRequest(ctx.request, ctx.response, plugins, reporter);
+                    WrapperUtils.afterRequest(ctx.request, ctx.response, _PLUGINS, __PRIVATE__.getReporter());
                 },
             };
             try {
                 ThundraLogger.debug('<KoaWrapper> Before handling request');
-                await WrapperUtils.beforeRequest(ctx.request, ctx.response, plugins);
+                await WrapperUtils.beforeRequest(ctx.request, ctx.response, _PLUGINS);
                 ctx.res.once('finish', () => {
                     ctx.request._matchedRoute = ctx._matchedRoute;
                     ExecutionContextManager.set(context);
                     ThundraLogger.debug('<KoaWrapper> After handling request');
-                    WrapperUtils.afterRequest(ctx.request, ctx.response, plugins, reporter);
+                    WrapperUtils.afterRequest(ctx.request, ctx.response, _PLUGINS,  __PRIVATE__.getReporter());
                 });
             } catch (err) {
                 ThundraLogger.error('<KoaWrapper> Error occurred in KoaWrapper:', err);
@@ -89,15 +98,28 @@ export function init() {
         return;
     }
 
-    ThundraLogger.debug('<KoaWrapper> Initializing ...');
     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
     if (!lambdaRuntime) {
-        ModuleUtils.patchModule(
-            'koa/lib/application.js',
-            'use',
-            wrapUse,
-            (Koa: any) => Koa.prototype);
-    } else {
+        ModuleUtils.instrument(
+            ['koa/lib/application.js'], undefined,
+            (lib: any, cfg: any) => {
+
+                ModuleUtils.patchModule(
+                    'koa/lib/application.js',
+                    'use',
+                    wrapUse,
+                    (Koa: any) => Koa.prototype,
+                    lib);
+            },
+            (lib: any, cfg: any) => { /* empty */ },
+            {});
+    }  else {
         ThundraLogger.debug('<KoaWrapper> Skipping initializing due to running in lambda runtime ...');
     }
 }
+
+export const __PRIVATE__ = {
+    getReporter: () => {
+        return _REPORTER;
+    },
+};

@@ -1,6 +1,13 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, ESTags, ClassNames,
+    DBTags,
+    SpanTags,
+    SpanTypes,
+    DomainNames,
+    DBTypes,
+    ESTags,
+    ClassNames,
+    INTEGRATIONS,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -12,8 +19,7 @@ import ExecutionContextManager from '../context/ExecutionContextManager';
 const has = require('lodash.has');
 const shimmer = require('shimmer');
 
-const MODULE_NAME = 'elasticsearch';
-const MODULE_VERSION = '>=10.5';
+const INTEGRATION_NAME = 'esLegacy';
 
 /**
  * {@link Integration} implementation for Elasticsearch integration
@@ -28,8 +34,9 @@ class ESLegacyIntegration implements Integration {
         ThundraLogger.debug('<ESLegacyIntegration> Activating ES integration');
 
         this.config = config || {};
+        const esLegacyIntegration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            [MODULE_NAME], MODULE_VERSION,
+            esLegacyIntegration.moduleNames, esLegacyIntegration.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

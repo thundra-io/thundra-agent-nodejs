@@ -1,19 +1,21 @@
 import ConfigProvider from '../../../dist/config/ConfigProvider';
 import ExecutionContextManager from '../../../dist/context/ExecutionContextManager';
-import {createMockExpressApp, createMockReporterInstance} from '../../mocks/mocks';
-import {ClassNames, DomainNames, HttpTags, SpanTags} from '../../../dist/Constants';
-import {init as initExpressWrapper, expressMW} from '../../../dist/wrappers/express/ExpressWrapper';
+import {
+    createMockExpressApp,
+    createMockReporterInstance
+} from '../../mocks/mocks';
+import {
+    ClassNames,
+    DomainNames,
+    HttpTags,
+    SpanTags
+} from '../../../dist/Constants';
+import * as ExpressWrapper from '../../../dist/wrappers/express/ExpressWrapper';
 
 const request = require('supertest');
 const express = require('express');
 const http = require('http');
 const methods = require('methods');
-
-ConfigProvider.init({apiKey: 'foo'});
-
-initExpressWrapper();
-
-let app;
 
 function doRequest(app) {
     var obj = {};
@@ -36,7 +38,17 @@ function doRequest(app) {
 }
 
 describe('express wrapper', () => {
+
+    let app;
+
     beforeAll(async () => {
+
+        ConfigProvider.init({ apiKey: 'foo' });
+
+        ExpressWrapper.__PRIVATE__.getReporter = jest.fn(() => createMockReporterInstance());
+
+        ExpressWrapper.init();
+
         if (!app) {
             app = await createMockExpressApp();
         }
@@ -119,10 +131,6 @@ describe('express wrapper', () => {
         let execContext;
 
         const customApp = express();
-
-        customApp.use(expressMW({
-            reporter: createMockReporterInstance(),
-        }));
 
         customApp.get('/', async (req, res) => {
             execContext = ExecutionContextManager.get();
@@ -246,10 +254,6 @@ describe('express wrapper', () => {
 
         const customApp = express();
 
-        customApp.use(expressMW({
-            reporter: createMockReporterInstance(),
-        }));
-
         customApp.get('/', async (req, res) => {
             execContexts.push(ExecutionContextManager.get());
             await doSomeWork('customSpan1');
@@ -313,62 +317,5 @@ describe('express wrapper', () => {
         for (const execContext of execContexts) {
             verifyExecContext(execContext);
         }
-    });
-});
-
-describe('should handle 2 express app calling each other', () => {
-    let callerContext;
-    let calleeContext;
-    let calleeServer;
-
-    const calleePort = 4000;
-    const caller = express();
-    const callee = express();
-
-    caller.use(expressMW({reporter: createMockReporterInstance()}));
-    callee.use(expressMW({reporter: createMockReporterInstance()}));
-
-    callee.get('/user', (req, res) => {
-        calleeContext = ExecutionContextManager.get();
-        res.sendStatus(200);
-    });
-
-    caller.get('/', async (req, res) => {
-        callerContext = ExecutionContextManager.get();
-
-        const url = `http://localhost:${calleePort}/user`;
-        await new Promise(resolve => {
-            http.get(url, (resp) => {
-                let data = '';
-                resp.on('data', (chunk) => {
-                    data += chunk;
-                });
-                resp.on('end', () => {
-                    resolve(data);
-                });
-            }).on('error', (err) => {
-                resolve(err);
-            });
-        });
-        res.sendStatus(200);
-    });
-
-    beforeAll((done) => {
-        calleeServer = callee.listen(calleePort, done);
-    });
-
-    afterAll((done) => {
-        calleeServer && calleeServer.close(done);
-    })
-
-    test('callee should receive caller trace context', async () => {
-        await doRequest(caller).get('/');
-
-        expect(calleeContext.traceId).toBe(callerContext.traceId);
-        expect(calleeContext.invocationData.incomingTraceLinks).toEqual([callerContext.tracer.getSpanList()[1].spanContext.spanId]);
-        expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_OPERATION_NAMES]).toEqual(['localhost/user']);
-        expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_CLASS_NAME]).toEqual('HTTP');
-        expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_DOMAIN_NAME]).toEqual('API');
-        expect(calleeContext.invocationData.incomingTraceLinks).toEqual(callerContext.invocationData.outgoingTraceLinks);
     });
 });

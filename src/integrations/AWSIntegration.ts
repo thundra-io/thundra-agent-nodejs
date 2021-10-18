@@ -6,13 +6,13 @@ import * as opentracing from 'opentracing';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 import { AWSServiceIntegration } from './AWSServiceIntegration';
+import { INTEGRATIONS } from '../Constants';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 const get = require('lodash.get');
 
-const MODULE_NAMES = ['aws-sdk', 'aws-sdk/lib/core.js'];
-const MODULE_VERSION = '2.x';
+const INTEGRATION_NAME = 'aws';
 
 /**
  * {@link Integration} implementation for AWS integration
@@ -27,8 +27,9 @@ export class AWSIntegration implements Integration {
     constructor(config: any) {
         this.wrappedFuncs = {};
         this.config = config || {};
+        const awsIntegration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            MODULE_NAMES, MODULE_VERSION,
+            awsIntegration.moduleNames, awsIntegration.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

@@ -2,6 +2,7 @@ import ThundraTracer from '../opentracing/Tracer';
 import InvocationData from '../plugins/data/invocation/InvocationData';
 import ThundraSpan from '../opentracing/Span';
 import LogData from '../plugins/data/log/LogData';
+import { ContextMode } from '../Constants';
 
 /**
  * Represents the scope of execution (request, invocation, etc ...)
@@ -30,10 +31,16 @@ export default class ExecutionContext {
     request: any;
     incomingTraceLinks: any[];
     outgoingTraceLinks: any[];
+    applicationClassName: string;
+    applicationDomainName: string;
     applicationResourceName: string;
+    applicationId: string;
     captureLog: boolean;
     logs: LogData[];
     reportingDisabled: boolean;
+    timeout: boolean;
+    parentContext: ExecutionContext;
+    compatibleContextModes: ContextMode[] = [];
 
     constructor(opts: any = {}) {
         this.startTimestamp = opts.startTimestamp || 0;
@@ -58,7 +65,19 @@ export default class ExecutionContext {
         this.logs = opts.logs || [];
         this.metrics = opts.metric || {};
         this.triggerOperationName = opts.triggerOperationName || '';
+        this.applicationClassName = opts.applicationClassName || '';
+        this.applicationDomainName = opts.applicationDomainName || '';
         this.applicationResourceName = opts.applicationResourceName || '';
+        this.applicationId = opts.applicationId || '';
+        this.timeout = false;
+        this.parentContext = opts.parentContext;
+
+        this.initContextMode();
+    }
+
+    isContextCompatibleWith(contextMode: ContextMode) {
+
+        return this.compatibleContextModes.includes(contextMode);
     }
 
     /**
@@ -88,4 +107,38 @@ export default class ExecutionContext {
         };
     }
 
+    setError(error: any) {
+        this.error = error;
+    }
+
+    setExecutionTimeout(timeout: boolean) {
+        this.timeout = timeout;
+    }
+
+    getContextInformation(): any  {
+
+        return {
+            applicationId: this.applicationId,
+            applicationClassName: this.applicationClassName,
+            applicationDomainName: this.applicationDomainName,
+        };
+    }
+
+    getAdditionalStartTags(): any {
+
+        return {
+        };
+    }
+
+    getAdditionalFinishTags(): any  {
+
+        return {
+        };
+    }
+
+    protected initContextMode() {
+
+        this.compatibleContextModes.push(ContextMode.GlobalMode);
+        this.compatibleContextModes.push(ContextMode.AsyncMode);
+    }
 }

@@ -1,7 +1,7 @@
 /**
  * Manages initialization process
  */
-import {INITIALIZERS} from './Initializers';
+import { INITIALIZERS } from './Initializers';
 import ThundraLogger from '../ThundraLogger';
 
 /**
@@ -38,7 +38,7 @@ class InitManager {
                     } else {
                         ThundraLogger.error(
                             `<InitManager> Couldn't initialize ${initializer.name} \
-                            because no "init" method is either defined or exported`);
+                            because no init method is either defined or exported`);
                     }
                 } else {
                     ThundraLogger.debug(
@@ -50,7 +50,6 @@ class InitManager {
             ThundraLogger.debug(`<InitManager> Skipped initialization as initializers have been already initialized`);
         }
     }
-
 }
 
 export default InitManager;

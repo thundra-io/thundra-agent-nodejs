@@ -6,6 +6,7 @@ import {
   DomainNames,
   AMQPTags,
   ClassNames,
+  INTEGRATIONS,
 } from '../Constants';
 
 import ThundraLogger from '../ThundraLogger';
@@ -18,9 +19,8 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const URL = require('url-parse');
 
-const MODULE_NAME = ['amqplib', 'amqplib/callback_api.js' , 'amqplib/lib/callback_model.js',
-  'amqplib/lib/channel_model.js', 'amqplib/lib/channel.js'];
-const MODULE_VERSION = '>=0.5';
+const INTEGRATION_NAME = 'amqplib';
+
 const PUBLISH_METHOD = 'basic.publish';
 
 /**
@@ -37,9 +37,10 @@ class AMQPLIBIntegration implements Integration {
     ThundraLogger.debug('<AMQPLIBIntegration> Activating AMQPLIB Integration');
 
     this.config = config || {};
+    const amqpIntegration = INTEGRATIONS[INTEGRATION_NAME];
     this.instrumentContext = ModuleUtils.instrument(
-      MODULE_NAME,
-      MODULE_VERSION,
+      amqpIntegration.moduleNames,
+      amqpIntegration.moduleVersion,
       (lib: any, cfg: any) => {
         this.wrap.call(this, lib, cfg);
       },
@@ -160,7 +161,7 @@ class AMQPLIBIntegration implements Integration {
           } else {
             const parts = URL(url, true);
             integration.vhost = parts.pathname ? parts.pathname.substr(1) : null;
-            if (integration.vhost) {
+            if (!integration.vhost) {
               integration.vhost = '::/';
             } else {
               integration.vhost = '::/' + integration.vhost;

@@ -518,11 +518,6 @@ const createMockClientContext = () => {
 const createMockKoaApp = () => {
     const app = new Koa();
 
-    app.use(koaMiddleWare({
-        disableAsyncContextManager: true,
-        reporter: createMockReporterInstance(),
-    }));
-
     app.use(async (ctx, next) => {
         if (ctx.path !== '/') {
             return await next();
@@ -542,12 +537,7 @@ const createMockKoaApp = () => {
 
 const createMockExpressApp = async () => {
     const app = express();
-
-    app.use(expressMW({
-        disableAsyncContextManager: true,
-        reporter: createMockReporterInstance(),
-    }));
-
+    
     app.get('/', function (req, res) {
         res.send('Hello Thundra!');
     });

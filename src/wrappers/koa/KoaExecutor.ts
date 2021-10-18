@@ -55,10 +55,6 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
             [HttpTags.BODY],
         );
     }
-
-    if (triggerOperationName) {
-        response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
-    }
 }
 
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
@@ -74,7 +70,13 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
         execContext.applicationResourceName = resourceName;
         rootSpan.operationName = resourceName;
     }
+
     InvocationSupport.setAgentTag(HttpTags.HTTP_STATUS, response.statusCode);
     Utils.copyProperties(response, ['status'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
     Utils.copyProperties(request, ['path'], rootSpan.tags, [HttpTags.HTTP_ROUTE_PATH]);
+
+    if (execContext.triggerOperationName) {
+
+        response.set(TriggerHeaderTags.RESOURCE_NAME, execContext.triggerOperationName);
+    }
 }

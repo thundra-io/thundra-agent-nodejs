@@ -1,9 +1,12 @@
 import { readFile } from 'fs';
 import * as os from 'os';
 import {
-    DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
+    DATA_MODEL_VERSION,
+    PROC_IO_PATH,
+    PROC_STAT_PATH,
     EnvVariableKeys,
     LISTENERS, AGENT_VERSION,
+    AGENT_UUID_CONST,
 } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
@@ -25,6 +28,7 @@ import ThundraSpanListener from '../listeners/ThundraSpanListener';
 import PluginContext from '../plugins/PluginContext';
 
 const uuidv4 = require('uuid/v4');
+const uuidv5 = require('uuid/v5');
 const zlib = require('zlib');
 
 const globalAppID = uuidv4();
@@ -43,6 +47,14 @@ class Utils {
      */
     static generateId(): string {
         return uuidv4();
+    }
+
+    /**
+     * Generates id in UUID format with given value
+     * @param value value
+     */
+    static generareIdFrom(value: string): string {
+        return uuidv5(value, AGENT_UUID_CONST);
     }
 
     /**

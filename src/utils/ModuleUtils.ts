@@ -128,12 +128,12 @@ class ModuleUtils {
             const requiredLib = ModuleUtils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
             if (requiredLib) {
                 if (version) {
-                    const { basedir } = ModuleUtils.getModuleInfo(moduleName);
-                    if (!basedir) {
-                        ThundraLogger.error(`<Utils> Base directory is not found for the package ${moduleName}`);
+                    const moduleInfo = ModuleUtils.getModuleInfo(moduleName);
+                    if (!moduleInfo) {
+                        ThundraLogger.debug(`<Utils> Base directory is not found for the package ${moduleName}`);
                         return;
                     }
-                    ModuleUtils.doInstrument(requiredLib, libs, basedir, moduleName, version, wrapper, config);
+                    ModuleUtils.doInstrument(requiredLib, libs, moduleInfo.basedir, moduleName, version, wrapper, config);
                 } else {
                     ModuleUtils.doInstrument(requiredLib, libs, null, moduleName, null, wrapper, config);
                 }
@@ -170,14 +170,22 @@ class ModuleUtils {
      *                   from given module to patch
      */
     static patchModule(moduleName: string, methodName: string,
-                       wrapper: Function, extractor: Function = (mod: any) => mod): boolean {
+                       wrapper: Function, extractor: Function = (mod: any) => mod, module?: any): boolean {
         ThundraLogger.debug(`<ModuleUtils> Patching module ${moduleName}`);
-        const module = ModuleUtils.tryRequire(moduleName);
+
         if (module) {
             shimmer.wrap(extractor(module), methodName, wrapper);
             ThundraLogger.debug(`<ModuleUtils> Patched module ${moduleName}`);
             return true;
         } else {
+
+            const requiredModule = ModuleUtils.tryRequire(moduleName);
+            if (requiredModule) {
+                shimmer.wrap(extractor(requiredModule), methodName, wrapper);
+                ThundraLogger.debug(`<ModuleUtils> Patched module ${moduleName}`);
+                return true;
+            }
+
             ThundraLogger.debug(`<ModuleUtils> Couldn't find module ${moduleName} to patch`);
             return false;
         }
@@ -203,8 +211,7 @@ class ModuleUtils {
         ThundraLogger.debug(`<ModuleUtils> Instrumenting module ${moduleName} ...`);
         let isValid = false;
         if (version) {
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
+            const isValidVersion = ModuleVersionValidator.validateModuleVersion(basedir, version);
             if (!isValidVersion) {
                 ThundraLogger.error(
                     `<ModuleUtils> Invalid module version for ${moduleName} integration. Supported version is ${version}`);

@@ -1,24 +1,39 @@
-import {createMockKoaApp, createMockReporterInstance} from "../../mocks/mocks";
+import { 
+    createMockKoaApp,
+    createMockReporterInstance
+} from "../../mocks/mocks";
 import ConfigProvider from "../../../dist/config/ConfigProvider";
-import {init, koaMiddleWare} from '../../../dist/wrappers/koa/KoaWrapper';
+import * as KoaWrapper from '../../../dist/wrappers/koa/KoaWrapper';
 import ExecutionContextManager from "../../../dist/context/ExecutionContextManager";
-import {ClassNames, DomainNames, HttpTags, SpanTags} from "../../../dist/Constants";
+import { 
+    ClassNames,
+    DomainNames,
+    HttpTags,
+    SpanTags
+} from "../../../dist/Constants";
+
 import Koa from 'koa';
-import http from "http";
 
 const request = require('supertest');
 
-let app;
-let server;
-const port = 9091
-
-ConfigProvider.init({apiKey: 'foo'});
-
-
 describe('koa wrapper', function () {
 
+    let app;
+
+    let server;
+
+    const port = 9091
+
+    ConfigProvider.init({apiKey: 'foo'});
+
     beforeAll(() => {
-        init();
+       
+        ConfigProvider.init({ apiKey: 'foo' });
+
+        KoaWrapper.__PRIVATE__.getReporter = jest.fn(() => createMockReporterInstance());
+
+        KoaWrapper.init();
+
         if (!app) {
             app = createMockKoaApp();
             server = app.listen(port);
@@ -101,10 +116,6 @@ describe('koa wrapper', function () {
         let execContext;
 
         const customApp = new Koa();
-
-        customApp.use(koaMiddleWare({
-            reporter: createMockReporterInstance(),
-        }));
 
         customApp.use(async (ctx, next) => {
             if (ctx.path !== '/') {
@@ -215,10 +226,6 @@ describe('koa wrapper', function () {
 
         const customApp = new Koa();
 
-        customApp.use(koaMiddleWare({
-            reporter: createMockReporterInstance(),
-        }));
-
         customApp.use(async (ctx, next) => {
             if (ctx.path !== '/') {
                 return await next();
@@ -285,69 +292,5 @@ describe('koa wrapper', function () {
         for (const execContext of execContexts) {
             verifyExecContext(execContext);
         }
-    });
-});
-
-describe('should handle 2 koa app calling each other', () => {
-    let callerContext;
-    let calleeContext;
-    let calleeServer;
-
-    const calleePort = 4001;
-    const caller = new Koa();
-    const callee = new Koa();
-
-    caller.use(koaMiddleWare({reporter: createMockReporterInstance()}));
-    callee.use(koaMiddleWare({reporter: createMockReporterInstance()}));
-
-    callee.use(async (ctx, next) => {
-        if (ctx.path !== '/user') {
-            return await next();
-        }
-        calleeContext = ExecutionContextManager.get();
-        ctx.statusCode = 200;
-    });
-
-    caller.use(async (ctx, next) => {
-        if (ctx.path !== '/') {
-            return await next();
-        }
-        callerContext = ExecutionContextManager.get();
-
-        const url = `http://localhost:${calleePort}/user`;
-        await new Promise(resolve => {
-            http.get(url, (resp) => {
-                let data = '';
-                resp.on('data', (chunk) => {
-                    data += chunk;
-                });
-                resp.on('end', () => {
-                    resolve(data);
-                });
-            }).on('error', (err) => {
-                resolve(err);
-            });
-        });
-        ctx.statusCode = 200;
-    });
-
-    beforeAll((done) => {
-        init();
-        calleeServer = callee.listen(calleePort, done);
-    });
-
-    afterAll((done) => {
-        calleeServer && calleeServer.close(done);
-    })
-
-    test('callee should receive caller trace context', async () => {
-        await request(caller.callback()).get('/');
-
-        expect(calleeContext.traceId).toBe(callerContext.traceId);
-        expect(calleeContext.invocationData.incomingTraceLinks).toEqual([callerContext.tracer.getSpanList()[1].spanContext.spanId]);
-        expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_OPERATION_NAMES]).toEqual(['localhost/user']);
-        expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_CLASS_NAME]).toEqual('HTTP');
-        expect(calleeContext.invocationData.tags[SpanTags.TRIGGER_DOMAIN_NAME]).toEqual('API');
-        expect(calleeContext.invocationData.incomingTraceLinks).toEqual(callerContext.invocationData.outgoingTraceLinks);
     });
 });

@@ -8,13 +8,13 @@ import { DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../ThundraLogger';
 import Utils from '../utils/Utils';
 import ThundraChaosError from '../error/ThundraChaosError';
+import { INTEGRATIONS } from '../Constants';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 const get = require('lodash.get');
 
-const MODULE_NAMES = ['@aws-sdk/smithy-client'];
-const MODULE_VERSION = '3.x';
+const INTEGRATION_NAME = 'aws3';
 
 /**
  * {@link Integration} implementation for AWS integration
@@ -29,8 +29,9 @@ export class AWSv3Integration implements Integration {
     constructor(config: any) {
         this.wrappedFuncs = {};
         this.config = config || {};
+        const awsSdkv3Integration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            MODULE_NAMES, MODULE_VERSION,
+            awsSdkv3Integration.moduleNames, awsSdkv3Integration.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

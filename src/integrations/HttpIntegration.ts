@@ -1,6 +1,6 @@
 import Integration from './Integration';
 import * as opentracing from 'opentracing';
-import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, TriggerHeaderTags } from '../Constants';
+import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, TriggerHeaderTags, INTEGRATIONS } from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
 import * as url from 'url';
@@ -16,8 +16,7 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const semver = require('semver');
 
-const MODULE_NAME_HTTP = 'http';
-const MODULE_NAME_HTTPS = 'https';
+const INTEGRATION_NAME = 'http';
 
 /**
  * {@link Integration} implementation for HTTP integration
@@ -32,8 +31,9 @@ class HttpIntegration implements Integration {
         ThundraLogger.debug('<HTTPIntegration> Activating HTTP integration');
 
         this.config = config || {};
+        const httpIntegration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
-            [MODULE_NAME_HTTP, MODULE_NAME_HTTPS], null,
+            httpIntegration.moduleNames, httpIntegration.moduleVersion,
             (lib: any, cfg: any, moduleName: string) => {
                 this.wrap.call(this, lib, cfg, moduleName);
             },
@@ -73,6 +73,12 @@ class HttpIntegration implements Integration {
                     const queryParams = splittedPath.length > 1 ? splittedPath[1] : '';
 
                     path = splittedPath[0];
+
+                    if (HTTPUtils.isTestContainersRequest(options, host)) {
+                        ThundraLogger.debug(
+                            `<HTTPIntegration> Skipped tracing request as test containers docker request`);
+                        return request.apply(this, [options, callback]);
+                    }
 
                     if (!HTTPUtils.isValidUrl(host)) {
                         ThundraLogger.debug(
@@ -119,36 +125,35 @@ class HttpIntegration implements Integration {
 
                     const me = this;
 
-                    const wrappedCallback = (err: any, res: any) => {
+                    const wrappedCallback = (res: any) => {
+
                         if (span) {
-                            if (err) {
-                                span.setErrorTag(err);
+
+                            HTTPUtils.fillOperationAndClassNameToSpan(span, res.headers);
+
+                            const statusCode = res.statusCode.toString();
+                            if (!config.disableHttp5xxError && statusCode.startsWith('5')) {
+                                span.setErrorTag(new HttpError(res.statusMessage));
                             }
+
+                            if (!config.disableHttp4xxError && statusCode.startsWith('4')) {
+                                span.setErrorTag(new HttpError(res.statusMessage));
+                            }
+
+                            span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
+
+                            if (res && res.headers) {
+                                res.headers = HTTPUtils.extractHeaders(res.headers);
+                            }
+
                             ThundraLogger.debug(`<HTTPIntegration> Closing HTTP span with name ${operationName}`);
-                            span.closeWithCallback(me, callback, [err, res]);
+                            span.closeWithCallback(me, callback, [res]);
                         }
                     };
 
                     span._initialized();
 
                     const req = request.call(this, options, wrappedCallback);
-
-                    req.on('response', (res: any) => {
-                        ThundraLogger.debug(`<HTTPIntegration> On response of HTTP span with name ${operationName}`);
-
-                        HTTPUtils.fillOperationAndClassNameToSpan(span, res.headers);
-
-                        const statusCode = res.statusCode.toString();
-                        if (!config.disableHttp5xxError && statusCode.startsWith('5')) {
-                            span.setErrorTag(new HttpError(res.statusMessage));
-                        }
-
-                        if (!config.disableHttp4xxError && statusCode.startsWith('4')) {
-                            span.setErrorTag(new HttpError(res.statusMessage));
-                        }
-
-                        span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
-                    });
 
                     const emit = req.emit;
                     req.emit = function (eventName: any, arg: any) {
@@ -173,6 +178,22 @@ class HttpIntegration implements Integration {
                                         `<HTTPIntegration> Unable to get body of HTTP span with name ${operationName}:`,
                                         error);
                                 }
+                            }
+                        }
+
+                        // timeout & abort & error handled here
+                        if (eventName === 'error') {
+
+                            if (span) {
+                                ThundraLogger.debug(
+                                    `<HTTPIntegration> Because of error, closing HTTP span with name
+                                    ${span.getOperationName()}`, arg.message);
+
+                                const err = new Error(arg.message);
+                                err.stack = arg.stack;
+
+                                span.setErrorTag(err);
+                                span.close();
                             }
                         }
 

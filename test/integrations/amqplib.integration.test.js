@@ -26,7 +26,7 @@ describe('AMQP 0-9-1 integration', () => {
         return AMQP.promise_model(sdk).then((data) => {
             const span_send = tracer.getRecorder().spanList[0];
             
-            expect(span_send.className).toBe('AMQP');
+            expect(span_send.className).toBe('RabbitMQ');
             expect(span_send.domainName).toBe('Messaging');
             expect(span_send.operationName).toBe('tasks_promise::/');
             expect(span_send.spanContext.traceId).not.toBeUndefined();
@@ -38,9 +38,7 @@ describe('AMQP 0-9-1 integration', () => {
             expect(span_send.tags['amqp.message']).toBe('amqplib promise');
             expect(span_send.tags['amqp.method']).toBe('basic.publish');
             expect(span_send.tags['operation.type']).toBe('publish');
-            expect(span_send.tags['service.name']).toBe('amqp-default-service');
-            expect(span_send.tags['span.type']).toBe('Amqplib');
-            
+            expect(span_send.tags['span.type']).toBe('RabbitMQ');   
         });
     });
 
@@ -63,9 +61,7 @@ describe('AMQP 0-9-1 integration', () => {
             expect(span_send.tags['amqp.method']).toBe('basic.publish');
             expect(span_send.tags['amqp.message']).toBe('amqplib callback');
             expect(span_send.tags['operation.type']).toBe('publish');
-            expect(span_send.tags['service.name']).toBe('amqp-default-service');
-            expect(span_send.tags['span.type']).toBe('Amqplib');
-            
+            expect(span_send.tags['span.type']).toBe('RabbitMQ');        
         });
     });
 });
