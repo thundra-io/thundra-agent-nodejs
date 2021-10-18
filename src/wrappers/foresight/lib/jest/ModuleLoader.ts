@@ -22,8 +22,6 @@ export const WrapTestRequireModule = () => {
     function requireModuleWrapper(internalRequireModule: any) {
         return function internalRequireModuleWrapper(from: any, moduleName: any, options: any, isRequireActual: any) {
 
-          ThundraLogger.debug('<ModuleLoader> Require module wrapped.');
-
           if (moduleName === '@thundra/core'
               && global && global.__thundraMasterModule__
               && global.__thundraMasterModule__.moduleExports) {

@@ -129,6 +129,19 @@ class HttpIntegration implements Integration {
 
                         if (span) {
 
+                            HTTPUtils.fillOperationAndClassNameToSpan(span, res.headers);
+
+                            const statusCode = res.statusCode.toString();
+                            if (!config.disableHttp5xxError && statusCode.startsWith('5')) {
+                                span.setErrorTag(new HttpError(res.statusMessage));
+                            }
+
+                            if (!config.disableHttp4xxError && statusCode.startsWith('4')) {
+                                span.setErrorTag(new HttpError(res.statusMessage));
+                            }
+
+                            span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
+
                             if (res && res.headers) {
                                 res.headers = HTTPUtils.extractHeaders(res.headers);
                             }
@@ -141,23 +154,6 @@ class HttpIntegration implements Integration {
                     span._initialized();
 
                     const req = request.call(this, options, wrappedCallback);
-
-                    req.on('response', (res: any) => {
-                        ThundraLogger.debug(`<HTTPIntegration> On response of HTTP span with name ${operationName}`);
-
-                        HTTPUtils.fillOperationAndClassNameToSpan(span, res.headers);
-
-                        const statusCode = res.statusCode.toString();
-                        if (!config.disableHttp5xxError && statusCode.startsWith('5')) {
-                            span.setErrorTag(new HttpError(res.statusMessage));
-                        }
-
-                        if (!config.disableHttp4xxError && statusCode.startsWith('4')) {
-                            span.setErrorTag(new HttpError(res.statusMessage));
-                        }
-
-                        span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
-                    });
 
                     const emit = req.emit;
                     req.emit = function (eventName: any, arg: any) {
