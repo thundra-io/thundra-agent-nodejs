@@ -263,7 +263,7 @@ export default [{
 /* test-code */
 export const __PRIVATE__ = {
   getSetupFilePath: () => {
-      return './wrappers/foresight/lib/jest/SetupFile.js';
+      return './bootstrap/foresight/jest/SetupFile.js';
   },
 };
 /* end-test-code */

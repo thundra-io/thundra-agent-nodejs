@@ -5,7 +5,7 @@
  * will be run only one time for per testsuite
  */
 
-const globalObj: any = global;
+const globalObj = global;
 
 if (globalObj && globalObj.__THUNDRA__ && globalObj.__THUNDRA__.testScopeLoaded) {
     globalObj.__THUNDRA__.testScopeLoaded(require);
