@@ -91,5 +91,41 @@ module.exports = [
                 },
             }),
         ]
+    },
+    {
+        input: './src/thundraApi.ts',
+        external: [
+            'aws-xray-sdk-core', 'util', 'url',
+            'os', 'child_process', 'fs', 'net',
+            'http', 'https', 'zlib', 'path',
+        ],
+        output: {
+            file: 'dist/ThundraApi.js',
+            format: 'cjs',
+        },
+        plugins: [
+            resolve(),
+            typescript(),
+            json(),
+            terser({
+                warnings: 'verbose',
+                compress: {
+                    warnings: 'verbose',
+                },
+                mangle: {
+                    keep_fnames: true,
+                },
+                output: {
+                    beautify: false,
+                },
+            }),
+            commonjs(),
+            replace({
+                exclude: 'node_modules/**',
+                replaces: {
+                    'import * as opentracing from \'opentracing\';': 'import opentracing from \'opentracing\';',
+                }
+            }),
+        ]
     }
 ];

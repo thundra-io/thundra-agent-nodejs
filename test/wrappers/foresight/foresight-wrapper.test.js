@@ -106,7 +106,7 @@ describe('Foresight Wrapper Tests', () => {
 
     it('Verify Test Suite Name', () => {
 
-        const testSuiteName = path.basename(__filename);
+        const testSuiteName = 'wrappers/foresight/foresight-wrapper.test.js';
         expect(testRunnerSupport.testSuiteName).toBe(testSuiteName);
         increaseSuccessfulCount();
     });

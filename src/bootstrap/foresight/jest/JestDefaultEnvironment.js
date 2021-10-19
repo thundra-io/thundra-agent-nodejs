@@ -1,5 +1,5 @@
-const ModuleUtils = require('@thundra/core/dist/utils/ModuleUtils').default;
-const ModuleVersionValidator = require('@thundra/core/dist/utils/ModuleVersionValidator').default;
+const { ModuleUtils } = require('@thundra/core/dist/ThundraApi');
+const { ModuleVersionValidator } = require('@thundra/core/dist/ThundraApi');
 
 const jestModuleInfo = ModuleUtils.getModuleInfo('jest');
 if (jestModuleInfo) {

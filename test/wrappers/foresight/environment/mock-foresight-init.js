@@ -7,7 +7,7 @@ import * as ForesightWrapper from '../../../../dist/wrappers/foresight';
 import * as ThundraJestEnvironment from '../../../../dist/wrappers/foresight/lib/jest/ThundraJestEnvironment';
 import * as TestRunnerSupport from '../../../../dist/wrappers/foresight/TestRunnerSupport';
 
-ThundraJestEnvironment.__PRIVATE__.getSetupFilePath = () => './SetupFile.js';
+ThundraJestEnvironment.__PRIVATE__.getSetupFilePath = () => '../../../../bootstrap/foresight/jest/SetupFile.js';
 
 ConfigProvider.init();
 ForesightWrapper.init();
