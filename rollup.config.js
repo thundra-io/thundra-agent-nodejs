@@ -93,14 +93,14 @@ module.exports = [
         ]
     },
     {
-        input: './src/thundraApi.ts',
+        input: './src/thundraInternalApi.ts',
         external: [
             'aws-xray-sdk-core', 'util', 'url',
             'os', 'child_process', 'fs', 'net',
             'http', 'https', 'zlib', 'path',
         ],
         output: {
-            file: 'dist/ThundraApi.js',
+            file: 'dist/ThundraInternalApi.js',
             format: 'cjs',
         },
         plugins: [
