@@ -23,6 +23,8 @@ import TestTraceAwareSampler from '../../sampler/TestTraceAwareSampler';
 import stripAnsi from 'strip-ansi';
 import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
 
+import { subscribeProcessExitEvents } from '../process';
+
 const APPLICATIONCLASSNAME = 'Jest';
 
 /**
@@ -38,6 +40,8 @@ function wrapEnvironment(BaseEnvironment: any) {
       super(config, context);
 
       ThundraLogger.debug(`<ThundraJestEnvironment> Initializing ...`);
+
+      subscribeProcessExitEvents();
 
       this.toBeAttachedToJestTestScope();
       this.setSamplersToConfig();

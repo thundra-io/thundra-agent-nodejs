@@ -840,8 +840,7 @@ export const enum ContextMode {
 }
 
 export const PROCESS_EXIT_EVENTS = [
-    'beforeExit', 'uncaughtException', 'unhandledRejection',
-    'SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP',
+    'beforeExit', 'SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP',
     'SIGABRT', 'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV',
     'SIGUSR2', 'SIGTERM',
 ];

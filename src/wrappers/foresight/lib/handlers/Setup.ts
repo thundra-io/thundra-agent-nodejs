@@ -6,15 +6,6 @@ import TestSuiteExecutionContext from '../../context/TestSuiteExecutionContext';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
 import ThundraLogger from '../../../../ThundraLogger';
 import HandlerUtils from './utils/HandlerUtils';
-import { PROCESS_EXIT_EVENTS } from '../../../../Constants';
-
-async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
-
-    if (TestRunnerSupport.initialized) {
-
-        await HandlerUtils.sendTestRunFinish();
-    }
-}
 
 async function globalSetup() {
 
@@ -23,20 +14,6 @@ async function globalSetup() {
     await EnvironmentSupport.init();
 
     await HandlerUtils.sendTestRunStart();
-}
-
-async function globalTeardown() {
-
-    ThundraLogger.debug(`<Setup> Global teardown creating for test suite: ${TestRunnerSupport.testSuiteName}.`);
-
-    PROCESS_EXIT_EVENTS.forEach((evt: any) => {
-
-        const exists = process.listeners(evt).some((listener) => listener === exitHandler);
-        if (!exists) {
-
-            process.prependOnceListener(evt, exitHandler);
-        }
-    });
 }
 
 async function initTestSuite() {
@@ -48,7 +25,6 @@ async function initTestSuite() {
         TestRunnerSupport.setInitialized(true);
 
         await globalSetup();
-        await globalTeardown();
     }
 }
 
