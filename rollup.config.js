@@ -100,7 +100,7 @@ module.exports = [
             'http', 'https', 'zlib', 'path',
         ],
         output: {
-            file: 'dist/ThundraInternalApi.js',
+            file: 'dist/thundraInternalApi.js',
             format: 'cjs',
         },
         plugins: [
@@ -127,5 +127,27 @@ module.exports = [
                 }
             }),
         ]
-    }
+    },
+    {
+        input: './src/thundraBridge.ts',
+        output: {
+            file: 'dist/thundraBridge.js',
+            format: 'cjs',
+        },
+        plugins: [
+            typescript(),
+            terser({
+                warnings: 'verbose',
+                compress: {
+                    warnings: 'verbose',
+                },
+                mangle: {
+                    keep_fnames: true,
+                },
+                output: {
+                    beautify: false,
+                },
+            }),
+        ],
+    },
 ];

@@ -19,6 +19,7 @@ import InvocationPlugin from '../../../../plugins/Invocation';
 import ThundraConfig from '../../../../plugins/config/ThundraConfig';
 import MaxCountAwareSampler from '../../sampler/MaxCountAwareSampler';
 import TestTraceAwareSampler from '../../sampler/TestTraceAwareSampler';
+import { resolveFromRoot } from '../../../../thundraInternalApi';
 
 import stripAnsi from 'strip-ansi';
 import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
@@ -46,10 +47,8 @@ function wrapEnvironment(BaseEnvironment: any) {
       this.toBeAttachedToJestTestScope();
       this.setSamplersToConfig();
 
-      /**
-       * will add default SetupFile
-       */
-      const setupFilePath = Path.join(__dirname, __PRIVATE__.getSetupFilePath());
+      // Add default SetupFile
+      const setupFilePath = resolveFromRoot(__PRIVATE__.getSetupFilePath());
       config.setupFiles.push(setupFilePath);
 
       this.testSuite = TestRunnerUtils.getTestFileName(context.testPath, config.cwd);
