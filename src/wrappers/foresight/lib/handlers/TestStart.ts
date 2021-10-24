@@ -10,7 +10,6 @@ import ThundraLogger from '../../../../ThundraLogger';
  * @param event event
  */
 export default async function run(event: TestSuiteEvent) {
-
     ThundraLogger.debug(`<TestStart> Handling test start event for test: ${event.testName}`);
 
     const testName = event.testName;
@@ -19,8 +18,8 @@ export default async function run(event: TestSuiteEvent) {
     const testCaseId = testSuiteName + '-' + testName;
 
     const context: TestCaseExecutionContext = ForesightWrapperUtils.createTestCaseExecutionContext(
-      TestRunnerSupport.testSuiteName,
-      testCaseId,
+        TestRunnerSupport.testSuiteName,
+        testCaseId,
     );
 
     ThundraLogger.debug(`<TestStart> New execution context created for test : ${event.testName}`);

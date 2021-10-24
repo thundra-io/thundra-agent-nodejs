@@ -12,14 +12,13 @@ export default class TestTraceAwareSampler<T> implements Sampler<T> {
     samplerFactory: Factory<Sampler<T>>;
 
     constructor(samplerFactory: Factory<Sampler<T>>) {
-       this.samplerFactory = samplerFactory;
+        this.samplerFactory = samplerFactory;
     }
 
     /**
      * @inheritDoc
      */
     isSampled(arg?: T) {
-
         const context = ExecutionContextManager.get();
         if (!context || !context.traceId) {
             return false;
@@ -29,11 +28,11 @@ export default class TestTraceAwareSampler<T> implements Sampler<T> {
 
         let sampler = this.traceSamplerMap.get(traceId);
         if (sampler == null) {
-
             sampler = this.samplerFactory.create();
             this.traceSamplerMap.set(traceId, sampler);
         }
 
         return sampler.isSampled(arg);
     }
+
 }

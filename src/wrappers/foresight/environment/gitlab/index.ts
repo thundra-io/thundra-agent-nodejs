@@ -11,7 +11,6 @@ export const ENVIRONMENT = 'GitLab';
 let environmentInfo: EnvironmentInfo;
 
 const getTestRunId = (repoURL: string, commitHash: string) => {
-
     const testRunId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_RUN_ID);
     if (testRunId) {
         return testRunId;
@@ -38,7 +37,6 @@ const isGitLabEnvironment = () => {
  * Get environment info
  */
 export const getEnvironmentInfo = () => {
-
     return environmentInfo;
 };
 
@@ -48,7 +46,6 @@ export const getEnvironmentInfo = () => {
 export const init = async (): Promise<void> => {
     try {
         if (environmentInfo == null && isGitLabEnvironment()) {
-
             const repoURL = process.env[ConfigNames.CI_REPOSITORY_URL_ENV_VAR_NAME]
                 || process.env[ConfigNames.CI_REPOSITORY_URL_ENV_VAR_NAME.toLowerCase()];
 
@@ -70,7 +67,6 @@ export const init = async (): Promise<void> => {
 
             const gitEnvironmentInfo = GitEnvironmentInfo.getEnvironmentInfo();
             if (gitEnvironmentInfo) {
-
                 if (!branch) {
                     branch = gitEnvironmentInfo.branch;
                 }
@@ -90,6 +86,6 @@ export const init = async (): Promise<void> => {
         }
     } catch (e) {
         ThundraLogger.error(
-            `<GithubEnvironmentInfoProvider> Unable to build environment info`);
+            '<GithubEnvironmentInfoProvider> Unable to build environment info');
     }
 };

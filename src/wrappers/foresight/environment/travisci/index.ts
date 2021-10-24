@@ -11,7 +11,6 @@ export const ENVIRONMENT = 'TravisCI';
 let environmentInfo: EnvironmentInfo;
 
 const getTestRunId = (repoURL: string, commitHash: string) => {
-
     const testRunId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_RUN_ID);
     if (testRunId) {
         return testRunId;
@@ -38,7 +37,6 @@ const isTravisCIEnvironment = () => {
  * Get environment info
  */
 export const getEnvironmentInfo = () => {
-
     return environmentInfo;
 };
 
@@ -48,7 +46,6 @@ export const getEnvironmentInfo = () => {
 export const init = async (): Promise<void> => {
     try {
         if (environmentInfo == null && isTravisCIEnvironment()) {
-
             const travisRepoSlug = process.env[ConfigNames.TRAVIS_REPO_SLUG_VAR_NAME]
                 || process.env[ConfigNames.TRAVIS_REPO_SLUG_VAR_NAME.toLowerCase()];
 
@@ -72,7 +69,6 @@ export const init = async (): Promise<void> => {
 
             const gitEnvironmentInfo = GitEnvironmentInfo.getEnvironmentInfo();
             if (gitEnvironmentInfo) {
-
                 if (!branch) {
                     branch = gitEnvironmentInfo.branch;
                 }
@@ -92,6 +88,6 @@ export const init = async (): Promise<void> => {
         }
     } catch (e) {
         ThundraLogger.error(
-            `<GithubEnvironmentInfoProvider> Unable to build environment info`);
+            '<GithubEnvironmentInfoProvider> Unable to build environment info');
     }
 };

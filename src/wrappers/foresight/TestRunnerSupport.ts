@@ -81,7 +81,6 @@ export const setTestStatusReportFreq = (freq: number) => {
 
 const sendTestRunStatus = async () => {
     if (!testRunScope || !initialized) {
-
         ThundraLogger.debug('<ThundraRunnerSupport> Test run not started. TestRunStatus will not send.');
         return;
     }
@@ -116,7 +115,6 @@ const sendTestRunStatus = async () => {
 };
 
 export const startTestRunStatusEvent = () => {
-
     if (testStatusReportFreq) {
         finishTestRunStatusEvent();
         testRunStatusWork = setTimeout(sendTestRunStatus, testStatusReportFreq);
@@ -124,7 +122,6 @@ export const startTestRunStatusEvent = () => {
 };
 
 export const finishTestRunStatusEvent = () => {
-
     if (testRunStatusWork) {
         clearInterval(testRunStatusWork);
         testRunStatusWork = null;
@@ -132,7 +129,6 @@ export const finishTestRunStatusEvent = () => {
 };
 
 export const startTestRun = (): TestRunStart => {
-
     const testRunId = getTestRunId();
     const taskId = Utils.generateId();
     const startTimestamp = new Date().getTime();
@@ -159,7 +155,6 @@ export const startTestRun = (): TestRunStart => {
 
 export const finishTestRun = (): TestRunFinish => {
     if (!initialized || !testRunScope) {
-
         ThundraLogger.debug('<ThundraRunnerSupport> Test run not started. TestRunFinish will not send.');
         return;
     }
@@ -193,7 +188,6 @@ export const finishTestRun = (): TestRunFinish => {
 };
 
 export const clearTestRun = () => {
-
     setInitialized(false);
     finishTestRunStatusEvent();
     setWrapperContext(null);

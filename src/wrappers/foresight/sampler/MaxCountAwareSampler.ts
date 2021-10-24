@@ -16,8 +16,8 @@ export default class MaxCountAwareSampler implements Sampler<null> {
      * @inheritDoc
      */
     isSampled(): boolean {
-
         this.counter++;
         return this.counter <= this.count;
     }
+
 }

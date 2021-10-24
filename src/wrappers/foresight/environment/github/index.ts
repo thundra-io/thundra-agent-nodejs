@@ -15,7 +15,6 @@ const REFS_HEADS_PREFIX = 'refs/heads/';
 let environmentInfo: EnvironmentInfo;
 
 const getTestRunId = (repoURL: string, commitHash: string) => {
-
     const testRunId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_RUN_ID);
     if (testRunId) {
         return testRunId;
@@ -36,7 +35,6 @@ const getTestRunId = (repoURL: string, commitHash: string) => {
  * Get environment info
  */
 export const getEnvironmentInfo = () => {
-
     return environmentInfo;
 };
 
@@ -94,6 +92,6 @@ export const init = async (): Promise<void> => {
         }
     } catch (e) {
         ThundraLogger.error(
-            `<GithubEnvironmentInfoProvider> Unable to build environment info`);
+            '<GithubEnvironmentInfoProvider> Unable to build environment info');
     }
 };

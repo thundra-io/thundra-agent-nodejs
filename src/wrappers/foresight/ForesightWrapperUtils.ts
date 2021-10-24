@@ -99,7 +99,6 @@ export default class ForesightWrapperUtils {
      * @param appInfo appInfo
      */
     static getDefaultApplicationId(appInfo: ApplicationInfo) {
-
         return ForesightWrapperUtils.createApplicationId(
             appInfo.applicationClassName,
             appInfo.applicationName,
@@ -120,7 +119,6 @@ export default class ForesightWrapperUtils {
      * @param pluginContext pluginContext
      */
     static createPlugins(config: ThundraConfig, pluginContext: PluginContext, pluginsWillBeLoaded: string[]): any[] {
-
         const plugins: any[] = [];
         if (config.disableMonitoring) {
             return plugins;
@@ -129,7 +127,6 @@ export default class ForesightWrapperUtils {
         if (pluginsWillBeLoaded.includes(TracePlugin.name)
             && !ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE)
             && config.traceConfig.enabled) {
-
             const tracePlugin = new TracePlugin(config.traceConfig);
             plugins.push(tracePlugin);
         }
@@ -137,13 +134,11 @@ export default class ForesightWrapperUtils {
         if (pluginsWillBeLoaded.includes(LogPlugin.name)
             && ConfigProvider.get<boolean>(ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE)
             && config.logConfig.enabled) {
-
             const logPlugin = new LogPlugin(config.logConfig);
             plugins.push(logPlugin);
         }
 
         if (pluginsWillBeLoaded.includes(InvocationPlugin.name)) {
-
             const invocationPlugin = new InvocationPlugin(config.invocationConfig);
             plugins.push(invocationPlugin);
         }
@@ -159,7 +154,6 @@ export default class ForesightWrapperUtils {
      * @param consoleRef consoleRef
      */
     static createLogPlugin(consoleRef: any) {
-
         const config = ConfigProvider.thundraConfig;
 
         if (ConfigProvider.get<boolean>(ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE) && config.logConfig.enabled) {
@@ -175,7 +169,6 @@ export default class ForesightWrapperUtils {
      * @param executor executor
      */
     static createPluginContext(apiKey: string, executor: any): PluginContext {
-
         const applicationInfo = ApplicationManager.getApplicationInfo();
 
         return new PluginContext({
@@ -198,7 +191,6 @@ export default class ForesightWrapperUtils {
      * @param testSuiteName testSuiteName
      */
     static createTestSuiteExecutionContext(testSuiteName: string): TestSuiteExecutionContext {
-
         const { thundraConfig } = ConfigProvider;
         const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
 
@@ -262,7 +254,6 @@ export default class ForesightWrapperUtils {
      * @param context context
      */
     static async beforeTestProcess(plugins: any[], context: ExecutionContext) {
-
         for (const plugin of plugins) {
             await plugin.beforeInvocation(context);
         }
@@ -275,7 +266,6 @@ export default class ForesightWrapperUtils {
      * @param reporter reporter
      */
     static async afterTestProcess(plugins: any[], context: ExecutionContext, reporter: Reporter) {
-
         context.finishTimestamp = Date.now();
 
         let reports: any = [];
@@ -311,7 +301,6 @@ export default class ForesightWrapperUtils {
      * @param execContext execContext
      */
     static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-
         const { tracer } = execContext;
         const traceId = Utils.generateId();
         const contextInformation: any = execContext.getContextInformation();
@@ -337,7 +326,6 @@ export default class ForesightWrapperUtils {
      * @param execContext execContext
      */
     static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-
         const {
             error,
             rootSpan,
@@ -357,7 +345,6 @@ export default class ForesightWrapperUtils {
      * @param pluginContext pluginContext
      */
     static createInvocationData(execContext: ExecutionContext, pluginContext: PluginContext): InvocationData {
-
         const invocationData = Utils.initMonitoringData(pluginContext,
             MonitoringDataType.INVOCATION) as InvocationData;
 
@@ -387,7 +374,6 @@ export default class ForesightWrapperUtils {
      * @param pluginContext pluginContext
      */
     static finishInvocationData(execContext: ExecutionContext, pluginContext: PluginContext) {
-
         const {
             error,
             invocationData,
@@ -429,4 +415,5 @@ export default class ForesightWrapperUtils {
         invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
         invocationData.applicationResourceName = applicationResourceName;
     }
+
 }

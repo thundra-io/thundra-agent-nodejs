@@ -8,7 +8,6 @@ import ThundraLogger from '../../../../ThundraLogger';
 import HandlerUtils from './utils/HandlerUtils';
 
 async function globalSetup() {
-
     ThundraLogger.debug(`<Setup> Global setup creating for test suite: ${TestRunnerSupport.testSuiteName}.`);
 
     await EnvironmentSupport.init();
@@ -17,10 +16,8 @@ async function globalSetup() {
 }
 
 async function initTestSuite() {
-
     if (!TestRunnerSupport.initialized) {
-
-        ThundraLogger.debug(`<Setup> Test suite initializing ...`);
+        ThundraLogger.debug('<Setup> Test suite initializing ...');
 
         TestRunnerSupport.setInitialized(true);
 
@@ -29,7 +26,6 @@ async function initTestSuite() {
 }
 
 async function startTestSuite() {
-
     const context: TestSuiteExecutionContext = ForesightWrapperUtils
         .createTestSuiteExecutionContext(TestRunnerSupport.testSuiteName);
     TestRunnerSupport.setTestSuiteContext(context);
@@ -44,7 +40,6 @@ async function startTestSuite() {
  * @param event event
  */
 export default async function run(event: TestSuiteEvent) {
-
     ThundraLogger.debug(`<Setup> Handling test setup event for test suite: ${TestRunnerSupport.testSuiteName}.`);
 
     await initTestSuite();

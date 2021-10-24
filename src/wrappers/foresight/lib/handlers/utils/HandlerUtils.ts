@@ -1,6 +1,5 @@
 import ConfigProvider from '../../../../../config/ConfigProvider';
 import ExecutionContext from '../../../../../context/ExecutionContext';
-import ExecutionContextManager from '../../../../../context/ExecutionContextManager';
 import ThundraSpan from '../../../../../opentracing/Span';
 import ThundraLogger from '../../../../../ThundraLogger';
 import Utils from '../../../../../utils/Utils';
@@ -12,33 +11,27 @@ import * as TestRunnerSupport from '../../../TestRunnerSupport';
 export default class HandlerUtils {
 
     static async sendTestRunStart() {
-
         const testRunStart = TestRunnerSupport.startTestRun();
         if (!testRunStart) {
             return;
         }
 
         try {
-
             await HandlerUtils.sendData(testRunStart);
             ThundraLogger.debug(`
                 <Setup> Test run start event sended for test suite: ${TestRunnerSupport.testSuiteName}
                 with test run id: ${testRunStart.id}
             `);
         } catch (error) {
-
             ThundraLogger.error('<Setup> Test run start event did not send.', error);
         } finally {
-
             TestRunnerSupport.startTestRunStatusEvent();
             ThundraLogger.debug('<Setup> Test run status event interval started');
         }
     }
 
     static async sendTestRunFinish() {
-
         try {
-
             const testRunFinish = TestRunnerSupport.finishTestRun();
             if (!testRunFinish) {
                 return;
@@ -50,17 +43,14 @@ export default class HandlerUtils {
                 with test run id: ${testRunFinish.id}
             `);
         } catch (error) {
-
             ThundraLogger.error('<Setup> Test run finish event did not send.', error);
         } finally {
-
             TestRunnerSupport.clearTestRun();
             ThundraLogger.debug(`<Teardown> Test run information cleared for test suite: ${TestRunnerSupport.testSuiteName}`);
         }
     }
 
     static async sendData(data: any) {
-
         const config = ConfigProvider.thundraConfig;
         const { apiKey } = config;
 
@@ -73,7 +63,6 @@ export default class HandlerUtils {
         const { tracer } = context;
 
         if (!tracer) {
-
             ThundraLogger.debug('<HandlerUtils> Tracer can not be empty.');
             return;
         }
@@ -95,7 +84,6 @@ export default class HandlerUtils {
 
     static finishSpanForTest(span: ThundraSpan, tagName: string, context: ExecutionContext) {
         if (!span) {
-
             ThundraLogger.debug('<HandlerUtils> Span can not be empty.');
             return;
         }
@@ -103,7 +91,6 @@ export default class HandlerUtils {
         span.close();
 
         if (!context || !context.invocationData) {
-
             ThundraLogger.debug('<HandlerUtils> Execution context can not be empty.');
             return;
         }
@@ -118,4 +105,5 @@ export default class HandlerUtils {
             invocationData.tags[tagName] = duration;
         }
     }
+
 }

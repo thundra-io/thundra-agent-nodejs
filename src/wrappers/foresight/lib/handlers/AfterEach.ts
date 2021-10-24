@@ -15,12 +15,10 @@ const TEST_AFTER_EACH_OPERATION_NAME = 'afterEach';
  * @param event event
  */
 export async function start(event: TestSuiteEvent) {
-
     ThundraLogger.debug('<AfterEach> Handling afterEach start event.');
 
     const context = TestRunnerSupport.testCaseExecutionContext;
     if (!context) {
-
         ThundraLogger.debug('<AfterEach> Execution context can not be empty.');
         return;
     }
@@ -29,7 +27,6 @@ export async function start(event: TestSuiteEvent) {
 
     span = HandlerUtils.createSpanForTest(TEST_AFTER_EACH_OPERATION_NAME, context);
     if (!span) {
-
         ThundraLogger.debug('<AfterEach> Span can not be empty.');
         return;
     }
@@ -43,18 +40,15 @@ export async function start(event: TestSuiteEvent) {
  * @param event event
  */
 export async function finish(event: TestSuiteEvent) {
-
     ThundraLogger.debug('<AfterEach> Handling AfterEach finish event.');
 
     if (!span) {
-
         ThundraLogger.debug('<AfterEach><finish process> Span can not be empty.');
         return;
     }
 
     const context = TestRunnerSupport.testCaseExecutionContext;
     if (!context) {
-
         ThundraLogger.debug('<AfterEach> Execution context can not be empty.');
         return;
     }

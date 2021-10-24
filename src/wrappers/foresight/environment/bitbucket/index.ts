@@ -11,7 +11,6 @@ export const ENVIRONMENT = 'BitBucket';
 let environmentInfo: EnvironmentInfo;
 
 const getTestRunId = (repoURL: string, commitHash: string) => {
-
     const testRunId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_RUN_ID);
     if (testRunId) {
         return testRunId;
@@ -36,7 +35,6 @@ const isBitBucketEnvironment = () => {
  * Get environment info
  */
 export const getEnvironmentInfo = () => {
-
     return environmentInfo;
 };
 
@@ -46,11 +44,9 @@ export const getEnvironmentInfo = () => {
 export const init = async (): Promise<void> => {
     try {
         if (environmentInfo == null && isBitBucketEnvironment()) {
-
             let repoURL = process.env[ConfigNames.BITBUCKET_GIT_HTTP_ORIGIN_ENV_VAR_NAME]
                 || process.env[ConfigNames.BITBUCKET_GIT_HTTP_ORIGIN_ENV_VAR_NAME.toLowerCase()];
             if (!repoURL) {
-
                 repoURL = process.env[ConfigNames.BITBUCKET_GIT_SSH_ORIGIN_ENV_VAR_NAME]
                     || process.env[ConfigNames.BITBUCKET_GIT_SSH_ORIGIN_ENV_VAR_NAME.toLowerCase()];
             }
@@ -84,6 +80,6 @@ export const init = async (): Promise<void> => {
         }
     } catch (e) {
         ThundraLogger.error(
-            `<GithubEnvironmentInfoProvider> Unable to build environment info`);
+            '<GithubEnvironmentInfoProvider> Unable to build environment info');
     }
 };
