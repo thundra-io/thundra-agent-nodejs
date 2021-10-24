@@ -1,3 +1,3 @@
-const ThundraCore = require('@thundra/core');
+const thundra = require('../../thundraBridge');
 
-ThundraCore.Foresight.init();
+thundra.Foresight.init();
