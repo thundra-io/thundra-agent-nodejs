@@ -10,7 +10,6 @@ export default class ForesightLogPlugin extends LogPlugin {
     }
 
     reportLog(logInfo: any, execContext: ExecutionContext, fromConsole: boolean = false): void {
-
         const context = (TestRunnerSupport.testCaseExecutionContext === execContext
             || TestRunnerSupport.testCaseExecutionContext === execContext.parentContext) ?
             TestRunnerSupport.testCaseExecutionContext : execContext;
@@ -21,12 +20,11 @@ export default class ForesightLogPlugin extends LogPlugin {
     }
 
     protected isSampled(): boolean {
-
         return true;
     }
 
     private _isSampled(): boolean {
-
         return this.getSampler().isSampled();
     }
+
 }

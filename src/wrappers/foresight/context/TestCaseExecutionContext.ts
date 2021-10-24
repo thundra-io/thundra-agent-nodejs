@@ -29,7 +29,6 @@ export default class TestCaseExecutionContext extends ExecutionContext {
     }
 
     getContextInformation() {
-
         const baseContextInformation = super.getContextInformation();
 
         return {
@@ -42,7 +41,6 @@ export default class TestCaseExecutionContext extends ExecutionContext {
     }
 
     getAdditionalStartTags() {
-
         const testRunScope = TestRunnerSupport.testRunScope;
 
         return {
@@ -56,7 +54,6 @@ export default class TestCaseExecutionContext extends ExecutionContext {
     }
 
     getAdditionalFinishTags() {
-
         return {
             [TestRunnerTags.TEST_STATUS]: this.status,
             ...(TestRunnerSupport.testSuiteExecutionContext && TestRunnerSupport.testSuiteExecutionContext.invocationData
@@ -70,7 +67,7 @@ export default class TestCaseExecutionContext extends ExecutionContext {
     }
 
     protected initContextMode() {
-
         this.compatibleContextModes.push(ContextMode.GlobalMode);
     }
+
 }

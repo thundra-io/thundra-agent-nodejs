@@ -38,7 +38,6 @@ function initAsync(asyncId: number, type: string, triggerAsyncId: number, resour
 }
 
 function _setContext(execContext: ExecutionContext) {
-
     if (execContext.isContextCompatibleWith(ContextMode.AsyncMode)) {
 
         currentContextModel = ContextMode.AsyncMode;
@@ -71,7 +70,6 @@ export function canChangeablebleContext() {
 }
 
 export function runWithContext(createExecContext: Function, fn: Function) {
-
     const execContext: ExecutionContext = createExecContext();
 
     if (activeGlobalExecutionContext != null
@@ -85,7 +83,6 @@ export function runWithContext(createExecContext: Function, fn: Function) {
 }
 
 export function get(): any {
-
     let context;
 
     if (currentContextModel === ContextMode.GlobalMode) {
@@ -98,12 +95,10 @@ export function get(): any {
 }
 
 export function set(execContext: ExecutionContext) {
-
     _setContext(execContext);
 }
 
 export function init() {
-
     const hook = asyncHooks.createHook({
         init: initAsync,
         destroy: destroyAsync,

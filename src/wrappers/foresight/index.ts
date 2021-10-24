@@ -41,54 +41,45 @@ export function globalTeardown(clientGlobalSetupPath: string) {
  * Foresight wrapper init function
  */
 export function init() {
-
     const testWrapperDisabled = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_DISABLE);
     if (testWrapperDisabled) {
-
-        ThundraLogger.debug(`<ForesightInit> Foresight disabled.`);
+        ThundraLogger.debug('<ForesightInit> Foresight disabled.');
         return;
     }
 
-    ThundraLogger.debug(`<ForesightInit> Initializing ...`);
+    ThundraLogger.debug('<ForesightInit> Initializing ...');
 
     libs.forEach((value: any, key: any) => {
-
         [].concat(value)
-        .forEach((instrumentation) => {
+            .forEach((instrumentation) => {
+                const moduleName = instrumentation.name;
+                const version = instrumentation.version;
+                let notSupportedVersion = '';
 
-            const moduleName = instrumentation.name;
-            const version = instrumentation.version;
-            let notSupportedVersion = '';
+                try {
+                    const hook = (lib: any, name: string, basedir: string) => {
+                        if (name === moduleName) {
+                            const isValidVersion = ModuleVersionValidator.validateModuleVersion(basedir, version);
+                            if (isValidVersion) {
+                                return instrumentation.patch.call(this, lib);
+                            }
 
-            try {
+                            notSupportedVersion = require(path.join(basedir, 'package.json')).version;
 
-                const hook = (lib: any, name: string, basedir: string) => {
-
-                    if (name === moduleName) {
-
-                        const isValidVersion = ModuleVersionValidator.validateModuleVersion(basedir, version);
-                        if (isValidVersion) {
-
-                            return instrumentation.patch.call(this, lib);
+                            ThundraLogger.error(
+                                `<ForesightInit> Version ${notSupportedVersion} is invalid for module ${moduleName}.
+                            Supported version is ${version}`);
                         }
 
-                        notSupportedVersion = require(path.join(basedir, 'package.json')).version;
+                        return lib;
+                    };
 
-                        ThundraLogger.error(
-                            `<ForesightInit> Version ${notSupportedVersion} is invalid for module ${moduleName}.
-                            Supported version is ${version}`);
-                    }
-
-                    return lib;
-                };
-
-                Hook([moduleName], { }, hook);
-            } catch (e) {
-
-                ThundraLogger.error(
-                    `<ForesightInit> Foresight did not initialized module ${moduleName} for version ${notSupportedVersion}.`);
-            }
-        });
+                    Hook([moduleName], { }, hook);
+                } catch (e) {
+                    ThundraLogger.error(
+                        `<ForesightInit> Foresight did not initialized module ${moduleName} for version ${notSupportedVersion}.`);
+                }
+            });
     });
 
     return true;

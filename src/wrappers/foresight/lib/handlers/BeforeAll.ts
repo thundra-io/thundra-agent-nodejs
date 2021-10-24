@@ -15,12 +15,10 @@ const TEST_BEFORE_ALL_OPERATION_NAME = 'beforeAll';
  * @param event event
  */
 export async function start(event: TestSuiteEvent) {
-
     ThundraLogger.debug('<beforeAll> Handling beforeAll start event.');
 
     const context = TestRunnerSupport.testSuiteExecutionContext;
     if (!context) {
-
         ThundraLogger.debug('<beforeAll> Execution context can not be empty.');
         return;
     }
@@ -43,12 +41,10 @@ export async function start(event: TestSuiteEvent) {
  * @param event event
  */
 export async function finish(event: TestSuiteEvent) {
-
     ThundraLogger.debug('<beforeAll> Handling beforeAll finish event.');
 
     const context = TestRunnerSupport.testSuiteExecutionContext;
     if (!context) {
-
         ThundraLogger.debug('<beforeAll> Execution context can not be empty.');
         return;
     }

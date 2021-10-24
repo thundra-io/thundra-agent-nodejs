@@ -58,7 +58,6 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
     }
 
     getContextInformation() {
-
         const baseContextInformation = super.getContextInformation();
 
         return {
@@ -71,7 +70,6 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
     }
 
     getAdditionalStartTags() {
-
         const testRunScope = TestRunnerSupport.testRunScope;
 
         return {
@@ -93,7 +91,7 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
     }
 
     protected initContextMode() {
-
         this.compatibleContextModes.push(ContextMode.GlobalMode);
     }
+
 }

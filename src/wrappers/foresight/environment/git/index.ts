@@ -10,7 +10,6 @@ export const ENVIRONMENT = 'Git';
 let environmentInfo: EnvironmentInfo;
 
 const getTestRunId = (repoURL: string, commitHash: string) => {
-
     const testRunId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_RUN_ID);
     if (testRunId) {
         return testRunId;
@@ -23,7 +22,6 @@ const getTestRunId = (repoURL: string, commitHash: string) => {
  * Get environment info
  */
 export const getEnvironmentInfo = () => {
-
     return environmentInfo;
 };
 
@@ -32,12 +30,10 @@ export const getEnvironmentInfo = () => {
  */
 export const init = async () => {
     if (environmentInfo == null) {
-
         ThundraLogger.debug('<GitEnvironmentProvider> Initializing git environment ...');
 
         const gitEnvironmentInfo = await GitHelper.init();
         if (gitEnvironmentInfo != null) {
-
             const repoURL = gitEnvironmentInfo.repoURL;
             const repoName = gitEnvironmentInfo.repoName;
             const branch = gitEnvironmentInfo.branch;

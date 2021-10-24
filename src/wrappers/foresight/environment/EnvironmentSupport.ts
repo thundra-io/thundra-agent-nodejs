@@ -12,7 +12,6 @@ let environmentInfo: EnvironmentInfo;
  * Initiate all environment providers and set non empty one
  */
 export const init = async () => {
-
     ThundraLogger.debug('<EnvironmentSupport> Environments initilizing ...');
 
     await InfoProvider.init();
@@ -20,7 +19,6 @@ export const init = async () => {
     Object.values(InfoProvider.environmentInfoProviders).forEach((environmentInfoProvider) => {
         const ei: EnvironmentInfo = environmentInfoProvider.getEnvironmentInfo();
         if (ei != null) {
-
             ThundraLogger.debug(`<EnvironmentSupport> Environment loaded. ${ei.environment}`);
             environmentInfo = ei;
             return;
@@ -40,7 +38,6 @@ export const getEnvironmentInfo = () => {
  * @param invocationData invocationData
  */
 export const tagInvocation = (invocationData: InvocationData) => {
-
     if (environmentInfo) {
         invocationData.tags[TestRunnerTags.TEST_ENVIRONMENT] = environmentInfo.environment;
         invocationData.tags[TestRunnerTags.SOURCE_CODE_REPO_URL] = environmentInfo.repoURL;
@@ -56,7 +53,6 @@ export const tagInvocation = (invocationData: InvocationData) => {
  * @param span span
  */
 export const tagSpan = (span: ThundraSpan) => {
-
     if (environmentInfo) {
         span.tags[TestRunnerTags.TEST_ENVIRONMENT] = environmentInfo.environment;
         span.tags[TestRunnerTags.SOURCE_CODE_REPO_URL] = environmentInfo.repoURL;

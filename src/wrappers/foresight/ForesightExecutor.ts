@@ -10,12 +10,10 @@ import * as EnvironmentSupport from './environment/EnvironmentSupport';
  * @param {ExecutionContext} execContext
  */
 export function startInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
-
     execContext.invocationData = ForesightWrapperUtils.createInvocationData(execContext, pluginContext);
 
     const additionalTags: any = execContext.getAdditionalStartTags();
     if (additionalTags) {
-
         Object.keys(additionalTags).forEach((tag) => {
             execContext.invocationData.tags[tag] = additionalTags[tag];
         });
@@ -28,14 +26,12 @@ export function startInvocation(pluginContext: PluginContext, execContext: Execu
  * @param {ExecutionContext} execContext
  */
 export function finishInvocation(pluginContext: PluginContext, execContext: ExecutionContext) {
-
     const { invocationData} = execContext;
 
     ForesightWrapperUtils.finishInvocationData(execContext, pluginContext);
 
     const additionalTags: any = execContext.getAdditionalFinishTags();
     if (additionalTags) {
-
         Object.keys(additionalTags).forEach((tag) => {
             invocationData.tags[tag] = additionalTags[tag];
         });
@@ -50,14 +46,12 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
  * @param {ExecutionContext} execContext
  */
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-
     ForesightWrapperUtils.startTrace(pluginContext, execContext);
 
     const { rootSpan } = execContext;
 
     const additionalTags: any = execContext.getAdditionalStartTags();
     if (additionalTags) {
-
         Object.keys(additionalTags).forEach((tag) => {
             rootSpan.tags[tag] = additionalTags[tag];
         });
@@ -72,14 +66,12 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
  * @param {ExecutionContext} execContext
  */
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-
     ForesightWrapperUtils.finishTrace(pluginContext, execContext);
 
     const { rootSpan } = execContext;
 
     const additionalTags: any = execContext.getAdditionalFinishTags();
     if (additionalTags) {
-
         Object.keys(additionalTags).forEach((tag) => {
             rootSpan.tags[tag] = additionalTags[tag];
         });

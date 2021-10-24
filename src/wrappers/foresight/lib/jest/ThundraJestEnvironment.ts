@@ -1,5 +1,3 @@
-import Path from 'path';
-
 import * as TestRunnerSupport from '../../TestRunnerSupport';
 import { JestEventHandlers } from '../handlers';
 import TestSuiteEvent from '../../model/TestSuiteEvent';
@@ -10,8 +8,9 @@ import ConfigNames from '../../../../config/ConfigNames';
 import ConfigProvider from '../../../../config/ConfigProvider';
 import ThundraLogger from '../../../../ThundraLogger';
 import {
-  LoadTestModules,
-  WrapTestRequireModule,
+    loadTestModules,
+    wrapTestRequireModule,
+    unwrapTestRequireModule,
 } from './ModuleLoader';
 import TracePlugin from '../../../../plugins/Trace';
 import LogPlugin from '../../../../plugins/Log';
@@ -33,204 +32,198 @@ const APPLICATIONCLASSNAME = 'Jest';
  * @param BaseEnvironment BaseEnvironment
  */
 function wrapEnvironment(BaseEnvironment: any) {
-  return class ThundraJestEnvironment extends BaseEnvironment {
+    return class ThundraJestEnvironment extends BaseEnvironment {
 
-    testSuite: string;
+        testSuite: string;
 
-    constructor (config: any, context: any) {
-      super(config, context);
+        constructor (config: any, context: any) {
+            super(config, context);
 
-      ThundraLogger.debug(`<ThundraJestEnvironment> Initializing ...`);
+            ThundraLogger.debug('<ThundraJestEnvironment> Initializing ...');
 
-      subscribeProcessExitEvents();
+            subscribeProcessExitEvents();
 
-      this.toBeAttachedToJestTestScope();
-      this.setSamplersToConfig();
+            this.toBeAttachedToJestTestScope();
+            this.setSamplersToConfig();
 
-      // Add default SetupFile
-      const setupFilePath = resolveFromRoot(__PRIVATE__.getSetupFilePath());
-      config.setupFiles.push(setupFilePath);
+            // Add default SetupFile
+            const setupFilePath = resolveFromRoot(__PRIVATE__.getSetupFilePath());
+            config.setupFiles.push(setupFilePath);
 
-      this.testSuite = TestRunnerUtils.getTestFileName(context.testPath, config.cwd);
+            this.testSuite = TestRunnerUtils.getTestFileName(context.testPath, config.cwd);
 
-      TestRunnerSupport.setTestSuiteName(this.testSuite);
+            TestRunnerSupport.setTestSuiteName(this.testSuite);
 
-      TestRunnerSupport.setApplicationClassName(APPLICATIONCLASSNAME);
+            TestRunnerSupport.setApplicationClassName(APPLICATIONCLASSNAME);
 
-      const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(
-        ForesightExecutor,
-        APPLICATIONCLASSNAME,
-        [
-          TracePlugin.name,
-          InvocationPlugin.name,
-        ],
-      );
+            const wrapperContext: WrapperContext = ForesightWrapperUtils.initWrapper(
+                ForesightExecutor,
+                APPLICATIONCLASSNAME,
+                [
+                    TracePlugin.name,
+                    InvocationPlugin.name,
+                ],
+            );
 
-      TestRunnerSupport.setWrapperContext(wrapperContext);
+            TestRunnerSupport.setWrapperContext(wrapperContext);
 
-      ForesightWrapperUtils.initForesightContextManager();
+            ForesightWrapperUtils.initForesightContextManager();
 
-      const testStatusReportFreq = ConfigProvider.get<number>(ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ, 10000);
-      TestRunnerSupport.setTestStatusReportFreq(testStatusReportFreq);
-    }
+            const testStatusReportFreq = ConfigProvider.get<number>(ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ, 10000);
+            TestRunnerSupport.setTestStatusReportFreq(testStatusReportFreq);
+        }
 
-    setSamplersToConfig() {
+        setSamplersToConfig() {
+            const thundraConfig: ThundraConfig = ConfigProvider.thundraConfig;
+            if (thundraConfig && thundraConfig.logConfig && !thundraConfig.logConfig.sampler) {
+                const maxCount = ConfigProvider.get<number>(ConfigNames.THUNDRA_AGENT_TEST_LOG_COUNT_MAX);
+                thundraConfig.logConfig.sampler = new TestTraceAwareSampler({ create: () => new MaxCountAwareSampler(maxCount) });
+            }
+        }
 
-      const thundraConfig: ThundraConfig = ConfigProvider.thundraConfig;
-      if (thundraConfig && thundraConfig.logConfig && !thundraConfig.logConfig.sampler) {
-
-        const maxCount = ConfigProvider.get<number>(ConfigNames.THUNDRA_AGENT_TEST_LOG_COUNT_MAX);
-        thundraConfig.logConfig.sampler = new TestTraceAwareSampler({ create: () => new MaxCountAwareSampler(maxCount) });
-      }
-    }
-
-    /**
-     * Create event name with event object for handle test events.
-     * Created value value will be used for select matched handler in JestEventHandlers
-     * @param event event
-     */
-    createEventName(event: any) {
-
-      let eventName = event.name;
-      if (eventName === 'hook_start' || eventName === 'hook_success') {
-        eventName = `${eventName}<${event.hook.type}>`;
-      }
-
-      return eventName;
-    }
-
-    /**
-     * Create TestSuiteEvent object for related handlers.
-     * @param event event
-     * @param state state
-     */
-    createTestSuiteEvent(event: any, state: any) {
-
-      if (!event) {
-        return;
-      }
-
-      const { testSuite } = this;
-
-      const name: string = event.name;
-      const orginalEvent = event;
-
-      let id: string;
-      let testName: string;
-      let testDuration: number;
-      let error: Error;
-
-      if (event.test && event.test.parent) {
-        const test = event.test;
-
-        id = testSuite + '-' + test.parent.name;
-        testName = test.name;
-        testDuration = test.duration;
-
-        const errorArr = test.errors;
-        if (errorArr.length) {
-
-          let stack;
-          let spareStack;
-          let message;
-
-          if (test.errors) {
-
-            const errObj = test.errors[0];
-            if (errObj) {
-              message = typeof errObj[0] === 'object' ? errObj[0].message : errObj[0];
+        /**
+         * Create event name with event object for handle test events.
+         * Created value value will be used for select matched handler in JestEventHandlers
+         * @param event event
+         */
+        createEventName(event: any) {
+            let eventName = event.name;
+            if (eventName === 'hook_start' || eventName === 'hook_success') {
+                eventName = `${eventName}<${event.hook.type}>`;
             }
 
-            if (errObj.length > 1) {
-              spareStack = typeof errObj[1] === 'object' ? errObj[1].stack : errObj[1];
+            return eventName;
+        }
+
+        /**
+         * Create TestSuiteEvent object for related handlers.
+         * @param event event
+         * @param state state
+         */
+        createTestSuiteEvent(event: any, state: any) {
+            if (!event) {
+                return;
             }
-          }
 
-          if (test.asyncError && test.asyncError.stack) {
-            stack = test.asyncError.stack;
-          } else {
-            stack = spareStack;
-          }
+            const { testSuite } = this;
 
-          error = new Error(stripAnsi(message));
-          error.stack = stack;
-        }
-      }
+            const name: string = event.name;
+            const orginalEvent = event;
 
-      return TestSuiteEvent
-        .builder()
-          .withId(id)
-          .withName(name)
-          .withTestName(testName)
-          .withTestDuration(testDuration)
-          .withError(error)
-          .withOrginalEvent(orginalEvent)
-          .withTestSuiteName(testSuite)
-        .build();
-    }
+            let id: string;
+            let testName: string;
+            let testDuration: number;
+            let error: Error;
 
-    /**
-     * set test suite context console to current global console.
-     * set loadThundraTestModules function to testsute global object.
-     * loadThundraTestModules function will be triggered per testcase.
-     */
-    toBeAttachedToJestTestScope() {
+            if (event.test && event.test.parent) {
+                const test = event.test;
 
-      this.global.__THUNDRA__ = {
-        testScopeLoaded: (testRequire: any) => {
+                id = testSuite + '-' + test.parent.name;
+                testName = test.name;
+                testDuration = test.duration;
 
-          LoadTestModules(testRequire);
-          WrapTestRequireModule();
+                const errorArr = test.errors;
+                if (errorArr.length) {
+                    let stack;
+                    let spareStack;
+                    let message;
 
-          const foresightLogPlugin = ForesightWrapperUtils.createLogPlugin(this.global.console);
-          if (foresightLogPlugin && TestRunnerSupport.wrapperContext
-              && TestRunnerSupport.wrapperContext.plugins && TestRunnerSupport.wrapperContext.pluginContext) {
+                    if (test.errors) {
+                        const errObj = test.errors[0];
+                        if (errObj) {
+                            message = typeof errObj[0] === 'object' ? errObj[0].message : errObj[0];
+                        }
 
-            foresightLogPlugin.setPluginContext(TestRunnerSupport.wrapperContext.pluginContext);
-            TestRunnerSupport.wrapperContext.plugins.push(foresightLogPlugin);
+                        if (errObj.length > 1) {
+                            spareStack = typeof errObj[1] === 'object' ? errObj[1].stack : errObj[1];
+                        }
+                    }
 
-            WrapperContext.addIgnoredPlugin(LogPlugin.name);
-          }
-        },
-        /* test-code */
-        testRunnerSupport: TestRunnerSupport,
-        /* test-code */
-      };
-    }
+                    if (test.asyncError && test.asyncError.stack) {
+                        stack = test.asyncError.stack;
+                    } else {
+                        stack = spareStack;
+                    }
 
-    /**
-     * Override handleTestEvent method.
-     * All test actions handle on this method.
-     * @param event event
-     * @param state state
-     */
-    async handleTestEvent(event: any, state: any) {
+                    error = new Error(stripAnsi(message));
+                    error.stack = stack;
+                }
+            }
 
-      try {
-        const eventName = this.createEventName(event);
-        if (!eventName) {
-
-          ThundraLogger.debug(`<ThundraJestEnvironment> Event name can not be empty. Testsuite name: ${this.testSuite}.`);
-          return;
+            return TestSuiteEvent
+                .builder()
+                .withId(id)
+                .withName(name)
+                .withTestName(testName)
+                .withTestDuration(testDuration)
+                .withError(error)
+                .withOrginalEvent(orginalEvent)
+                .withTestSuiteName(testSuite)
+                .build();
         }
 
-        const testSuiteEvent = this.createTestSuiteEvent(event, state);
+        /**
+         * set test suite context console to current global console.
+         * set loadThundraTestModules function to testsute global object.
+         * loadThundraTestModules function will be triggered per testcase.
+         */
+        toBeAttachedToJestTestScope() {
+            this.global.__THUNDRA__ = {
+                testScopeLoaded: (testRequire: any) => {
+                    loadTestModules(testRequire);
+                    wrapTestRequireModule();
 
-        if (!testSuiteEvent) {
+                    const foresightLogPlugin = ForesightWrapperUtils.createLogPlugin(this.global.console);
+                    if (foresightLogPlugin && TestRunnerSupport.wrapperContext
+                        && TestRunnerSupport.wrapperContext.plugins && TestRunnerSupport.wrapperContext.pluginContext) {
+                        foresightLogPlugin.setPluginContext(TestRunnerSupport.wrapperContext.pluginContext);
+                        TestRunnerSupport.wrapperContext.plugins.push(foresightLogPlugin);
 
-          ThundraLogger.debug(`<ThundraJestEnvironment> Test suite event can not be empty. Testsuite name: ${this.testSuite}.`);
-          return;
+                        WrapperContext.addIgnoredPlugin(LogPlugin.name);
+                    }
+                },
+                /* test-code */
+                testRunnerSupport: TestRunnerSupport,
+                /* test-code */
+            };
         }
 
-        const handler = JestEventHandlers.get(eventName);
-        if (handler) {
-          await handler(testSuiteEvent);
+        /**
+         * Override handleTestEvent method.
+         * All test actions handle on this method.
+         * @param event event
+         * @param state state
+         */
+        async handleTestEvent(event: any, state: any) {
+            try {
+                const eventName = this.createEventName(event);
+                if (!eventName) {
+                    ThundraLogger.debug(
+                        `<ThundraJestEnvironment> Event name can not be empty. Testsuite name: ${this.testSuite}.`);
+                    return;
+                }
+
+                const testSuiteEvent = this.createTestSuiteEvent(event, state);
+                if (!testSuiteEvent) {
+                    ThundraLogger.debug(
+                        `<ThundraJestEnvironment> Test suite event can not be empty. Testsuite name: ${this.testSuite}.`);
+                    return;
+                }
+
+                const handler = JestEventHandlers.get(eventName);
+                if (handler) {
+                    await handler(testSuiteEvent);
+                }
+            } catch (error) {
+                ThundraLogger.error('<ThundraJestEnvironment> An error occured while handling test event.', error);
+            }
         }
-      } catch (error) {
-        ThundraLogger.error('<ThundraJestEnvironment> An error occured while handling test event.', error);
-      }
-    }
-  };
+
+        async teardown() {
+            unwrapTestRequireModule();
+        }
+
+    };
 }
 
 /**
@@ -238,35 +231,30 @@ function wrapEnvironment(BaseEnvironment: any) {
  * @param Environment Environment
  */
 const patch = (Environment: any) => {
+    const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);
+    if (!projectId) {
+        ThundraLogger.error('<ThundraJestEnvironment> Test project id must be filled ...');
+        return Environment;
+    }
 
-  const projectId = ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID);
-  if (!projectId) {
-
-    ThundraLogger.error('<ThundraJestEnvironment> Test project id must be filled ...');
-    return Environment;
-
-  }
-
-  TestRunnerSupport.setProjectId(projectId);
-  return wrapEnvironment(Environment);
+    TestRunnerSupport.setProjectId(projectId);
+    return wrapEnvironment(Environment);
 };
 
 export default [{
     name: 'jest-environment-node',
     version: '>=24.8.0',
     patch,
-  },
-  {
+}, {
     name: 'jest-environment-jsdom',
     version: '>=24.8.0',
     patch,
-  },
-];
+}];
 
 /* test-code */
 export const __PRIVATE__ = {
-  getSetupFilePath: () => {
-      return './bootstrap/foresight/jest/SetupFile.js';
-  },
+    getSetupFilePath: () => {
+        return './bootstrap/foresight/jest/SetupFile.js';
+    },
 };
 /* end-test-code */

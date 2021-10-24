@@ -47,7 +47,6 @@ export const init = async () => {
     let commitMessage: string;
 
     try {
-
         ThundraLogger.debug('<GitHelper> Obtaining git environment information ...');
 
         const gitroot = await git.findRoot({
@@ -94,7 +93,6 @@ export const init = async () => {
 
         ThundraLogger.debug('<GitHelper> Obtained git environment information ...');
     } catch (error) {
-
         ThundraLogger.error('<GitHelper> Git environment did not created.', error);
     }
 
