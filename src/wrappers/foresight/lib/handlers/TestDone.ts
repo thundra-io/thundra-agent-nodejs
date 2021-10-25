@@ -50,7 +50,7 @@ export default async function run(event: TestSuiteEvent) {
 
         context.setError(event.error);
 
-        if (event.timeout) {
+        if (event.isTimeout()) {
             context.setExecutionTimeout(true);
             testStatus = TEST_STATUS.ABORTED;
 

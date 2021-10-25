@@ -24,6 +24,7 @@ import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
 
 import { subscribeProcessExitEvents } from '../process';
 import ErrorParser from '../jest/utils/ErrorParser';
+import TestRunError from '../../model/TestRunError';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -113,7 +114,7 @@ function wrapEnvironment(BaseEnvironment: any) {
             let id: string;
             let testName: string;
             let testDuration: number;
-            let error: Error;
+            let error: TestRunError;
 
             if (event.test && event.test.parent) {
               const test = event.test;
@@ -135,7 +136,6 @@ function wrapEnvironment(BaseEnvironment: any) {
                 .withTestName(testName)
                 .withTestDuration(testDuration)
                 .withError(error)
-                .withTimeout(error && error.message ? error.message.toLowerCase().includes('exceeded timeout') : false)
                 .withOrginalEvent(orginalEvent)
                 .withTestSuiteName(testSuite)
                 .build();

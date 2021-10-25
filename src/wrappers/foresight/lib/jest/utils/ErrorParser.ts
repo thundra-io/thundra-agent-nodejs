@@ -1,12 +1,13 @@
 import Utils from '../../../../../utils/Utils';
 import ThundraLogger from '../../../../../ThundraLogger';
 import stripAnsi from 'strip-ansi';
+import TestRunError from '../../../model/TestRunError';
 
 export default class ErrorParser {
 
-    static buildError(errorArr: any[], asyncError: any) {
+    static buildError(errorArr: any[], asyncError: any): TestRunError | null {
         try {
-            let error;
+            let error: TestRunError;
             const errorCount = errorArr.length;
             if (errorCount) {
               let stack = '';
@@ -36,8 +37,12 @@ export default class ErrorParser {
                 stack = ErrorParser.deepParseError(errorArr, 1);
               }
 
-              error = new Error(message ? stripAnsi(message) : '');
-              error.stack = stack ? stripAnsi(stack) : '';
+              error = TestRunError
+                .builder()
+                .withMessage(message ? stripAnsi(message) : '')
+                .withStack(stack ? stripAnsi(stack) : '')
+                .withTimeout(message ? message.toLowerCase().includes('exceeded timeout') : false)
+                .build();
             }
 
             return error;
