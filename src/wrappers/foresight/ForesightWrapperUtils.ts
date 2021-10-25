@@ -25,12 +25,14 @@ import ForesightLogPlugin from './plugin/ForesightLogPlugin';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 
 import * as ForesightContextProvider from './context/ForesightContextProvider';
+import Log from '../../plugins/Log';
 
 const get = require('lodash.get');
 
 const TEST_APPLICATION_CLASS_NAME = 'TestSuite';
 const TEST_SUIT_APPLICATION_DOMAIN_NAME = 'TestSuite';
 const TEST_CASE_APPLICATION_DOMAIN_NAME = 'Test';
+const TEST_MAX_REPORT_SIZE = 250 * 1024; // 250 KB
 
 /**
  * Utility class for Foresight wrapper
@@ -152,8 +154,9 @@ export default class ForesightWrapperUtils {
     /**
      * Create log plugin
      * @param consoleRef consoleRef
+     * @return {@link Log} the created {@link Log} log plugin or {@code null}
      */
-    static createLogPlugin(consoleRef: any) {
+    static createLogPlugin(consoleRef: any): Log | null {
         const config = ConfigProvider.thundraConfig;
 
         if (ConfigProvider.get<boolean>(ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE) && config.logConfig.enabled) {
@@ -183,7 +186,7 @@ export default class ForesightWrapperUtils {
      * @param apiKey apiKey
      */
     static createReporter(apiKey: string): Reporter {
-        return new Reporter(apiKey);
+        return new Reporter(apiKey, { maxReportSize: TEST_MAX_REPORT_SIZE });
     }
 
     /**

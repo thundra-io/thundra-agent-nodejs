@@ -10,7 +10,11 @@ import ThundraLogger from '../../../../ThundraLogger';
 import {
     loadTestModules,
     wrapTestRequireModule,
+    wrapTestTransformFile,
+    wrapTestTransformFileAsync,
     unwrapTestRequireModule,
+    unwrapTestTransformFile,
+    unwrapTestTransformFileAsync,
 } from './ModuleLoader';
 import TracePlugin from '../../../../plugins/Trace';
 import LogPlugin from '../../../../plugins/Log';
@@ -25,6 +29,9 @@ import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
 import { subscribeProcessExitEvents } from '../process';
 import ErrorParser from '../jest/utils/ErrorParser';
 import TestRunError from '../../model/TestRunError';
+
+import Trace from '../../../../plugins/Trace';
+import Log from '../../../../plugins/Log';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -150,9 +157,16 @@ function wrapEnvironment(BaseEnvironment: any) {
             this.global.__THUNDRA__ = {
                 testScopeLoaded: (testRequire: any) => {
                     loadTestModules(testRequire);
-                    wrapTestRequireModule();
 
-                    const foresightLogPlugin = ForesightWrapperUtils.createLogPlugin(this.global.console);
+                    wrapTestRequireModule();
+                    const tracePlugin: Trace = TestRunnerSupport.wrapperContext.getPlugin(Trace.NAME);
+                    if (tracePlugin) {
+                        tracePlugin.initInstrumenter(this.global);
+                        wrapTestTransformFile(tracePlugin);
+                        wrapTestTransformFileAsync(tracePlugin);
+                    }
+
+                    const foresightLogPlugin: Log = ForesightWrapperUtils.createLogPlugin(this.global.console);
                     if (foresightLogPlugin && TestRunnerSupport.wrapperContext
                         && TestRunnerSupport.wrapperContext.plugins && TestRunnerSupport.wrapperContext.pluginContext) {
                         foresightLogPlugin.setPluginContext(TestRunnerSupport.wrapperContext.pluginContext);
@@ -200,6 +214,8 @@ function wrapEnvironment(BaseEnvironment: any) {
 
         async teardown() {
             unwrapTestRequireModule();
+            unwrapTestTransformFile();
+            unwrapTestTransformFileAsync();
         }
 
     };

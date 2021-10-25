@@ -13,13 +13,16 @@ import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import ExecutionContext from '../context/ExecutionContext';
 import GlobalTracer from '../opentracing/GlobalTracer';
+import Plugin from './Plugin';
 
 const get = require('lodash.get');
 
 /**
  * The trace plugin for trace support
  */
-export default class Trace {
+export default class Trace implements Plugin {
+
+    public static readonly NAME: string = 'Trace';
 
     pluginOrder: number = 1;
     pluginContext: PluginContext;
@@ -44,6 +47,13 @@ export default class Trace {
         this.initIntegrations();
 
         opentracing.initGlobalTracer(new GlobalTracer());
+    }
+
+    /**
+     * @inheritDoc
+     */
+    getName(): string {
+        return Trace.NAME;
     }
 
     /**
@@ -123,6 +133,25 @@ export default class Trace {
      */
     destroy(): void {
         // pass
+    }
+
+    /**
+     * Initializes the {@link Instrumenter instrumenter}
+     * @param glob the global
+     */
+    initInstrumenter(glob: NodeJS.Global): void {
+        this.instrumenter.setGlobalFunction(glob);
+    }
+
+    /**
+     * Instruments the given JS code.
+     *
+     * @param filename  name of the file
+     * @param code      the code to be instrumented
+     * @return {string}the instrumented code
+     */
+    instrument(filename: string, code: string): string {
+        return this.instrumenter.instrument(filename, code);
     }
 
     private initIntegrations(): void {

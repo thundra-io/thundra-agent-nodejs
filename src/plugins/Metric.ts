@@ -11,13 +11,16 @@ import MonitoringDataType from './data/base/MonitoringDataType';
 import PluginContext from './PluginContext';
 import ThundraLogger from '../ThundraLogger';
 import ExecutionContext from '../context/ExecutionContext';
+import Plugin from './Plugin';
 
 const get = require('lodash.get');
 
 /**
  * The log plugin for metric support
  */
-export default class Metric {
+export default class Metric implements Plugin {
+
+    public static readonly NAME: string = 'Metric';
 
     pluginOrder: number = 2;
     pluginContext: PluginContext;
@@ -34,6 +37,13 @@ export default class Metric {
         };
         this.config = config;
         this.clockTick = parseInt(execSync('getconf CLK_TCK').toString(), 0);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    getName(): string {
+        return Metric.NAME;
     }
 
     /**

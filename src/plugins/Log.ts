@@ -13,13 +13,16 @@ import ConfigNames from '../config/ConfigNames';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
 import LogManager from './LogManager';
 import ExecutionContext from '../context/ExecutionContext';
+import Plugin from './Plugin';
 
 const get = require('lodash.get');
 
 /**
  * The log plugin for log support
  */
-export default class Log {
+export default class Log implements Plugin {
+
+    public static readonly NAME: string = 'Log';
 
     pluginOrder: number = 4;
     pluginContext: PluginContext;
@@ -51,6 +54,13 @@ export default class Log {
         if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_CONSOLE_DISABLE)) {
             this.shimConsole();
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    getName(): string {
+        return Log.NAME;
     }
 
     /**
