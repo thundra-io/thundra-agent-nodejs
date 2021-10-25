@@ -3,13 +3,16 @@ import InvocationConfig from './config/InvocationConfig';
 import PluginContext from './PluginContext';
 import ExecutionContext from '../context/ExecutionContext';
 import ThundraLogger from '../ThundraLogger';
+import Plugin from './Plugin';
 
 const get = require('lodash.get');
 
 /**
  * The invocation plugin
  */
-export default class Invocation {
+export default class Invocation implements Plugin {
+
+    public static readonly NAME: string = 'Invocation';
 
     pluginOrder: number = 2;
     pluginContext: PluginContext;
@@ -25,6 +28,13 @@ export default class Invocation {
             'after-invocation': this.afterInvocation,
         };
         this.options = options;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    getName(): string {
+        return Invocation.NAME;
     }
 
     /**

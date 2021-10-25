@@ -20,6 +20,8 @@ const copy = require('fast-copy');
 const TRACE_DEF_SEPARATOR: string = '.';
 const MAX_LINES: number = 100;
 const MAX_VAR_VALUE_SIZE: number = 8192; // 8KB
+const MAX_ELEMENTS: number = 100;
+const MAX_PROPS: number = 20;
 
 /**
  * Instruments specified/configured modules/method during load time
@@ -56,31 +58,7 @@ class Instrumenter {
         self.setGlobalFunction();
 
         const thundraCompile = function (content: any, filename: any) {
-            const relPath = path.relative(process.cwd(), filename);
-            let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPARATOR);
-            relPathWithDots = relPathWithDots.replace('.js', '');
-
-            const sci = self.sourceCodeInstrumenter;
-
-            if (sci.shouldTraceFile(relPathWithDots)) {
-                ThundraLogger.debug('<Instrumenter> Instrumenting file', filename, 'at', relPath);
-                let wrapped = true;
-                if (Module.wrapper.length === 2) {
-                    content = Module.wrapper[0] + '\n' + content + Module.wrapper[1];
-                } else {
-                    wrapped = false;
-                }
-                try {
-                    content = sci.addTraceHooks(content, relPathWithDots, wrapped);
-                    if (Module.wrapper.length === 2) {
-                        content = content.substring(Module.wrapper[0].length, content.length - Module.wrapper[1].length);
-                    }
-                    ThundraLogger.debug('<Instrumenter> Instrumented file', filename, 'at', relPath, ':', content);
-                } catch (e) {
-                    ThundraLogger.error(
-                        '<Instrumenter> Error occurred while instrumenting file', filename, 'at', relPath, ':', e);
-                }
-            }
+            content = self.instrument(filename, content);
 
             self.origCompile.call(this, content, filename);
         };
@@ -89,6 +67,44 @@ class Instrumenter {
             writable: false,
         });
         Module.prototype._compile = thundraCompile;
+    }
+
+    /**
+     * Instruments the given JS code.
+     *
+     * @param filename  name of the file
+     * @param code      the code to be instrumented
+     * @return {string}the instrumented code
+     */
+    instrument(filename: string, code: string): string {
+        const relPath = path.relative(process.cwd(), filename);
+        let relPathWithDots = relPath.replace(/\//g, TRACE_DEF_SEPARATOR);
+        relPathWithDots = relPathWithDots.replace('.js', '');
+        relPathWithDots = relPathWithDots.replace('.ts', '');
+
+        const sci = this.sourceCodeInstrumenter;
+
+        if (sci.shouldTraceFile(relPathWithDots)) {
+            ThundraLogger.debug('<Instrumenter> Instrumenting file', filename, 'at', relPath);
+            let wrapped = true;
+            if (Module.wrapper.length === 2) {
+                code = Module.wrapper[0] + '\n' + code + Module.wrapper[1];
+            } else {
+                wrapped = false;
+            }
+            try {
+                code = sci.addTraceHooks(code, relPathWithDots, wrapped);
+                if (Module.wrapper.length === 2) {
+                    code = code.substring(Module.wrapper[0].length, code.length - Module.wrapper[1].length);
+                }
+                ThundraLogger.debug('<Instrumenter> Instrumented file', filename, 'at', relPath, ':', code);
+            } catch (e) {
+                ThundraLogger.error(
+                    '<Instrumenter> Error occurred while instrumenting file', filename, 'at', relPath, ':', e);
+            }
+        }
+
+        return code;
     }
 
     /**
@@ -106,73 +122,14 @@ class Instrumenter {
         }
     }
 
-    private checkValueSize(value: any): boolean {
-        try {
-            const valueSize = sizeof(value);
-            return valueSize <= MAX_VAR_VALUE_SIZE;
-        } catch (e) {
-            ThundraLogger.debug('<Instrumenter> Unable to check value size:', e);
-            return true;
-        }
-    }
-
-    private packValue(value: any) {
-        // `==` is used on purpose (instead of `===`) as it covers both undefined and null values
-        if (value == null) {
-            return null;
-        }
-        const valueType = typeof value;
-        if (valueType === 'function') {
-            return `function ${value.name}(...) { ... }`;
-        }
-        if (value instanceof Map || value instanceof Set) {
-            value = [...value];
-        }
-        if (!this.checkValueSize(value)) {
-            return '<skipped: value too big>';
-        }
-        try {
-            // Create deep copy to take snapshot of the value.
-            // So later modifications on the real value/object
-            // will not be reflected to the taken snapshot here.
-            return copy(value);
-        } catch (e1) {
-            ThundraLogger.debug('<Instrumenter> Unable to clone value:', e1);
-            try {
-                const valueJson = Utils.serializeJSON(value);
-                if (valueJson) {
-                    if (valueJson.length <= MAX_VAR_VALUE_SIZE) {
-                        return valueJson;
-                    } else {
-                        ThundraLogger.debug('<Instrumenter> Unable to serialize value to JSON as it is too big');
-                    }
-                } else {
-                    ThundraLogger.debug('<Instrumenter> Unable to serialize value to JSON as no JSON could produced');
-                }
-            } catch (e2) {
-                ThundraLogger.debug('<Instrumenter> Unable to serialize value to JSON:', e2);
-            }
-            try {
-                const valueStr = value.toString();
-                if (valueStr) {
-                    if (valueStr.length <= MAX_VAR_VALUE_SIZE) {
-                        return valueStr;
-                    } else {
-                        ThundraLogger.debug('<Instrumenter> Unable to use "toString()" of value as it is too big');
-                    }
-                } else {
-                    ThundraLogger.debug('<Instrumenter> Unable to use "toString()" of value as no string could be produced');
-                }
-            } catch (e3) {
-                ThundraLogger.debug('<Instrumenter> Unable to use "toString()" of value:', e3);
-            }
-            return '<unable to serialize value>';
-        }
-    }
-
-    private setGlobalFunction() {
+    /**
+     * Sets the global function
+     * @param glob the global
+     */
+    setGlobalFunction(glob?: NodeJS.Global) {
         const me = this;
-        global.__thundraTraceEntry__ = function (args: any) {
+        const g = glob || global;
+        g.__thundraTraceEntry__ = function (args: any) {
             const { tracer } = ExecutionContextManager.get();
             if (!tracer) {
                 return;
@@ -220,7 +177,7 @@ class Instrumenter {
             }
         };
 
-        global.__thundraTraceLine__ = function (args: any) {
+        g.__thundraTraceLine__ = function (args: any) {
             let methodName = null;
             try {
                 const entryData = args.entryData;
@@ -299,7 +256,7 @@ class Instrumenter {
             }
         };
 
-        global.__thundraTraceExit__ = function (args: any) {
+        g.__thundraTraceExit__ = function (args: any) {
             let methodName = null;
             const { tracer } = ExecutionContextManager.get();
             if (!tracer) {
@@ -342,6 +299,130 @@ class Instrumenter {
                 }
             }
         };
+    }
+
+    private checkValueSize(value: any): boolean {
+        try {
+            const valueSize = sizeof(value);
+            return valueSize <= MAX_VAR_VALUE_SIZE;
+        } catch (e) {
+            ThundraLogger.debug('<Instrumenter> Unable to check value size:', e);
+            return true;
+        }
+    }
+
+    private packValue(value: any) {
+        // `==` is used on purpose (instead of `===`) as it covers both undefined and null values
+        if (value == null) {
+            return null;
+        }
+        const valueType = typeof value;
+        if (valueType === 'function') {
+            return `function ${value.name}(...) { ... }`;
+        }
+        if (value instanceof Map || value instanceof Set) {
+            value = [...value];
+        }
+        if (!this.checkValueSize(value)) {
+            return this.summarizeValue(value);
+        }
+        try {
+            // Create deep copy to take snapshot of the value.
+            // So later modifications on the real value/object
+            // will not be reflected to the taken snapshot here.
+            return copy(value);
+        } catch (e1) {
+            ThundraLogger.debug('<Instrumenter> Unable to clone value:', e1);
+            try {
+                const valueJson = Utils.serializeJSON(value);
+                if (valueJson) {
+                    if (valueJson.length <= MAX_VAR_VALUE_SIZE) {
+                        return valueJson;
+                    } else {
+                        ThundraLogger.debug('<Instrumenter> Unable to serialize value to JSON as it is too big');
+                    }
+                } else {
+                    ThundraLogger.debug('<Instrumenter> Unable to serialize value to JSON as no JSON could produced');
+                }
+            } catch (e2) {
+                ThundraLogger.debug('<Instrumenter> Unable to serialize value to JSON:', e2);
+            }
+            try {
+                const valueStr = value.toString();
+                if (valueStr) {
+                    if (valueStr.length <= MAX_VAR_VALUE_SIZE) {
+                        return valueStr;
+                    } else {
+                        ThundraLogger.debug('<Instrumenter> Unable to use "toString()" of value as it is too big');
+                    }
+                } else {
+                    ThundraLogger.debug('<Instrumenter> Unable to use "toString()" of value as no string could be produced');
+                }
+            } catch (e3) {
+                ThundraLogger.debug('<Instrumenter> Unable to use "toString()" of value:', e3);
+            }
+            return '<unable to serialize value>';
+        }
+    }
+
+    private summarizeValue(value: any): any {
+        if (Array.isArray(value)) {
+            return this.summarizeArray(value);
+        } else {
+            return this.summarizeObject(value);
+        }
+    }
+
+    private summarizeArray(array: any[]): any[] {
+        const summary: any = [];
+        const elementCount = Math.min(array.length, MAX_ELEMENTS);
+        const maxElementSize = 2 * (MAX_VAR_VALUE_SIZE / elementCount);
+        let currentSize: number = 0;
+        for (let i = 0; i < elementCount; i++) {
+            const element = array[i];
+            const elementSize = sizeof(element);
+            // Check whether
+            // - the element is small enough
+            // - the new size will not exceed the max size with the new element
+            if ((elementSize <= maxElementSize) && (currentSize + elementSize <= MAX_VAR_VALUE_SIZE)) {
+                summary[i] = copy(element);
+                currentSize += elementSize;
+            } else {
+                summary[i] = '<skipped: element too big>';
+            }
+        }
+        return summary;
+    }
+
+    private summarizeObject(obj: any): any {
+        // First, sort object properties by their sizes
+        obj = Object.entries(obj).
+                sort((kv1: any[], kv2: any[]) => {
+                    const size1 = sizeof(kv1[1]);
+                    const size2 = sizeof(kv2[1]);
+                    return size1 - size2;
+                }).
+                reduce((sorted: any, kv: any[]) => {
+                    sorted[kv[0]] = kv[1];
+                    return sorted;
+                }, {});
+
+        // Then shallow copy properties by starting from the smallest one until it reaches to the max limit
+        const summary: any = {};
+        const keys = Object.keys(obj);
+        let currentSize: number = 0;
+        for (let i = 0; i < keys.length && i < MAX_PROPS; i++) {
+            const key = keys[i];
+            const prop = obj[key];
+            const propSize = sizeof(prop);
+            // Check whether the new size will exceed the max size with the new prop
+            if (currentSize + propSize > MAX_VAR_VALUE_SIZE) {
+                break;
+            }
+            summary[key] = copy(prop);
+            currentSize += propSize;
+        }
+        return summary;
     }
 
 }

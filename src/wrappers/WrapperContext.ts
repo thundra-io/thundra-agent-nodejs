@@ -1,6 +1,6 @@
-
 import Reporter from '../Reporter';
 import PluginContext from '../plugins/PluginContext';
+import Plugin from '../plugins/Plugin';
 
 /**
  * Wrapper context
@@ -12,12 +12,12 @@ export default class WrapperContext {
 
     reporter: Reporter;
     pluginContext: PluginContext;
-    plugins: any[];
+    plugins: Plugin[];
 
     constructor(
         reporter: Reporter,
         pluginContext: PluginContext,
-        plugins: any[],
+        plugins: Plugin[],
     ) {
         this.reporter = reporter;
         this.pluginContext = pluginContext;
@@ -25,18 +25,29 @@ export default class WrapperContext {
     }
 
     static addIgnoredPlugin(pluginType: string) {
-
         WrapperContext.IGNORED_PLUGIN_SET.add(pluginType);
     }
 
-    protected getAllowedPlugins(plugins: any[]): any[] {
+    /**
+     * Gets the plugin by its name.
+     *
+     * @param pluginName name of the plugin
+     * @return {Plugin} the {@link Plugin plugin} or {@code null}
+     */
+    public getPlugin<P extends Plugin>(pluginName: string): P | null {
+        for (const plugin of this.plugins) {
+            if (plugin.getName() === pluginName) {
+                return plugin as P;
+            }
+        }
+        return null;
+    }
 
+    private getAllowedPlugins(plugins: any[]): any[] {
         const resultPlugins: any[] = [];
 
         for (let i = 0; i < plugins.length; i++) {
-
             const pluginType = plugins[i].constructor.name;
-
             WrapperContext.IGNORED_PLUGIN_SET.has(pluginType)
                 ? delete plugins[i]
                 : resultPlugins.push(plugins[i]);
@@ -44,4 +55,5 @@ export default class WrapperContext {
 
         return resultPlugins;
     }
+
 }
