@@ -51,20 +51,6 @@ export default class ErrorParser {
         }
     }
 
-    static parseErrors(errorArr: any[]) {
-        const resultArr = [];
-        for (const candidateError of errorArr) {
-          if (Utils.isError(candidateError)) {
-            resultArr.push({
-              message: candidateError.message,
-              stack: candidateError.stack,
-            });
-          }
-        }
-
-        return resultArr;
-    }
-
     static deepParseError(errorArr: any[], iteration: number = 0): string {
         const result = [];
         for (const candidateError of errorArr) {
