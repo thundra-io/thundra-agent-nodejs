@@ -35,15 +35,6 @@ const increaseActions = {
     [TEST_STATUS.ABORTED]: increaseAbortedCount,
 };
 
-const isErrorTimeout = (error: Error) => {
-    let result = false;
-    if (error.message && error.message.toLowerCase().includes('exceeded timeout')) {
-        result = true;
-    }
-
-    return result;
-};
-
 /**
  * Function for handling test done event
  * @param event event
@@ -57,10 +48,9 @@ export default async function run(event: TestSuiteEvent) {
     if (event.hasError()) {
         testStatus = TEST_STATUS.FAILED;
 
-        const error = event.error;
         context.setError(event.error);
 
-        if (isErrorTimeout(error)) {
+        if (event.isTimeout()) {
             context.setExecutionTimeout(true);
             testStatus = TEST_STATUS.ABORTED;
 

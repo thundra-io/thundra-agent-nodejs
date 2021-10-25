@@ -20,10 +20,11 @@ import MaxCountAwareSampler from '../../sampler/MaxCountAwareSampler';
 import TestTraceAwareSampler from '../../sampler/TestTraceAwareSampler';
 import { resolveFromRoot } from '../../../../thundraInternalApi';
 
-import stripAnsi from 'strip-ansi';
 import TestRunnerUtils from '../../../../utils/TestRunnerUtils';
 
 import { subscribeProcessExitEvents } from '../process';
+import ErrorParser from '../jest/utils/ErrorParser';
+import TestRunError from '../../model/TestRunError';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -113,41 +114,19 @@ function wrapEnvironment(BaseEnvironment: any) {
             let id: string;
             let testName: string;
             let testDuration: number;
-            let error: Error;
+            let error: TestRunError;
 
             if (event.test && event.test.parent) {
-                const test = event.test;
+              const test = event.test;
 
-                id = testSuite + '-' + test.parent.name;
-                testName = test.name;
-                testDuration = test.duration;
+              id = testSuite + '-' + test.parent.name;
+              testName = test.name;
+              testDuration = test.duration;
 
-                const errorArr = test.errors;
-                if (errorArr.length) {
-                    let stack;
-                    let spareStack;
-                    let message;
-
-                    if (test.errors) {
-                        const errObj = test.errors[0];
-                        if (errObj) {
-                            message = typeof errObj[0] === 'object' ? errObj[0].message : errObj[0];
-                        }
-
-                        if (errObj.length > 1) {
-                            spareStack = typeof errObj[1] === 'object' ? errObj[1].stack : errObj[1];
-                        }
-                    }
-
-                    if (test.asyncError && test.asyncError.stack) {
-                        stack = test.asyncError.stack;
-                    } else {
-                        stack = spareStack;
-                    }
-
-                    error = new Error(stripAnsi(message));
-                    error.stack = stack;
-                }
+              const errorArr = test.errors;
+              if (errorArr && errorArr.length) {
+                error = ErrorParser.buildError(test.errors, test.asyncError);
+              }
             }
 
             return TestSuiteEvent

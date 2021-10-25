@@ -1,6 +1,7 @@
 import Utils from '../../..//utils/Utils';
 
 import * as TestRunnerSupport from '../TestRunnerSupport';
+import TestRunError from './TestRunError';
 
 export default class TestSuiteEvent {
 
@@ -11,7 +12,7 @@ export default class TestSuiteEvent {
         testSuiteName: string;
         testName: string;
         testDuration: number;
-        error: Error;
+        error: TestRunError;
         orginalEvent: any;
 
         withId(id: string) {
@@ -34,7 +35,7 @@ export default class TestSuiteEvent {
             return this;
         }
 
-        withError(error: Error) {
+        withError(error: TestRunError) {
             this.error = error;
             return this;
         }
@@ -67,7 +68,7 @@ export default class TestSuiteEvent {
     testSuiteName: string;
     testName: string;
     testDuration: number;
-    error: Error;
+    error: TestRunError;
     orginalEvent: any;
 
     constructor(
@@ -76,7 +77,7 @@ export default class TestSuiteEvent {
         testSuiteName: string,
         testName: string,
         testDuration: number,
-        error: Error,
+        error: TestRunError,
         orginalEvent: any,
     ) {
         this.id = id;
@@ -94,5 +95,9 @@ export default class TestSuiteEvent {
 
     hasError(): boolean {
         return this.error !== undefined;
+    }
+
+    isTimeout(): boolean {
+        return this.hasError() ? this.error.timeout : false;
     }
 }
