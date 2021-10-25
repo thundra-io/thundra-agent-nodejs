@@ -225,6 +225,15 @@ class Utils {
     }
 
     /**
+     * Check parameter is error
+     * @param err the error to be checked
+     * @return parameter is error
+     */
+    static isError(err: any): boolean {
+        return err && err.stack && err.message;
+    }
+
+    /**
      * Parses/processes given error to generate new error
      * @param err the error to be parsed
      * @return the generated error

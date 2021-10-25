@@ -12,6 +12,7 @@ export default class TestSuiteEvent {
         testName: string;
         testDuration: number;
         error: Error;
+        timeout: boolean;
         orginalEvent: any;
 
         withId(id: string) {
@@ -31,6 +32,11 @@ export default class TestSuiteEvent {
 
         withTestDuration(testDuration: number) {
             this.testDuration = testDuration;
+            return this;
+        }
+
+        withTimeout(timeout: boolean) {
+            this.timeout = timeout;
             return this;
         }
 
@@ -57,6 +63,7 @@ export default class TestSuiteEvent {
                 this.testName,
                 this.testDuration,
                 this.error,
+                this.timeout,
                 this.orginalEvent || {},
             );
         }
@@ -68,6 +75,7 @@ export default class TestSuiteEvent {
     testName: string;
     testDuration: number;
     error: Error;
+    timeout: boolean;
     orginalEvent: any;
 
     constructor(
@@ -77,6 +85,7 @@ export default class TestSuiteEvent {
         testName: string,
         testDuration: number,
         error: Error,
+        timeout: boolean,
         orginalEvent: any,
     ) {
         this.id = id;
@@ -85,6 +94,7 @@ export default class TestSuiteEvent {
         this.testName = testName;
         this.testDuration = testDuration;
         this.error = error,
+        this.timeout = timeout,
         this.orginalEvent = orginalEvent;
     }
 
