@@ -155,50 +155,34 @@ class HttpIntegration implements Integration {
 
                     const req = request.call(this, options, wrappedCallback);
 
-                    const emit = req.emit;
-                    req.emit = function (eventName: any, arg: any) {
-                        if (eventName === 'socket') {
-                            if (req.listenerCount('response') === 1) {
-                                req.on('response', (res: any) => res.resume());
-                            }
-
-                            const httpMessage = arg._httpMessage;
-
-                            if (!config.maskHttpBody && httpMessage._hasBody) {
-                                try {
-                                    let lines: string[];
-                                    if (has(httpMessage, 'outputData')) {
-                                        lines = httpMessage.outputData[0].data.split('\n');
-                                    } else if (has(httpMessage, 'output')) {
-                                        lines = httpMessage.output[0].split('\n');
-                                    }
-                                    span.setTag(HttpTags.BODY, lines[lines.length - 1]);
-                                } catch (error) {
-                                    ThundraLogger.error(
-                                        `<HTTPIntegration> Unable to get body of HTTP span with name ${operationName}:`,
-                                        error);
+                    if (!config.maskHttpBody && req.write && typeof req.write === 'function') {
+                        const write = req.write;
+                        req.write = function () {
+                            try {
+                                if (arguments[0]
+                                    && (typeof arguments[0] === 'string' || arguments[0] instanceof Buffer)) {
+                                    span.setTag(HttpTags.BODY, arguments[0].toString('utf8'));
                                 }
+                            } catch (error) {
+                                ThundraLogger.error(
+                                `<HTTPIntegration> Unable to get body of HTTP span with name ${operationName}:`,
+                                error);
                             }
+
+                            return write.apply(this, arguments);
+                        };
+                    }
+
+                    req.once('error', (error: any) => {
+                        if (span) {
+                            ThundraLogger.debug(
+                                `<HTTPIntegration> Because of error, closing HTTP span with name
+                                ${span.getOperationName()}`, error);
+
+                            span.setErrorTag(error);
+                            span.close();
                         }
-
-                        // timeout & abort & error handled here
-                        if (eventName === 'error') {
-
-                            if (span) {
-                                ThundraLogger.debug(
-                                    `<HTTPIntegration> Because of error, closing HTTP span with name
-                                    ${span.getOperationName()}`, arg.message);
-
-                                const err = new Error(arg.message);
-                                err.stack = arg.stack;
-
-                                span.setErrorTag(err);
-                                span.close();
-                            }
-                        }
-
-                        return emit.apply(this, arguments);
-                    };
+                    });
 
                     return req;
 
