@@ -9,6 +9,16 @@ import Trace from '../../../../plugins/Trace';
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 
+let TransformWrapped = false;
+
+export const isTransformWrapped = (): boolean => {
+    return TransformWrapped;
+};
+
+export const setTransformWrapped = (transformWrapped: boolean) => {
+    TransformWrapped = transformWrapped;
+};
+
 /**
  * try to load test modules
  * @param testRequire testRequire testsuite's context require
@@ -58,6 +68,7 @@ export const unwrapTestRequireModule = () => {
 
 export const wrapTestTransformFile = (tracePlugin: Trace) => {
     function transformFileWrapper(internalTransformFile: any) {
+        TransformWrapped = true;
         return function internalTransformFileWrapper(fileName: string, options?: any) {
             let code: string = internalTransformFile.call(this, fileName, options);
             if (code) {
@@ -94,6 +105,7 @@ export const unwrapTestTransformFile = () => {
 
 export const wrapTestTransformFileAsync = (tracePlugin: Trace) => {
     function transformFileAsyncWrapper(internalTransformFileAsync: any) {
+        TransformWrapped = true;
         return function internalTransformFileAsyncWrapper(fileName: string, options?: any) {
             const codePromise: Promise<string> = internalTransformFileAsync.call(this, fileName, options);
             if (codePromise) {
