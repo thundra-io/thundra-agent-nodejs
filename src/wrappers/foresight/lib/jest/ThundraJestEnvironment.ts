@@ -10,6 +10,8 @@ import ThundraLogger from '../../../../ThundraLogger';
 import {
     loadTestModules,
     wrapTestRequireModule,
+    TransformWrapped,
+    setTransformWrapped,
     wrapTestTransformFile,
     wrapTestTransformFileAsync,
     unwrapTestRequireModule,
@@ -32,6 +34,7 @@ import TestRunError from '../../model/TestRunError';
 
 import Trace from '../../../../plugins/Trace';
 import Log from '../../../../plugins/Log';
+import TraceConfig from '../../../../plugins/config/TraceConfig';
 
 const APPLICATIONCLASSNAME = 'Jest';
 
@@ -161,9 +164,12 @@ function wrapEnvironment(BaseEnvironment: any) {
                     wrapTestRequireModule();
                     const tracePlugin: Trace = TestRunnerSupport.wrapperContext.getPlugin(Trace.NAME);
                     if (tracePlugin) {
-                        tracePlugin.initInstrumenter(this.global);
-                        wrapTestTransformFile(tracePlugin);
-                        wrapTestTransformFileAsync(tracePlugin);
+                        const traceConfig: TraceConfig = tracePlugin.config;
+                        if (traceConfig && traceConfig.traceableConfigs && traceConfig.traceableConfigs.length > 0) {
+                            tracePlugin.initInstrumenter(this.global);
+                            wrapTestTransformFile(tracePlugin);
+                            wrapTestTransformFileAsync(tracePlugin);
+                        }
                     }
 
                     const foresightLogPlugin: Log = ForesightWrapperUtils.createLogPlugin(this.global.console);
@@ -214,8 +220,12 @@ function wrapEnvironment(BaseEnvironment: any) {
 
         async teardown() {
             unwrapTestRequireModule();
-            unwrapTestTransformFile();
-            unwrapTestTransformFileAsync();
+
+            if (TransformWrapped) {
+                unwrapTestTransformFile();
+                unwrapTestTransformFileAsync();
+                setTransformWrapped(false);
+            }
         }
 
     };
