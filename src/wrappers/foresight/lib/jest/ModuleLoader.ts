@@ -9,7 +9,11 @@ import Trace from '../../../../plugins/Trace';
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 
-export let TransformWrapped = false;
+let TransformWrapped = false;
+
+export const isTransformWrapped = (): boolean => {
+    return TransformWrapped;
+};
 
 export const setTransformWrapped = (transformWrapped: boolean) => {
     TransformWrapped = transformWrapped;

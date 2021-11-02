@@ -10,7 +10,7 @@ import ThundraLogger from '../../../../ThundraLogger';
 import {
     loadTestModules,
     wrapTestRequireModule,
-    TransformWrapped,
+    isTransformWrapped,
     setTransformWrapped,
     wrapTestTransformFile,
     wrapTestTransformFileAsync,
@@ -221,7 +221,7 @@ function wrapEnvironment(BaseEnvironment: any) {
         async teardown() {
             unwrapTestRequireModule();
 
-            if (TransformWrapped) {
+            if (isTransformWrapped()) {
                 unwrapTestTransformFile();
                 unwrapTestTransformFileAsync();
                 setTransformWrapped(false);
