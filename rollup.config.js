@@ -43,7 +43,8 @@ module.exports = [
             }),
             copy({
                 targets: [
-                  { src: 'src/bootstrap/*', dest: 'dist/bootstrap' },
+                    { src: 'src/bootstrap/*', dest: 'dist/bootstrap' },
+                    { src: 'src/index.d.ts', dest: 'dist', rename: 'thundra.d.ts' }
                 ]
             })
         ]
