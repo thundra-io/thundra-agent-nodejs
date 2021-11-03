@@ -155,8 +155,8 @@ class ThundraTracer extends Tracer {
         const tags: any = {};
         let span;
         const rootTraceId = fields.rootTraceId ? fields.rootTraceId : Utils.generateId();
-
         const parentContext = fields.parentContext ? fields.parentContext : Utils.getParentContext(fields.references);
+        const parentSpan = fields.childOf ? fields.childOf : this.getActiveSpan();
 
         if (!fields.propagated && (parentContext && !this.activeSpans.get(parentContext.spanId))) {
             throw new Error('Invalid spanId : ' + parentContext.spanId);
@@ -176,7 +176,7 @@ class ThundraTracer extends Tracer {
         } else {
             span = new ThundraSpan(this, {
                 operationName: name,
-                parent: this.getActiveSpan() ? this.getActiveSpan().spanContext : null,
+                parent: parentSpan ? parentSpan.spanContext : null,
                 tags: Object.assign(tags, this.tags, fields.tags),
                 rootTraceId,
                 startTime: Date.now(),
@@ -186,7 +186,6 @@ class ThundraTracer extends Tracer {
             });
         }
 
-        const parentSpan = this.getActiveSpan();
         if (parentSpan && parentSpan.getTag(LineByLineTags.LINES)) {
             this._injectLineByLineTags(span, parentSpan);
         }
@@ -201,6 +200,7 @@ class ThundraTracer extends Tracer {
                 args: fields.args,
             });
         this.activeSpans.set(span.spanContext.spanId, span);
+
         return span;
     }
 

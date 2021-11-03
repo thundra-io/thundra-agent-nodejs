@@ -71,6 +71,8 @@ describe('trace config', () => {
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK, true);
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK, true);
         ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK, true);
+        ConfigProvider.set(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RABBITMQ_MESSAGE_MASK, true);
+
 
         const config = new TraceConfig({});
         
@@ -78,5 +80,6 @@ describe('trace config', () => {
         expect(config.maskRdbStatement).toEqual(true);
         expect(config.maskDynamoDBStatement).toEqual(true);
         expect(config.maskElasticSearchBody).toEqual(true);
+        expect(config.maskRabbitmqMessage).toEqual(true);
     });
 });

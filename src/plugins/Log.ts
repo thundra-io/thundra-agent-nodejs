@@ -13,26 +13,29 @@ import ConfigNames from '../config/ConfigNames';
 import InvocationTraceSupport from './support/InvocationTraceSupport';
 import LogManager from './LogManager';
 import ExecutionContext from '../context/ExecutionContext';
+import Plugin from './Plugin';
 
 const get = require('lodash.get');
 
 /**
  * The log plugin for log support
  */
-export default class Log {
+export default class Log implements Plugin {
+
+    public static readonly NAME: string = 'Log';
 
     pluginOrder: number = 4;
     pluginContext: PluginContext;
     hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
              'after-invocation': (execContext: ExecutionContext) => void; };
     enabled: boolean;
-    consoleReference: any = console;
+    consoleReference: any;
     config: LogConfig;
     logLevelFilter: number = 0;
     baseLogData: LogData;
     debugEnabled: boolean;
 
-    constructor(options?: LogConfig) {
+    constructor(options?: LogConfig, consoleReference: any = console) {
         LogManager.addListener(this);
 
         this.hooks = {
@@ -41,6 +44,7 @@ export default class Log {
         };
         this.enabled = get(options, 'enabled', true);
         this.config = options;
+        this.consoleReference = consoleReference;
 
         const levelConfig = ConfigProvider.get<string>(ConfigNames.THUNDRA_LOG_LOGLEVEL);
         this.logLevelFilter = levelConfig && logLevels[levelConfig] ? logLevels[levelConfig] : 0;
@@ -50,6 +54,13 @@ export default class Log {
         if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_CONSOLE_DISABLE)) {
             this.shimConsole();
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    getName(): string {
+        return Log.NAME;
     }
 
     /**
@@ -78,8 +89,7 @@ export default class Log {
     afterInvocation = (execContext: ExecutionContext) => {
         ThundraLogger.debug('<Log> After invocation of transaction', execContext.transactionId);
 
-        const sampler = get(this.config, 'sampler', { isSampled: () => true });
-        const sampled = sampler.isSampled();
+        const sampled = this.isSampled();
         const { logs } = execContext;
 
         ThundraLogger.debug('<Log> Checked sampling of transaction', execContext.transactionId, ':', sampled);
@@ -129,7 +139,7 @@ export default class Log {
      * @param {boolean} fromConsole indicates whether the log is reported from shimmed console method
      */
     reportLog(logInfo: any, execContext: ExecutionContext, fromConsole: boolean = false): void {
-        if (!this.enabled) {
+        if (!this.enabled) {
             if (this.debugEnabled) {
                 ThundraLogger.debug('<Log> Skipping reporting log because logging is disabled:', logInfo);
             }
@@ -156,7 +166,17 @@ export default class Log {
         }
     }
 
-    private shimConsole(): void {
+    protected getSampler(): any {
+
+        return get(this.config, 'sampler', { isSampled: () => true });
+    }
+
+    protected isSampled(): boolean {
+
+        return this.getSampler().isSampled();
+    }
+
+    protected shimConsole(): void {
         ConsoleShimmedMethods.forEach((method) => {
             const consoleMethod = this.consoleReference[method];
             // If console method is valid and it is not patched by Thundra
@@ -202,5 +222,4 @@ export default class Log {
             }
         });
     }
-
 }

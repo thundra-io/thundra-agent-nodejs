@@ -13,18 +13,23 @@ import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
 import ExecutionContext from '../context/ExecutionContext';
 import GlobalTracer from '../opentracing/GlobalTracer';
+import Plugin from './Plugin';
 
 const get = require('lodash.get');
 
 /**
  * The trace plugin for trace support
  */
-export default class Trace {
+export default class Trace implements Plugin {
+
+    public static readonly NAME: string = 'Trace';
 
     pluginOrder: number = 1;
     pluginContext: PluginContext;
-    hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
-            'after-invocation': (execContext: ExecutionContext) => void; };
+    hooks: {
+        'before-invocation': (execContext: ExecutionContext) => void;
+        'after-invocation': (execContext: ExecutionContext) => void;
+    };
     config: TraceConfig;
     integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
@@ -42,6 +47,13 @@ export default class Trace {
         this.initIntegrations();
 
         opentracing.initGlobalTracer(new GlobalTracer());
+    }
+
+    /**
+     * @inheritDoc
+     */
+    getName(): string {
+        return Trace.NAME;
     }
 
     /**
@@ -84,16 +96,20 @@ export default class Trace {
         }
 
         const spanList = tracer.getRecorder().getSpanList();
-        const isSampled = get(this.config, 'sampler.isSampled', () => true);
-        const sampled = isSampled(rootSpan);
+        const sampler = get(this.config, 'sampler', { isSampled: () => true });
+        const sampled = sampler.isSampled(rootSpan);
 
         ThundraLogger.debug('<Trace> Checked sampling of transaction', execContext.transactionId, ':', sampled);
 
         if (sampled) {
             const debugEnabled: boolean = ThundraLogger.isDebugEnabled();
+            let runSamplerOnEach: boolean = this.config.runSamplerOnEachSpan;
+            if (!runSamplerOnEach && sampler.sampleOnEach && typeof sampler.sampleOnEach === 'function') {
+                runSamplerOnEach = sampler.sampleOnEach();
+            }
             for (const span of spanList) {
                 if (span) {
-                    if (this.config.runSamplerOnEachSpan && !isSampled(span)) {
+                    if (runSamplerOnEach && !sampler.isSampled(span)) {
                         ThundraLogger.debug(
                             `<Trace> Filtering span with name ${span.getOperationName()} due to custom sampling configuration`);
                         continue;
@@ -119,19 +135,41 @@ export default class Trace {
         // pass
     }
 
+    /**
+     * Initializes the {@link Instrumenter instrumenter}
+     * @param glob the global
+     */
+    initInstrumenter(glob: NodeJS.Global): void {
+        this.instrumenter.setGlobalFunction(glob);
+    }
+
+    /**
+     * Instruments the given JS code.
+     *
+     * @param filename  name of the file
+     * @param code      the code to be instrumented
+     * @return {string}the instrumented code
+     */
+    instrument(filename: string, code: string): string {
+        return this.instrumenter.instrument(filename, code);
+    }
+
     private initIntegrations(): void {
         if (!(this.config.disableInstrumentation || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_DISABLE))) {
             this.integrationsMap = new Map<string, Integration>();
 
             for (const key of Object.keys(INTEGRATIONS)) {
-                const clazz = INTEGRATIONS[key];
-                if (clazz) {
-                    if (!this.integrationsMap.get(key)) {
-                        if (!this.config.isIntegrationDisabled(key)) {
-                            const instance = new clazz(this.config);
-                            this.integrationsMap.set(key, instance);
-                        } else {
-                            ThundraLogger.debug(`<Trace> Disabled integration ${key}`);
+                const integration = INTEGRATIONS[key];
+                if (integration) {
+                    const clazz = integration.class;
+                    if (clazz) {
+                        if (!this.integrationsMap.get(key)) {
+                            if (!this.config.isIntegrationDisabled(key)) {
+                                const instance = new clazz(this.config);
+                                this.integrationsMap.set(key, instance);
+                            } else {
+                                ThundraLogger.debug(`<Trace> Disabled integration ${key}`);
+                            }
                         }
                     }
                 }

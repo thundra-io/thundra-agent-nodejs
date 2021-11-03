@@ -31,6 +31,7 @@ class TraceConfig extends BasePluginConfig {
     maskRdbStatement: boolean;
     maskDynamoDBStatement: boolean;
     maskElasticSearchBody: boolean;
+    maskRabbitmqMessage: boolean;
     maskMongoDBCommand: boolean;
     dynamoDBTraceInjectionEnabled: boolean;
     lambdaTraceInjectionDisabled: boolean;
@@ -52,6 +53,8 @@ class TraceConfig extends BasePluginConfig {
     runSamplerOnEachSpan: boolean;
     instrumentAWSOnLoad: boolean;
     tracer: ThundraTracer;
+    hapiTraceDisabled: boolean;
+    koaTraceDisabled: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -96,6 +99,9 @@ class TraceConfig extends BasePluginConfig {
         this.maskElasticSearchBody = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK,
             options.maskElasticSearchBody);
+        this.maskRabbitmqMessage = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RABBITMQ_MESSAGE_MASK,
+            options.maskRabbitmqMessage);
         this.maskMongoDBCommand = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_MONGODB_COMMAND_MASK,
             options.maskMongoDBCommand);
@@ -148,6 +154,13 @@ class TraceConfig extends BasePluginConfig {
 
         this.runSamplerOnEachSpan = get(options, 'runCustomSamplerOnEachSpan', false);
         this.sampler = options.sampler;
+
+        this.hapiTraceDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE,
+            options.hapiTraceDisabled);
+        this.koaTraceDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE,
+            options.koaTraceDisabled);
 
         for (const configName of ConfigProvider.names()) {
             if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG)) {

@@ -6,6 +6,7 @@ import WrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
+import WebWrapperUtils from '../WebWrapperUtils';
 
 export function startInvocation(pluginContext: PluginContext, execContext: any) {
     execContext.invocationData = WrapperUtils.createInvocationData(execContext, pluginContext);
@@ -60,7 +61,11 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
     WrapperUtils.finishTrace(pluginContext, execContext);
 
-    const { rootSpan, response, request } = execContext;
+    const {
+        rootSpan,
+        response,
+        request,
+    } = execContext;
 
     InvocationSupport.setAgentTag(HttpTags.HTTP_STATUS, response.statusCode);
     Utils.copyProperties(response, ['statusCode'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
@@ -76,7 +81,6 @@ function handleRoutePath(context: ExecutionContext, resourceName: string) {
 
     // Change root span name and response header
     rootSpan.operationName = resourceName;
-    response.set(TriggerHeaderTags.RESOURCE_NAME, triggerOperationName);
     InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
 }
 
@@ -91,7 +95,7 @@ function setupRoutePathHandler(execContext: ExecutionContext) {
             set(newValue) {
                 request._route = newValue;
                 if (request._route) {
-                    const mergedPath = mergePathAndRoute(request.originalUrl, request._route.path);
+                    const mergedPath = WebWrapperUtils.mergePathAndRoute(request.originalUrl, request._route.path);
                     handleRoutePath(execContext, mergedPath);
                 }
             },
@@ -99,27 +103,4 @@ function setupRoutePathHandler(execContext: ExecutionContext) {
     } else {
         handleRoutePath(execContext, request.route.path);
     }
-}
-
-export function mergePathAndRoute(path: string, route: string) {
-    if (path.indexOf('?') > -1) {
-        path = path.substring(0, path.indexOf('?'));
-    }
-
-    const routeSCount = route.split('/').length - 1;
-    const onlySlash = route === '/';
-
-    let normalizedPath;
-
-    if (!onlySlash) {
-        for (let i = 0; i < routeSCount; i++) {
-            path = path.substring(0, path.lastIndexOf('/'));
-        }
-        normalizedPath = path + route;
-    } else {
-        const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
-        normalizedPath = Utils.getNormalizedPath(path, depth);
-    }
-
-    return normalizedPath;
 }

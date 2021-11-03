@@ -1,4 +1,5 @@
 import ThundraSpanContext from '../SpanContext';
+import { TraceHeaderTags } from '../../Constants';
 
 /**
  * Propagator to inject/extract {@link ThundraSpanContext}
@@ -6,10 +7,10 @@ import ThundraSpanContext from '../SpanContext';
  */
 class TextMapPropagator {
 
-    static TRACE_ID_KEY: string =   'x-thundra-trace-id';
-    static TRANSACTION_ID_KEY: string =  'x-thundra-transaction-id';
-    static SPAN_ID_KEY: string = 'x-thundra-span-id';
-    static BAGGAGE_PREFIX: string = 'x-thundra-baggage-';
+    static TRACE_ID_KEY: string =  TraceHeaderTags.TRACE_ID;
+    static TRANSACTION_ID_KEY: string =  TraceHeaderTags.TRANSACTION_ID;
+    static SPAN_ID_KEY: string = TraceHeaderTags.SPAN_ID;
+    static BAGGAGE_PREFIX: string = TraceHeaderTags.BAGGAGE_PREFIX;
     static BAGGAGE_PATTERN: RegExp = new RegExp(`^${TextMapPropagator.BAGGAGE_PREFIX}(.+)$`);
 
     /**

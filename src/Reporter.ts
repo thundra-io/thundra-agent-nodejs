@@ -3,8 +3,12 @@ import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
 import {
-    COMPOSITE_MONITORING_DATA_PATH, getDefaultCollectorEndpoint, LOCAL_COLLECTOR_ENDPOINT,
-    SPAN_TAGS_TO_TRIM_1, SPAN_TAGS_TO_TRIM_2,
+    COMPOSITE_MONITORING_DATA_PATH,
+    getDefaultCollectorEndpoint,
+    LOCAL_COLLECTOR_ENDPOINT,
+    SPAN_TAGS_TO_TRIM_1,
+    SPAN_TAGS_TO_TRIM_2,
+    REPORTER_HTTP_TIMEOUT,
 } from './Constants';
 import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
@@ -18,6 +22,7 @@ import MonitorDataType from './plugins/data/base/MonitoringDataType';
 const httpAgent = new http.Agent({
     keepAlive: true,
 });
+
 const httpsAgent = new https.Agent({
     maxCachedSessions: 1,
     keepAlive: true,
@@ -115,6 +120,7 @@ class Reporter {
         const path = COMPOSITE_MONITORING_DATA_PATH;
 
         return {
+            timeout: REPORTER_HTTP_TIMEOUT,
             method: 'POST',
             hostname: u ? u.hostname : this.url.hostname,
             path: (u ? u.pathname : this.url.pathname) + path,
@@ -129,6 +135,12 @@ class Reporter {
                     const socket: net.Socket = net.createConnection(options.port as number, options.hostname);
                     socket.setNoDelay(true);
                     socket.setKeepAlive(true);
+
+                    socket.setTimeout(REPORTER_HTTP_TIMEOUT, () => {
+                        ThundraLogger.error('<Reporter> Reporter socket timeout.'
+                        + 'Please be sure that your application has access to public internet.');
+                    });
+
                     oncreate(null, socket);
                     return socket;
                 } catch (e) {
@@ -141,55 +153,41 @@ class Reporter {
 
     private getCompositeReport(reports: any[]): any {
         ThundraLogger.debug('<Reporter> Generating composite report ...');
-        reports = reports.slice(0);
 
-        const invocationReport = reports.filter((report) => report.data.type === MonitoringDataType.INVOCATION)[0];
-        if (!invocationReport) {
-            ThundraLogger.debug('<Reporter> No invocation data could be found in the reports');
-            return [];
-        }
-
-        const compositeData = this.initCompositeMonitoringData(invocationReport.data);
+        const compositeData = this.initCompositeMonitoringData();
         const batch: any[] = [];
         for (const report of reports) {
-            batch.push(this.stripCommonFields(report.data as BaseMonitoringData));
+            batch.push(this.stripCommonFields(report.data));
         }
         compositeData.allMonitoringData = batch;
 
         return Utils.generateReport(compositeData, this.apiKey);
     }
 
-    private initCompositeMonitoringData(data: BaseMonitoringData): CompositeMonitoringData {
+    private initCompositeMonitoringData(): CompositeMonitoringData {
         const monitoringData = Utils.createMonitoringData(MonitorDataType.COMPOSITE);
 
         monitoringData.id = Utils.generateId();
-        monitoringData.agentVersion = data.agentVersion;
-        monitoringData.dataModelVersion = data.dataModelVersion;
-        monitoringData.applicationId = data.applicationId;
-        monitoringData.applicationDomainName = data.applicationDomainName;
-        monitoringData.applicationClassName = data.applicationClassName;
-        monitoringData.applicationName = data.applicationName;
-        monitoringData.applicationVersion = data.applicationVersion;
-        monitoringData.applicationStage = data.applicationStage;
-        monitoringData.applicationRuntime = data.applicationRuntime;
-        monitoringData.applicationRuntimeVersion = data.applicationRuntimeVersion;
-        monitoringData.applicationTags = data.applicationTags;
+        Utils.injectCommonApplicationProperties(monitoringData);
 
         return monitoringData as CompositeMonitoringData;
     }
 
-    private stripCommonFields(monitoringData: BaseMonitoringData) {
-        monitoringData.agentVersion = undefined;
-        monitoringData.dataModelVersion = undefined;
-        monitoringData.applicationId = undefined;
-        monitoringData.applicationClassName = undefined;
-        monitoringData.applicationDomainName = undefined;
-        monitoringData.applicationName = undefined;
-        monitoringData.applicationVersion = undefined;
-        monitoringData.applicationStage = undefined;
-        monitoringData.applicationRuntime = undefined;
-        monitoringData.applicationRuntimeVersion = undefined;
-        monitoringData.applicationTags = undefined;
+    private stripCommonFields(monitoringData: any) {
+
+        if (monitoringData instanceof BaseMonitoringData) {
+            monitoringData.agentVersion = undefined;
+            monitoringData.dataModelVersion = undefined;
+            monitoringData.applicationId = undefined;
+            monitoringData.applicationClassName = undefined;
+            monitoringData.applicationDomainName = undefined;
+            monitoringData.applicationName = undefined;
+            monitoringData.applicationVersion = undefined;
+            monitoringData.applicationStage = undefined;
+            monitoringData.applicationRuntime = undefined;
+            monitoringData.applicationRuntimeVersion = undefined;
+            monitoringData.applicationTags = undefined;
+        }
 
         return monitoringData;
     }
@@ -258,6 +256,13 @@ class Reporter {
             this.useHttps
                 ? request = https.request(this.requestOptions, responseHandler)
                 : request = http.request(this.requestOptions, responseHandler);
+
+            request.setTimeout(REPORTER_HTTP_TIMEOUT, () => {
+                ThundraLogger.error('<Reporter> Reporter request timeout.'
+                + ' Please be sure that your application has access to public internet.');
+                return reject(new Error('Reporter request timeout.'
+                + ' Please be sure that your application has access to public internet.'));
+            });
 
             request.on('error', (error: any) => {
                 ThundraLogger.debug('<Reporter> Request sent to collector has failed:', error);

@@ -349,7 +349,11 @@ describe('whitelist config', () => {
         const es = require('elasticsearch');
 
         test('should whitelist es query operation', () => {
-            const originalFunction = () => ESCalls.query(es);
+
+            const originalFunction = () => ESCalls.query(new es.Client({
+                host: 'http://localhost:9200'
+            }));
+
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).then(() => {
@@ -592,7 +596,11 @@ describe('blacklist config', () => {
         const es = require('elasticsearch');
 
         test('should blacklist es query operation', () => {
-            const originalFunction = () => ESCalls.query(es);
+
+            const originalFunction = () => ESCalls.query(new es.Client({
+                host: 'http://localhost:9200'
+            }));
+            
             const wrappedFunc = thundraWrapper(originalFunction);
 
             return wrappedFunc(originalEvent, originalContext).catch(() => {

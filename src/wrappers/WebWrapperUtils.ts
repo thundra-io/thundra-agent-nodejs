@@ -16,15 +16,55 @@ import * as asyncContextProvider from '../context/asyncContextProvider';
 import * as opentracing from 'opentracing';
 import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
 import InvocationData from '../plugins/data/invocation/InvocationData';
-import TimeoutError from '../error/TimeoutError';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
-import { HttpTags, DomainNames, ClassNames, SpanTags, TriggerHeaderTags } from '../Constants';
+import { HttpTags, SpanTags, TriggerHeaderTags } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
+import { ApplicationInfo } from '../application/ApplicationInfo';
+import HttpError from '../error/HttpError';
+import WrapperContext from './WrapperContext';
 
 const get = require('lodash.get');
 
 export default class WebWrapperUtils {
+
+    static initWrapper(applicationClassName: string, applicationDomainName: string, executor: any) {
+        ApplicationManager.setApplicationInfoProvider().update({
+            applicationClassName,
+            applicationDomainName,
+        });
+
+        const appInfo = ApplicationManager.getApplicationInfo();
+        ApplicationManager.getApplicationInfoProvider().update({
+            applicationId: WebWrapperUtils.getDefaultApplicationId(appInfo),
+        });
+
+        const config = ConfigProvider.thundraConfig;
+        const { apiKey } = config;
+
+        const reporter = WebWrapperUtils.createReporter(apiKey);
+        const pluginContext = WebWrapperUtils.createPluginContext(apiKey, executor);
+        const plugins = WebWrapperUtils.createPlugins(config, pluginContext);
+
+        return new WrapperContext(reporter, pluginContext, plugins);
+    }
+
+    static getDefaultApplicationId(appInfo: ApplicationInfo) {
+        return WebWrapperUtils.createApplicationId(
+            appInfo.applicationClassName,
+            appInfo.applicationRegion,
+            appInfo.applicationName,
+        );
+    }
+
+    static createApplicationId(
+        applicationClassName: string,
+        applicationRegion: string,
+        applicationName: string,
+        ) {
+            return `node:${applicationClassName}:${applicationRegion}:${applicationName}`;
+    }
+
     static async beforeRequest(request: any, response: any, plugins: any[]) {
         const context = ExecutionContextManager.get();
 
@@ -40,16 +80,35 @@ export default class WebWrapperUtils {
     static async afterRequest(request: any, response: any, plugins: any[], reporter: Reporter) {
         const context = ExecutionContextManager.get();
 
-        context.finishTimestamp = Date.now();
-
-        for (const plugin of plugins) {
-            await plugin.afterInvocation(context);
+        if (!context.error && response.statusCode >= 500) {
+            context.error = new HttpError(`Returned with status code ${response.statusCode}.`);
         }
 
+        context.finishTimestamp = Date.now();
+
+        let reports: any = [];
+
+        // Clear reports first
+        context.reports = [];
         try {
-            await reporter.sendReports(context.reports);
-        } catch (err) {
-            ThundraLogger.error('<WebWrapperUtils> Error occurred while reporting:', err);
+            // Run plugins and let them to generate reports
+            for (const plugin of plugins) {
+                await plugin.afterInvocation(context);
+            }
+            reports = context.reports;
+        } finally {
+            // Make sure generated reports are cleared
+            context.reports = [];
+        }
+
+        if (!context.reportingDisabled) {
+            try {
+                await reporter.sendReports(reports);
+            } catch (err) {
+                ThundraLogger.error('<WebWrapperUtils> Error occurred while reporting:', err);
+            }
+        } else {
+            ThundraLogger.debug('<WebWrapperUtils> Skipped reporting as reporting is disabled');
         }
     }
 
@@ -87,12 +146,19 @@ export default class WebWrapperUtils {
         });
     }
 
+    static createReporter(apiKey: string): Reporter {
+        return new Reporter(apiKey);
+    }
+
     static initAsyncContextManager() {
         ExecutionContextManager.setProvider(asyncContextProvider);
         ExecutionContextManager.init();
     }
 
-    static createExecContext(): ExecutionContext {
+    static createExecContext(
+        applicationClassName?: string,
+        applicationDomainName?: string,
+    ): ExecutionContext {
         const { thundraConfig } = ConfigProvider;
         const tracerConfig = get(thundraConfig, 'traceConfig.tracerConfig', {});
 
@@ -103,7 +169,16 @@ export default class WebWrapperUtils {
 
         const startTimestamp = Date.now();
 
+        const appInfo = ApplicationManager.getApplicationInfo();
+
         return new ExecutionContext({
+            applicationId: WebWrapperUtils.createApplicationId(
+                applicationClassName,
+                appInfo.applicationRegion,
+                applicationDomainName,
+            ),
+            applicationClassName,
+            applicationDomainName,
             tracer,
             transactionId,
             startTimestamp,
@@ -157,8 +232,9 @@ export default class WebWrapperUtils {
 
         const { startTimestamp, finishTimestamp, spanId, response } = execContext;
 
-        invocationData.finishTimestamp = finishTimestamp;
-        invocationData.duration = finishTimestamp - startTimestamp;
+        // Finish invocation if it is not finished yet
+        invocationData.finish(finishTimestamp);
+
         invocationData.resources = InvocationTraceSupport.getResources(spanId);
         invocationData.incomingTraceLinks = InvocationTraceSupport.getIncomingTraceLinks();
         invocationData.outgoingTraceLinks = InvocationTraceSupport.getOutgoingTraceLinks();
@@ -170,7 +246,11 @@ export default class WebWrapperUtils {
     }
 
     static startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-        const { tracer, request } = execContext;
+        const {
+            tracer,
+            request,
+        } = execContext;
+
         const propagatedSpanContext: ThundraSpanContext =
             tracer.extract(opentracing.FORMAT_HTTP_HEADERS, request.headers) as ThundraSpanContext;
 
@@ -185,9 +265,10 @@ export default class WebWrapperUtils {
             propagated: propagatedSpanContext ? true : false,
             parentContext: propagatedSpanContext,
             rootTraceId: traceId,
-            domainName: DomainNames.API,
-            className: ClassNames.EXPRESS,
+            domainName: pluginContext.applicationInfo.applicationDomainName,
+            className: pluginContext.applicationInfo.applicationClassName,
         });
+        rootSpan.isRootSpan = true;
 
         InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
         InvocationSupport.setAgentTag(SpanTags.TRIGGER_DOMAIN_NAME, 'API');
@@ -206,10 +287,36 @@ export default class WebWrapperUtils {
     }
 
     static finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-        const { rootSpan, finishTimestamp } = execContext;
+        const { error, rootSpan, finishTimestamp } = execContext;
 
-        rootSpan.finish();
-        rootSpan.finishTime = finishTimestamp;
+        if (error) {
+            rootSpan.setErrorTag(error);
+        }
+
+        // If root span is already finished, it won't have any effect
+        rootSpan.finish(finishTimestamp);
     }
 
+    static mergePathAndRoute(path: string, route: string) {
+        if (path.indexOf('?') > -1) {
+            path = path.substring(0, path.indexOf('?'));
+        }
+
+        const routeSCount = route.split('/').length - 1;
+        const onlySlash = route === '/';
+
+        let normalizedPath;
+
+        if (!onlySlash) {
+            for (let i = 0; i < routeSCount; i++) {
+                path = path.substring(0, path.lastIndexOf('/'));
+            }
+            normalizedPath = path + route;
+        } else {
+            const depth = ConfigProvider.get<number>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH);
+            normalizedPath = Utils.getNormalizedPath(path, depth);
+        }
+
+        return normalizedPath;
+    }
 }

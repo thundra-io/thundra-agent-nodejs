@@ -88,7 +88,7 @@ describe('listener config', () => {
                         errorType: 'NameError',
                         errorMessage: 'foo',
                         injectOnFinish: true,
-                        injectCountFreq: 3
+                        injectPercentage: 33
                     }
                 },
                 filters: [
@@ -120,7 +120,7 @@ describe('listener config', () => {
         expect(listener.onSpanStarted).toBeTruthy();
         expect(listener.onSpanFinished).toBeTruthy();
 
-        expect(listener.listener.injectCountFreq).toBe(3);
+        expect(listener.listener.injectPercentage).toBe(33);
         expect(listener.listener.injectOnFinish).toBe(true);
         expect(listener.listener.errorType).toBe('NameError');
         expect(listener.listener.errorMessage).toBe('foo');

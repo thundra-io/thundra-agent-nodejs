@@ -9,13 +9,15 @@ import ThundraSpanContext from '../../opentracing/SpanContext';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
-import {AWSFirehoseIntegration, AWSDynamoDBIntegration} from '../../integrations/AWSIntegration';
+import {AWSFirehoseIntegration, AWSDynamoDBIntegration} from '../../integrations/AWSServiceIntegration';
 import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
 import Utils from '../../utils/Utils';
 import {ApplicationManager} from '../../application/ApplicationManager';
 import {LambdaPlatformUtils} from './LambdaPlatformUtils';
 
 const get = require('lodash.get');
+const MAX_TRIGGER_RESOURCE_NAME_COUNT = 10;
+const MAX_TRACE_LINK_COUNT = 10;
 
 /**
  * Utility class for AWS Lambda event related stuff.
@@ -84,6 +86,9 @@ class LambdaEventUtils {
         } else if (originalEvent['detail-type'] && originalEvent.detail && originalEvent.version
             && Array.isArray(originalEvent.resources)) {
             return LambdaEventType.EventBridge;
+        } else if (originalEvent.rmqMessagesByQueue && originalEvent.eventSourceArn.includes('broker') &&
+            originalEvent.eventSource === 'aws:rmq') {
+            return LambdaEventType.AmazonMQ;
         } else if (originalEvent.Action && originalEvent.body) {
             try {
                 const {headers} = JSON.parse(originalEvent.body);
@@ -266,6 +271,44 @@ class LambdaEventUtils {
         InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
         this.injectTriggerTagsForInvocation(domainName, className, Array.from(queueNames));
         this.injectTriggerTagsForSpan(span, domainName, className, Array.from(queueNames));
+
+        return className;
+    }
+
+    /**
+     * Injects trigger tags for AWS AmazonMQ events
+     * @param {ThundraSpan} span the span to inject tags
+     * @param originalEvent the original AWS Lambda invocation event
+     * @return {string} the class name of the trigger
+     */
+     static injectTriggerTagsForAmazonRMQ(span: ThundraSpan, originalEvent: any, originalContext: any): string {
+        const domainName = DomainNames.MESSAGING;
+        const className = ClassNames.RABBITMQ;
+        const queueNames: Set<string> = new Set<string>();
+        const traceLinks: any[] = [];
+
+        Object.keys(originalEvent.rmqMessagesByQueue).forEach((queue) => {
+            if (queueNames.size < MAX_TRIGGER_RESOURCE_NAME_COUNT) {
+                queueNames.add(queue);
+            }
+            for (const record of originalEvent.rmqMessagesByQueue[`${queue}`]) {
+                const spanIdBytes = get(record, 'basicProperties.headers.x-thundra-span-id.bytes', false);
+                if (spanIdBytes) {
+                    const spanId = Buffer.from(spanIdBytes, 'base64').toString();
+                    if (traceLinks.length < MAX_TRACE_LINK_COUNT) {
+                        traceLinks.push(spanId);
+                    }
+                }
+            }
+        });
+
+        if (queueNames.size > 0) {
+            this.injectTriggerTagsForInvocation(domainName, className, Array.from(queueNames));
+            this.injectTriggerTagsForSpan(span, domainName, className, Array.from(queueNames));
+        }
+        if (traceLinks.length > 0) {
+            InvocationTraceSupport.addIncomingTraceLinks(traceLinks);
+        }
 
         return className;
     }
@@ -601,6 +644,46 @@ class LambdaEventUtils {
     }
 
     /**
+     * Extracts span context from given AmazonRMQ event
+     * @param {ThundraTracer} tracer the tracer
+     * @param originalEvent the original AWS Lambda invocation event
+     * @return {ThundraSpanContext} the extracted {@link ThundraSpanContext}
+     */
+    static extractSpanContextFromAmazonRMQEvent(tracer: ThundraTracer, originalEvent: any): ThundraSpanContext {
+        let spanContext: ThundraSpanContext;
+        let sc: ThundraSpanContext;
+        for (const queue of Object.keys(originalEvent.rmqMessagesByQueue)) {
+            const queueData = originalEvent.rmqMessagesByQueue[queue];
+            for (const data of queueData) {
+                const traceIdBytes = get(data, 'basicProperties.headers.x-thundra-trace-id.bytes', null);
+                const traceId = traceIdBytes ? Buffer.from(traceIdBytes, 'base64').toString() : null;
+                if (!traceId) {
+                    continue;
+                }
+                const transactionIdBytes = get(data, 'basicProperties.headers.x-thundra-transaction-id.bytes', null);
+                const transactionId = transactionIdBytes ? Buffer.from(transactionIdBytes, 'base64').toString() : null;
+                const spanIdBytes = get(data, 'basicProperties.headers.x-thundra-span-id.bytes', null);
+                const spanId = spanIdBytes ? Buffer.from(spanIdBytes, 'base64').toString() : null;
+                sc = new ThundraSpanContext( {transactionId, spanId, traceId} );
+                if (sc) {
+                    if (!spanContext) {
+                        spanContext = sc;
+                    } else {
+                        if (spanContext.traceId !== sc.traceId &&
+                            spanContext.transactionId !== sc.transactionId &&
+                            spanContext.spanId !== sc.spanId) {
+                            return;
+                        }
+                    }
+                } else {
+                    return;
+                }
+            }
+        }
+        return spanContext;
+    }
+
+    /**
      * Injects triggers tags to the current AWS Lambda invocation
      * @param {string} domainName the trigger domain name
      * @param {string} className the trigger class name
@@ -649,4 +732,5 @@ export enum LambdaEventType {
     Vercel,
     Netlify,
     SES,
+    AmazonMQ,
 }

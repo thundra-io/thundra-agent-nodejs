@@ -1,19 +1,17 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, ClassNames,
+    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, ClassNames, INTEGRATIONS,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
-import Utils from '../utils/Utils';
+import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
 
-const MODULE_NAME = 'mysql2';
-const FILE_NAME = 'lib/connection';
-const MODULE_VERSION = '>=1.5';
+const INTEGRATION_NAME = 'mysql2';
 
 /**
  * {@link Integration} implementation for MySQL integration
@@ -28,17 +26,16 @@ class MySQL2Integration implements Integration {
         ThundraLogger.debug('<MySQL2Integration> Activating MySQL2 integration');
 
         this.config = config || {};
-        this.instrumentContext = Utils.instrument(
-            [MODULE_NAME], MODULE_VERSION,
+        const mysql2Integration = INTEGRATIONS[INTEGRATION_NAME];
+        this.instrumentContext = ModuleUtils.instrument(
+            mysql2Integration.moduleNames, mysql2Integration.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },
             (lib: any, cfg: any) => {
                 this.doUnwrap.call(this, lib);
             },
-            this.config,
-            null,
-            FILE_NAME);
+            this.config);
     }
 
     /**
@@ -137,10 +134,16 @@ class MySQL2Integration implements Integration {
             };
         }
 
-        if (has(lib, 'prototype.query')) {
+        if (has(lib, 'Connection.prototype.query')) {
             ThundraLogger.debug('<MySQL2Integration> Wrapping "mysql2.query"');
 
-            shimmer.wrap(lib.prototype, 'query', wrapper);
+            shimmer.wrap(lib.Connection.prototype, 'query', wrapper);
+        }
+
+        if (has(lib, 'Connection.prototype.execute')) {
+            ThundraLogger.debug('<MySQL2Integration> Wrapping "mysql2.execute"');
+
+            shimmer.wrap(lib.Connection.prototype, 'execute', wrapper);
         }
     }
 

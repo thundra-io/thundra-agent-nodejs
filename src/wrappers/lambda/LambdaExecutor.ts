@@ -67,6 +67,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         className: ClassNames.LAMBDA,
     });
 
+    execContext.rootSpan.isRootSpan = true;
     execContext.spanId = execContext.rootSpan.spanContext.spanId;
     execContext.rootSpan.startTime = execContext.startTimestamp;
     execContext.triggerClassName =
@@ -269,10 +270,16 @@ function extractSpanContext(tracer: ThundraTracer, lambdaEventType: LambdaEventT
         return LambdaEventUtils.extractSpanContextFromSNSEvent(tracer, originalEvent);
     } else if (lambdaEventType === LambdaEventType.SQS) {
         return LambdaEventUtils.extractSpanContextFromSQSEvent(tracer, originalEvent);
+    } else if (lambdaEventType === LambdaEventType.AmazonMQ) {
+        return LambdaEventUtils.extractSpanContextFromAmazonRMQEvent(tracer, originalEvent);
     }
 }
 
 function processAPIGWResponse(response: any, originalEvent: any): void {
+    // If response is custom authorizer response, skip processing it
+    if (response && response.principalId && response.policyDocument) {
+        return;
+    }
     try {
         const headers = get(response, 'headers', {});
         headers[TriggerHeaderTags.RESOURCE_NAME] = originalEvent.resource;
@@ -316,6 +323,8 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, exec
             return LambdaEventUtils.injectTriggerTagsForVercel(span, originalEvent, originalContext);
         } else if (lambdaEventType === LambdaEventType.Netlify) {
             return LambdaEventUtils.injectTriggerTagsForNetlify(span, originalEvent);
+        } else if (lambdaEventType === LambdaEventType.AmazonMQ) {
+            return LambdaEventUtils.injectTriggerTagsForAmazonRMQ(span, originalEvent, originalContext);
         } else {
             return LambdaEventUtils.injectTriggerTagsForCommon(span, originalEvent, originalContext);
         }

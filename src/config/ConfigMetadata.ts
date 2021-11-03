@@ -45,11 +45,9 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     },
     [ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME]: {
         type: 'string',
-        defaultValue: 'API',
     },
     [ConfigNames.THUNDRA_APPLICATION_CLASS_NAME]: {
         type: 'string',
-        defaultValue: 'AWS-Lambda',
     },
     [ConfigNames.THUNDRA_APPLICATION_VERSION]: {
         type: 'string',
@@ -111,6 +109,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_INVOCATION_SAMPLE_ONERROR]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE]: {
         type: 'boolean',
         defaultValue: false,
@@ -133,7 +135,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         defaultValue: 100,
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_DISABLE]: {
-        type: 'string',
+        type: 'boolean',
         defaultValue: false,
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ON_LOAD]: {
@@ -212,6 +214,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_RABBITMQ_MESSAGE_MASK]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_PATH_DEPTH]: {
         type: 'number',
         defaultValue: 1,
@@ -229,6 +235,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         defaultValue: true,
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE]: {
         type: 'boolean',
         defaultValue: false,
     },
@@ -274,6 +284,32 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     },
     [ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN]: {
         type: 'string',
+    },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_PROJECT_ID]: {
+        type: 'string',
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_RUN_ID]: {
+        type: 'string',
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_STATUS_REPORT_FREQ]: {
+        type: 'number',
+        defaultValue: 10000,
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_DISABLE]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_LOG_ENABLE]: {
+        type: 'boolean',
+        defaultValue: true,
+    },
+    [ConfigNames.THUNDRA_AGENT_TEST_LOG_COUNT_MAX]: {
+        type: 'number',
+        defaultValue: 100,
     },
 };
 

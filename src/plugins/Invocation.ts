@@ -3,17 +3,24 @@ import InvocationConfig from './config/InvocationConfig';
 import PluginContext from './PluginContext';
 import ExecutionContext from '../context/ExecutionContext';
 import ThundraLogger from '../ThundraLogger';
+import Plugin from './Plugin';
+
+const get = require('lodash.get');
 
 /**
  * The invocation plugin
  */
-export default class Invocation {
+export default class Invocation implements Plugin {
+
+    public static readonly NAME: string = 'Invocation';
 
     pluginOrder: number = 2;
     pluginContext: PluginContext;
     options: InvocationConfig;
-    hooks: { 'before-invocation': (execContext: ExecutionContext) => void;
-             'after-invocation': (execContext: ExecutionContext) => void; };
+    hooks: {
+        'before-invocation': (execContext: ExecutionContext) => void;
+        'after-invocation': (execContext: ExecutionContext) => void;
+    };
 
     constructor(options?: InvocationConfig) {
         this.hooks = {
@@ -21,6 +28,13 @@ export default class Invocation {
             'after-invocation': this.afterInvocation,
         };
         this.options = options;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    getName(): string {
+        return Invocation.NAME;
     }
 
     /**
@@ -62,9 +76,18 @@ export default class Invocation {
         const { apiKey } = this.pluginContext;
         const invocation = Utils.generateReport(invocationData, apiKey);
 
-        ThundraLogger.debug('<Invocation> Reporting invocation:', invocation);
+        const sampler = get(this.options, 'sampler', { isSampled: () => true });
+        const sampled = sampler.isSampled(invocation);
 
-        execContext.report(invocation);
+        ThundraLogger.debug('<Invocation> Checked sampling of transaction', execContext.transactionId, ':', sampled);
+
+        if (sampled) {
+            execContext.report(invocation);
+        } else {
+            ThundraLogger.debug(
+                '<Invocation> Reporting disabled due to existing sampler for transaction', execContext.transactionId);
+            execContext.reportingDisabled = true;
+        }
     }
 
     /**

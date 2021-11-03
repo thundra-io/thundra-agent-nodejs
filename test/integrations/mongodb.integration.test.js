@@ -32,7 +32,10 @@ describe('MongoDB integration', () => {
             expect(span.domainName).toBe('DB');
             expect(span.operationName).toBe('testDB');
             expect(span.tags['operation.type']).toBe('WRITE');
-            expect(span.tags['db.host']).toBe('localhost');
+
+            const hostCheck = (span.tags['db.host'] === 'localhost' || span.tags['db.host'] === '127.0.0.1');
+            expect(hostCheck).toBeTruthy();
+
             expect(span.tags['db.port']).toBe('27017');
             expect(span.tags['db.instance']).toBe('testDB');
             expect(span.tags['db.type']).toBe('mongodb');
@@ -60,7 +63,10 @@ describe('MongoDB integration', () => {
             expect(span.domainName).toBe('DB');
             expect(span.operationName).toBe('testDB');
             expect(span.tags['operation.type']).toBe('WRITE');
-            expect(span.tags['db.host']).toBe('localhost');
+            
+            const hostCheck = (span.tags['db.host'] === 'localhost' || span.tags['db.host'] === '127.0.0.1');
+            expect(hostCheck).toBeTruthy();
+
             expect(span.tags['db.port']).toBe('27017');
             expect(span.tags['db.instance']).toBe('testDB');
             expect(span.tags['db.type']).toBe('mongodb');

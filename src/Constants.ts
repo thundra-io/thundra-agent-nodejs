@@ -3,6 +3,7 @@
  */
 
 import HttpIntegration from './integrations/HttpIntegration';
+import Http2Integration from './integrations/Http2Integration';
 import PostgreIntegration from './integrations/PostgreIntegration';
 import MySQL2Integration from './integrations/MySQL2Integration';
 import MySQLIntegration from './integrations/MySQLIntegration';
@@ -10,19 +11,23 @@ import RedisIntegration from './integrations/RedisIntegration';
 import MongoDBIntegration from './integrations/MongoDBIntegration';
 import IORedisIntegration from './integrations/IORedisIntegration';
 import { AWSIntegration } from './integrations/AWSIntegration';
+import { AWSv3Integration } from './integrations/AWSv3Integration';
+import ESLegacyIntegration from './integrations/ESLegacyIntegration';
 import ESIntegration from './integrations/ESIntegration';
+import AMQPLIBIntegration from './integrations/AmqplibIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './listeners/LatencyInjectorSpanListener';
 import TagInjectorSpanListener from './listeners/TagInjectorSpanListener';
 import SecurityAwareSpanListener from './listeners/SecurityAwareSpanListener';
 
-const { version } = require('../package.json');
+const {version} = require('../package.json');
 
 export const EnvVariableKeys = {
 
     LAMBDA_TASK_ROOT: 'LAMBDA_TASK_ROOT',
 
+    AWS_EXECUTION_ENV: 'AWS_EXECUTION_ENV',
     AWS_LAMBDA_LOG_STREAM_NAME: 'AWS_LAMBDA_LOG_STREAM_NAME',
     AWS_LAMBDA_FUNCTION_VERSION: 'AWS_LAMBDA_FUNCTION_VERSION',
     AWS_REGION: 'AWS_REGION',
@@ -149,7 +154,10 @@ export const ClassNames = {
     NETLIFY: 'Netlify',
     SES: 'AWS-SES',
     STEPFUNCTIONS: 'AWS-StepFunctions',
-    EXPRESS: 'EXPRESS',
+    EXPRESS: 'Express',
+    KOA: 'Koa',
+    HAPI: 'Hapi',
+    RABBITMQ: 'RabbitMQ',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -426,6 +434,21 @@ export const ESTags = {
     ES_BODY: 'elasticsearch.body',
 };
 
+interface AMQPLIBType {
+    [key: string]: string;
+}
+
+export const AMQPTags: AMQPLIBType = {
+    HOST: 'amqp.host',
+    PORT: 'amqp.port',
+    QUEUE: 'amqp.queue',
+    EXCHANGE: 'amqp.exchange',
+    ROUTING_KEY: 'amqp.routing_key',
+    MESSAGE: 'amqp.message',
+    VHOST: 'amqp.vhost',
+    METHOD: 'amqp.method',
+};
+
 export const AwsSDKTags = {
     SERVICE_NAME: 'aws.service.name',
     REQUEST_NAME: 'aws.request.name',
@@ -508,6 +531,13 @@ export const SpanTags = {
     RESOURCE_NAMES: 'resource.names',
 };
 
+export const TraceHeaderTags = {
+    TRACE_ID: 'x-thundra-trace-id',
+    TRANSACTION_ID: 'x-thundra-transaction-id',
+    SPAN_ID: 'x-thundra-span-id',
+    BAGGAGE_PREFIX: 'x-thundra-baggage-',
+};
+
 export const TriggerHeaderTags = {
     RESOURCE_NAME: 'x-thundra-resource-name',
 };
@@ -528,18 +558,46 @@ export const SpanTypes = {
     AWS_EVENTBRIDGE: 'AWS-EventBridge',
     AWS_SES: 'AWS-SES',
     AWS_STEPFUNCTIONS: 'AWS-StepFunctions',
+    RABBITMQ: 'RabbitMQ',
 };
 
 export const INTEGRATIONS: any = {
-    http: HttpIntegration,
-    pg: PostgreIntegration,
-    mysql2: MySQL2Integration,
-    mysql: MySQLIntegration,
-    redis: RedisIntegration,
-    ioredis: IORedisIntegration,
-    aws: AWSIntegration,
-    es: ESIntegration,
-    mongodb: MongoDBIntegration,
+    http: {class: HttpIntegration, moduleNames: ['http', 'https'], moduleVersion: null},
+    http2: {class: Http2Integration, moduleNames: ['http2'], moduleVersion: null},
+    pg: {class: PostgreIntegration, moduleNames: ['pg'], moduleVersion: '6.x || 7.x || 8.x'},
+    mysql2: {class: MySQL2Integration, moduleNames: ['mysql2'], moduleVersion: '>=1.5'},
+    mysql: {class: MySQLIntegration, moduleNames: ['mysql'], moduleVersion: '>=2'},
+    redis: {class: RedisIntegration, moduleNames: ['redis'], moduleVersion: '>=2.6'},
+    ioredis: {class: IORedisIntegration, moduleNames: ['ioredis'], moduleVersion: '>=2'},
+    aws: {class: AWSIntegration, moduleNames: ['aws-sdk', 'aws-sdk/lib/core.js'], moduleVersion: '2.x'},
+    aws3: {class: AWSv3Integration, moduleNames: ['@aws-sdk/smithy-client'], moduleVersion: '3.x'},
+    es: {class: ESIntegration, moduleNames: ['@elastic/elasticsearch'], moduleVersion: '>=5.6.16'},
+    esLegacy: {class: ESLegacyIntegration, moduleNames: ['elasticsearch'], moduleVersion: '>=10.5'},
+    mongodb: {class: MongoDBIntegration, moduleNames: ['mongodb'], moduleVersion: '>=1'},
+    amqplib: {class: AMQPLIBIntegration, moduleNames: [
+        'amqplib',
+        'amqplib/callback_api.js',
+        'amqplib/lib/callback_model.js',
+        'amqplib/lib/channel_model.js',
+        'amqplib/lib/channel.js',
+    ],
+    moduleVersion: '>=0.5'},
+};
+
+export const WRAPPERS: any = {
+    hapi: {
+        moduleNames: [
+            '@hapi/hapi',
+            'hapi',
+    ]},
+    express: {
+        moduleNames: [
+            'express',
+    ]},
+    koa: {
+        moduleNames: [
+            'koa/lib/application.js',
+    ]},
 };
 
 export const LISTENERS: any = {
@@ -734,3 +792,65 @@ export const SPAN_TAGS_TO_TRIM_2: string[] = [
     AwsEventBridgeTags.ENTRIES,
     AwsStepFunctionsTags.EXECUTION_INPUT,
 ];
+
+export const THUNDRA_COLLECTOR_ENDPOINT_PATTERNS: any = {
+    PATTERN1: /^api[-\w]*\.thundra\.io$/,
+    PATTERN2: /^([\w-]+\.)?collector\.thundra\.io$/,
+};
+
+export const TESTCONTAINERS_HTTP_PATH_PATTERNS: any = {
+    PATTERN1: /info\w*/,
+    PATTERN2: /exec\/\w*/,
+    PATTERN3: /containers\/\w*/,
+    PATTERN4: /images\/\w*/,
+};
+
+export const MAX_HTTP_VALUE_SIZE: number = 10 * 1024;
+
+export const REPORTER_HTTP_TIMEOUT: number = 3000;
+
+export const AGENT_UUID_CONST: string = '3cda958c-e704-56ff-b519-ab2e3dc3ccc2';
+
+export const enum TEST_STATUS {
+    SUCCESSFUL = 'SUCCESSFUL',
+    FAILED = 'FAILED',
+    ABORTED = 'ABORTED',
+    SKIPPED = 'SKIPPED',
+}
+
+export const enum JEST_TEST_EVENTS {
+    SETUP = 'setup',
+    TEARDOWN = 'teardown',
+    TESTSTART = 'test_start',
+    TESTDONE = 'test_done',
+    TESTSKIP = 'test_skip',
+    BEFOREEACHSTART = 'hook_start<beforeEach>',
+    BEFOREEACHFINISH = 'hook_success<beforeEach>',
+    AFTEREACHSTART = 'hook_start<afterEach>',
+    AFTEREACHFINISH = 'hook_success<afterEach>',
+    BEFOREALLSTART = 'hook_start<beforeAll>',
+    BEFOREALLFINISH = 'hook_success<beforeAll>',
+    AFTERALLSTART = 'hook_start<afterAll>',
+    AFTERALLFINISH = 'hook_success<afterAll>',
+}
+
+export const enum ContextMode {
+    GlobalMode,
+    AsyncMode,
+}
+
+export const PROCESS_EXIT_EVENTS = [
+    'beforeExit', 'SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGTRAP',
+    'SIGABRT', 'SIGBUS', 'SIGFPE', 'SIGUSR1', 'SIGSEGV',
+    'SIGUSR2', 'SIGTERM',
+];
+
+export const KNOWN_TEST_FILE_PATHS = new Set([
+    'src',
+    'test',
+    'tests',
+    '_test_',
+    '_tests_',
+    '__test__',
+    '__tests__',
+]);

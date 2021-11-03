@@ -1,9 +1,12 @@
 import { readFile } from 'fs';
 import * as os from 'os';
 import {
-    DATA_MODEL_VERSION, PROC_IO_PATH, PROC_STAT_PATH,
+    DATA_MODEL_VERSION,
+    PROC_IO_PATH,
+    PROC_STAT_PATH,
     EnvVariableKeys,
     LISTENERS, AGENT_VERSION,
+    AGENT_UUID_CONST,
 } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
@@ -19,23 +22,15 @@ import SpanData from '../plugins/data/trace/SpanData';
 import LogData from '../plugins/data/log/LogData';
 import ThundraLogger from '../ThundraLogger';
 import CompositeMonitoringData from '../plugins/data/composite/CompositeMonitoringData';
-import ModuleVersionValidator from '../integrations/ModuleVersionValidator';
 import { ApplicationManager } from '../application/ApplicationManager';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import ThundraSpanListener from '../listeners/ThundraSpanListener';
 import PluginContext from '../plugins/PluginContext';
 
-const parse = require('module-details-from-path');
 const uuidv4 = require('uuid/v4');
+const uuidv5 = require('uuid/v5');
 const zlib = require('zlib');
-const Hook = require('require-in-the-middle');
-const path = require('path');
 
-declare var __non_webpack_require__: any;
-const customReq = typeof __non_webpack_require__ !== 'undefined'
-    ? __non_webpack_require__
-    : require;
-const thundraWrapped = '__thundra_wrapped';
 const globalAppID = uuidv4();
 
 /**
@@ -52,6 +47,14 @@ class Utils {
      */
     static generateId(): string {
         return uuidv4();
+    }
+
+    /**
+     * Generates id in UUID format with given value
+     * @param value value
+     */
+    static generareIdFrom(value: string): string {
+        return uuidv5(value, AGENT_UUID_CONST);
     }
 
     /**
@@ -204,12 +207,30 @@ class Utils {
     }
 
     /**
+     * To make lower case the given {@link string} value
+     * @param {string} value the {@link string} value to be lower case
+     * @return {string} the lower cased {@link string} value
+     */
+    static makeLowerCase(value: string): string {
+        return value.charAt(0).toLowerCase() + value.slice(1);
+    }
+
+    /**
      * Capitalizes the given {@link string} value
      * @param {string} value the {@link string} value to be capitalized
      * @return {string} the capitalized {@link string} value
      */
     static capitalize(value: string): string {
         return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    /**
+     * Check parameter is error
+     * @param err the error to be checked
+     * @return parameter is error
+     */
+    static isError(err: any): boolean {
+        return err && err.stack && err.message;
     }
 
     /**
@@ -242,6 +263,29 @@ class Utils {
         error.stack = maskErrorStackTrace ? '' : error.stack;
 
         return error;
+    }
+
+    /**
+     * Builds {@link Error} from given error
+     * @param err the error to be used for building {@link Error}
+     * @return the built {@link Error}
+     */
+    static buildError(err: any): Error {
+        if (err instanceof Error) {
+            return err;
+        }
+        if (typeof err === 'string') {
+            return new Error(err.toString());
+        } else {
+            const e = new Error(err.message);
+            if (err.name) {
+                e.name = err.name;
+            }
+            if (err.stack) {
+                e.stack = err.stack;
+            }
+            return e;
+        }
     }
 
     /**
@@ -279,107 +323,44 @@ class Utils {
     }
 
     /**
-     * Tries to require given module by its name and paths
-     * @param {string} name the module name
-     * @param {string[]} paths the paths to be looked for module
-     * @return the required module
-     */
-    static tryRequire(name: string, paths?: string[]): any {
-        try {
-            let resolvedPath;
-            if (paths) {
-                resolvedPath = customReq.resolve(name, { paths });
-            } else {
-                resolvedPath = customReq.resolve(name);
-            }
-            return customReq(resolvedPath);
-            // tslint:disable-next-line:no-empty
-        } catch (e) {
-            ThundraLogger.debug(`<Utils> Couldn't require module ${name} in the paths ${paths}:`, e);
-        }
-    }
-
-    /**
-     * Instruments given module by its name
-     * @param {string[]} moduleNames the modules names to instrument
-     * @param {string} version the version of the library
-     * @param wrapper the wrapper to instrument
-     * @param unwrapper the unwrapper to un-instrument
-     * @param config the config to be passed to wrapper and unwrapper
-     * @param {string[]} paths the paths to be looked for module to instrument
-     * @param {string} fileName the name of the file in module to instrument
-     * @return the context to manage instrumentation cycle (for ex. un-instrument)
-     */
-    static instrument(moduleNames: string[], version: string, wrapper: any,
-                      unwrapper?: any, config?: any, paths?: string[], fileName?: string): any {
-        const libs: any[] = [];
-        const hooks: any[] = [];
-        for (const moduleName of moduleNames) {
-            const requiredLib = Utils.tryRequire(fileName ? path.join(moduleName, fileName) : moduleName, paths);
-            if (requiredLib) {
-                if (version) {
-                    const { basedir } = Utils.getModuleInfo(moduleName);
-                    if (!basedir) {
-                        ThundraLogger.error(`<Utils> Base directory is not found for the package ${moduleName}`);
-                        return;
-                    }
-                    Utils.doInstrument(requiredLib, libs, basedir, moduleName, version, wrapper, config);
-                } else {
-                    Utils.doInstrument(requiredLib, libs, null, moduleName, null, wrapper, config);
-                }
-            }
-            const hook = Hook(moduleName, { internals: true }, (lib: any, name: string, basedir: string) => {
-                if (name === moduleName) {
-                    Utils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
-                }
-                return lib;
-            });
-            hooks.push(hook);
-        }
-        return {
-            uninstrument: () => {
-                for (const lib of libs) {
-                    if (unwrapper) {
-                        unwrapper(lib, config);
-                    }
-                    delete lib[thundraWrapped];
-                }
-                for (const hook of hooks) {
-                    hook.unhook();
-                }
-            },
-        };
-    }
-
-    /**
      * Creates and initializes monitoring data according to given {@link MonitoringDataType}
      * @param {PluginContext} pluginContext the {@link PluginContext} to be used for initializing monitoring data
      * @param {MonitoringDataType} type the type of the monitoring data
      * @return {BaseMonitoringData} the created and initialized monitoring data
      */
     static initMonitoringData(pluginContext: PluginContext, type: MonitoringDataType): BaseMonitoringData {
-        const monitoringData = this.createMonitoringData(type);
-
-        const applicationInfo = ApplicationManager.getApplicationInfo();
+        const monitoringData: BaseMonitoringData = this.createMonitoringData(type);
 
         monitoringData.id = Utils.generateId();
-        monitoringData.agentVersion = AGENT_VERSION;
-        monitoringData.dataModelVersion = DATA_MODEL_VERSION;
-        monitoringData.applicationInstanceId = applicationInfo.applicationInstanceId;
-        monitoringData.applicationId = applicationInfo.applicationId;
-        monitoringData.applicationName = applicationInfo.applicationName;
-        monitoringData.applicationClassName = applicationInfo.applicationClassName;
-        monitoringData.applicationDomainName = applicationInfo.applicationDomainName;
-        monitoringData.applicationStage = applicationInfo.applicationStage;
-        monitoringData.applicationVersion = applicationInfo.applicationVersion;
-        monitoringData.applicationRuntimeVersion = process.version;
-
-        monitoringData.applicationTags = {
-            ...monitoringData.applicationTags,
-            ...applicationInfo.applicationTags,
-        };
+        Utils.injectCommonApplicationProperties(monitoringData);
 
         return monitoringData;
+    }
+
+    /**
+     * Injects common application properties into given {@link BaseMonitoringData} monitoring data
+     * @param {BaseMonitoringData} monitoringData the @link BaseMonitoringData} monitoring data
+     *        in which common application properties will be injected to
+     */
+    static injectCommonApplicationProperties(monitoringData: BaseMonitoringData) {
+        const applicationInfo = ApplicationManager.getApplicationInfo();
+
+        monitoringData.agentVersion = AGENT_VERSION;
+        monitoringData.dataModelVersion = DATA_MODEL_VERSION;
+        monitoringData.applicationRuntimeVersion = process.version;
+        if (applicationInfo) {
+            monitoringData.applicationInstanceId = applicationInfo.applicationInstanceId;
+            monitoringData.applicationId = applicationInfo.applicationId;
+            monitoringData.applicationName = applicationInfo.applicationName;
+            monitoringData.applicationClassName = applicationInfo.applicationClassName;
+            monitoringData.applicationDomainName = applicationInfo.applicationDomainName;
+            monitoringData.applicationStage = applicationInfo.applicationStage;
+            monitoringData.applicationVersion = applicationInfo.applicationVersion;
+            monitoringData.applicationTags = {
+                ...monitoringData.applicationTags,
+                ...applicationInfo.applicationTags,
+            };
+        }
     }
 
     /**
@@ -545,10 +526,7 @@ class Utils {
         newAppInfo.applicationStage = updates.applicationStage || applicationInfo.applicationStage || '';
         newAppInfo.applicationVersion = updates.applicationVersion || applicationInfo.applicationVersion || '';
         newAppInfo.applicationTags = updates.applicationTags || applicationInfo.applicationTags;
-
-        const defaultAppID =
-            `node:${newAppInfo.applicationClassName}:${newAppInfo.applicationRegion}:${newAppInfo.applicationName}`;
-        newAppInfo.applicationId = updates.applicationId || applicationInfo.applicationId || defaultAppID;
+        newAppInfo.applicationId = updates.applicationId || applicationInfo.applicationId;
 
         return newAppInfo;
     }
@@ -589,45 +567,6 @@ class Utils {
         } catch (error) {
             ThundraLogger.error(`Couldn't normalize the given path: ${pathStr}, for depth value: ${depth}`);
             return pathStr;
-        }
-    }
-
-    private static getModuleInfo(name: string, paths?: string[]): any {
-        try {
-            let modulePath;
-            if (paths !== undefined) {
-                modulePath = customReq.resolve(name, { paths });
-            } else {
-                modulePath = customReq.resolve(name);
-            }
-            return parse(modulePath);
-        } catch (e) {
-            ThundraLogger.debug(`<Utils> Couldn't get info of module ${name} in the paths ${paths}:`, e);
-            return {};
-        }
-    }
-
-    private static doInstrument(lib: any, libs: any[], basedir: string, moduleName: string,
-                                version: string, wrapper: any, config?: any): any {
-        let isValid = false;
-        if (version) {
-            const moduleValidator = new ModuleVersionValidator();
-            const isValidVersion = moduleValidator.validateModuleVersion(basedir, version);
-            if (!isValidVersion) {
-                ThundraLogger.error(
-                    `<Utils> Invalid module version for ${moduleName} integration. Supported version is ${version}`);
-            } else {
-                isValid = true;
-            }
-        } else {
-            isValid = true;
-        }
-        if (isValid) {
-            if (!lib[thundraWrapped]) {
-                wrapper(lib, config, moduleName);
-                lib[thundraWrapped] = true;
-                libs.push(lib);
-            }
         }
     }
 

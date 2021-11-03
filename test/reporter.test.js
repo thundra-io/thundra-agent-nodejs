@@ -8,6 +8,7 @@ let httpsRequestCalled = false;
 let httpsRequestOnCalled = false;
 let httpsRequestWriteCalled = false;
 let httpsRequestEndCalled = false;
+let httpsRequestOnTimeout = false;
 
 let httpsSentData;
 
@@ -24,6 +25,7 @@ afterEach(() => {
 jest.mock('http', () => ({
     request: (options, response) => {
         return {
+            setTimeout: jest.fn(() => httpsRequestOnTimeout = true),
             on: jest.fn(() => true),
             write: jest.fn(data => {
             }),
@@ -39,6 +41,7 @@ jest.mock('https', () => ({
     request: (options, response) => {
         httpsRequestCalled = true;
         return {
+            setTimeout: jest.fn(() => httpsRequestOnTimeout = true),
             on: jest.fn(() => httpsRequestOnCalled = true),
             write: jest.fn(data => {
                 httpsRequestWriteCalled = true;
@@ -236,7 +239,7 @@ describe('reporter', () => {
 
     it('trim reports', async () => {
         const reporter = new Reporter('apiKey', {
-            maxReportSize: 256,
+            maxReportSize: 400,
         });
         const mockReport1 = { data: { type: 'Invocation', data: 'data1'}};
         const mockReport2 = { data: { type: 'Span', data: 'data2', tags: { } }};

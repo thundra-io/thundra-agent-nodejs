@@ -2,9 +2,9 @@ import Integration from './Integration';
 import ThundraSpan from '../opentracing/Span';
 import { DB_TYPE, DB_INSTANCE } from 'opentracing/lib/ext/tags';
 import ThundraLogger from '../ThundraLogger';
-import Utils from '../utils/Utils';
+import ModuleUtils from '../utils/ModuleUtils';
 import {
-    DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags, RedisCommandTypes,
+    DomainNames, ClassNames, SpanTags, SpanTypes, DBTypes, DBTags, RedisTags, RedisCommandTypes, INTEGRATIONS,
 } from '../Constants';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
@@ -13,8 +13,7 @@ const shimmer = require('shimmer');
 const has = require('lodash.has');
 const get = require('lodash.get');
 
-const MODULE_NAME = 'ioredis';
-const MODULE_VERSION = '>=2';
+const INTEGRATION_NAME = 'ioredis';
 
 /**
  * {@link Integration} implementation for Redis integration
@@ -29,8 +28,9 @@ class IORedisIntegration implements Integration {
         ThundraLogger.debug('<IORedisIntegration> Activating IORedis integration');
 
         this.config = config || {};
-        this.instrumentContext = Utils.instrument(
-            [MODULE_NAME], MODULE_VERSION,
+        const ioRedisIntegration = INTEGRATIONS[INTEGRATION_NAME];
+        this.instrumentContext = ModuleUtils.instrument(
+            ioRedisIntegration.moduleNames, ioRedisIntegration.moduleVersion,
             (lib: any, cfg: any) => {
                 this.wrap.call(this, lib, cfg);
             },

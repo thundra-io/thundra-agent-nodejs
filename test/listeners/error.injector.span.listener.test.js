@@ -12,8 +12,7 @@ describe('error injector span listener', () => {
         const listener = new ErrorInjectorSpanListener(opt);
      
         // Assert
-        expect(listener.counter).toBe(0);
-        expect(listener.injectCountFreq).toBe(listener.DEFAULT_INJECT_COUNT_FREQ);
+        expect(listener.injectPercentage).toBe(listener.DEFAULT_INJECT_PERCENTAGE);
         expect(listener.errorMessage).toBe(listener.DEFAULT_ERROR_MESSAGE);
         expect(listener.errorType).toBe(listener.DEFAULT_ERROR_TYPE);
         expect(listener.injectOnFinish).toBe(listener.DEFAULT_INJECT_ON_FINISH);
@@ -22,7 +21,7 @@ describe('error injector span listener', () => {
     it('should inject error according to the error frequency', () => {
         // Arrange
         const opt = {
-            injectCountFreq: 5,
+            injectPercentage: 20,
         };
         const listener = new ErrorInjectorSpanListener(opt);
         const span = tracer.startSpan('test span');
@@ -44,7 +43,7 @@ describe('error injector span listener', () => {
     it('should inject error with message and type', () => {
         // Arrange
         const opt = {
-            injectCountFreq: 1000,
+            injectPercentage: 100,
             errorType: 'MyError',
             errorMessage: 'This is an error!',
         };
@@ -102,7 +101,6 @@ describe('error injector span listener', () => {
         listener.onSpanInitialized(span, this, callback, args);
 
         // Assert
-        expect(listener.counter).toBe(1);
         expect(callback).toBeCalledWith(new Error(listener.DEFAULT_ERROR_MESSAGE));
     });
 });

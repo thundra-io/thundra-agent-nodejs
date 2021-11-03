@@ -2,7 +2,7 @@ version: 2
 jobs:
     build:
       docker:
-        - image: circleci/node:8.11
+        - image: circleci/node:10.24
         
         - image: postgres:9.5-alpine
           environment:
@@ -23,6 +23,9 @@ jobs:
             - "ES_JAVA_OPTS=-Xms64m -Xmx64m"
 
         - image: circleci/mongo
+
+        - image: docker.io/bitnami/rabbitmq:3.8
+        
 
       resource_class: large
       steps:

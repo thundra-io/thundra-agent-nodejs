@@ -7,16 +7,19 @@ import config from './plugins/config';
 import listeners from './listeners';
 import samplers from './samplers';
 import Utils from './utils/Utils';
-import { EnvVariableKeys } from './Constants';
+import {EnvVariableKeys} from './Constants';
 import InvocationSupport from './plugins/support/InvocationSupport';
 import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
 import support from './plugins/support';
 import ConfigNames from './config/ConfigNames';
-import { loadHandler } from './wrappers/lambda/lambdaRuntimeSupport';
+import {loadHandler} from './wrappers/lambda/lambdaRuntimeSupport';
 import * as ExpressWrapper from './wrappers/express/ExpressWrapper';
 import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
+import InitManager from './init/InitManager';
+import ModuleUtils from './utils/ModuleUtils';
+import * as Foresight from './foresight';
 
 // Check if multiple instances of package exist
 if (!global.__thundraImports__) {
@@ -38,8 +41,11 @@ let initialized = false;
  * @param options the options (configs, etc ...) to initialize agent
  */
 function init(options?: any) {
-    ConfigProvider.init(options);
-    initialized = true;
+    if (!initialized) {
+        ConfigProvider.init(options);
+        InitManager.init();
+        initialized = true;
+    }
 }
 
 /**
@@ -74,7 +80,6 @@ function expressMW() {
     if (!initialized) {
         init();
     }
-
     return ExpressWrapper.expressMW();
 }
 
@@ -113,26 +118,70 @@ function tracer() {
     return ExecutionContextManager.get().tracer;
 }
 
+/**
+ * Instruments given module if it is supported
+ * @param moduleName {string} name of the module to be instrumented
+ * @param module the module to be instrumented
+ * @return {boolean} {@code true} if the given has been instrumented,
+ *                   {@code false} otherwise
+ */
+function instrumentModule(moduleName: string, module: any): boolean {
+    return ModuleUtils.instrumentModule(moduleName, module);
+}
+
+/**
+ * Uninstruments given module if it is supported and already instrumented
+ * @param moduleName {string} name of the module to be uninstrumented
+ * @param module the module to be uninstrumented
+ * @return {boolean} {@code true} if the given has been uninstrumented,
+ *                   {@code false} otherwise
+ */
+function uninstrumentModule(moduleName: string, module: any): boolean {
+    return ModuleUtils.uninstrumentModule(moduleName, module);
+}
+
 const updateConfig = config.ThundraConfig.updateConfig;
 
-// Expose Lambda wrapper creator by default
-module.exports = createLambdaWrapper;
+if (global.__thundraMasterModule__) {
+    // This is another Thundra module which is the master module
 
-// Named exports
-Object.assign(module.exports, {
-    config,
-    samplers,
-    listeners,
-    init,
-    updateConfig,
-    createLogger,
-    loadUserHandler,
-    addLogListener,
-    createLambdaWrapper,
-    lambdaWrapper,
-    tracer,
-    expressMW,
-    InvocationSupport,
-    InvocationTraceSupport,
-    ...support,
-});
+    const thundraMasterModule = global.__thundraMasterModule__;
+
+    console.warn(`[THUNDRA] Thundra master module detected at ${thundraMasterModule.fileName}.`,
+        `So delegating from current module at ${__filename} to the master module.`);
+
+    // Expose master module exports
+    module.exports = thundraMasterModule.moduleExports;
+} else {
+    // This is the Thundra master module,
+
+    // Expose Lambda wrapper creator by default
+    module.exports = createLambdaWrapper;
+
+    // Named exports
+    Object.assign(module.exports, {
+        config,
+        samplers,
+        listeners,
+        init,
+        Foresight,
+        updateConfig,
+        createLogger,
+        loadUserHandler,
+        addLogListener,
+        createLambdaWrapper,
+        lambdaWrapper,
+        tracer,
+        instrumentModule,
+        uninstrumentModule,
+        expressMW,
+        InvocationSupport,
+        InvocationTraceSupport,
+        ...support,
+    });
+
+    global.__thundraMasterModule__ = {
+        fileName: __filename,
+        moduleExports: module.exports,
+    };
+}

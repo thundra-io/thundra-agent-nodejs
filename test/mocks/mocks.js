@@ -1,9 +1,11 @@
-import { LambdaContextProvider } from '../../dist/wrappers/lambda/LambdaContextProvider';
+import {LambdaContextProvider} from '../../dist/wrappers/lambda/LambdaContextProvider';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import ThundraTracer from '../../dist/opentracing/Tracer';
-import { expressMW } from '../../dist/wrappers/express/ExpressWrapper';
+import {expressMW} from '../../dist/wrappers/express/ExpressWrapper';
+import {koaMiddleWare} from '../../dist/wrappers/koa/KoaWrapper';
 
 const express = require('express');
+const Koa = require('koa');
 
 const createMockContext = () => {
     return {
@@ -35,7 +37,7 @@ const createMockWrapperInstance = () => {
     return {
         apiKey: 'apiKey',
         originalContext: createMockContext(),
-        originalEvent: { key: 'data' },
+        originalEvent: {key: 'data'},
         coldStart: 'false',
         reporter: createMockReporterInstance(),
         pluginContext: createMockPluginContext()
@@ -44,7 +46,7 @@ const createMockWrapperInstance = () => {
 
 const createMockPlugin = () => {
     return {
-        hooks: { 'not-a-real-hook': jest.fn() }
+        hooks: {'not-a-real-hook': jest.fn()}
     };
 };
 
@@ -71,9 +73,9 @@ const createMockLambdaExecContext = () => {
         transactionId: 'foo',
         platformData: {
             originalContext: createMockContext(),
-            originalEvent: { key: 'data' },
+            originalEvent: {key: 'data'},
         },
-        response: { key: 'data' },
+        response: {key: 'data'},
     });
 }
 
@@ -513,24 +515,63 @@ const createMockClientContext = () => {
     };
 };
 
-const createMockExpressApp = () => {
+const createMockKoaApp = () => {
+    const app = new Koa();
+
+    app.use(async (ctx, next) => {
+        if (ctx.path !== '/') {
+            return await next();
+        }
+        ctx.body = 'Hello Thundra!';
+    });
+
+    app.use(async (ctx, next) => {
+        if (ctx.path !== '/error') {
+            return await next();
+        }
+        throw new APIError('Boom');
+    });
+
+    return app;
+};
+
+const createMockExpressApp = async () => {
     const app = express();
-
-    app.use(expressMW({
-        disableAsyncContextManager: true,
-        reporter: createMockReporterInstance(),
-    }));
-
+    
     app.get('/', function (req, res) {
         res.send('Hello Thundra!');
     });
 
+    app.get('/error', function (req, res, next) {
+        next(new APIError('Boom'));
+    });
+
+    let resolve;
+    const serverInitPromise = new Promise((r => resolve = r));
+    const server = app.listen(() => {
+        resolve();
+    });
+    app.server = server;
+    await serverInitPromise;
+
+
     return app;
+};
+
+
+class APIError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = APIError.name;
+        Error.captureStackTrace(this, APIError);
+    }
 }
 
 module.exports = {
+    APIError,
     createMockContext,
     createMockExpressApp,
+    createMockKoaApp,
     createMockReporterInstance,
     createMockWrapperInstance,
     createMockPluginContext,

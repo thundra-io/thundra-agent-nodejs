@@ -16,6 +16,7 @@ class ThundraSpan extends Span {
     finishTime: number;
     spanContext: ThundraSpanContext;
     rootTraceId: string;
+    isRootSpan: boolean;
     transactionId: string;
     logs: any[];
     className: string;
@@ -37,6 +38,7 @@ class ThundraSpan extends Span {
         this.startTime = startTime;
         this.finishTime = 0;
         this.rootTraceId = fields.rootTraceId || null;
+        this.isRootSpan = fields.isRootSpan || false;
         this.transactionId = fields.transactionId || null;
         this.spanContext = this._createContext(parent);
         this.logs = [];
@@ -83,6 +85,14 @@ class ThundraSpan extends Span {
     }
 
     /**
+     * Checks whether the span has error tag
+     * @return {boolean} {@code true} if the span has error tags, {@code false} otherwise
+     */
+    hasErrorTag(): boolean {
+        return this.getTag('error');
+    }
+
+    /**
      * Closes the span
      * @param finishTime the finish time
      */
@@ -94,7 +104,7 @@ class ThundraSpan extends Span {
 
         this.finishTime = finishTime;
         if (this.spanContext.sampled) {
-            this.parentTracer._record(this, {disableActiveSpanHandling: true});
+            this.parentTracer._record(this, { disableActiveSpanHandling: true });
         }
     }
 
@@ -105,7 +115,7 @@ class ThundraSpan extends Span {
      * @param args the arguments to be passed to callback
      * @param finishTime the finish time
      */
-    closeWithCallback(me: any, callback: () => any, args: any[] , finishTime: number = Date.now()) {
+    closeWithCallback(me: any, callback: () => any, args: any[], finishTime: number = Date.now()) {
         if (this.finishTime !== 0) {
             ThundraLogger.debug(`<Span> Span with name ${this.operationName} is already closed`);
             return;
@@ -113,7 +123,7 @@ class ThundraSpan extends Span {
 
         this.finishTime = finishTime;
         if (this.spanContext.sampled) {
-            this.parentTracer._record(this, {disableActiveSpanHandling: true, me, callback, args});
+            this.parentTracer._record(this, { disableActiveSpanHandling: true, me, callback, args });
         }
     }
 
@@ -153,7 +163,7 @@ class ThundraSpan extends Span {
                 transactionId: parent.transactionId,
             });
         } else {
-                spanContext = new ThundraSpanContext({
+            spanContext = new ThundraSpanContext({
                 traceId: this.rootTraceId,
                 spanId: Utils.generateId(),
                 transactionId: this.transactionId,
@@ -212,7 +222,7 @@ class ThundraSpan extends Span {
 
         this.finishTime = finishTime;
         if (this.spanContext.sampled) {
-            this.parentTracer._record(this, {disableActiveSpanHandling: false});
+            this.parentTracer._record(this, { disableActiveSpanHandling: false });
         }
     }
 
@@ -231,9 +241,9 @@ class ThundraSpan extends Span {
 }
 
 export enum SpanEvent {
-  SPAN_START,
-  SPAN_INITIALIZE,
-  SPAN_FINISH,
+    SPAN_START,
+    SPAN_INITIALIZE,
+    SPAN_FINISH,
 }
 
 export default ThundraSpan;

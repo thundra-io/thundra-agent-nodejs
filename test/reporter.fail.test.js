@@ -7,6 +7,8 @@ let httpsRequestCalled = false;
 let httpRequestOnCalled = false;
 let httpsRequestOnCalled = false;
 
+let httpsRequestOnTimeout = false;
+
 let httpRequestWriteCalled = false;
 let httpsRequestWriteCalled = false;
 
@@ -20,6 +22,7 @@ jest.mock('http', () => ({
     request: (options, response) => {
         httpRequestCalled = true;
         return {
+            setTimeout: jest.fn(() => httpsRequestOnTimeout = true),
             on: jest.fn(() => httpRequestOnCalled = true),
             write: jest.fn(data => {
                 httpRequestWriteCalled = true;
@@ -37,6 +40,7 @@ jest.mock('https', () => ({
     request: (options, response) => {
         httpsRequestCalled = true;
         return {
+            setTimeout: jest.fn(() => httpsRequestOnTimeout = true),
             on: jest.fn(() => httpsRequestOnCalled = true),
             write: jest.fn(data => {
                 httpsRequestWriteCalled = true;
@@ -49,6 +53,8 @@ jest.mock('https', () => ({
         return null;
     }
 }));
+
+jest.setTimeout(10000);
 
 describe('reporter', () => {
 
@@ -71,34 +77,36 @@ describe('reporter', () => {
             expect(httpRequestEndCalled).toEqual(true);
         });
 
+        test('should be time out', () => {
+            jest.mock('http', () => ({
+                request: (options, response) => {
+                    httpRequestCalled = true;
+                    return {
+                        setTimeout: jest.fn(() => httpsRequestOnTimeout = true),
+                        on: jest.fn(() => httpRequestOnCalled = true),
+                        write: jest.fn(async data => {
+                            const delay = ms => new Promise(res => setTimeout(res, ms));
+                            await delay(4000)
+                            httpRequestWriteCalled = true;
+                            httpSentData = data;
+                        }),
+                        end: jest.fn(() => httpRequestEndCalled = true)
+                    };
+                },
+                Agent: () => {
+                    return null;
+                }
+            }));
+
+            reporter.sendReports(reports);
+            expect(httpRequestCalled).toEqual(true);
+            expect(httpsRequestOnTimeout).toEqual(true);
+        });
+
         test('should JSON.stringify reports on https.request', () => {
             const httpSentDataObj = JSON.parse(httpSentData);
             const allHttpSentDataObj = httpSentDataObj.data.allMonitoringData;
             expect(JSON.stringify(allHttpSentDataObj)).toEqual(JSON.stringify(reports.map(r => r.data)));
         });
     });
-
-    describe('send reports failure', () => {
-        const consoleLogOriginal = console.log;
-        try {
-            let consoleOutput;
-
-            const reporter = new Reporter('apiKey');
-            const mockReport1 = {data: {type: 'Invocation', data: 'data1'}};
-            const mockReport2 = {data: {type: 'Span', data: 'data2'}};
-
-            const reports = [];
-            reports.push(mockReport1);
-            reports.push(mockReport2);
-
-            console.log = jest.fn(input => (consoleOutput = input));
-
-            return reporter.sendReports(reports).then(() => {
-                expect(consoleOutput).toEqual(JSON.stringify(reports));
-            });
-        } finally {
-            console.log = consoleLogOriginal;
-        }
-    });
-
 });
