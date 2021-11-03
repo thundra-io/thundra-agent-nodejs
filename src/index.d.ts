@@ -19,14 +19,14 @@ declare module '@thundra/core' {
    * @param options the options (configs, etc ...) to initialize agent
    * @return {LambdaWrapper} the AWS Lambda wrapper to wrap the original handler
    */
-  export function createLambdaWrapper(options?: any): Function;
+  export function createLambdaWrapper(options?: any): <F extends Function>(f: F) => F;
 
   /**
    * Wraps the given original AWS Lambda handler
    * @param handler the original AWS Lambda handler to be wrapped
    * @return the wrapped handler
    */
-  export function lambdaWrapper<F extends Function>(h: Function | AWSLambda.Handler): F;
+  export function lambdaWrapper<F extends Function>(f: F): F;
 
   /**
    * Creates {@link Logger} with given options
