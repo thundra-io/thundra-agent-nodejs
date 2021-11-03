@@ -1,5 +1,5 @@
 /**
- * Type definitions for @thundra/core v2.12.4
+ * Type definitions for @thundra/core
  *
  * Project:     Thundra Lambda Node.js Agent
  * Author:      Oguzhan Ozdemir <oguzhan.ozdemir@thundra.io>
@@ -17,14 +17,14 @@ declare module '@thundra/core' {
    * @param options the options (configs, etc ...) to initialize agent
    * @return {LambdaWrapper} the AWS Lambda wrapper to wrap the original handler
    */
-  export function createLambdaWrapper(options?: any): (f: Function) => WrappedFunction;
+  export function createLambdaWrapper(options?: any): Function;
 
   /**
    * Wraps the given original AWS Lambda handler
    * @param handler the original AWS Lambda handler to be wrapped
    * @return the wrapped handler
    */
-  export function lambdaWrapper(handler: any): (f: Function) => WrappedFunction;
+  export function lambdaWrapper<F extends Function>(f: Function): F;
 
   /**
    * Creates {@link Logger} with given options
