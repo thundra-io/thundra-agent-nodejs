@@ -33,28 +33,76 @@ declare module '@thundra/core' {
   export function createLogger(options: any): Logger;
 
   /**
-   * Creates an Express.js middleware to integrate Thundra
-   * @return the Thundra middleware
-   */
-  export function expressMW(): void;
-
-  /**
-   * Adds given log listener
-   * @param listener the log listener to be added
-   */
-  export function addLogListener(listener: any): void;
-
-  /**
    * Gets the tracer
    * @return {Tracer} the tracer
    */
   export function tracer(): ThundraTracer;
 
   /**
-   * Loads and returns the user AWS Lambda handler
-   * @return the loaded user AWS Lambda handler
+   * Sets the tag
+   * @param {string} name the tag name
+   * @param value the tag value
    */
-  export function loadUserHandler(): any;
+  export function setTag(name: string, value: any): void;
+
+  /**
+   * Sets the tags
+   * @param tags the tags to be set
+   */
+  export function setTags(tagsToSet: { [name: string]: any }): void;
+
+  /**
+   * Gets the tag
+   * @param {string} name the tag name
+   * @return the tag value
+   */
+  export function getTag(name: string): any;
+
+  /**
+   * Gets the tags
+   * @return the tags
+   */
+  export function getTags();
+
+  /**
+   * Removes the tag
+   * @param {string} name the tag name
+   */
+  export function removeTag(name: string): void;
+
+  /**
+   * Removes the tags
+   */
+  export function removeTags(): void;
+
+  /**
+   * Checks whether invocation has error
+   * @return {boolean} {@code true} if invocation has error, {@code false} otherwise
+   */
+  export function hasError(): boolean;
+
+  /**
+   * Sets the {@link Error} to the invocation
+   * @param {Error} error the {@link Error} to be set
+   */
+  export function setError(error: any): void;
+
+  /**
+   * Gets the {@link Error} to the invocation
+   * @return {Error} the {@link Error} of the invocation
+   */
+  export function getError(): Error;
+
+  /**
+   * Clears the invocation error
+   */
+  export function clearError(): void;
+
+  /**
+   * Gets the invocation URL on Thundra Console
+   * @return {string} the invocation URL on Thundra Console
+   */
+  export function getConsoleInvocationURL(): string;
 
   /**
     * Thundra's logger implementation
