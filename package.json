@@ -77,6 +77,7 @@
     "@babel/runtime-corejs2": "^7.0.0",
     "@elastic/elasticsearch": "^6.2.4",
     "@hapi/hapi": "^20.1.5",
+    "@types/aws-lambda": "^8.10.85",
     "@types/minimatch": "^3.0.3",
     "@types/node": "^10.5.0",
     "@types/strip-ansi": "^5.0.0",
