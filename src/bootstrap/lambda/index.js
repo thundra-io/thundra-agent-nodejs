@@ -1,4 +1,4 @@
-const thundra = require('../../thundraBridge');
+const thundra = require('@thundra/core/dist/thundraBridge');
 
 const ORIGINAL_HANDLER_ENV_VAR_NAME = '_HANDLER';
 const THUNDRA_HANDLER_ENV_VAR_NAME = 'THUNDRA_AGENT_LAMBDA_HANDLER';
@@ -9,8 +9,8 @@ const JS_FILE_EXTENSION = '.js';
 const userHandler = process.env[ORIGINAL_HANDLER_ENV_VAR_NAME];
 
 // Resolve Thundra handler
-const lambdaTaskRoot = process.env[LAMBDA_TASK_ROOT_ENV_VAR_NAME]
-let thundraHandler = require.resolve('../../handler');
+const lambdaTaskRoot = process.env[LAMBDA_TASK_ROOT_ENV_VAR_NAME];
+let thundraHandler = require.resolve('@thundra/core/dist/handler');
 if (thundraHandler.startsWith(lambdaTaskRoot)) {
     thundraHandler = '.' + thundraHandler.substring(lambdaTaskRoot.length);
 }
