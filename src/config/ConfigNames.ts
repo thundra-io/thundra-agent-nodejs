@@ -40,6 +40,8 @@ class ConfigNames {
         'thundra.agent.application.version';
     public static readonly THUNDRA_APPLICATION_TAG_PREFIX: string =
         'thundra.agent.application.tag.';
+    public static readonly THUNDRA_AGENT_HTTP_ERROR_IGNORED_STATUS_CODES: string =
+        'thundra.agent.http.error.ignored.status.codes';
 
     /////////////////////////////////////////////////////////////////////////////
 
