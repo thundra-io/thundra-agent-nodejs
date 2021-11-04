@@ -124,7 +124,7 @@
     "typescript": "^3.9.9"
   },
   "dependencies": {
-    "@thundra/instrumenter": "^1.3.3",
+    "@thundra/instrumenter": "^1.3.4",
     "@thundra/warmup": "1.0.0",
     "fast-copy": "^2.1.0",
     "isomorphic-git": "^1.9.2",
