@@ -1,4 +1,4 @@
-const thundra = require('@thundra/core/dist/thundraBridge');
+const thundra = require('../../thundraBridge');
 
 const ORIGINAL_HANDLER_ENV_VAR_NAME = '_HANDLER';
 const THUNDRA_HANDLER_ENV_VAR_NAME = 'THUNDRA_AGENT_LAMBDA_HANDLER';
