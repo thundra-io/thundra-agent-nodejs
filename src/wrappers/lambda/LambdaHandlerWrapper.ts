@@ -17,6 +17,7 @@ import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import ExecutionContext from '../../context/ExecutionContext';
+import HTTPUtils from '../../utils/HTTPUtils';
 
 const path = require('path');
 
@@ -537,13 +538,8 @@ class LambdaHandlerWrapper {
         let isError = false;
         if (Utils.isValidHTTPResponse(result) && result.body) {
             if (typeof result.body === 'string') {
-                const ignoredStatusCodesStr =
-                    ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_HTTP_ERROR_IGNORED_STATUS_CODES);
-                if (ignoredStatusCodesStr) {
-                    const ignoredStatusCodes = ignoredStatusCodesStr.replace(/\s/g, '').split(',');
-                    if (ignoredStatusCodes && ignoredStatusCodes.includes(`${result.statusCode}`)) {
-                        return false;
-                    }
+                if (HTTPUtils.isErrorFreeStatusCode(result.statusCode)) {
+                    return false;
                 }
 
                 if (result.statusCode >= 400 && result.statusCode <= 599) {

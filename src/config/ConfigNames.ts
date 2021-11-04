@@ -40,8 +40,6 @@ class ConfigNames {
         'thundra.agent.application.version';
     public static readonly THUNDRA_APPLICATION_TAG_PREFIX: string =
         'thundra.agent.application.tag.';
-    public static readonly THUNDRA_AGENT_HTTP_ERROR_IGNORED_STATUS_CODES: string =
-        'thundra.agent.http.error.ignored.status.codes';
 
     /////////////////////////////////////////////////////////////////////////////
 
@@ -150,6 +148,8 @@ class ConfigNames {
         'thundra.agent.trace.integrations.http.error.on4xx.disable';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_ON_5XX_DISABLE: string =
         'thundra.agent.trace.integrations.http.error.on5xx.disable';
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_IGNORED_STATUS_CODES: string =
+        'thundra.agent.trace.integrations.http.error.ignored.status.codes';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK: string =
         'thundra.agent.trace.integrations.redis.command.mask';

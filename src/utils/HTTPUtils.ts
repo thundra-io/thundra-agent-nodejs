@@ -1,3 +1,5 @@
+import ConfigNames from '../config/ConfigNames';
+import ConfigProvider from '../config/ConfigProvider';
 import {
     THUNDRA_COLLECTOR_ENDPOINT_PATTERNS,
     TESTCONTAINERS_HTTP_PATH_PATTERNS,
@@ -119,6 +121,23 @@ class HTTPUtils {
                 span._setOperationName(resourceName);
             }
         }
+    }
+
+    static isErrorFreeStatusCode(statusCode: number): boolean {
+        let result = false;
+
+        const ignoredStatusCodesStr =
+            ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_IGNORED_STATUS_CODES);
+
+        if (ignoredStatusCodesStr) {
+            const ignoredStatusCodes = ignoredStatusCodesStr.replace(/\s/g, '').split(',');
+
+            if (ignoredStatusCodes && ignoredStatusCodes.includes(`${statusCode}`)) {
+                result = true;
+            }
+        }
+
+        return result;
     }
 }
 
