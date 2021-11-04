@@ -55,6 +55,9 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     [ConfigNames.THUNDRA_APPLICATION_TAG_PREFIX]: {
         type: 'any',
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_IGNORED_STATUS_CODES]: {
+        type: 'any',
+    },
     [ConfigNames.THUNDRA_REPORT_REST_BASEURL]: {
         type: 'string',
         defaultValue: 'https://collector.thundra.io/v1',

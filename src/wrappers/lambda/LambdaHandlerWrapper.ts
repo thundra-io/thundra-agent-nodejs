@@ -17,6 +17,7 @@ import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import ExecutionContext from '../../context/ExecutionContext';
+import HTTPUtils from '../../utils/HTTPUtils';
 
 const path = require('path');
 
@@ -537,6 +538,10 @@ class LambdaHandlerWrapper {
         let isError = false;
         if (Utils.isValidHTTPResponse(result) && result.body) {
             if (typeof result.body === 'string') {
+                if (HTTPUtils.isErrorFreeStatusCode(result.statusCode)) {
+                    return false;
+                }
+
                 if (result.statusCode >= 400 && result.statusCode <= 599) {
                     isError = true;
                 }
