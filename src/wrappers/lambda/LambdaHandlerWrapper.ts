@@ -540,7 +540,7 @@ class LambdaHandlerWrapper {
                 const ignoredStatusCodesStr =
                     ConfigProvider.get<string>(ConfigNames.THUNDRA_AGENT_HTTP_ERROR_IGNORED_STATUS_CODES);
                 if (ignoredStatusCodesStr) {
-                    const ignoredStatusCodes = ignoredStatusCodesStr.replace(/\s/g,'').split(',');
+                    const ignoredStatusCodes = ignoredStatusCodesStr.replace(/\s/g, '').split(',');
                     if (ignoredStatusCodes && ignoredStatusCodes.includes(`${result.statusCode}`)) {
                         return false;
                     }
