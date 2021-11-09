@@ -922,11 +922,11 @@ export class AWSDynamoDBIntegration {
             const attrHash = md5(AWSDynamoDBIntegration.serializeAttributes(attributes));
             const tl1: any[] =
                 [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
-            traceLinks.push(tl1);
+            traceLinks.push(...tl1);
             if (timestamp2) {
                 const tl2: any[] =
                     [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp2 + i}:${operationType}:${attrHash}`);
-                traceLinks.push(tl2);
+                traceLinks.push(...tl2);
             }
         }
         return traceLinks;
