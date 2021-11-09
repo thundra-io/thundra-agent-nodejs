@@ -3,7 +3,7 @@ import Argument from './Argument';
 import ReturnValue from './ReturnValue';
 import ThundraLogger from '../../ThundraLogger';
 import ThundraSpan from '../Span';
-import { ThundraSourceCodeInstrumenter } from '@thundra/instrumenter';
+import {ThundraSourceCodeInstrumenter, TraceableConfig} from '@thundra/instrumenter';
 import { MethodTags, LineByLineTags } from '../../Constants';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
@@ -28,45 +28,51 @@ const MAX_PROPS: number = 20;
  */
 class Instrumenter {
 
+    private traceableConfigs: TraceableConfig[];
+    private traceableConfigPrefix: string;
     private origCompile: any;
     private sourceCodeInstrumenter: ThundraSourceCodeInstrumenter;
 
     constructor(traceConfig: TraceConfig) {
-        const traceableConfigs = get(traceConfig, 'traceableConfigs');
-        const traceableConfigPrefix = ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX);
+        this.traceableConfigs = get(traceConfig, 'traceableConfigs');
+        this.traceableConfigPrefix = ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX);
 
-        this.sourceCodeInstrumenter = new ThundraSourceCodeInstrumenter(traceableConfigs, traceableConfigPrefix);
+        this.sourceCodeInstrumenter = new ThundraSourceCodeInstrumenter(this.traceableConfigs, this.traceableConfigPrefix);
     }
 
     /**
      * Hooks itself into module load cycle to instrument specified/configured modules/methods
      */
     hookModuleCompile() {
-        const compile = Module.prototype._compile;
+        this.setGlobalFunction();
 
-        if (compile._thundra) {
-            ThundraLogger.debug('<Instrumenter> Already wrapped, skipped hooking module compile');
-            // If already hooked into compile phase, don't hook again
-            return;
+        const traceableConfigsSpecified: boolean =
+            Array.isArray(this.traceableConfigs) && this.traceableConfigs.length > 0;
+        if (traceableConfigsSpecified) {
+            const compile = Module.prototype._compile;
+
+            if (compile._thundra) {
+                ThundraLogger.debug('<Instrumenter> Already wrapped, skipped hooking module compile');
+                // If already hooked into compile phase, don't hook again
+                return;
+            }
+
+            ThundraLogger.debug('<Instrumenter> Hooking module compile ...');
+
+            const self = this;
+            this.origCompile = compile;
+
+            const thundraCompile = function (content: any, filename: any) {
+                content = self.instrument(filename, content);
+
+                self.origCompile.call(this, content, filename);
+            };
+            Object.defineProperty(thundraCompile, '_thundra', {
+                value: true,
+                writable: false,
+            });
+            Module.prototype._compile = thundraCompile;
         }
-
-        ThundraLogger.debug('<Instrumenter> Hooking module compile ...');
-
-        this.origCompile = compile;
-
-        const self = this;
-        self.setGlobalFunction();
-
-        const thundraCompile = function (content: any, filename: any) {
-            content = self.instrument(filename, content);
-
-            self.origCompile.call(this, content, filename);
-        };
-        Object.defineProperty(thundraCompile, '_thundra', {
-            value: true,
-            writable: false,
-        });
-        Module.prototype._compile = thundraCompile;
     }
 
     /**
@@ -93,7 +99,7 @@ class Instrumenter {
                 wrapped = false;
             }
             try {
-                code = sci.addTraceHooks(code, relPathWithDots, wrapped);
+                code = sci.addTraceHooks(code, relPathWithDots, wrapped, filename);
                 if (Module.wrapper.length === 2) {
                     code = code.substring(Module.wrapper[0].length, code.length - Module.wrapper[1].length);
                 }
