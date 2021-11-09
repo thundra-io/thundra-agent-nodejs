@@ -877,24 +877,33 @@ export class AWSDynamoDBIntegration {
 
         let traceLinks: any[] = [];
         let timestamp: number;
+        let timestamp2: number;
 
         if (AWSServiceIntegration.hasDateInResponse(response)) {
             timestamp = Date.parse(AWSServiceIntegration.getDateFromResponse(response)) / 1000;
         } else {
-            timestamp = Math.floor(Date.now() / 1000) - 1;
+            const startTime: number = span.startTime / 1000;
+            const finishTime: number = Date.now() / 1000;
+            timestamp = Math.floor(finishTime) - 1;
+            if (finishTime - startTime >= 3) {
+                timestamp2 = Math.floor(startTime);
+            }
         }
 
         if (operationName === 'putItem') {
-            traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(params.Item, 'SAVE', tableName, region, timestamp);
+            traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(
+                params.Item, 'SAVE', tableName, region, timestamp, timestamp2);
         } else if (operationName === 'updateItem') {
-            traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(params.Key, 'SAVE', tableName, region, timestamp);
+            traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(
+                params.Key, 'SAVE', tableName, region, timestamp, timestamp2);
         } else if (operationName === 'deleteItem') {
             if (config.dynamoDBTraceInjectionEnabled &&
                 AWSServiceIntegration.hasInResponseData(response, 'Attributes.x-thundra-span-id')) {
                 const spanId = AWSServiceIntegration.getFromResponseData(response, 'Attributes.x-thundra-span-id');
                 traceLinks = [`DELETE:${spanId}`];
             } else {
-                traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(params.Key, 'DELETE', tableName, region, timestamp);
+                traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(
+                    params.Key, 'DELETE', tableName, region, timestamp, timestamp2);
             }
         }
 
@@ -906,12 +915,21 @@ export class AWSDynamoDBIntegration {
     }
 
     public static generateDynamoTraceLinks(attributes: any, operationType: string,
-                                           tableName: string, region: string, timestamp: number): any[] {
+                                           tableName: string, region: string,
+                                           timestamp: number, timestamp2?: number): any[] {
+        const traceLinks: any[] = [];
         if (attributes) {
             const attrHash = md5(AWSDynamoDBIntegration.serializeAttributes(attributes));
-            return [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
+            const tl1: any[] =
+                [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp + i}:${operationType}:${attrHash}`);
+            traceLinks.push(tl1);
+            if (timestamp2) {
+                const tl2: any[] =
+                    [0, 1, 2].map((i) => `${region}:${tableName}:${timestamp2 + i}:${operationType}:${attrHash}`);
+                traceLinks.push(tl2);
+            }
         }
-        return [];
+        return traceLinks;
     }
 
     private static getDynamoDBTableName(request: any): string {

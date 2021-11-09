@@ -174,10 +174,13 @@ class LambdaEventUtils {
         const traceLinks: any[] = [];
         const tableNames: Set<string> = new Set<string>();
         for (const record of originalEvent.Records) {
-            const evenSourceARN = record.eventSourceARN;
-            const idx1 = evenSourceARN.indexOf('/');
-            const idx2 = evenSourceARN.indexOf('/', idx1 + 1);
-            const tableName = evenSourceARN.substring(idx1 + 1, idx2);
+            const eventSourceARN = record.eventSourceARN;
+            const idx1 = eventSourceARN.indexOf('/');
+            const idx2 = eventSourceARN.indexOf('/', idx1 + 1);
+            const tableName =
+                idx2 < 0
+                    ? eventSourceARN.substring(idx1 + 1)
+                    : eventSourceARN.substring(idx1 + 1, idx2);
             const region = record.awsRegion || '';
             tableNames.add(tableName);
 
@@ -202,7 +205,7 @@ class LambdaEventUtils {
                 if (creationTime) {
                     const NewImage = get(record, 'dynamodb.NewImage', {});
                     const Keys = get(record, 'dynamodb.Keys', {});
-                    const timestamp = creationTime - 1;
+                    const timestamp = parseInt(creationTime, 10) - 1;
                     if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
                         traceLinks.push(...AWSDynamoDBIntegration.generateDynamoTraceLinks(
                             NewImage, 'SAVE', tableName, region, timestamp,
