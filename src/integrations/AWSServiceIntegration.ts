@@ -882,12 +882,11 @@ export class AWSDynamoDBIntegration {
         if (AWSServiceIntegration.hasDateInResponse(response)) {
             timestamp = Date.parse(AWSServiceIntegration.getDateFromResponse(response)) / 1000;
         } else {
-            const startTime: number = span.startTime / 1000;
-            const finishTime: number = Date.now() / 1000;
-            timestamp = Math.floor(finishTime) - 1;
-            if (finishTime - startTime >= 3) {
-                timestamp2 = Math.floor(startTime);
-            }
+            timestamp = Math.floor(Date.now() / 1000) - 1;
+        }
+        const requestStartTime: number = Math.floor(span.startTime / 1000);
+        if (timestamp - requestStartTime > 1) {
+            timestamp2 = requestStartTime;
         }
 
         if (operationName === 'putItem') {
