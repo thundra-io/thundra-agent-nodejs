@@ -13,7 +13,7 @@ module.exports = {
         });
         
         stream.end(JSON.stringify({
-            testField: 'test-value'
+            testField: 'test-response'
         }));
     },
     '/404': (stream) => {

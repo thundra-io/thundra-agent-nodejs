@@ -49,6 +49,7 @@ class TraceConfig extends BasePluginConfig {
     maskLambdaPayload: boolean;
     maskEventBridgeDetail: boolean;
     maskHttpBody: boolean;
+    maskHttpResponseBody: boolean;
     sampler: Sampler<any>;
     runSamplerOnEachSpan: boolean;
     instrumentAWSOnLoad: boolean;
@@ -108,6 +109,9 @@ class TraceConfig extends BasePluginConfig {
         this.maskHttpBody = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_MASK,
             options.maskHttpBody);
+        this.maskHttpResponseBody = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_MASK,
+            options.maskHttpResponseBody);
         this.maskEventBridgeDetail = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_EVENTBRIDGE_DETAIL_MASK,
             options.maskEventBridgeDetail);

@@ -1,6 +1,16 @@
 import Integration from './Integration';
 import * as opentracing from 'opentracing';
-import { HttpTags, SpanTags, SpanTypes, DomainNames, ClassNames, TriggerHeaderTags, INTEGRATIONS } from '../Constants';
+import {
+    HttpTags,
+    SpanTags,
+    SpanTypes,
+    DomainNames,
+    ClassNames,
+    TriggerHeaderTags,
+    MAX_HTTP_REQUEST_SIZE,
+    MAX_HTTP_RESPONSE_SIZE,
+    INTEGRATIONS,
+} from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
 import * as url from 'url';
@@ -126,9 +136,7 @@ class HttpIntegration implements Integration {
                     const me = this;
 
                     const wrappedCallback = (res: any) => {
-
                         if (span) {
-
                             HTTPUtils.fillOperationAndClassNameToSpan(span, res.headers);
 
                             const statusCode = res.statusCode.toString();
@@ -161,16 +169,76 @@ class HttpIntegration implements Integration {
                             try {
                                 if (arguments[0]
                                     && (typeof arguments[0] === 'string' || arguments[0] instanceof Buffer)) {
-                                    span.setTag(HttpTags.BODY, arguments[0].toString('utf8'));
+                                    const requestData: string | Buffer = arguments[0];
+                                    if (requestData.length <= MAX_HTTP_REQUEST_SIZE) {
+                                        const requestBody: string = requestData.toString('utf8');
+                                        if (ThundraLogger.isDebugEnabled()) {
+                                            ThundraLogger.debug(`<HTTPIntegration> Captured request body: ${requestBody}`);
+                                        }
+                                        span.setTag(HttpTags.BODY, requestBody);
+                                    }
                                 }
                             } catch (error) {
                                 ThundraLogger.error(
-                                `<HTTPIntegration> Unable to get body of HTTP span with name ${operationName}:`,
-                                error);
+                                    `<HTTPIntegration> Unable to get request body of HTTP span with name ${operationName}:`,
+                                    error);
                             }
 
                             return write.apply(this, arguments);
                         };
+                    }
+
+                    if (span && !config.maskHttpResponseBody) {
+                        req.on('response', (res: any) => {
+                            ThundraLogger.debug(`<HTTPIntegration> On response of HTTP span with name ${operationName}`);
+
+                            try {
+                                // If there is no headers, "contentLength" will be undefined
+                                // If there is no `content-length` header, `contentLength` will be `NaN`
+                                const contentLength: Number | undefined =
+                                    res.headers && parseInt(res.headers['content-length'], 0);
+                                const responseTooBig = contentLength && contentLength > MAX_HTTP_RESPONSE_SIZE;
+                                if (responseTooBig) {
+                                    return;
+                                }
+                            } catch (error) {
+                                ThundraLogger.error(
+                                    `<HTTPIntegration> Unable to check response length of HTTP span with name ${operationName}:`,
+                                    error);
+                            }
+
+                            let chunks: Buffer[] = [];
+                            let totalSize: Number = 0;
+
+                            res.on('data', (chunk: any) => {
+                                if (!chunk) {
+                                    return;
+                                }
+                                totalSize += chunk.length;
+                                if (totalSize <= MAX_HTTP_RESPONSE_SIZE) {
+                                    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+                                } else {
+                                    // No need to capture partial response body
+                                    chunks = null;
+                                }
+                            });
+
+                            res.on('end', () => {
+                                try {
+                                    if (chunks && chunks.length) {
+                                        const responseBody: string = Buffer.concat(chunks).toString('utf8');
+                                        if (ThundraLogger.isDebugEnabled()) {
+                                            ThundraLogger.debug(`<HTTPIntegration> Captured response body: ${responseBody}`);
+                                        }
+                                        span.setTag(HttpTags.RESPONSE_BODY, responseBody);
+                                    }
+                                } catch (error) {
+                                    ThundraLogger.error(
+                                        `<HTTPIntegration> Unable to get response body of HTTP span with name ${operationName}:`,
+                                        error);
+                                }
+                            });
+                        });
                     }
 
                     req.once('error', (error: any) => {
@@ -185,7 +253,6 @@ class HttpIntegration implements Integration {
                     });
 
                     return req;
-
                 } catch (error) {
                     ThundraLogger.error('<HTTPIntegration> Error occurred while tracing HTTP request:', error);
 
