@@ -5,6 +5,7 @@ import ExecutionContextManager from '../../dist/context/ExecutionContextManager'
 import ExecutionContext from '../../dist/context/ExecutionContext';
 
 import HTTPUtils from '../../dist/utils/HTTPUtils';
+import {HttpTags, SpanTags, ErrorTags} from '../../dist/Constants';
 
 describe('HTTP integration', () => {
     let tracer;
@@ -33,15 +34,19 @@ describe('HTTP integration', () => {
         expect(span.className).toBe('HTTP');
         expect(span.domainName).toBe('API');
 
-        expect(span.tags['operation.type']).toBe('GET');
-        expect(span.tags['http.method']).toBe('GET');
-        expect(span.tags['http.host']).toBe('httpstat.us');
-        expect(span.tags['http.path']).toBe('/200');
-        expect(span.tags['http.url']).toBe('httpstat.us/200?userId=1');
-        expect(span.tags['http.query_params']).toBe('userId=1');
-        expect(span.tags['http.status_code']).toBe(200);
-        expect(span.tags['topology.vertex']).toEqual(true);
-        expect(span.tags['http.body']).not.toBeTruthy();
+        expect(span.tags[SpanTags.OPERATION_TYPE]).toBe('GET');
+        expect(span.tags[HttpTags.HTTP_METHOD]).toBe('GET');
+        expect(span.tags[HttpTags.HTTP_HOST]).toBe('httpstat.us');
+        expect(span.tags[HttpTags.HTTP_PATH]).toBe('/200');
+        expect(span.tags[HttpTags.HTTP_URL]).toBe('httpstat.us/200?userId=1');
+        expect(span.tags[HttpTags.QUERY_PARAMS]).toBe('userId=1');
+        expect(span.tags[HttpTags.HTTP_STATUS]).toBe(200);
+        expect(span.tags[ErrorTags.ERROR]).toBe(undefined);
+        expect(span.tags[ErrorTags.ERROR_KIND]).toBe(undefined);
+        expect(span.tags[ErrorTags.ERROR_MESSAGE]).toBe(undefined);
+        expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
+        expect(span.tags[HttpTags.BODY]).not.toBeTruthy();
+        expect(span.tags[HttpTags.RESPONSE_BODY]).not.toBeTruthy();
     });
 
     test('should set 4XX 5XX errors on HTTP calls', async () => {
@@ -56,17 +61,18 @@ describe('HTTP integration', () => {
         expect(span.className).toBe('HTTP');
         expect(span.domainName).toBe('API');
 
-        expect(span.tags['operation.type']).toBe('GET');
-        expect(span.tags['http.method']).toBe('GET');
-        expect(span.tags['http.host']).toBe('httpstat.us');
-        expect(span.tags['http.path']).toBe('/404');
-        expect(span.tags['http.url']).toBe('httpstat.us/404');
-        expect(span.tags['http.status_code']).toBe(404);
-        expect(span.tags['error']).toBe(true);
-        expect(span.tags['error.kind']).toBe('HttpError');
-        expect(span.tags['error.message']).toBe('Not Found');
-        expect(span.tags['topology.vertex']).toEqual(true);
-        expect(span.tags['http.body']).not.toBeTruthy();
+        expect(span.tags[SpanTags.OPERATION_TYPE]).toBe('GET');
+        expect(span.tags[HttpTags.HTTP_METHOD]).toBe('GET');
+        expect(span.tags[HttpTags.HTTP_HOST]).toBe('httpstat.us');
+        expect(span.tags[HttpTags.HTTP_PATH]).toBe('/404');
+        expect(span.tags[HttpTags.HTTP_URL]).toBe('httpstat.us/404');
+        expect(span.tags[HttpTags.HTTP_STATUS]).toBe(404);
+        expect(span.tags[ErrorTags.ERROR]).toBe(true);
+        expect(span.tags[ErrorTags.ERROR_KIND]).toBe('HttpError');
+        expect(span.tags[ErrorTags.ERROR_MESSAGE]).toBe('Not Found');
+        expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
+        expect(span.tags[HttpTags.BODY]).not.toBeTruthy();
+        expect(span.tags[HttpTags.RESPONSE_BODY]).not.toBeTruthy();
     });
 
     test('should disable 4XX 5XX errors on HTTP calls', async () => {
@@ -81,17 +87,18 @@ describe('HTTP integration', () => {
         expect(span.className).toBe('HTTP');
         expect(span.domainName).toBe('API');
 
-        expect(span.tags['operation.type']).toBe('GET');
-        expect(span.tags['http.method']).toBe('GET');
-        expect(span.tags['http.host']).toBe('httpstat.us');
-        expect(span.tags['http.path']).toBe('/404');
-        expect(span.tags['http.url']).toBe('httpstat.us/404');
-        expect(span.tags['http.status_code']).toBe(404);
-        expect(span.tags['error']).toBe(undefined);
-        expect(span.tags['error.kind']).toBe(undefined);
-        expect(span.tags['error.message']).toBe(undefined);
-        expect(span.tags['topology.vertex']).toEqual(true);
-        expect(span.tags['http.body']).not.toBeTruthy();
+        expect(span.tags[SpanTags.OPERATION_TYPE]).toBe('GET');
+        expect(span.tags[HttpTags.HTTP_METHOD]).toBe('GET');
+        expect(span.tags[HttpTags.HTTP_HOST]).toBe('httpstat.us');
+        expect(span.tags[HttpTags.HTTP_PATH]).toBe('/404');
+        expect(span.tags[HttpTags.HTTP_URL]).toBe('httpstat.us/404');
+        expect(span.tags[HttpTags.HTTP_STATUS]).toBe(404);
+        expect(span.tags[ErrorTags.ERROR]).toBe(undefined);
+        expect(span.tags[ErrorTags.ERROR_KIND]).toBe(undefined);
+        expect(span.tags[ErrorTags.ERROR_MESSAGE]).toBe(undefined);
+        expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
+        expect(span.tags[HttpTags.BODY]).not.toBeTruthy();
+        expect(span.tags[HttpTags.RESPONSE_BODY]).not.toBeTruthy();
     });
 
     test('should instrument HTTPS POST calls', async () => {
@@ -107,8 +114,9 @@ describe('HTTP integration', () => {
         expect(span.className).toBe('HTTP');
         expect(span.domainName).toBe('API');
 
-        expect(span.tags['http.method']).toBe('POST');
-        expect(span.tags['http.body']).toBe('{"todo":"Buy the milk"}');
+        expect(span.tags[HttpTags.HTTP_METHOD]).toBe('POST');
+        expect(span.tags[HttpTags.BODY]).toBe('{"todo":"Buy the milk"}');
+        expect(span.tags[HttpTags.RESPONSE_BODY]).not.toBeTruthy();
     });
 
     test('should mask body in post', async () => {
@@ -124,8 +132,9 @@ describe('HTTP integration', () => {
         expect(span.className).toBe('HTTP');
         expect(span.domainName).toBe('API');
 
-        expect(span.tags['http.method']).toBe('POST');
-        expect(span.tags['http.body']).not.toBeTruthy();
+        expect(span.tags[HttpTags.HTTP_METHOD]).toBe('POST');
+        expect(span.tags[HttpTags.BODY]).not.toBeTruthy();
+        expect(span.tags[HttpTags.RESPONSE_BODY]).not.toBeTruthy();
     });
 
     test('should instrument api gateway calls ', () => {

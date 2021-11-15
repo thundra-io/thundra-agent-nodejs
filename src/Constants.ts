@@ -415,6 +415,7 @@ export const HttpTags = {
     HTTP_ROUTE_PATH: 'http.route_path',
     QUERY_PARAMS: 'http.query_params',
     BODY: 'http.body',
+    RESPONSE_BODY: 'http.response.body',
 };
 
 export const RedisTags = {
@@ -529,6 +530,13 @@ export const SpanTags = {
     TOPOLOGY_VERTEX: 'topology.vertex',
     TRACE_LINKS: 'trace.links',
     RESOURCE_NAMES: 'resource.names',
+};
+
+export const ErrorTags = {
+    ERROR: 'error',
+    ERROR_KIND: 'error.kind',
+    ERROR_MESSAGE: 'error.message',
+    ERROR_STACK: 'error.stack',
 };
 
 export const TraceHeaderTags = {
@@ -777,6 +785,7 @@ export const SPAN_TAGS_TO_TRIM_2: string[] = [
     AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST,
     AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_RESPONSE,
     HttpTags.BODY,
+    HttpTags.RESPONSE_BODY,
     DBTags.DB_STATEMENT,
     RedisTags.REDIS_COMMAND,
     RedisTags.REDIS_COMMANDS,
@@ -805,7 +814,8 @@ export const TESTCONTAINERS_HTTP_PATH_PATTERNS: any = {
     PATTERN4: /images\/\w*/,
 };
 
-export const MAX_HTTP_VALUE_SIZE: number = 10 * 1024;
+export const MAX_HTTP_REQUEST_SIZE: number = 10 * 1024; // 10 KB
+export const MAX_HTTP_RESPONSE_SIZE: number = 10 * 1024; // 10 KB
 
 export const REPORTER_HTTP_TIMEOUT: number = 3000;
 

@@ -7,7 +7,9 @@ import {
     DomainNames,
     ClassNames,
     TriggerHeaderTags,
-    MAX_HTTP_VALUE_SIZE, INTEGRATIONS,
+    MAX_HTTP_REQUEST_SIZE,
+    MAX_HTTP_RESPONSE_SIZE,
+    INTEGRATIONS,
 } from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
@@ -59,11 +61,9 @@ class Http2Integration implements Integration {
 
         const http2Wrapper = (request: any, authority: any) => {
             return function (headers: any, options: any) {
-
                 let span: ThundraSpan;
 
                 try {
-
                     ThundraLogger.debug('<HTTP2Integration> Tracing HTTP2 request:', headers);
 
                     const { tracer } = ExecutionContextManager.get();
@@ -123,44 +123,89 @@ class Http2Integration implements Integration {
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     });
 
-                    const me = this;
-
                     span._initialized();
 
                     const clientRequest = request.apply(this, [headers, options]);
 
-                    const chunks: any = [];
+                    if (!config.maskHttpBody && clientRequest.write && typeof clientRequest.write === 'function') {
+                        const write = clientRequest.write;
+                        clientRequest.write = function () {
+                            try {
+                                if (arguments[0]
+                                    && (typeof arguments[0] === 'string' || arguments[0] instanceof Buffer)) {
+                                    const requestData: string | Buffer = arguments[0];
+                                    if (requestData.length <= MAX_HTTP_REQUEST_SIZE) {
+                                        const requestBody: string = requestData.toString('utf8');
+                                        if (ThundraLogger.isDebugEnabled()) {
+                                            ThundraLogger.debug(`<HTTP2Integration> Captured request body: ${requestBody}`);
+                                        }
+                                        span.setTag(HttpTags.BODY, requestBody);
+                                    }
+                                }
+                            } catch (error) {
+                                ThundraLogger.error(
+                                    `<HTTP2Integration> Unable to get request body of HTTP2 span with name ${operationName}:`,
+                                    error);
+                            }
+
+                            return write.apply(this, arguments);
+                        };
+                    }
+
                     let responseHeaders: any = {};
-
-                    clientRequest.once('data', (chunk: any) => {
-                        if (config.maskHttpBody || !chunk) {
-                            return;
-                        }
-
-                        const totalSize = chunks.reduce((total: any, item: any) => item.length + total, 0);
-                        if (totalSize + chunk.length <= MAX_HTTP_VALUE_SIZE) {
-                            chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
-                        }
-                    });
+                    let chunks: any = [];
+                    let totalSize: Number = 0;
 
                     clientRequest.once('response', (res: any) => {
+                        ThundraLogger.debug(`<HTTP2Integration> On response of HTTP2 span with name ${operationName}`);
+
                         responseHeaders = HTTPUtils.extractHeaders(res);
 
-                        ThundraLogger.debug(`<HTTP2Integration> On response of HTTP2 span with name ${operationName}`);
+                        try {
+                            // If there is no headers, "contentLength" will be undefined
+                            // If there is no `content-length` header, `contentLength` will be `NaN`
+                            const contentLength: Number | undefined =
+                                res.headers && parseInt(res.headers['content-length'], 0);
+                            const responseTooBig = contentLength && contentLength > MAX_HTTP_RESPONSE_SIZE;
+                            if (responseTooBig) {
+                                return;
+                            }
+                        } catch (error) {
+                            ThundraLogger.error(
+                                `<HTTP2Integration> Unable to check response length of HTTP2 span with name ${operationName}:`,
+                                error);
+                        }
+
+                        if (!config.maskHttpBody) {
+                            clientRequest.once('data', (chunk: any) => {
+                                if (!chunk) {
+                                    return;
+                                }
+                                totalSize += chunk.length;
+                                if (totalSize <= MAX_HTTP_RESPONSE_SIZE) {
+                                    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+                                } else {
+                                    // No need to capture partial response body
+                                    chunks = null;
+                                }
+                            });
+                        }
                     });
 
                     clientRequest.once('end', () => {
-
                         if (span) {
-
-                            let payload;
-                            if (chunks && chunks.length) {
-                                try {
-                                    payload = JSON.parse(chunks);
-                                } catch (error) {
-                                    ThundraLogger.debug('<HTTP2Integration> Response is not valid JSON:', payload);
-                                    payload = chunks.toString();
+                            try {
+                                if (chunks && chunks.length) {
+                                    const responseBody: string = Buffer.concat(chunks).toString('utf8');
+                                    if (ThundraLogger.isDebugEnabled()) {
+                                        ThundraLogger.debug(`<HTTP2Integration> Captured response body: ${responseBody}`);
+                                    }
+                                    span.setTag(HttpTags.RESPONSE_BODY, responseBody);
                                 }
+                            } catch (error) {
+                                ThundraLogger.error(
+                                    `<HTTP2Integration> Unable to get response body of HTTP2 span with name ${operationName}:`,
+                                    error);
                             }
 
                             HTTPUtils.fillOperationAndClassNameToSpan(span, responseHeaders);
@@ -169,25 +214,13 @@ class Http2Integration implements Integration {
                             if (!config.disableHttp5xxError && `${statusCode}`.startsWith('5')) {
                                 span.setErrorTag(new HttpError(statusCode));
                             }
-
                             if (!config.disableHttp4xxError && `${statusCode}`.startsWith('4')) {
                                 span.setErrorTag(new HttpError(statusCode));
                             }
-
                             span.setTag(HttpTags.HTTP_STATUS, statusCode);
 
-                            if (!config.maskHttpBody && payload) {
-                                try {
-
-                                    span.setTag(HttpTags.BODY, payload);
-                                } catch (error) {
-                                    ThundraLogger.error(
-                                        `<HTTP2Integration> Unable to get body of HTTP2 span with name ${operationName}:`,
-                                        error);
-                                }
-                            }
-
                             ThundraLogger.debug(`<HTTP2Integration> Closing HTTP2 span with name ${operationName}`);
+
                             span.close();
                         }
                     });
