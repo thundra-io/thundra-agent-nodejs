@@ -75,7 +75,9 @@ class LambdaEventUtils {
         } else if (originalEvent.Records && Array.isArray(originalEvent.Records) &&
             originalEvent.Records[0] && originalEvent.Records[0].cf) {
             return LambdaEventType.CloudFront;
-        } else if (originalEvent.requestContext && originalEvent.resource && originalEvent.path) {
+        } else if (originalEvent.requestContext
+            && ((originalEvent.resource && originalEvent.path)
+               || (originalEvent.routeKey && originalEvent.rawPath))) {
             return LambdaEventType.APIGatewayProxy;
         } else if (originalEvent.context && originalEvent.context.stage && originalEvent.context['resource-path']) {
             return LambdaEventType.APIGatewayPassThrough;
@@ -440,7 +442,7 @@ class LambdaEventUtils {
     static injectTriggerTagsForAPIGatewayProxy(span: ThundraSpan, originalEvent: any): string {
         const domainName = DomainNames.API;
         const className = ClassNames.APIGATEWAY;
-        const operationName = originalEvent.resource;
+        const operationName = LambdaEventUtils.getApigatewayResource(originalEvent);
         const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
 
         if (incomingSpanId) {
@@ -711,6 +713,18 @@ class LambdaEventUtils {
         span.setTag(SpanTags.TRIGGER_OPERATION_NAMES, operationNames);
     }
 
+    static getApigatewayResource(event: any) {
+        if (!event) {
+            return;
+        }
+
+        let resource = event.resource;
+        if (!resource && event.routeKey) {
+            resource = event.routeKey.split(' ').pop();
+        }
+
+        return resource;
+    }
 }
 
 export default LambdaEventUtils;
