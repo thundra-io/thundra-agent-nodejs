@@ -282,7 +282,7 @@ function processAPIGWResponse(response: any, originalEvent: any): void {
     }
     try {
         const headers = get(response, 'headers', {});
-        headers[TriggerHeaderTags.RESOURCE_NAME] = originalEvent.resource;
+        headers[TriggerHeaderTags.RESOURCE_NAME] = LambdaEventUtils.getApigatewayResource(originalEvent);
         response.headers = headers;
     } catch (error) {
         // Can not set headers property on response, probably it is not an object
