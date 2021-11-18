@@ -8,7 +8,6 @@ import PluginContext from '../plugins/PluginContext';
 import ConfigProvider from '../config/ConfigProvider';
 import ThundraConfig from '../plugins/config/ThundraConfig';
 import ConfigNames from '../config/ConfigNames';
-import { ApplicationManager } from '../application/ApplicationManager';
 import ExecutionContext from '../context/ExecutionContext';
 import Utils from '../utils/Utils';
 import ThundraTracer from '../opentracing/Tracer';
@@ -18,7 +17,7 @@ import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
 import InvocationData from '../plugins/data/invocation/InvocationData';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
-import { HttpTags, SpanTags, TriggerHeaderTags } from '../Constants';
+import { HttpTags, SpanTags, TriggerHeaderTags, DEFAULT_APPLICATION_NAME } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import HttpError from '../error/HttpError';
@@ -161,7 +160,7 @@ export default class WebWrapperUtils {
                 applicationId: WebWrapperUtils.createApplicationId(
                     applicationClassName,
                     appInfoFromConfig.applicationRegion || '',
-                    appInfoFromConfig.applicationName || applicationDomainName,
+                    appInfoFromConfig.applicationName || DEFAULT_APPLICATION_NAME,
                 ),
                 applicationClassName,
                 applicationDomainName,

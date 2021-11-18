@@ -7,6 +7,7 @@ import {
     EnvVariableKeys,
     LISTENERS, AGENT_VERSION,
     AGENT_UUID_CONST,
+    DEFAULT_APPLICATION_NAME,
 } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
@@ -521,7 +522,7 @@ class Utils {
         return {
             ...(applicationId ? { applicationId } : undefined),
             applicationInstanceId: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_INSTANCE_ID) || globalAppID,
-            applicationName: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME) || 'thundra-app',
+            applicationName: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME) || DEFAULT_APPLICATION_NAME,
             ...(applicationClassName ? { applicationClassName } : undefined),
             ...(applicationDomainName ? { applicationDomainName } : undefined),
             ...(applicationRegion ? { applicationRegion } : undefined),
@@ -540,7 +541,7 @@ class Utils {
     static mergeApplicationInfo(updates: any = {}, applicationInfo: ApplicationInfo) {
         const newAppInfo: ApplicationInfo = { ...applicationInfo };
         newAppInfo.applicationInstanceId = updates.applicationInstanceId || applicationInfo.applicationInstanceId || globalAppID;
-        newAppInfo.applicationName = updates.applicationName || applicationInfo.applicationName || 'thundra-app';
+        newAppInfo.applicationName = updates.applicationName || applicationInfo.applicationName || DEFAULT_APPLICATION_NAME;
         newAppInfo.applicationClassName = updates.applicationClassName || applicationInfo.applicationClassName || '';
         newAppInfo.applicationDomainName = updates.applicationDomainName || applicationInfo.applicationDomainName || '';
         newAppInfo.applicationRegion = updates.applicationRegion || applicationInfo.applicationRegion || '';
