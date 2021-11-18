@@ -33,9 +33,9 @@ export default class TestCaseExecutionContext extends ExecutionContext {
 
         return {
             ...( baseContextInformation ? baseContextInformation : undefined ),
-            domainName: this.applicationDomainName,
+            domainName: baseContextInformation ? baseContextInformation.applicationDomainName : '',
             operationName: this.method,
-            className: this.applicationClassName,
+            className: baseContextInformation ? baseContextInformation.applicationClassName : '',
             applicationName: this.testSuiteName,
         };
     }

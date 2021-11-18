@@ -28,17 +28,7 @@ const get = require('lodash.get');
 
 export default class WebWrapperUtils {
 
-    static initWrapper(applicationClassName: string, applicationDomainName: string, executor: any) {
-        ApplicationManager.setApplicationInfoProvider().update({
-            applicationClassName,
-            applicationDomainName,
-        });
-
-        const appInfo = ApplicationManager.getApplicationInfo();
-        ApplicationManager.getApplicationInfoProvider().update({
-            applicationId: WebWrapperUtils.getDefaultApplicationId(appInfo),
-        });
-
+    static initWrapper(executor: any) {
         const config = ConfigProvider.thundraConfig;
         const { apiKey } = config;
 
@@ -137,10 +127,7 @@ export default class WebWrapperUtils {
     }
 
     static createPluginContext(apiKey: string, executor: any): PluginContext {
-        const applicationInfo = ApplicationManager.getApplicationInfo();
-
         return new PluginContext({
-            applicationInfo,
             apiKey,
             executor,
         });
@@ -168,17 +155,17 @@ export default class WebWrapperUtils {
         tracer.setTransactionId(transactionId);
 
         const startTimestamp = Date.now();
-
-        const appInfo = ApplicationManager.getApplicationInfo();
-
+        const appInfoFromConfig = Utils.getAppInfoFromConfig();
         return new ExecutionContext({
-            applicationId: WebWrapperUtils.createApplicationId(
+            applicationInfo: {
+                applicationId: WebWrapperUtils.createApplicationId(
+                    applicationClassName,
+                    appInfoFromConfig.applicationRegion || '',
+                    appInfoFromConfig.applicationName || applicationDomainName,
+                ),
                 applicationClassName,
-                appInfo.applicationRegion,
                 applicationDomainName,
-            ),
-            applicationClassName,
-            applicationDomainName,
+            },
             tracer,
             transactionId,
             startTimestamp,
@@ -190,7 +177,7 @@ export default class WebWrapperUtils {
             MonitoringDataType.INVOCATION) as InvocationData;
 
         invocationData.applicationPlatform = '';
-        invocationData.applicationRegion = pluginContext.applicationInfo.applicationRegion;
+        invocationData.applicationRegion = execContext.getApplicationInfo().applicationRegion;
         invocationData.tags = {};
         invocationData.userTags = {};
         invocationData.startTimestamp = execContext.startTimestamp;
@@ -265,8 +252,8 @@ export default class WebWrapperUtils {
             propagated: propagatedSpanContext ? true : false,
             parentContext: propagatedSpanContext,
             rootTraceId: traceId,
-            domainName: pluginContext.applicationInfo.applicationDomainName,
-            className: pluginContext.applicationInfo.applicationClassName,
+            domainName: execContext.getApplicationInfo().applicationDomainName,
+            className: execContext.getApplicationInfo().applicationClassName,
         });
         rootSpan.isRootSpan = true;
 

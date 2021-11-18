@@ -1,6 +1,7 @@
 import { ApplicationInfoProvider } from './ApplicationInfoProvider';
 import { ApplicationInfo } from './ApplicationInfo';
 import { GlobalApplicationInfoProvider } from './GlobalApplicationInfoProvider';
+import ExecutionContextManager from '../context/ExecutionContextManager';
 
 /**
  * Mediator class for application level stuff.
@@ -21,6 +22,14 @@ export class ApplicationManager {
     }
 
     static getApplicationInfo(): ApplicationInfo {
+        const activeContext = ExecutionContextManager.get();
+        if (activeContext && activeContext.getApplicationInfo) {
+            const activeContextApplicationInfo = activeContext.getApplicationInfo();
+            if (activeContextApplicationInfo) {
+                return activeContextApplicationInfo;
+            }
+        }
+
         if (ApplicationManager.applicationInfoProvider) {
             return ApplicationManager.applicationInfoProvider.getApplicationInfo();
         } else {

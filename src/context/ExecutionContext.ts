@@ -3,6 +3,10 @@ import InvocationData from '../plugins/data/invocation/InvocationData';
 import ThundraSpan from '../opentracing/Span';
 import LogData from '../plugins/data/log/LogData';
 import { ContextMode } from '../Constants';
+import { ApplicationInfo } from '../application/ApplicationInfo';
+import ConfigNames from '../config/ConfigNames';
+import ConfigProvider from '../config/ConfigProvider';
+import Utils from '../utils/Utils';
 
 /**
  * Represents the scope of execution (request, invocation, etc ...)
@@ -31,8 +35,6 @@ export default class ExecutionContext {
     request: any;
     incomingTraceLinks: any[];
     outgoingTraceLinks: any[];
-    applicationClassName: string;
-    applicationDomainName: string;
     applicationResourceName: string;
     applicationId: string;
     captureLog: boolean;
@@ -41,6 +43,7 @@ export default class ExecutionContext {
     timeout: boolean;
     parentContext: ExecutionContext;
     compatibleContextModes: ContextMode[] = [];
+    applicationInfo: ApplicationInfo;
 
     constructor(opts: any = {}) {
         this.startTimestamp = opts.startTimestamp || 0;
@@ -65,12 +68,14 @@ export default class ExecutionContext {
         this.logs = opts.logs || [];
         this.metrics = opts.metric || {};
         this.triggerOperationName = opts.triggerOperationName || '';
-        this.applicationClassName = opts.applicationClassName || '';
-        this.applicationDomainName = opts.applicationDomainName || '';
         this.applicationResourceName = opts.applicationResourceName || '';
         this.applicationId = opts.applicationId || '';
         this.timeout = false;
         this.parentContext = opts.parentContext;
+
+        if (opts.applicationInfo) {
+            this.applicationInfo = Utils.mergeApplicationInfo(Utils.getAppInfoFromConfig(), opts.applicationInfo);
+        }
 
         this.initContextMode();
     }
@@ -115,12 +120,16 @@ export default class ExecutionContext {
         this.timeout = timeout;
     }
 
+    getApplicationInfo(): ApplicationInfo {
+        return this.applicationInfo;
+    }
+
     getContextInformation(): any  {
 
         return {
-            applicationId: this.applicationId,
-            applicationClassName: this.applicationClassName,
-            applicationDomainName: this.applicationDomainName,
+            applicationId: this.applicationInfo ? this.applicationInfo.applicationId : '',
+            applicationClassName: this.applicationInfo ? this.applicationInfo.applicationClassName : '',
+            applicationDomainName: this.applicationInfo ? this.applicationInfo.applicationDomainName : '',
         };
     }
 

@@ -62,9 +62,9 @@ export default class TestSuiteExecutionContext extends ExecutionContext {
 
         return {
             ...( baseContextInformation ? baseContextInformation : undefined ),
-            domainName: this.applicationDomainName,
+            domainName: baseContextInformation ? baseContextInformation.applicationDomainName : '',
             operationName: this.testSuiteName,
-            className: this.applicationClassName,
+            className: baseContextInformation ? baseContextInformation.applicationClassName : '',
             applicationName: this.testSuiteName,
         };
     }

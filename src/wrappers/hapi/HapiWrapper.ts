@@ -146,10 +146,7 @@ export const init = () => {
         const {
             reporter,
             plugins,
-        } = WebWrapperUtils.initWrapper(
-            ApplicationClassName,
-            ApplicationDomainName,
-            HapiExecutor);
+        } = WebWrapperUtils.initWrapper(HapiExecutor);
 
         WrapperUtils.initAsyncContextManager();
 
