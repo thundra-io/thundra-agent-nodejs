@@ -4,8 +4,6 @@ import ThundraSpan from '../opentracing/Span';
 import LogData from '../plugins/data/log/LogData';
 import { ContextMode } from '../Constants';
 import { ApplicationInfo } from '../application/ApplicationInfo';
-import ConfigNames from '../config/ConfigNames';
-import ConfigProvider from '../config/ConfigProvider';
 import Utils from '../utils/Utils';
 
 /**
