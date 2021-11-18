@@ -53,6 +53,10 @@ export default class ForesightWrapperUtils {
             InvocationPlugin.name,
         ]) {
 
+        /**
+         * Set App info globally for test run events
+         * Non execution context Processes
+         */
         ForesightWrapperUtils.setApplicationInfo(
             applicationClassName,
             TEST_APPLICATION_CLASS_NAME,
@@ -172,10 +176,7 @@ export default class ForesightWrapperUtils {
      * @param executor executor
      */
     static createPluginContext(apiKey: string, executor: any): PluginContext {
-        const applicationInfo = ApplicationManager.getApplicationInfo();
-
         return new PluginContext({
-            applicationInfo,
             apiKey,
             executor,
         });
@@ -205,13 +206,15 @@ export default class ForesightWrapperUtils {
         const startTimestamp = Date.now();
 
         return new TestSuiteExecutionContext({
-            applicationId: ForesightWrapperUtils.createApplicationId(
-                TestRunnerSupport.applicationClassName,
-                TestRunnerSupport.testSuiteName,
-            ),
-            applicationClassName: TestRunnerSupport.applicationClassName,
-            applicationDomainName: TEST_SUIT_APPLICATION_DOMAIN_NAME,
-            applicationName: TestRunnerSupport.testSuiteName,
+            applicationInfo: {
+                applicationId: ForesightWrapperUtils.createApplicationId(
+                    TestRunnerSupport.applicationClassName,
+                    TestRunnerSupport.testSuiteName,
+                ),
+                applicationClassName: TestRunnerSupport.applicationClassName,
+                applicationDomainName: TEST_SUIT_APPLICATION_DOMAIN_NAME,
+                applicationName: TestRunnerSupport.testSuiteName,
+            },
             tracer,
             transactionId,
             startTimestamp,
@@ -236,13 +239,15 @@ export default class ForesightWrapperUtils {
         const startTimestamp = Date.now();
 
         return new TestCaseExecutionContext({
-            applicationId: ForesightWrapperUtils.createApplicationId(
-                TestRunnerSupport.applicationClassName,
-                TestRunnerSupport.testSuiteName,
-            ),
-            applicationClassName: TestRunnerSupport.applicationClassName,
-            applicationDomainName: TEST_CASE_APPLICATION_DOMAIN_NAME,
-            applicationName: TestRunnerSupport.testSuiteName,
+            applicationInfo: {
+                applicationId: ForesightWrapperUtils.createApplicationId(
+                    TestRunnerSupport.applicationClassName,
+                    TestRunnerSupport.testSuiteName,
+                ),
+                applicationClassName: TestRunnerSupport.applicationClassName,
+                applicationDomainName: TEST_CASE_APPLICATION_DOMAIN_NAME,
+                applicationName: TestRunnerSupport.testSuiteName,
+            },
             tracer,
             transactionId,
             startTimestamp,
@@ -291,10 +296,10 @@ export default class ForesightWrapperUtils {
             try {
                 await reporter.sendReports(reports);
             } catch (err) {
-                ThundraLogger.error('<WebWrapperUtils> Error occurred while reporting:', err);
+                ThundraLogger.error('<ForesightWrapperUtils> Error occurred while reporting:', err);
             }
         } else {
-            ThundraLogger.debug('<WebWrapperUtils> Skipped reporting as reporting is disabled');
+            ThundraLogger.debug('<ForesightWrapperUtils> Skipped reporting as reporting is disabled');
         }
     }
 
@@ -352,7 +357,7 @@ export default class ForesightWrapperUtils {
             MonitoringDataType.INVOCATION) as InvocationData;
 
         invocationData.applicationPlatform = '';
-        invocationData.applicationRegion = pluginContext.applicationInfo.applicationRegion;
+        invocationData.applicationRegion = execContext.applicationInfo.applicationRegion;
         invocationData.tags = {};
         invocationData.userTags = {};
         invocationData.startTimestamp = execContext.startTimestamp;

@@ -8,7 +8,6 @@ import PluginContext from '../plugins/PluginContext';
 import ConfigProvider from '../config/ConfigProvider';
 import ThundraConfig from '../plugins/config/ThundraConfig';
 import ConfigNames from '../config/ConfigNames';
-import { ApplicationManager } from '../application/ApplicationManager';
 import ExecutionContext from '../context/ExecutionContext';
 import Utils from '../utils/Utils';
 import ThundraTracer from '../opentracing/Tracer';
@@ -18,7 +17,7 @@ import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
 import InvocationData from '../plugins/data/invocation/InvocationData';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
-import { HttpTags, SpanTags, TriggerHeaderTags } from '../Constants';
+import { HttpTags, SpanTags, TriggerHeaderTags, DEFAULT_APPLICATION_NAME } from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import HttpError from '../error/HttpError';
@@ -28,17 +27,7 @@ const get = require('lodash.get');
 
 export default class WebWrapperUtils {
 
-    static initWrapper(applicationClassName: string, applicationDomainName: string, executor: any) {
-        ApplicationManager.setApplicationInfoProvider().update({
-            applicationClassName,
-            applicationDomainName,
-        });
-
-        const appInfo = ApplicationManager.getApplicationInfo();
-        ApplicationManager.getApplicationInfoProvider().update({
-            applicationId: WebWrapperUtils.getDefaultApplicationId(appInfo),
-        });
-
+    static initWrapper(executor: any) {
         const config = ConfigProvider.thundraConfig;
         const { apiKey } = config;
 
@@ -137,10 +126,7 @@ export default class WebWrapperUtils {
     }
 
     static createPluginContext(apiKey: string, executor: any): PluginContext {
-        const applicationInfo = ApplicationManager.getApplicationInfo();
-
         return new PluginContext({
-            applicationInfo,
             apiKey,
             executor,
         });
@@ -168,17 +154,17 @@ export default class WebWrapperUtils {
         tracer.setTransactionId(transactionId);
 
         const startTimestamp = Date.now();
-
-        const appInfo = ApplicationManager.getApplicationInfo();
-
+        const appInfoFromConfig = Utils.getAppInfoFromConfig();
         return new ExecutionContext({
-            applicationId: WebWrapperUtils.createApplicationId(
+            applicationInfo: {
+                applicationId: WebWrapperUtils.createApplicationId(
+                    applicationClassName,
+                    appInfoFromConfig.applicationRegion || '',
+                    appInfoFromConfig.applicationName || DEFAULT_APPLICATION_NAME,
+                ),
                 applicationClassName,
-                appInfo.applicationRegion,
                 applicationDomainName,
-            ),
-            applicationClassName,
-            applicationDomainName,
+            },
             tracer,
             transactionId,
             startTimestamp,
@@ -190,7 +176,7 @@ export default class WebWrapperUtils {
             MonitoringDataType.INVOCATION) as InvocationData;
 
         invocationData.applicationPlatform = '';
-        invocationData.applicationRegion = pluginContext.applicationInfo.applicationRegion;
+        invocationData.applicationRegion = execContext.getApplicationInfo().applicationRegion;
         invocationData.tags = {};
         invocationData.userTags = {};
         invocationData.startTimestamp = execContext.startTimestamp;
@@ -265,8 +251,8 @@ export default class WebWrapperUtils {
             propagated: propagatedSpanContext ? true : false,
             parentContext: propagatedSpanContext,
             rootTraceId: traceId,
-            domainName: pluginContext.applicationInfo.applicationDomainName,
-            className: pluginContext.applicationInfo.applicationClassName,
+            domainName: execContext.getApplicationInfo().applicationDomainName,
+            className: execContext.getApplicationInfo().applicationClassName,
         });
         rootSpan.isRootSpan = true;
 

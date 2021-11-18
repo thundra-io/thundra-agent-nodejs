@@ -65,9 +65,7 @@ describe('Hapijs Wrapper Tests', () => {
 
     test('should trace error', async () => {
 
-        const { headers } = await request(server.listener).get('/error');
-
-        expect(headers[TriggerHeaderTags.RESOURCE_NAME]).toBeTruthy();
+        await request(server.listener).get('/error');
 
         const execContext = ExecutionContextManager.get();
         const spanList = execContext.tracer.getSpanList();
@@ -92,9 +90,7 @@ describe('Hapijs Wrapper Tests', () => {
 
     test('should trace 404 not found', async () => {
         
-        const { headers } = await request(server.listener).get('/404');
-
-        expect(headers[TriggerHeaderTags.RESOURCE_NAME]).toBeTruthy();
+        await request(server.listener).get('/404');
 
         const execContext = ExecutionContextManager.get();
         const spanList = execContext.tracer.getSpanList();

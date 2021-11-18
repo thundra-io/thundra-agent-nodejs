@@ -7,6 +7,7 @@ import {
     EnvVariableKeys,
     LISTENERS, AGENT_VERSION,
     AGENT_UUID_CONST,
+    DEFAULT_APPLICATION_NAME,
 } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
@@ -510,6 +511,27 @@ class Utils {
         return applicationTags;
     }
 
+    static getAppInfoFromConfig(): ApplicationInfo {
+        const applicationId = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_ID);
+        const applicationClassName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_CLASS_NAME);
+        const applicationDomainName = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_DOMAIN_NAME);
+        const applicationRegion = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_REGION);
+        const applicationVersion = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_VERSION);
+        const applicationStage = ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_STAGE);
+
+        return {
+            ...(applicationId ? { applicationId } : undefined),
+            applicationInstanceId: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_INSTANCE_ID) || globalAppID,
+            applicationName: ConfigProvider.get<string>(ConfigNames.THUNDRA_APPLICATION_NAME) || DEFAULT_APPLICATION_NAME,
+            ...(applicationClassName ? { applicationClassName } : undefined),
+            ...(applicationDomainName ? { applicationDomainName } : undefined),
+            ...(applicationRegion ? { applicationRegion } : undefined),
+            ...(applicationVersion ? { applicationVersion } : undefined),
+            ...(applicationStage ? { applicationStage } : undefined),
+            applicationTags: Utils.getApplicationTags(),
+        };
+    }
+
     /**
      * Merges given updates into given {@link ApplicationInfo}
      * @param updates the updates to merge into given {@link ApplicationInfo}
@@ -519,7 +541,7 @@ class Utils {
     static mergeApplicationInfo(updates: any = {}, applicationInfo: ApplicationInfo) {
         const newAppInfo: ApplicationInfo = { ...applicationInfo };
         newAppInfo.applicationInstanceId = updates.applicationInstanceId || applicationInfo.applicationInstanceId || globalAppID;
-        newAppInfo.applicationName = updates.applicationName || applicationInfo.applicationName || 'thundra-app';
+        newAppInfo.applicationName = updates.applicationName || applicationInfo.applicationName || DEFAULT_APPLICATION_NAME;
         newAppInfo.applicationClassName = updates.applicationClassName || applicationInfo.applicationClassName || '';
         newAppInfo.applicationDomainName = updates.applicationDomainName || applicationInfo.applicationDomainName || '';
         newAppInfo.applicationRegion = updates.applicationRegion || applicationInfo.applicationRegion || '';

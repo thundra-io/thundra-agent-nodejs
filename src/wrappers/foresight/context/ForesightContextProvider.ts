@@ -47,20 +47,6 @@ function _setContext(execContext: ExecutionContext) {
         activeGlobalExecutionContext = execContext;
         currentContextModel = ContextMode.GlobalMode;
     }
-
-    const {
-        applicationClassName,
-        applicationDomainName,
-        applicationName,
-        applicationId,
-    } = execContext.getContextInformation();
-
-    ApplicationManager.getApplicationInfoProvider().update({
-        ...(applicationClassName ? { applicationClassName } : undefined),
-        ...(applicationDomainName ? { applicationDomainName } : undefined),
-        ...(applicationName ? { applicationName } : undefined),
-        ...(applicationId ? { applicationId } : undefined),
-    });
 }
 
 export const PROVIDER_NAME = 'Foresight Context Provider';

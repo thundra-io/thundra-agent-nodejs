@@ -25,7 +25,7 @@ export function koaMiddleWare(opts: any = {}) {
     const {
         reporter,
         plugins,
-    } = WebWrapperUtils.initWrapper(ApplicationClassName, ApplicationDomainName, KoaExecutor);
+    } = WebWrapperUtils.initWrapper(KoaExecutor);
 
     _REPORTER = reporter;
     _PLUGINS = plugins;

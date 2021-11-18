@@ -26,7 +26,7 @@ export function expressMW(opts: any = {}) {
     const {
         reporter,
         plugins,
-    } = WrapperUtils.initWrapper(ApplicationClassName, ApplicationDomainName, ExpressExecutor);
+    } = WrapperUtils.initWrapper(ExpressExecutor);
 
     WrapperUtils.initAsyncContextManager();
 

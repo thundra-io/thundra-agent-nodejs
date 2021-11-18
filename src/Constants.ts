@@ -864,3 +864,5 @@ export const KNOWN_TEST_FILE_PATHS = new Set([
     '__test__',
     '__tests__',
 ]);
+
+export const DEFAULT_APPLICATION_NAME = 'thundra-app';
