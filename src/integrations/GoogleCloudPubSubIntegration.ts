@@ -1,0 +1,300 @@
+import Integration from './Integration';
+import * as opentracing from 'opentracing';
+import {
+    SpanTags,
+    SpanTypes,
+    DomainNames,
+    ClassNames,
+    TriggerHeaderTags,
+    INTEGRATIONS,
+    GooglePubSubTags,
+} from '../Constants';
+import GooglePubSubUtils from '../utils/GooglePubSubUtils';
+import ModuleUtils from '../utils/ModuleUtils';
+import ThundraLogger from '../ThundraLogger';
+import ThundraSpan from '../opentracing/Span';
+import ThundraChaosError from '../error/ThundraChaosError';
+import ExecutionContextManager from '../context/ExecutionContextManager';
+
+const shimmer = require('shimmer');
+const has = require('lodash.has');
+const semver = require('semver');
+
+const INTEGRATION_NAME = 'googlecloud.pubsub';
+
+/**
+ * {@link Integration} implementation for Google PubSub service publish and pull
+ * through {@code publish} and {@code pull} method
+ */
+class GoogleCloudPubSubIntegration implements Integration {
+
+    config: any;
+    private instrumentContext: any;
+
+    constructor(config: any) {
+        ThundraLogger.debug('<GoogleCloudPubSubIntegration> Activating HTTP integration');
+
+        this.config = config || {};
+        const googleCloudPubSubIntegration = INTEGRATIONS[INTEGRATION_NAME];
+        this.instrumentContext = ModuleUtils.instrument(
+            googleCloudPubSubIntegration.moduleNames, googleCloudPubSubIntegration.moduleVersion,
+            (lib: any, cfg: any, moduleName: string) => {
+                this.wrap.call(this, lib, cfg, moduleName);
+            },
+            (lib: any, cfg: any, moduleName: string) => {
+                this.doUnwrap.call(this, lib, moduleName);
+            },
+            this.config);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    wrap(lib: any, thundraConfig: any, moduleName: string): void {
+        ThundraLogger.debug('<GoogleCloudPubSubIntegration> Wrap');
+
+        function requestWrapper(original: any) {
+            return function internalWrapper(config: any, callback: any) {
+
+                const orginalCallback = callback;
+                let span: ThundraSpan;
+                try {
+
+                    ThundraLogger.debug('<GoogleCloudPubSubIntegration> Tracing GoogleCloudPubSubIntegration request:', config);
+
+                    const { tracer } = ExecutionContextManager.get();
+
+                    if (!tracer) {
+                        ThundraLogger.debug('<GoogleCloudPubSubIntegration> Skipped tracing request as no tracer is available');
+                        return original.apply(this, [config, orginalCallback]);
+                    }
+
+                    const parentSpan = tracer.getActiveSpan();
+
+                    const topic = GooglePubSubUtils.getTopic(config);
+                    const operationName = `${config.method}-${topic}`;
+
+                    ThundraLogger.debug(`<GoogleCloudPubSubIntegration> Starting publish span with name ${operationName}`);
+
+                    span = tracer._startSpan(operationName, {
+                        childOf: parentSpan,
+                        domainName: DomainNames.API,
+                        className: ClassNames.GOOGLEPUBSUB,
+                        disableActiveStart: true,
+                    });
+
+                    const getMessageBody = () => {
+                        if (!config || !config.reqOpts || !config.reqOpts.messages) {
+                            return;
+                        }
+
+                        return GooglePubSubUtils.parseMessages(config.reqOpts.messages);
+                    };
+
+                    const tags = {
+                        [GooglePubSubTags.PROJECT_ID]: this.projectId,
+                        [GooglePubSubTags.TOPIC_NAME]: topic,
+                        [GooglePubSubTags.MESSAGES]: thundraConfig.maskGooglePublishRequestBody ? undefined
+                            : JSON.stringify(getMessageBody()),
+                        [GooglePubSubTags.METHOD]: config.method ? config.method.toUpperCase() : 'PUBLISH',
+                        [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
+                        [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
+                        [SpanTags.TOPOLOGY_VERTEX]: true,
+                    };
+
+                    if (config.method === 'publish') {
+                        tags[GooglePubSubTags.KIND] = 'Producer';
+                    }
+
+                    if (config.reqOpts && config.reqOpts.messages) {
+                        for (const message of config.reqOpts.messages) {
+                            const attributes = message.attributes ? message.attributes : {};
+                            tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, attributes);
+                            attributes[TriggerHeaderTags.RESOURCE_NAME] = operationName;
+                            message.attributes = attributes;
+                        }
+                    }
+
+                    span.addTags(tags);
+
+                    const me = this;
+                    const wrappedCallback = (err: any, res: any) => {
+                        if (!span) {
+                            orginalCallback(err, res);
+                            return;
+                        }
+
+                        if (res && res.messageIds) {
+                            span.addTags({ [GooglePubSubTags.MESSAGEIDS]: res.messageIds.join(',') });
+                        }
+
+                        span.closeWithCallback(me, orginalCallback, [err, res]);
+                    };
+
+                    span._initialized();
+
+                    return original.apply(this, [config, wrappedCallback]);
+                } catch (error) {
+                    ThundraLogger.error('<GoogleCloudPubSubIntegration> Error occurred while tracing PubSub request:', error);
+                    if (span) {
+                        span.close();
+                    }
+
+                    return original.apply(this, [config, orginalCallback]);
+                }
+            };
+        }
+
+        function pullWrapper(original: any) {
+            return function internalWrapper(request: any, options: any, callback: any) {
+
+                let clientPromise;
+                let span: ThundraSpan;
+                try {
+                    ThundraLogger.debug('<GoogleCloudPubSubIntegration> Tracing GoogleCloudPubSubIntegration pull');
+
+                    const { tracer } = ExecutionContextManager.get();
+
+                    if (!tracer) {
+                        ThundraLogger.debug('<GoogleCloudPubSubIntegration> Skipped tracing pull as no tracer is available');
+                        return original.apply(this, [request, options, callback]);
+                    }
+
+                    const originalOptions = typeof options !== 'function' ? options : undefined;
+                    const originalCallback = typeof options === 'function' ? options : callback;
+
+                    const parentSpan = tracer.getActiveSpan();
+
+                    const topic = request.subscription;
+                    const operationName = `pull-${topic}`;
+
+                    ThundraLogger.debug(`<GoogleCloudPubSubIntegration> Starting pull span with name ${operationName}`);
+
+                    span = tracer._startSpan(operationName, {
+                        childOf: parentSpan,
+                        domainName: DomainNames.API,
+                        className: ClassNames.GOOGLEPUBSUB,
+                        disableActiveStart: true,
+                    });
+
+                    const tags = {
+                        [GooglePubSubTags.TOPIC_NAME]: topic,
+                        [GooglePubSubTags.METHOD]: 'PULL',
+                        [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
+                        [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
+                        [SpanTags.TOPOLOGY_VERTEX]: true,
+                        [GooglePubSubTags.KIND]: 'Consumer',
+                    };
+
+                    span.addTags(tags);
+
+                    const getMessageBody = (receivedMessages: any []) => {
+                        if (!receivedMessages) {
+                            return;
+                        }
+
+                        const messages = receivedMessages.map((receivedMessage) => receivedMessage.message);
+                        return GooglePubSubUtils.parseMessages(messages);
+                    };
+
+                    const me = this;
+                    const wrappedCallback = (err: any, res: any)  => {
+                        if (!span) {
+                            if (originalCallback) {
+                                originalCallback(err, res);
+                            }
+
+                            return;
+                        }
+
+                        if (err) {
+                            span.setErrorTag(err);
+                        } else if (res && res.receivedMessages) {
+                            const messages = getMessageBody(res.receivedMessages);
+                            if (messages) {
+                                span.addTags({
+                                    [GooglePubSubTags.MESSAGES]: thundraConfig.maskGoogleSubscriptionResponseBody ? undefined
+                                        : JSON.stringify(messages),
+                                });
+                            }
+                        }
+
+                        if (originalCallback) {
+                            span.closeWithCallback(this, originalCallback, [err, res]);
+                        } else {
+                            span.close();
+                        }
+                    };
+
+                    if (originalCallback) {
+                        return original.apply(this, [request, originalOptions, wrappedCallback]);
+                    } else {
+                        clientPromise = original.apply(this, [request, options, callback]).then(
+                            (res: any) => {
+                                const [response] = res;
+                                wrappedCallback(null, response);
+                                return res;
+                            }, (err: any) => {
+                                wrappedCallback(err, null);
+                                throw err;
+                            },
+                        );
+                    }
+                } catch (error) {
+                    ThundraLogger.error('<GoogleCloudPubSubIntegration> Error occurred while tracing PubSub pull:', error);
+
+                    if (span) {
+                        span.close();
+                    }
+
+                    if (!clientPromise) {
+                        clientPromise = original.apply(this, [request, options, callback]);
+                    }
+                }
+
+                return clientPromise;
+            };
+        }
+
+        if (has(lib, 'PubSub.prototype.request')) {
+            ThundraLogger.debug('<GoogleCloudPubSubIntegration> Wrapping "PubSub.prototype.request"');
+            shimmer.wrap(lib.PubSub.prototype, 'request', requestWrapper);
+        }
+
+        if (has(lib, 'v1.SubscriberClient.prototype.pull')) {
+            ThundraLogger.debug('<GoogleCloudPubSubIntegration> Wrapping "v1.SubscriberClient.prototype.pull"');
+            shimmer.wrap(lib.v1.SubscriberClient.prototype, 'pull', pullWrapper);
+        }
+    }
+
+    /**
+     * Unwraps given library
+     * @param lib the library to be unwrapped
+     */
+    doUnwrap(lib: any, moduleName: string) {
+        ThundraLogger.debug('<GoogleCloudPubSubIntegration> Do unwrap');
+
+        if (has(lib, 'PubSub.prototype.request')) {
+            ThundraLogger.debug('<GoogleCloudPubSubIntegration> Unwrapping "request"');
+            shimmer.unwrap(lib.PubSub.prototype, 'request');
+        }
+
+        if (has(lib, 'v1.SubscriberClient.prototype.pull')) {
+            ThundraLogger.debug('<GoogleCloudPubSubIntegration> Unwrapping "pull"');
+            shimmer.unwrap(lib.v1.SubscriberClient.prototype, 'pull');
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    unwrap(): void {
+        ThundraLogger.debug('<GoogleCloudPubSubIntegration> Unwrap');
+
+        if (this.instrumentContext.uninstrument) {
+            this.instrumentContext.uninstrument();
+        }
+    }
+}
+
+export default GoogleCloudPubSubIntegration;

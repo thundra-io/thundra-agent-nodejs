@@ -15,6 +15,7 @@ import { AWSv3Integration } from './integrations/AWSv3Integration';
 import ESLegacyIntegration from './integrations/ESLegacyIntegration';
 import ESIntegration from './integrations/ESIntegration';
 import AMQPLIBIntegration from './integrations/AmqplibIntegration';
+import GoogleCloudPubSubIntegration from './integrations/GoogleCloudPubSubIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './listeners/LatencyInjectorSpanListener';
@@ -157,6 +158,7 @@ export const ClassNames = {
     EXPRESS: 'Express',
     KOA: 'Koa',
     HAPI: 'Hapi',
+    GOOGLEPUBSUB: 'GooglePubSub',
     RABBITMQ: 'RabbitMQ',
 };
 
@@ -532,6 +534,15 @@ export const SpanTags = {
     RESOURCE_NAMES: 'resource.names',
 };
 
+export const GooglePubSubTags = {
+    PROJECT_ID: 'gcloud.projectId',
+    TOPIC_NAME: 'topic.name',
+    METHOD: 'method',
+    KIND: 'kind',
+    MESSAGEIDS: 'messageIds',
+    MESSAGES: 'messages',
+};
+
 export const ErrorTags = {
     ERROR: 'error',
     ERROR_KIND: 'error.kind',
@@ -567,6 +578,7 @@ export const SpanTypes = {
     AWS_SES: 'AWS-SES',
     AWS_STEPFUNCTIONS: 'AWS-StepFunctions',
     RABBITMQ: 'RabbitMQ',
+    GOOGLEPUBSUB: 'Google-PubSub',
 };
 
 export const INTEGRATIONS: any = {
@@ -590,6 +602,7 @@ export const INTEGRATIONS: any = {
         'amqplib/lib/channel.js',
     ],
     moduleVersion: '>=0.5'},
+    'googlecloud.pubsub': {class: GoogleCloudPubSubIntegration, moduleNames: ['@google-cloud/pubsub'], moduleVersion: '>=1.2'},
 };
 
 export const WRAPPERS: any = {

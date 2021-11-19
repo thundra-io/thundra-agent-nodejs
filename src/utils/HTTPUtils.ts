@@ -63,6 +63,10 @@ class HTTPUtils {
             return false;
         }
 
+        if (host.indexOf('pubsub.googleapis.com') !== -1) {
+            return false;
+        }
+
         if (THUNDRA_COLLECTOR_ENDPOINT_PATTERNS.PATTERN1.test(host) ||
             THUNDRA_COLLECTOR_ENDPOINT_PATTERNS.PATTERN2.test(host) ||
             host === 'serverless.com' ||
