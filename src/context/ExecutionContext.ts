@@ -88,7 +88,7 @@ export default class ExecutionContext {
      * @param data data to be reported
      */
     report(data: any) {
-        this.reports = [...this.reports, data];
+        this.reports.push(data);
     }
 
     /**

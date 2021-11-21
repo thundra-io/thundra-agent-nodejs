@@ -95,7 +95,7 @@ export default class Trace implements Plugin {
             executor.finishTrace(this.pluginContext, execContext, this.config);
         }
 
-        const spanList = tracer.getRecorder().getSpanList();
+        const spanList: ThundraSpan[] = tracer.getRecorder().getSpanList();
         const sampler = get(this.config, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled(rootSpan);
 
@@ -107,6 +107,11 @@ export default class Trace implements Plugin {
             if (!runSamplerOnEach && sampler.sampleOnEach && typeof sampler.sampleOnEach === 'function') {
                 runSamplerOnEach = sampler.sampleOnEach();
             }
+
+            let reportedSpanCount: number = 0;
+            const highPrioritySpans: any[] = [];
+            const lowPrioritySpans: any[] = [];
+
             for (const span of spanList) {
                 if (span) {
                     if (runSamplerOnEach && !sampler.isSampled(span)) {
@@ -118,12 +123,56 @@ export default class Trace implements Plugin {
                     const spanData = this.buildSpanData(span, execContext);
                     const spanReportData = Utils.generateReport(spanData, apiKey);
 
-                    if (debugEnabled) {
-                        ThundraLogger.debug('<Trace> Reporting span:', spanReportData);
-                    }
+                    const shouldBeReported: boolean = span.isRootSpan;
+                    // On-going (not finished) spans have higher priority (for ex. in case of timeout)
+                    const highPriority: boolean = !span.isFinished();
 
-                    execContext.report(spanReportData);
+                    if (shouldBeReported) {
+                        if (debugEnabled) {
+                            ThundraLogger.debug('<Trace> Reporting span:', spanReportData);
+                        }
+                        execContext.report(spanReportData);
+                        reportedSpanCount++;
+                    } else {
+                        if (highPriority) {
+                            highPrioritySpans.push(spanReportData);
+                        } else {
+                            lowPrioritySpans.push(spanReportData);
+                        }
+                    }
                 }
+            }
+
+            // Report high priority spans first until the max limit
+            for (const span of highPrioritySpans) {
+                if (reportedSpanCount >= this.config.maxSpanCount) {
+                    if (debugEnabled) {
+                        ThundraLogger.debug(`<Trace> Reached max span limit ${this.config.maxSpanCount}, ` +
+                                            `so skipping remaining high priority spans`);
+                    }
+                    break;
+                }
+                if (debugEnabled) {
+                    ThundraLogger.debug('<Trace> Reporting span:', span);
+                }
+                execContext.report(span);
+                reportedSpanCount++;
+            }
+
+            // Then report low priority spans until the max limit
+            for (const span of lowPrioritySpans) {
+                if (reportedSpanCount >= this.config.maxSpanCount) {
+                    if (debugEnabled) {
+                        ThundraLogger.debug(`<Trace> Reached max span limit ${this.config.maxSpanCount}, ` +
+                                            `so skipping remaining low priority spans`);
+                    }
+                    break;
+                }
+                if (debugEnabled) {
+                    ThundraLogger.debug('<Trace> Reporting span:', span);
+                }
+                execContext.report(span);
+                reportedSpanCount++;
             }
         }
     }

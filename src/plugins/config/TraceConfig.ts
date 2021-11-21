@@ -19,13 +19,13 @@ class TraceConfig extends BasePluginConfig {
     disableResponse: boolean;
     tracerConfig: any;
     traceableConfigs: TraceableConfig[];
+    maxSpanCount: number;
     maskRequest: (request: any) => any;
     maskResponse: (response: any) => any;
     disabledIntegrations: IntegrationConfig[];
     disableInstrumentation: boolean;
     disableHttp4xxError: boolean;
     disableHttp5xxError: boolean;
-    integrationsMap: Map<string, Integration>;
     instrumenter: Instrumenter;
     maskRedisCommand: boolean;
     maskRdbStatement: boolean;
@@ -71,6 +71,10 @@ class TraceConfig extends BasePluginConfig {
         this.disabledIntegrations = [];
         this.tracerConfig = get(options, 'tracerConfig', {});
         this.traceableConfigs = [];
+
+        this.maxSpanCount = ConfigProvider.get<number>(
+            ConfigNames.THUNDRA_TRACE_SPAN_COUNT_MAX,
+            options.maxSpanCount);
 
         this.disableInstrumentation = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE,

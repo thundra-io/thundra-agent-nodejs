@@ -28,10 +28,10 @@ test('PROC_IO_PATH did not change', () => {
 });
 
 test('Timeout margin should be decided based on region', () => {
-    expect(getTimeoutMargin('us-west-2')).toEqual(200);
-    expect(getTimeoutMargin('us-west-1')).toEqual(400);
-    expect(getTimeoutMargin('us-east-2')).toEqual(600);
-    expect(getTimeoutMargin('us-east-1')).toEqual(600);
+    expect(getTimeoutMargin('us-west-2')).toEqual(1000);
+    expect(getTimeoutMargin('us-west-1')).toEqual(1000);
+    expect(getTimeoutMargin('us-east-2')).toEqual(1000);
+    expect(getTimeoutMargin('us-east-1')).toEqual(1000);
 
     expect(getTimeoutMargin('ap-south-1')).toEqual(1000);
     expect(getTimeoutMargin('ap-northeast-2')).toEqual(1000);
@@ -39,7 +39,7 @@ test('Timeout margin should be decided based on region', () => {
     expect(getTimeoutMargin('ap-southeast-2')).toEqual(1000);
     expect(getTimeoutMargin('ap-northeast-1')).toEqual(1000);
 
-    expect(getTimeoutMargin('ca-central-1')).toEqual(600);
+    expect(getTimeoutMargin('ca-central-1')).toEqual(1000);
     expect(getTimeoutMargin('cn-north-1')).toEqual(1000);
 
     expect(getTimeoutMargin('eu-central-1')).toEqual(1000);
@@ -47,7 +47,7 @@ test('Timeout margin should be decided based on region', () => {
     expect(getTimeoutMargin('eu-west-2')).toEqual(1000);
     expect(getTimeoutMargin('eu-west-3')).toEqual(1000);
 
-    expect(getTimeoutMargin('sa-east-1')).toEqual(800);
+    expect(getTimeoutMargin('sa-east-1')).toEqual(1000);
 
     expect(getTimeoutMargin('tr-east-1')).toEqual(1000); // Unknown
 
