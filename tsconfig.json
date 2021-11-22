@@ -4,11 +4,11 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "noImplicitAny": true,
-        "target": "es6",
+        "target": "es2017",
         "outDir": "./dist",
         "preserveConstEnums": true,
         "lib": [
-            "es2016"
+            "es2017"
         ],
         "removeComments": false,
         "sourceMap": true,

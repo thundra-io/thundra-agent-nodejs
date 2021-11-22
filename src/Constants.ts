@@ -47,25 +47,9 @@ export const EnvVariableKeys = {
 };
 
 export function getTimeoutMargin(region: string) {
-    if (region) {
-        if (region === 'us-west-2') { // our region
-            return 200;
-        } else if (region.startsWith('us-west-')) { // Any region at west of USA
-            return 400;
-        } else if (region.startsWith('us-')) { // Any region at USA
-            return 600;
-        } else if (region.startsWith('ca-')) { // Any region at Canada
-            return 600;
-        } else if (region.startsWith('sa-')) { // Any region at South America
-            return 800;
-        } else if (region.startsWith('cn-')) { // Any region at China
-            return 1000;
-        } else if (region.startsWith('eu-')) { // Any region at Europe
-            return 1000;
-        } else if (region.startsWith('ap-')) { // Any region at Asia Pacific
-            return 1000;
-        }
-    }
+    // Region based timeout margin is tricky because there are also other parameters
+    // like memory size and telemetry data size.
+    // So, just to be safe, use 1 seconds by default for all cases.
     return 1000;
 }
 
@@ -818,6 +802,7 @@ export const MAX_HTTP_REQUEST_SIZE: number = 10 * 1024; // 10 KB
 export const MAX_HTTP_RESPONSE_SIZE: number = 10 * 1024; // 10 KB
 
 export const REPORTER_HTTP_TIMEOUT: number = 3000;
+export const REPORTER_DATA_SIZE_LIMIT: number = 1_000_000; // 1MB
 
 export const AGENT_UUID_CONST: string = '3cda958c-e704-56ff-b519-ab2e3dc3ccc2';
 

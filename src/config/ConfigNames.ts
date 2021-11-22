@@ -97,6 +97,8 @@ class ConfigNames {
 
     /////////////////////////////////////////////////////////////////////////////
 
+    public static readonly THUNDRA_TRACE_SPAN_COUNT_MAX: string =
+        'thundra.agent.trace.span.count.max';
     public static readonly THUNDRA_TRACE_SPAN_LISTENERCONFIG: string =
         'thundra.agent.trace.span.listenerconfig';
 

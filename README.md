@@ -321,6 +321,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_REPORT_REST_TRUSTALLCERTIFICATES                      |  bool  |              false              |
 | THUNDRA_AGENT_REPORT_REST_LOCAL                                     |  bool  |              false              |
 | THUNDRA_AGENT_REPORT_CLOUDWATCH_ENABLE                              |  bool  |              false              |
+| THUNDRA_AGENT_REPORT_MAX_SIZE                                       | number |         32 * 1024 (32 KB)       |
 | THUNDRA_AGENT_LAMBDA_HANDLER                                        | string |                -                |
 | THUNDRA_AGENT_LAMBDA_WARMUP_WARMUPAWARE                             |  bool  |              false              |
 | THUNDRA_AGENT_LAMBDA_TIMEOUT_MARGIN                                 | number |                -                |
@@ -345,6 +346,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_TRACE_INSTRUMENT_TRACEABLECONFIG                      | string |                -                |
 | THUNDRA_AGENT_TRACE_INSTRUMENT_FILE_PREFIX                          | string |                -                |
 | THUNDRA_AGENT_TRACE_SPAN_LISTENERCONFIG                             | string |                -                |
+| THUNDRA_AGENT_TRACE_SPAN_COUNT_MAX                                  | number |               200               |
 | THUNDRA_AGENT_SAMPLER_TIMEAWARE_TIMEFREQ                            | number |             300000              |
 | THUNDRA_AGENT_SAMPLER_COUNTAWARE_COUNTFREQ                          | number |               100               |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_DISABLE                            |  bool  |              false              |

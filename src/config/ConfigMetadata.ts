@@ -120,6 +120,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_TRACE_SPAN_COUNT_MAX]: {
+        type: 'number',
+        defaultValue: 200,
+    },
     [ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG]: {
         type: 'string',
     },
