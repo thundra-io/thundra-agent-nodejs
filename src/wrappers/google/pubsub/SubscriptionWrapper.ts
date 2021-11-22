@@ -19,6 +19,24 @@ const ApplicationDomainName = DomainNames.API;
 let _REPORTER: Reporter;
 let _PLUGINS: any[];
 
+function subscriberListenWrapper(wrappedFunction: any) {
+    return function internalSubscriberListenWrapper() {
+        ThundraLogger.debug('<GoogleSubscriptionWrapper> Initializing ...');
+
+        const {
+            reporter,
+            plugins,
+        } = WrapperUtils.initWrapper(SubscriptionExecutor);
+
+        WrapperUtils.initAsyncContextManager();
+
+        _REPORTER = reporter;
+        _PLUGINS = plugins;
+
+        return wrappedFunction.apply(this);
+    };
+}
+
 function subscriberOnWrapper(wrappedFunction: any) {
     return function internalPubSubSubscriberWrapper(eventName: any, callback: any) {
         if (eventName !== 'message') {
@@ -65,22 +83,16 @@ export const init = () => {
 
     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
     if (!lambdaRuntime) {
-
-        ThundraLogger.debug('<GoogleSubscriptionWrapper> Initializing ...');
-
-        const {
-            reporter,
-            plugins,
-        } = WrapperUtils.initWrapper(SubscriptionExecutor);
-
-        WrapperUtils.initAsyncContextManager();
-
-        _REPORTER = reporter;
-        _PLUGINS = plugins;
-
         ModuleUtils.instrument(
             ['@google-cloud/pubsub/build/src/subscription'], undefined,
             (lib: any, cfg: any) => {
+                ModuleUtils.patchModule(
+                    '@google-cloud/pubsub/build/src/subscription',
+                    '_listen',
+                    subscriberListenWrapper,
+                    (subscription: any) => subscription.Subscription.prototype,
+                    lib);
+
                 ModuleUtils.patchModule(
                     '@google-cloud/pubsub/build/src/subscription',
                     'on',

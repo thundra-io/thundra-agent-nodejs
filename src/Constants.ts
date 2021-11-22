@@ -536,11 +536,11 @@ export const SpanTags = {
 
 export const GooglePubSubTags = {
     PROJECT_ID: 'gcloud.projectId',
+    SUBSCRIPTION: 'subscription',
     TOPIC_NAME: 'topic.name',
-    METHOD: 'method',
-    KIND: 'kind',
     MESSAGEIDS: 'messageIds',
     MESSAGES: 'messages',
+    MESSAGE: 'message',
 };
 
 export const ErrorTags = {
@@ -627,6 +627,15 @@ export const LISTENERS: any = {
     LatencyInjectorSpanListener,
     TagInjectorSpanListener,
     SecurityAwareSpanListener,
+};
+
+export const GooglePubSubOperationTypes: any = {
+    PULL: 'READ',
+    PUBLISH: 'WRITE',
+    CREATESUBSCRIPTION: 'WRITE',
+    DELETESUBSCRIPTION: 'DELETE',
+    CREATETOPIC: 'WRITE',
+    DELETETOPIC: 'DELETE',
 };
 
 export const RedisCommandTypes: any = {

@@ -8,6 +8,7 @@ import {
     TriggerHeaderTags,
     INTEGRATIONS,
     GooglePubSubTags,
+    GooglePubSubOperationTypes,
 } from '../Constants';
 import GooglePubSubUtils from '../utils/GooglePubSubUtils';
 import ModuleUtils from '../utils/ModuleUtils';
@@ -18,7 +19,7 @@ import ExecutionContextManager from '../context/ExecutionContextManager';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
-const semver = require('semver');
+const get = require('lodash.get');
 
 const INTEGRATION_NAME = 'googlecloud.pubsub';
 
@@ -29,12 +30,15 @@ const INTEGRATION_NAME = 'googlecloud.pubsub';
 class GoogleCloudPubSubIntegration implements Integration {
 
     config: any;
+    private wrappedFuncs: any;
     private instrumentContext: any;
 
     constructor(config: any) {
-        ThundraLogger.debug('<GoogleCloudPubSubIntegration> Activating HTTP integration');
+        ThundraLogger.debug('<GoogleCloudPubSubIntegration> Activating Google PubSub integration');
 
+        this.wrappedFuncs = {};
         this.config = config || {};
+
         const googleCloudPubSubIntegration = INTEGRATIONS[INTEGRATION_NAME];
         this.instrumentContext = ModuleUtils.instrument(
             googleCloudPubSubIntegration.moduleNames, googleCloudPubSubIntegration.moduleVersion,
@@ -53,11 +57,14 @@ class GoogleCloudPubSubIntegration implements Integration {
     wrap(lib: any, thundraConfig: any, moduleName: string): void {
         ThundraLogger.debug('<GoogleCloudPubSubIntegration> Wrap');
 
-        function requestWrapper(original: any) {
+        const integration = this;
+        function requestWrapper(original: any, wrappedFunctionName: string) {
+            integration.wrappedFuncs[wrappedFunctionName] = original;
             return function internalWrapper(config: any, callback: any) {
 
                 const orginalCallback = callback;
                 let span: ThundraSpan;
+                let reachedToCallOriginalFunc: boolean = false;
                 try {
 
                     ThundraLogger.debug('<GoogleCloudPubSubIntegration> Tracing GoogleCloudPubSubIntegration request:', config);
@@ -69,10 +76,11 @@ class GoogleCloudPubSubIntegration implements Integration {
                         return original.apply(this, [config, orginalCallback]);
                     }
 
+                    const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
                     const parentSpan = tracer.getActiveSpan();
 
                     const topic = GooglePubSubUtils.getTopic(config);
-                    const operationName = `${config.method}-${topic}`;
+                    const operationName = `${config.method.toUpperCase()}-${topic}`;
 
                     ThundraLogger.debug(`<GoogleCloudPubSubIntegration> Starting publish span with name ${operationName}`);
 
@@ -91,20 +99,21 @@ class GoogleCloudPubSubIntegration implements Integration {
                         return GooglePubSubUtils.parseMessages(config.reqOpts.messages);
                     };
 
+                    const meesageContent = getMessageBody();
+
                     const tags = {
                         [GooglePubSubTags.PROJECT_ID]: this.projectId,
                         [GooglePubSubTags.TOPIC_NAME]: topic,
-                        [GooglePubSubTags.MESSAGES]: thundraConfig.maskGooglePublishRequestBody ? undefined
-                            : JSON.stringify(getMessageBody()),
-                        [GooglePubSubTags.METHOD]: config.method ? config.method.toUpperCase() : 'PUBLISH',
+                        ...((meesageContent && !thundraConfig.maskGooglePublishRequestBody) ? {
+                            [GooglePubSubTags.MESSAGE]: JSON.stringify(getMessageBody()),
+                        } : undefined),
+                        [SpanTags.OPERATION_TYPE]: config.method
+                            ? (GooglePubSubOperationTypes[`${config.method.toUpperCase()}`] || config.method)
+                            : SpanTypes.GOOGLEPUBSUB,
                         [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
                         [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     };
-
-                    if (config.method === 'publish') {
-                        tags[GooglePubSubTags.KIND] = 'Producer';
-                    }
 
                     if (config.reqOpts && config.reqOpts.messages) {
                         for (const message of config.reqOpts.messages) {
@@ -124,7 +133,9 @@ class GoogleCloudPubSubIntegration implements Integration {
                             return;
                         }
 
-                        if (res && res.messageIds) {
+                        if (err) {
+                            span.setErrorTag(err);
+                        } else if (res && res.messageIds) {
                             span.addTags({ [GooglePubSubTags.MESSAGEIDS]: res.messageIds.join(',') });
                         }
 
@@ -132,24 +143,30 @@ class GoogleCloudPubSubIntegration implements Integration {
                     };
 
                     span._initialized();
+                    reachedToCallOriginalFunc = true;
 
-                    return original.apply(this, [config, wrappedCallback]);
+                    return originalFunction.apply(this, [config, wrappedCallback]);
                 } catch (error) {
                     ThundraLogger.error('<GoogleCloudPubSubIntegration> Error occurred while tracing PubSub request:', error);
                     if (span) {
                         span.close();
                     }
 
-                    return original.apply(this, [config, orginalCallback]);
+                    if (reachedToCallOriginalFunc || error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        return original.apply(this, [config, orginalCallback]);
+                    }
                 }
             };
         }
 
-        function pullWrapper(original: any) {
+        function pullWrapper(original: any, wrappedFunctionName: string) {
+            integration.wrappedFuncs[wrappedFunctionName] = original;
             return function internalWrapper(request: any, options: any, callback: any) {
 
-                let clientPromise;
                 let span: ThundraSpan;
+                let reachedToCallOriginalFunc: boolean = false;
                 try {
                     ThundraLogger.debug('<GoogleCloudPubSubIntegration> Tracing GoogleCloudPubSubIntegration pull');
 
@@ -163,30 +180,13 @@ class GoogleCloudPubSubIntegration implements Integration {
                     const originalOptions = typeof options !== 'function' ? options : undefined;
                     const originalCallback = typeof options === 'function' ? options : callback;
 
+                    const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
                     const parentSpan = tracer.getActiveSpan();
 
-                    const topic = request.subscription;
-                    const operationName = `pull-${topic}`;
+                    const subscription = request.subscription;
+                    const operationName = `PULL-${subscription}`;
 
                     ThundraLogger.debug(`<GoogleCloudPubSubIntegration> Starting pull span with name ${operationName}`);
-
-                    span = tracer._startSpan(operationName, {
-                        childOf: parentSpan,
-                        domainName: DomainNames.API,
-                        className: ClassNames.GOOGLEPUBSUB,
-                        disableActiveStart: true,
-                    });
-
-                    const tags = {
-                        [GooglePubSubTags.TOPIC_NAME]: topic,
-                        [GooglePubSubTags.METHOD]: 'PULL',
-                        [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
-                        [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
-                        [SpanTags.TOPOLOGY_VERTEX]: true,
-                        [GooglePubSubTags.KIND]: 'Consumer',
-                    };
-
-                    span.addTags(tags);
 
                     const getMessageBody = (receivedMessages: any []) => {
                         if (!receivedMessages) {
@@ -197,7 +197,39 @@ class GoogleCloudPubSubIntegration implements Integration {
                         return GooglePubSubUtils.parseMessages(messages);
                     };
 
-                    const me = this;
+                    const getProjectId = () => {
+                        if (!subscription) {
+                            return;
+                        }
+
+                        const topicInfo = subscription.split('/');
+                        if (topicInfo.lenght < 1) {
+                            return;
+                        }
+
+                        return topicInfo[1];
+                    };
+
+                    span = tracer._startSpan(operationName, {
+                        childOf: parentSpan,
+                        domainName: DomainNames.API,
+                        className: ClassNames.GOOGLEPUBSUB,
+                        disableActiveStart: true,
+                    });
+
+                    const tags = {
+                        [GooglePubSubTags.PROJECT_ID]: getProjectId(),
+                        [GooglePubSubTags.SUBSCRIPTION]: subscription,
+                        [SpanTags.OPERATION_TYPE]: GooglePubSubOperationTypes.PULL,
+                        [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
+                        [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
+                        [SpanTags.TOPOLOGY_VERTEX]: true,
+                    };
+
+                    span.addTags(tags);
+                    span._initialized();
+                    reachedToCallOriginalFunc = true;
+
                     const wrappedCallback = (err: any, res: any)  => {
                         if (!span) {
                             if (originalCallback) {
@@ -227,9 +259,9 @@ class GoogleCloudPubSubIntegration implements Integration {
                     };
 
                     if (originalCallback) {
-                        return original.apply(this, [request, originalOptions, wrappedCallback]);
+                        return originalFunction.apply(this, [request, originalOptions, wrappedCallback]);
                     } else {
-                        clientPromise = original.apply(this, [request, options, callback]).then(
+                        return originalFunction.apply(this, [request, options, callback]).then(
                             (res: any) => {
                                 const [response] = res;
                                 wrappedCallback(null, response);
@@ -247,23 +279,23 @@ class GoogleCloudPubSubIntegration implements Integration {
                         span.close();
                     }
 
-                    if (!clientPromise) {
-                        clientPromise = original.apply(this, [request, options, callback]);
+                    if (reachedToCallOriginalFunc || error instanceof ThundraChaosError) {
+                        throw error;
+                    } else {
+                        return original.apply(this, [request, options, callback]);
                     }
                 }
-
-                return clientPromise;
             };
         }
 
         if (has(lib, 'PubSub.prototype.request')) {
             ThundraLogger.debug('<GoogleCloudPubSubIntegration> Wrapping "PubSub.prototype.request"');
-            shimmer.wrap(lib.PubSub.prototype, 'request', requestWrapper);
+            shimmer.wrap(lib.PubSub.prototype, 'request', (wrapped: Function) => requestWrapper(wrapped, 'request'));
         }
 
         if (has(lib, 'v1.SubscriberClient.prototype.pull')) {
             ThundraLogger.debug('<GoogleCloudPubSubIntegration> Wrapping "v1.SubscriberClient.prototype.pull"');
-            shimmer.wrap(lib.v1.SubscriberClient.prototype, 'pull', pullWrapper);
+            shimmer.wrap(lib.v1.SubscriberClient.prototype, 'pull', (wrapped: Function) => pullWrapper(wrapped, 'pull'));
         }
     }
 
@@ -294,6 +326,10 @@ class GoogleCloudPubSubIntegration implements Integration {
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
+    }
+
+    private getOriginalFunction(wrappedFunctionName: string) {
+        return get(this, `wrappedFuncs.${wrappedFunctionName}`);
     }
 }
 

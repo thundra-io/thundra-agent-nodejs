@@ -1,16 +1,20 @@
 import Utils from '../../../utils/Utils';
-import { HttpTags, TriggerHeaderTags, SpanTags, SpanTypes, GooglePubSubTags } from '../../../Constants';
+import {
+    ClassNames,
+    DomainNames,
+    TriggerHeaderTags,
+    SpanTags,
+    SpanTypes,
+    GooglePubSubTags,
+} from '../../../Constants';
 import PluginContext from '../../../plugins/PluginContext';
 import ExecutionContext from '../../../context/ExecutionContext';
 import WrapperUtils from '../../WebWrapperUtils';
-import ConfigProvider from '../../../config/ConfigProvider';
-import ConfigNames from '../../../config/ConfigNames';
 import InvocationSupport from '../../../plugins/support/InvocationSupport';
-import WebWrapperUtils from '../../WebWrapperUtils';
 import * as opentracing from 'opentracing';
 import ThundraSpanContext from '../../../opentracing/SpanContext';
 import InvocationTraceSupport from '../../../plugins/support/InvocationTraceSupport';
-import { ClassNames, DomainNames } from '../../../Constants';
+import GooglePubSubUtils from '../../../utils/GooglePubSubUtils';
 
 const get = require('lodash.get');
 
@@ -65,13 +69,13 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     rootSpan.isRootSpan = true;
 
     const subscription = request._subscriber._subscription;
-    const topic = (subscription.metadata && subscription.metadata.topic)
+    const subscriptionName = (subscription.metadata && subscription.metadata.topic)
         ? subscription.metadata.topic : subscription.name;
 
     const tags = {
-      [GooglePubSubTags.PROJECT_ID]: subscription.pubsub.projectId,
-      [GooglePubSubTags.TOPIC_NAME]: topic,
-      [GooglePubSubTags.KIND]: 'Consumer',
+      [GooglePubSubTags.PROJECT_ID]: subscription.pubsub ? subscription.pubsub.projectId : '',
+      [GooglePubSubTags.SUBSCRIPTION]: subscriptionName,
+      [GooglePubSubTags.MESSAGE]: GooglePubSubUtils.parseMessage(request),
       [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
     };
 
