@@ -58,7 +58,7 @@ class Reporter {
                 new SpanTagTrimmer(SPAN_TAGS_TO_TRIM_2),
                 new NonInvocationTrimmer(),
             ];
-        this.maxReportSize = opt.maxReportSize || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_MAX_SIZE);
+        this.maxReportSize = opt.maxReportSize || ConfigProvider.get<number>(ConfigNames.THUNDRA_REPORT_SIZE_MAX);
         if (this.maxReportSize > REPORTER_DATA_SIZE_LIMIT) {
             this.maxReportSize = REPORTER_DATA_SIZE_LIMIT;
             ThundraLogger.info(
