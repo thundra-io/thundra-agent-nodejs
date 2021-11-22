@@ -15,6 +15,8 @@ import * as opentracing from 'opentracing';
 import ThundraSpanContext from '../../../opentracing/SpanContext';
 import InvocationTraceSupport from '../../../plugins/support/InvocationTraceSupport';
 import GooglePubSubUtils from '../../../utils/GooglePubSubUtils';
+import ConfigNames from '../../../config/ConfigNames';
+import ConfigProvider from '../../../config/ConfigProvider';
 
 const get = require('lodash.get');
 
@@ -72,10 +74,11 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     const subscriptionName = (subscription.metadata && subscription.metadata.topic)
         ? subscription.metadata.topic : subscription.name;
 
+    const maskMessage = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBLISH_BODY_MASK);
     const tags = {
       [GooglePubSubTags.PROJECT_ID]: subscription.pubsub ? subscription.pubsub.projectId : '',
       [GooglePubSubTags.SUBSCRIPTION]: subscriptionName,
-      [GooglePubSubTags.MESSAGE]: GooglePubSubUtils.parseMessage(request),
+      ...( !maskMessage ? { [GooglePubSubTags.MESSAGE]:  GooglePubSubUtils.parseMessage(request) } : undefined ),
       [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
     };
 
