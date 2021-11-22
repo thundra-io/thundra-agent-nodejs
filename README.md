@@ -321,7 +321,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_REPORT_REST_TRUSTALLCERTIFICATES                      |  bool  |              false              |
 | THUNDRA_AGENT_REPORT_REST_LOCAL                                     |  bool  |              false              |
 | THUNDRA_AGENT_REPORT_CLOUDWATCH_ENABLE                              |  bool  |              false              |
-| THUNDRA_AGENT_REPORT_MAX_SIZE                                       | number |         32 * 1024 (32 KB)       |
+| THUNDRA_AGENT_REPORT_SIZE_MAX                                       | number |         32 * 1024 (32 KB)       |
 | THUNDRA_AGENT_LAMBDA_HANDLER                                        | string |                -                |
 | THUNDRA_AGENT_LAMBDA_WARMUP_WARMUPAWARE                             |  bool  |              false              |
 | THUNDRA_AGENT_LAMBDA_TIMEOUT_MARGIN                                 | number |                -                |
