@@ -162,7 +162,7 @@ describe('Google Cloud PubSub Integration', () => {
             expect(publishSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.PUBLISH);
             expect(publishSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
             expect(publishSpan.tags[GooglePubSubTags.TOPIC_NAME]).toBe(consoleTopicName);
-            expect(publishSpan.tags[GooglePubSubTags.MESSAGES]).toBeTruthy();
+            expect(publishSpan.tags[GooglePubSubTags.MESSAGE]).toBeTruthy();
             expect(publishSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLEPUBSUB);
             expect(publishSpan.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
             expect(publishSpan.tags[ErrorTags.ERROR]).toBe(true);
