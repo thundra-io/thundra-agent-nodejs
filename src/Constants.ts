@@ -158,7 +158,8 @@ export const ClassNames = {
     EXPRESS: 'Express',
     KOA: 'Koa',
     HAPI: 'Hapi',
-    GOOGLEPUBSUB: 'GooglePubSub',
+    GOOGLEPUBSUB: 'Google-PubSub',
+    NODEHANDLER: 'Node-Handler',
     RABBITMQ: 'RabbitMQ',
 };
 
@@ -535,12 +536,12 @@ export const SpanTags = {
 };
 
 export const GooglePubSubTags = {
-    PROJECT_ID: 'gcloud.projectId',
-    SUBSCRIPTION: 'subscription',
-    TOPIC_NAME: 'topic.name',
-    MESSAGEIDS: 'messageIds',
-    MESSAGES: 'messages',
-    MESSAGE: 'message',
+    PROJECT_ID: 'google.projectId',
+    SUBSCRIPTION: 'google.pubsub.subscription',
+    TOPIC_NAME: 'google.pubsub.topic.name',
+    MESSAGEIDS: 'google.pubsub.messageIds',
+    MESSAGES: 'google.pubsub.messages',
+    MESSAGE: 'google.pubsub.message',
 };
 
 export const ErrorTags = {

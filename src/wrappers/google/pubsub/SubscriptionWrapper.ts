@@ -13,7 +13,7 @@ import LambdaUtils from '../../../utils/LambdaUtils';
 import * as SubscriptionExecutor from './SubscriptionExecutor';
 import WrapperUtils from '../../WebWrapperUtils';
 
-const ApplicationClassName = ClassNames.GOOGLEPUBSUB;
+const ApplicationClassName = ClassNames.NODEHANDLER;
 const ApplicationDomainName = DomainNames.API;
 
 let _REPORTER: Reporter;
