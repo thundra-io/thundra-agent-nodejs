@@ -158,8 +158,8 @@ export const ClassNames = {
     EXPRESS: 'Express',
     KOA: 'Koa',
     HAPI: 'Hapi',
-    GOOGLEPUBSUB: 'Google-PubSub',
-    NODEHANDLER: 'Node-Handler',
+    GOOGLE_PUBSUB: 'Google-PubSub',
+    NODE_HANDLER: 'Node-Handler',
     RABBITMQ: 'RabbitMQ',
 };
 
@@ -542,6 +542,7 @@ export const GooglePubSubTags = {
     MESSAGEIDS: 'google.pubsub.messageIds',
     MESSAGES: 'google.pubsub.messages',
     MESSAGE: 'google.pubsub.message',
+    ACK: 'google.pubsub.ack',
 };
 
 export const ErrorTags = {
@@ -579,7 +580,7 @@ export const SpanTypes = {
     AWS_SES: 'AWS-SES',
     AWS_STEPFUNCTIONS: 'AWS-StepFunctions',
     RABBITMQ: 'RabbitMQ',
-    GOOGLEPUBSUB: 'Google-PubSub',
+    GOOGLE_PUBSUB: 'Google-PubSub',
 };
 
 export const INTEGRATIONS: any = {
@@ -633,10 +634,10 @@ export const LISTENERS: any = {
 export const GooglePubSubOperationTypes: any = {
     PULL: 'READ',
     PUBLISH: 'WRITE',
-    CREATESUBSCRIPTION: 'WRITE',
-    DELETESUBSCRIPTION: 'DELETE',
-    CREATETOPIC: 'WRITE',
-    DELETETOPIC: 'DELETE',
+    CREATE_SUBSCRIPTION: 'WRITE',
+    DELETE_SUBSCRIPTION: 'DELETE',
+    CREATE_TOPIC: 'WRITE',
+    DELETE_TOPIC: 'DELETE',
 };
 
 export const RedisCommandTypes: any = {

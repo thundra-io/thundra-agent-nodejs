@@ -74,19 +74,19 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     const subscriptionName = (subscription.metadata && subscription.metadata.topic)
         ? subscription.metadata.topic : subscription.name;
 
-    const maskMessage = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBLISH_BODY_MASK);
+    const maskMessage = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK);
     const tags = {
       [GooglePubSubTags.PROJECT_ID]: subscription.pubsub ? subscription.pubsub.projectId : '',
       [GooglePubSubTags.SUBSCRIPTION]: subscriptionName,
       ...( !maskMessage ? { [GooglePubSubTags.MESSAGE]:  GooglePubSubUtils.parseMessage(request) } : undefined ),
-      [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
+      [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLE_PUBSUB,
     };
 
     rootSpan.addTags(tags);
 
     InvocationSupport.setAgentTag(SpanTags.TRIGGER_OPERATION_NAMES, [triggerOperationName]);
-    InvocationSupport.setAgentTag(SpanTags.TRIGGER_DOMAIN_NAME, DomainNames.API);
-    InvocationSupport.setAgentTag(SpanTags.TRIGGER_CLASS_NAME, ClassNames.GOOGLEPUBSUB);
+    InvocationSupport.setAgentTag(SpanTags.TRIGGER_DOMAIN_NAME, DomainNames.MESSAGING);
+    InvocationSupport.setAgentTag(SpanTags.TRIGGER_CLASS_NAME, ClassNames.GOOGLE_PUBSUB);
 
     if (incomingSpanID) {
         InvocationTraceSupport.addIncomingTraceLink(incomingSpanID);
@@ -108,5 +108,5 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
     WrapperUtils.finishTrace(pluginContext, execContext);
 
     const { rootSpan, request } = execContext;
-    rootSpan.tags['pubsub.ack'] = request._handled ? 1 : 0;
+    rootSpan.tags[GooglePubSubTags.ACK] = request._handled;
 }

@@ -13,8 +13,8 @@ import LambdaUtils from '../../../utils/LambdaUtils';
 import * as SubscriptionExecutor from './SubscriptionExecutor';
 import WrapperUtils from '../../WebWrapperUtils';
 
-const ApplicationClassName = ClassNames.NODEHANDLER;
-const ApplicationDomainName = DomainNames.API;
+const ApplicationClassName = ClassNames.NODE_HANDLER;
+const ApplicationDomainName = DomainNames.MESSAGING;
 
 let _REPORTER: Reporter;
 let _PLUGINS: any[];
@@ -53,12 +53,16 @@ function subscriberOnWrapper(wrappedFunction: any) {
                     return;
                 }
 
+                const context: ExecutionContext = this;
                 try {
-                    const context: ExecutionContext = this;
                     ThundraLogger.debug('<GoogleSubscriptionWrapper> Before handling request');
                     await WrapperUtils.beforeRequest(message, {}, _PLUGINS);
 
                     await orginalCallback(message);
+                } catch (err) {
+                    ThundraLogger.debug('<GoogleSubscriptionWrapper> An error occured while handling message', err);
+                    context.setError(err);
+                    throw err;
                 } finally {
                     ThundraLogger.debug('<GoogleSubscriptionWrapper> After handling request');
                     await WrapperUtils.afterRequest(message, {}, _PLUGINS, __PRIVATE__.getReporter());
@@ -72,7 +76,7 @@ function subscriberOnWrapper(wrappedFunction: any) {
 export const init = () => {
 
     const isGoogleSubscriptionTracingDisabled =
-        ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_SUBSCRIPTION_DISABLE);
+        ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_DISABLE);
 
     if (isGoogleSubscriptionTracingDisabled) {
 

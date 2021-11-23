@@ -80,14 +80,14 @@ class GoogleCloudPubSubIntegration implements Integration {
                     const parentSpan = tracer.getActiveSpan();
 
                     const topic = GooglePubSubUtils.getTopic(config);
-                    const operationName = `${config.method.toUpperCase()}-${topic}`;
+                    const operationName = `${topic}`;
 
                     ThundraLogger.debug(`<GoogleCloudPubSubIntegration> Starting publish span with name ${operationName}`);
 
                     span = tracer._startSpan(operationName, {
                         childOf: parentSpan,
-                        domainName: DomainNames.API,
-                        className: ClassNames.GOOGLEPUBSUB,
+                        domainName: DomainNames.MESSAGING,
+                        className: ClassNames.GOOGLE_PUBSUB,
                         disableActiveStart: true,
                     });
 
@@ -104,13 +104,11 @@ class GoogleCloudPubSubIntegration implements Integration {
                     const tags = {
                         [GooglePubSubTags.PROJECT_ID]: this.projectId,
                         [GooglePubSubTags.TOPIC_NAME]: topic,
-                        ...((meesageContent && !thundraConfig.maskGooglePublishRequestBody) ? {
-                            [GooglePubSubTags.MESSAGE]: JSON.stringify(getMessageBody()),
+                        ...((meesageContent && !thundraConfig.maskGooglePubSubMessage) ? {
+                            [GooglePubSubTags.MESSAGE]: getMessageBody(),
                         } : undefined),
-                        [SpanTags.OPERATION_TYPE]: config.method
-                            ? (GooglePubSubOperationTypes[`${config.method.toUpperCase()}`] || config.method)
-                            : SpanTypes.GOOGLEPUBSUB,
-                        [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
+                        [SpanTags.OPERATION_TYPE]: GooglePubSubOperationTypes.PUBLISH,
+                        [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLE_PUBSUB,
                         [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     };
@@ -184,7 +182,7 @@ class GoogleCloudPubSubIntegration implements Integration {
                     const parentSpan = tracer.getActiveSpan();
 
                     const subscription = request.subscription;
-                    const operationName = `PULL-${subscription}`;
+                    const operationName = `${subscription}`;
 
                     ThundraLogger.debug(`<GoogleCloudPubSubIntegration> Starting pull span with name ${operationName}`);
 
@@ -212,8 +210,8 @@ class GoogleCloudPubSubIntegration implements Integration {
 
                     span = tracer._startSpan(operationName, {
                         childOf: parentSpan,
-                        domainName: DomainNames.API,
-                        className: ClassNames.GOOGLEPUBSUB,
+                        domainName: DomainNames.MESSAGING,
+                        className: ClassNames.GOOGLE_PUBSUB,
                         disableActiveStart: true,
                     });
 
@@ -221,8 +219,7 @@ class GoogleCloudPubSubIntegration implements Integration {
                         [GooglePubSubTags.PROJECT_ID]: getProjectId(),
                         [GooglePubSubTags.SUBSCRIPTION]: subscription,
                         [SpanTags.OPERATION_TYPE]: GooglePubSubOperationTypes.PULL,
-                        [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLEPUBSUB,
-                        [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
+                        [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLE_PUBSUB,
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     };
 
@@ -245,8 +242,8 @@ class GoogleCloudPubSubIntegration implements Integration {
                             const messages = getMessageBody(res.receivedMessages);
                             if (messages) {
                                 span.addTags({
-                                    [GooglePubSubTags.MESSAGES]: thundraConfig.maskGoogleSubscriptionResponseBody ? undefined
-                                        : JSON.stringify(messages),
+                                    [GooglePubSubTags.MESSAGES]: thundraConfig.maskGooglePubSubMessage ? undefined
+                                        : messages,
                                 });
                             }
                         }

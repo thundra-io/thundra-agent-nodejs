@@ -14,9 +14,6 @@ import { createMockReporterInstance } from '../../../mocks/mocks';
 const { PubSub } = require('@google-cloud/pubsub');
 
 describe('Google subscription Wrapper Tests', () => {
-
-    jest.setTimeout(500000);
-
     const projectId = 'project-test';
     const subscriptionName = 'pub-sub-tryer-sub';
 
@@ -77,15 +74,15 @@ describe('Google subscription Wrapper Tests', () => {
             expect(spanList.length).toBe(1);
 
             expect(rootSpan.operationName).toBe('incomingResourceName');
-            expect(rootSpan.className).toBe(ClassNames.GOOGLEPUBSUB);
-            expect(rootSpan.domainName).toBe(DomainNames.API);
+            expect(rootSpan.className).toBe(ClassNames.NODE_HANDLER);
+            expect(rootSpan.domainName).toBe(DomainNames.MESSAGING);
             expect(rootSpan.startTime).toBeTruthy();
             expect(rootSpan.finishTime).toBeTruthy();
             expect(rootSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
             expect(rootSpan.tags[GooglePubSubTags.SUBSCRIPTION]).toBe(subscriptionName);
             expect(rootSpan.tags[GooglePubSubTags.MESSAGES]).not.toBeTruthy();
-            expect(rootSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLEPUBSUB);
-            
+            expect(rootSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
+
             done();
         };
         

@@ -17,9 +17,6 @@ import Utils from '../../dist/utils/Utils';
 const { PubSub } = require('@google-cloud/pubsub');
 
 describe('Google Cloud PubSub Integration', () => {
-
-    jest.setTimeout(600000);
-
     const projectId = 'project-test';
     const topicName = 'pub-sub-tryer-topic';
     const subscriptionName = 'pub-sub-tryer-sub'; 
@@ -124,27 +121,26 @@ describe('Google Cloud PubSub Integration', () => {
 
         const createTopicSpan = spanList[0];
 
-        expect(createTopicSpan.operationName).toBe(`CREATETOPIC-${consoleTopicName}`);
-        expect(createTopicSpan.className).toBe(ClassNames.GOOGLEPUBSUB);
-        expect(createTopicSpan.domainName).toBe(DomainNames.API);
-        expect(createTopicSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.CREATETOPIC);
+        expect(createTopicSpan.operationName).toBe(`${consoleTopicName}`);
+        expect(createTopicSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
+        expect(createTopicSpan.domainName).toBe(DomainNames.MESSAGING);
+        expect(createTopicSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.CREATE_TOPIC);
         expect(createTopicSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
         expect(createTopicSpan.tags[GooglePubSubTags.TOPIC_NAME]).toBe(consoleTopicName);
         expect(createTopicSpan.tags[GooglePubSubTags.MESSAGE]).not.toBeTruthy();
-        expect(createTopicSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLEPUBSUB);
+        expect(createTopicSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
         expect(createTopicSpan.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
 
         const publishSpan = spanList[1];
 
-        expect(publishSpan.operationName).toBe(`PUBLISH-${consoleTopicName}`);
-        expect(publishSpan.className).toBe(ClassNames.GOOGLEPUBSUB);
-        expect(publishSpan.domainName).toBe(DomainNames.API);
+        expect(publishSpan.operationName).toBe(`${consoleTopicName}`);
+        expect(publishSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
+        expect(publishSpan.domainName).toBe(DomainNames.MESSAGING);
         expect(publishSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.PUBLISH);
         expect(publishSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
         expect(publishSpan.tags[GooglePubSubTags.TOPIC_NAME]).toBe(consoleTopicName);
         expect(publishSpan.tags[GooglePubSubTags.MESSAGEIDS]).toBe(result);
-        // expect(publishSpan.tags[GooglePubSubTags.MESSAGE]).toBe(JSON.stringify([{ data: { date } }]));
-        expect(publishSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLEPUBSUB);
+        expect(publishSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
         expect(publishSpan.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
     });
 
@@ -156,14 +152,14 @@ describe('Google Cloud PubSub Integration', () => {
         defaultTopic.publishMessage({ data }, function(err, data) {
             const publishSpan = tracer.getRecorder().spanList[0];
 
-            expect(publishSpan.operationName).toBe(`PUBLISH-${consoleTopicName}`);
-            expect(publishSpan.className).toBe(ClassNames.GOOGLEPUBSUB);
-            expect(publishSpan.domainName).toBe(DomainNames.API);
+            expect(publishSpan.operationName).toBe(`${consoleTopicName}`);
+            expect(publishSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
+            expect(publishSpan.domainName).toBe(DomainNames.MESSAGING);
             expect(publishSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.PUBLISH);
             expect(publishSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
             expect(publishSpan.tags[GooglePubSubTags.TOPIC_NAME]).toBe(consoleTopicName);
             expect(publishSpan.tags[GooglePubSubTags.MESSAGE]).toBeTruthy();
-            expect(publishSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLEPUBSUB);
+            expect(publishSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
             expect(publishSpan.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
             expect(publishSpan.tags[ErrorTags.ERROR]).toBe(true);
             expect(publishSpan.tags[ErrorTags.ERROR_KIND]).toBe('Error');
@@ -194,14 +190,13 @@ describe('Google Cloud PubSub Integration', () => {
 
         const pullSpan = tracer.getRecorder().spanList[0];
 
-        expect(pullSpan.operationName).toBe(`PULL-${consoleSubscriptionName}`);
-        expect(pullSpan.className).toBe(ClassNames.GOOGLEPUBSUB);
-        expect(pullSpan.domainName).toBe(DomainNames.API);
+        expect(pullSpan.operationName).toBe(`${consoleSubscriptionName}`);
+        expect(pullSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
+        expect(pullSpan.domainName).toBe(DomainNames.MESSAGING);
         expect(pullSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.PULL);
         expect(pullSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
         expect(pullSpan.tags[GooglePubSubTags.SUBSCRIPTION]).toBe(consoleSubscriptionName);
-        expect(pullSpan.tags[GooglePubSubTags.MESSAGES]).toBe(JSON.stringify([]));
-        expect(pullSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLEPUBSUB);
+        expect(pullSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
         expect(pullSpan.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
     });
 
@@ -228,14 +223,14 @@ describe('Google Cloud PubSub Integration', () => {
         finally {
             const pullSpan = tracer.getRecorder().spanList[0];
 
-            expect(pullSpan.operationName).toBe(`PULL-${consoleSubscriptionName}`);
-            expect(pullSpan.className).toBe(ClassNames.GOOGLEPUBSUB);
-            expect(pullSpan.domainName).toBe(DomainNames.API);
+            expect(pullSpan.operationName).toBe(`${consoleSubscriptionName}`);
+            expect(pullSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
+            expect(pullSpan.domainName).toBe(DomainNames.MESSAGING);
             expect(pullSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.PULL);
             expect(pullSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
             expect(pullSpan.tags[GooglePubSubTags.SUBSCRIPTION]).toBe(consoleSubscriptionName);
             expect(pullSpan.tags[GooglePubSubTags.MESSAGES]).not.toBeTruthy();
-            expect(pullSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLEPUBSUB);
+            expect(pullSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
             expect(pullSpan.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
             expect(pullSpan.tags[ErrorTags.ERROR]).toBe(true);
             expect(pullSpan.tags[ErrorTags.ERROR_KIND]).toBe('Error');
