@@ -19,6 +19,7 @@ Check out [example projects](https://github.com/thundra-io/thundra-examples-lamb
     - [Integration Options for Containers and VMs](#integration-options-for-containers-and-vms)
       - [Express](#express)
       - [Hapi](#hapi)
+      - [Koa](#koa)
     - [Integration Options for AWS Lambda](#integration-options-for-aws-lambda)
       - [Using Layers](#using-layers)
       - [Without Layers](#without-layers)
@@ -90,7 +91,6 @@ const thundra = require("@thundra/core");
 const express = require('express');
 
 const app = express();
-app.use(thundra.expressMW());
 
 app.get('/', function (req,res) {
    res.send("Response")
@@ -202,6 +202,8 @@ Thundra provides out-of-the-box instrumentation (tracing) for following librarie
 |mysql2              |`>=1.5.0`                  |
 |pg                  |`>=6.0.0`                  |
 |amqp 0.9.1          |`>=0.5.0`                  |
+|@google-cloud/pubsub|`>=1.2`                    |
+
 
 
 
