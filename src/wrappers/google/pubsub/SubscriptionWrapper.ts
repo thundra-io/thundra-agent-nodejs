@@ -12,6 +12,7 @@ import LambdaUtils from '../../../utils/LambdaUtils';
 
 import * as SubscriptionExecutor from './SubscriptionExecutor';
 import WrapperUtils from '../../WebWrapperUtils';
+import ThundraChaosError from '../../../error/ThundraChaosError';
 
 const ApplicationClassName = ClassNames.NODE_HANDLER;
 const ApplicationDomainName = DomainNames.MESSAGING;
@@ -64,7 +65,7 @@ function subscriberOnWrapper(wrappedFunction: any) {
                 } catch (err) {
                     ThundraLogger.debug('<GoogleSubscriptionWrapper> An error occured while handling message', err);
                     context.setError(err);
-                    if (beforeRequestCalled) {
+                    if (beforeRequestCalled || err instanceof ThundraChaosError) {
                         // Error is thrown by original callback, so re-throw it here
                         throw err;
                     } else {
