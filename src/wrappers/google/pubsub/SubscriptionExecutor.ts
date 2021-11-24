@@ -60,7 +60,11 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
     const incomingSpanID = get(propagatedSpanContext, 'spanId');
 
-    const rootSpan = tracer._startSpan(triggerOperationName, {
+    const subscription = request._subscriber._subscription;
+    const subscriptionName = (subscription.metadata && subscription.metadata.topic)
+        ? subscription.metadata.topic : subscription.name;
+
+    const rootSpan = tracer._startSpan(triggerOperationName || subscriptionName, {
         propagated: propagatedSpanContext ? true : false,
         parentContext: propagatedSpanContext,
         rootTraceId: traceId,
@@ -69,10 +73,6 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     });
 
     rootSpan.isRootSpan = true;
-
-    const subscription = request._subscriber._subscription;
-    const subscriptionName = (subscription.metadata && subscription.metadata.topic)
-        ? subscription.metadata.topic : subscription.name;
 
     const maskMessage = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK);
     const tags = {

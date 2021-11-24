@@ -20,6 +20,7 @@ Check out [example projects](https://github.com/thundra-io/thundra-examples-lamb
       - [Express](#express)
       - [Hapi](#hapi)
       - [Koa](#koa)
+      - [Google PubSub](#google-pubsub)
     - [Integration Options for AWS Lambda](#integration-options-for-aws-lambda)
       - [Using Layers](#using-layers)
       - [Without Layers](#without-layers)
@@ -139,6 +140,110 @@ app.use(async (ctx, next) => {
   ctx.body = 'Hello Thundra!';
 });
 app.listen(3000)
+```
+
+#### Google Pubsub
+
+##### Publish
+
+```js
+const { PubSub } = require('@google-cloud/pubsub');
+
+const projectId = 'your_google_cloud_project_id';
+const topicName = 'your_google_cloud_pubsub_topic';
+
+const pubsub = new PubSub({ projectId });
+
+/* 
+* if topic allready exists 
+* const topic = await pubsub.topic(topicName)
+**/
+const topic = await pubsub.createTopic(topicName);
+
+const date = new Date().toString();
+const dataBuffer = Buffer.from(JSON.stringify({date}));
+
+const result = await topic.publishMessage({ data: dataBuffer });
+```
+##### Subscription
+
+##### Asynchronous Pull
+
+```js
+const thundra = require("@thundra/core");
+thundra.init();
+
+const { PubSub, Subscription } = require('@google-cloud/pubsub');
+
+const projectId = 'your_google_cloud_project_id';
+const topicName = 'your_google_cloud_pubsub_topic';
+const subscriptionName = 'your_google_cloud_pubsup_subscription_name';
+
+const pubsub = new PubSub({ projectId });
+
+(async() => {
+    
+    /* 
+    * if subscription allready exists 
+    * const subscription = pubsub.subscription(subscriptionName);
+    **/
+    const [subscription] = await pubsub.topic(topicName).createSubscription(subscriptionName);
+    
+    const messageHandler = message => {
+      try {
+        ...
+        message.ack();
+      } catch (err) {
+        ...
+        message.nack();
+      }
+    };
+    
+    subscription.on(`message`, messageHandler);
+})().catch(error => console.log(error));
+```
+
+##### Synchronous Pull
+
+```js
+const { v1 } = require('@google-cloud/pubsub');
+
+const subClient = new v1.SubscriberClient();
+
+const projectId = 'your_google_cloud_project_id';
+const subscriptionName = 'your_google_cloud_pubsup_subscription_name';
+
+const formattedSubscription = subClient.subscriptionPath(
+  projectId,
+  subscriptionName
+);
+
+const request = {
+  subscription: formattedSubscription,
+  maxMessages: 10,
+};
+
+...
+
+const result = await subClient.pull(request);
+const [response] = result;
+
+const ackIds = [];
+for (const message of response.receivedMessages) {
+  ...
+  ackIds.push(message.ackId);
+}
+
+if (ackIds.length !== 0) {
+  const ackRequest = {
+    subscription: formattedSubscription,
+    ackIds: ackIds,
+  };
+
+  await subClient.acknowledge(ackRequest);
+}
+...
+
 ```
 
 ### Integration Options for AWS Lambda

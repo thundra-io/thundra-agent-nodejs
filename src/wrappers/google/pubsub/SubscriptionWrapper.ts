@@ -54,18 +54,30 @@ function subscriberOnWrapper(wrappedFunction: any) {
                 }
 
                 const context: ExecutionContext = this;
+                let beforeRequestCalled: boolean = false;
                 try {
                     ThundraLogger.debug('<GoogleSubscriptionWrapper> Before handling request');
                     await WrapperUtils.beforeRequest(message, {}, _PLUGINS);
+                    beforeRequestCalled = true;
 
                     await orginalCallback(message);
                 } catch (err) {
                     ThundraLogger.debug('<GoogleSubscriptionWrapper> An error occured while handling message', err);
                     context.setError(err);
-                    throw err;
+                    if (beforeRequestCalled) {
+                        // Error is thrown by original callback, so re-throw it here
+                        throw err;
+                    } else {
+                        // In case of internal error in Thundra,
+                        // don't let the user call by-passed and call the original callback so
+                        await orginalCallback(message);
+                    }
                 } finally {
                     ThundraLogger.debug('<GoogleSubscriptionWrapper> After handling request');
-                    await WrapperUtils.afterRequest(message, {}, _PLUGINS, __PRIVATE__.getReporter());
+                    if (beforeRequestCalled) {
+                        // Call "after-request" if "before-request" has been handled successfully
+                        await WrapperUtils.afterRequest(message, {}, _PLUGINS, __PRIVATE__.getReporter());
+                   }
                 }
             });
 
