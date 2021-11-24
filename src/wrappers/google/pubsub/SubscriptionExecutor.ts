@@ -55,16 +55,16 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     const propagatedSpanContext: ThundraSpanContext =
         tracer.extract(opentracing.FORMAT_TEXT_MAP, request.attributes) as ThundraSpanContext;
 
-    const triggerOperationName = get(request, `attributes.${TriggerHeaderTags.RESOURCE_NAME}`)
-        || contextInformation.operationName;
-    const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
-    const incomingSpanID = get(propagatedSpanContext, 'spanId');
-
     const subscription = request._subscriber._subscription;
     const subscriptionName = (subscription.metadata && subscription.metadata.topic)
         ? subscription.metadata.topic : subscription.name;
 
-    const rootSpan = tracer._startSpan(triggerOperationName || subscriptionName, {
+    const triggerOperationName = get(request, `attributes.${TriggerHeaderTags.RESOURCE_NAME}`)
+        || subscriptionName || contextInformation.operationName;
+    const traceId = get(propagatedSpanContext, 'traceId') || Utils.generateId();
+    const incomingSpanID = get(propagatedSpanContext, 'spanId');
+
+    const rootSpan = tracer._startSpan(triggerOperationName, {
         propagated: propagatedSpanContext ? true : false,
         parentContext: propagatedSpanContext,
         rootTraceId: traceId,
