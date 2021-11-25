@@ -357,8 +357,6 @@ function injectAppsyncInfo(request: any, response: any, execContext: ExecutionCo
                     skipped Thundra AppSync trace key injection for transaction',
                     execContext.transactionId);
             }
-
-            InvocationTraceSupport.addOutgoingTraceLink(traceId);
         }
     } catch (error) {
         ThundraLogger.error('<LambdaExecutor> Failed to inject appsync trace id:', error);
