@@ -9,11 +9,12 @@ import ThundraSpanContext from '../../opentracing/SpanContext';
 import ThundraTracer from '../../opentracing/Tracer';
 import * as opentracing from 'opentracing';
 import InvocationSupport from '../../plugins/support/InvocationSupport';
-import {AWSFirehoseIntegration, AWSDynamoDBIntegration} from '../../integrations/AWSServiceIntegration';
+import { AWSFirehoseIntegration, AWSDynamoDBIntegration } from '../../integrations/AWSServiceIntegration';
 import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport';
 import Utils from '../../utils/Utils';
-import {ApplicationManager} from '../../application/ApplicationManager';
-import {LambdaPlatformUtils} from './LambdaPlatformUtils';
+import { ApplicationManager } from '../../application/ApplicationManager';
+import { LambdaPlatformUtils } from './LambdaPlatformUtils';
+import TraceConfig from '../../plugins/config/TraceConfig';
 
 const get = require('lodash.get');
 const MAX_TRIGGER_RESOURCE_NAME_COUNT = 10;
@@ -77,8 +78,14 @@ class LambdaEventUtils {
             return LambdaEventType.CloudFront;
         } else if (originalEvent.requestContext
             && ((originalEvent.resource && originalEvent.path)
-               || (originalEvent.routeKey && originalEvent.rawPath))) {
-            return LambdaEventType.APIGatewayProxy;
+                || (originalEvent.routeKey && originalEvent.rawPath))) {
+
+            if (originalEvent.requestContext.domainName
+                && (originalEvent.requestContext.domainName.indexOf('lambda-url') !== -1)) {
+                return LambdaEventType.FunctionURL;
+            } else {
+                return LambdaEventType.APIGatewayProxy;
+            }
         } else if (originalEvent.context && originalEvent.context.stage && originalEvent.context['resource-path']) {
             return LambdaEventType.APIGatewayPassThrough;
         } else if (process.env[NetlifyConstants.NETLIFY_UNIQUE_ENV] || process.env[NetlifyConstants.NETLIFY_DEV]) {
@@ -93,7 +100,7 @@ class LambdaEventUtils {
             return LambdaEventType.AmazonMQ;
         } else if (originalEvent.Action && originalEvent.body) {
             try {
-                const {headers} = JSON.parse(originalEvent.body);
+                const { headers } = JSON.parse(originalEvent.body);
                 if (headers && headers[VercelConstants.DEPLOYMENT_URL_HEADER]) {
                     return LambdaEventType.Vercel;
                 }
@@ -286,7 +293,7 @@ class LambdaEventUtils {
      * @param originalEvent the original AWS Lambda invocation event
      * @return {string} the class name of the trigger
      */
-     static injectTriggerTagsForAmazonRMQ(span: ThundraSpan, originalEvent: any, originalContext: any): string {
+    static injectTriggerTagsForAmazonRMQ(span: ThundraSpan, originalEvent: any, originalContext: any): string {
         const domainName = DomainNames.MESSAGING;
         const className = ClassNames.RABBITMQ;
         const queueNames: Set<string> = new Set<string>();
@@ -434,6 +441,32 @@ class LambdaEventUtils {
     }
 
     /**
+     * Injects trigger tags for AWS Lambda Function URL events
+     * @param {ThundraSpan} span the span to inject tags
+     * @param {TraceConfig} config the {@link TraceConfig}
+     * @param originalEvent the original AWS Lambda invocation event
+     * @return {string} the class name of the trigger
+     */
+    static injectTriggerTagsForFunctionURL(span: ThundraSpan, originalEvent: any, config: TraceConfig): string {
+        const domainName = DomainNames.API;
+        const className = ClassNames.HTTP;
+
+        const host = get(originalEvent, 'requestContext.domainName', '');
+        const path = get(originalEvent, 'rawPath', '/')
+        const operationName = host + Utils.getNormalizedPath(path, config.httpPathDepth);
+
+        const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
+
+        if (incomingSpanId) {
+            InvocationTraceSupport.addIncomingTraceLinks([incomingSpanId]);
+        }
+        this.injectTriggerTagsForInvocation(domainName, className, [operationName]);
+        this.injectTriggerTagsForSpan(span, domainName, className, [operationName]);
+
+        return className;
+    }
+
+    /**
      * Injects trigger tags for AWS API Gateway (Proxy mode) events
      * @param {ThundraSpan} span the span to inject tags
      * @param originalEvent the original AWS Lambda invocation event
@@ -507,7 +540,7 @@ class LambdaEventUtils {
         let operationName = 'vercel';
 
         try {
-            const {headers, host, path} = JSON.parse(originalEvent.body);
+            const { headers, host, path } = JSON.parse(originalEvent.body);
 
             if (headers[VercelConstants.DEPLOYMENT_URL_HEADER]) {
                 const deplomentUrl = headers[VercelConstants.DEPLOYMENT_URL_HEADER];
@@ -519,7 +552,7 @@ class LambdaEventUtils {
                 operationName = host;
                 ApplicationManager.getApplicationInfoProvider().update({
                     applicationName,
-                    applicationId: LambdaPlatformUtils.getApplicationId(originalContext, {functionName: applicationName}),
+                    applicationId: LambdaPlatformUtils.getApplicationId(originalContext, { functionName: applicationName }),
                 });
             }
 
@@ -669,7 +702,7 @@ class LambdaEventUtils {
                 const transactionId = transactionIdBytes ? Buffer.from(transactionIdBytes, 'base64').toString() : null;
                 const spanIdBytes = get(data, 'basicProperties.headers.x-thundra-span-id.bytes', null);
                 const spanId = spanIdBytes ? Buffer.from(spanIdBytes, 'base64').toString() : null;
-                sc = new ThundraSpanContext( {transactionId, spanId, traceId} );
+                sc = new ThundraSpanContext({ transactionId, spanId, traceId });
                 if (sc) {
                     if (!spanContext) {
                         spanContext = sc;
@@ -750,4 +783,5 @@ export enum LambdaEventType {
     Netlify,
     SES,
     AmazonMQ,
+    FunctionURL,
 }

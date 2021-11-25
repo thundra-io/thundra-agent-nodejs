@@ -137,7 +137,7 @@ class HttpIntegration implements Integration {
 
                     const wrappedCallback = (res: any) => {
                         if (span) {
-                            HTTPUtils.fillOperationAndClassNameToSpan(span, res.headers);
+                            HTTPUtils.fillOperationAndClassNameToSpan(span, res.headers, host);
 
                             const statusCode = res.statusCode.toString();
                             if (!config.disableHttp5xxError && statusCode.startsWith('5')) {

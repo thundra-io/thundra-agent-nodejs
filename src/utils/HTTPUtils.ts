@@ -56,7 +56,8 @@ class HTTPUtils {
     static isValidUrl(host: string): boolean {
         if (host.indexOf('amazonaws.com') !== -1) {
             if (host.indexOf('.execute-api.') !== -1
-                || host.indexOf('.elb.') !== -1) {
+                || host.indexOf('.elb.') !== -1
+                || host.indexOf('.lambda-url.') !== -1) {
                 return true;
             }
 
@@ -110,9 +111,11 @@ class HTTPUtils {
     static fillOperationAndClassNameToSpan = (
         span: any,
         headers: any,
+        host: string,
     ) => {
         if (span && headers) {
-            if ('x-amzn-requestid' in headers) {
+            if ('x-amzn-requestid' in headers
+                && host.indexOf('.execute-api.') !== -1) {
                 span._setClassName(ClassNames.APIGATEWAY);
             }
 
