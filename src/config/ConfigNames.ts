@@ -80,6 +80,8 @@ class ConfigNames {
         'thundra.agent.lambda.trace.cloudwatchlog.request.enable';
     public static readonly THUNDRA_LAMBDA_AWS_STEPFUNCTIONS: string =
         'thundra.agent.lambda.aws.stepfunctions';
+        public static readonly THUNDRA_LAMBDA_AWS_APPSYNC: string =
+            'thundra.agent.lambda.aws.appsync';
 
     /////////////////////////////////////////////////////////////////////////////
 
