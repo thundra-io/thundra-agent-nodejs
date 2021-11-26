@@ -838,6 +838,10 @@ export const TESTCONTAINERS_HTTP_PATH_PATTERNS: any = {
     PATTERN4: /images\/\w*/,
 };
 
+export const GOOGLE_PUBSUB_HTTP_PATTERNS: any = {
+    PATTERN1: /google.pubsub.v1.\w*/,
+};
+
 export const MAX_HTTP_REQUEST_SIZE: number = 10 * 1024; // 10 KB
 export const MAX_HTTP_RESPONSE_SIZE: number = 10 * 1024; // 10 KB
 

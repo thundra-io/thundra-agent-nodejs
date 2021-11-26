@@ -3,6 +3,7 @@ import ConfigProvider from '../config/ConfigProvider';
 import {
     THUNDRA_COLLECTOR_ENDPOINT_PATTERNS,
     TESTCONTAINERS_HTTP_PATH_PATTERNS,
+    GOOGLE_PUBSUB_HTTP_PATTERNS,
     ClassNames,
     TraceHeaderTags,
     TriggerHeaderTags,
@@ -63,7 +64,8 @@ class HTTPUtils {
             return false;
         }
 
-        if (host.indexOf('pubsub.googleapis.com') !== -1) {
+        if (host.indexOf('pubsub.googleapis.com') !== -1 ||
+            GOOGLE_PUBSUB_HTTP_PATTERNS.PATTERN1.test(host)) {
             return false;
         }
 
