@@ -150,8 +150,8 @@ class GoogleCloudPubSubIntegration implements Integration {
                         span.close();
                     }
 
-                    if (reachedToCallOriginalFunc || error instanceof ThundraChaosError) {
-                        throw error;
+                    if (orginalCallback && (reachedToCallOriginalFunc || error instanceof ThundraChaosError)) {
+                        return orginalCallback(error);
                     } else {
                         return original.apply(this, [config, orginalCallback]);
                     }

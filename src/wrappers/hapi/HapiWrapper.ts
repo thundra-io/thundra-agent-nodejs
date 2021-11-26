@@ -34,6 +34,18 @@ function hapiServerWrapper(wrappedFunction: Function) {
 
     return function internalHapiServerWrapper() {
 
+        ThundraLogger.debug('<HapiWrapper> Initializing ...');
+
+        const {
+            reporter,
+            plugins,
+        } = WebWrapperUtils.initWrapper(HapiExecutor);
+
+        WrapperUtils.initAsyncContextManager();
+
+        _REPORTER = reporter;
+        _PLUGINS = plugins;
+
         ThundraLogger.debug('<HapiWrapper> Hapi server wrapped.');
 
         const server = wrappedFunction.apply(this, arguments);
@@ -140,19 +152,6 @@ export const init = () => {
 
     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
     if (!lambdaRuntime) {
-
-        ThundraLogger.debug('<HapiWrapper> Initializing ...');
-
-        const {
-            reporter,
-            plugins,
-        } = WebWrapperUtils.initWrapper(HapiExecutor);
-
-        WrapperUtils.initAsyncContextManager();
-
-        _REPORTER = reporter;
-        _PLUGINS = plugins;
-
         Object.keys(modulesWillBepatched).forEach((moduleName: any) => {
             ModuleUtils.instrument(
                 [moduleName], undefined,
