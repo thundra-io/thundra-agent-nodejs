@@ -147,6 +147,7 @@ class GoogleCloudPubSubIntegration implements Integration {
                 } catch (error) {
                     ThundraLogger.error('<GoogleCloudPubSubIntegration> Error occurred while tracing PubSub request:', error);
                     if (span) {
+                        span.setErrorTag(error);
                         span.close();
                     }
 

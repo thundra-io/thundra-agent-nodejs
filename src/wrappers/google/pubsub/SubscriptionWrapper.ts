@@ -65,12 +65,7 @@ function subscriberOnWrapper(wrappedFunction: any) {
                 } catch (err) {
                     ThundraLogger.debug('<GoogleSubscriptionWrapper> An error occured while handling message', err);
                     context.setError(err);
-                    if (beforeRequestCalled || err instanceof ThundraChaosError) {
-                        // Error is thrown by original callback, so re-throw it here
-                        throw err;
-                    } else {
-                        // In case of internal error in Thundra,
-                        // don't let the user call by-passed and call the original callback so
+                    if (!beforeRequestCalled) {
                         await orginalCallback(message);
                     }
                 } finally {
