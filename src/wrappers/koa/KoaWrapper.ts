@@ -1,6 +1,5 @@
 import {ClassNames, DomainNames} from '../../Constants';
 import WrapperUtils from '../WebWrapperUtils';
-import WebWrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import * as KoaExecutor from './KoaExecutor';
 import ThundraLogger from '../../ThundraLogger';
@@ -17,20 +16,27 @@ const ApplicationDomainName = DomainNames.API;
 
 let _REPORTER: Reporter;
 let _PLUGINS: any[];
+let initialized = false;
 
-export function koaMiddleWare(opts: any = {}) {
+const initWrapperContext = () => {
+    if (initialized) {
+        return;
+    }
 
-    ThundraLogger.debug('<KoaWrapper> koaMiddleWare running ...');
-
+    ThundraLogger.debug('<KoaWrapper> Initializing ...');
+    initialized = true;
     const {
         reporter,
         plugins,
-    } = WebWrapperUtils.initWrapper(KoaExecutor);
+    } = WrapperUtils.initWrapper(KoaExecutor);
 
     _REPORTER = reporter;
     _PLUGINS = plugins;
 
     WrapperUtils.initAsyncContextManager();
+};
+
+export function koaMiddleWare(opts: any = {}) {
 
     ThundraLogger.debug('<KoaWrapper> Creating Thundra middleware ...');
 
@@ -89,6 +95,28 @@ function wrapUse(originalUse: Function) {
     };
 }
 
+// export function init() {
+//     const isKoaDisable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE);
+//     ThundraLogger.debug('<KoaWrapper> isKoaDisable ...', isKoaDisable);
+
+//     if (isKoaDisable) {
+//         ThundraLogger.debug('<KoaWrapper> Koa integration disabled. Skipping initializing ...');
+//         return;
+//     }
+
+//     ThundraLogger.debug('<KoaWrapper> Initializing ...');
+//     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
+//     if (!lambdaRuntime) {
+//         ModuleUtils.patchModule(
+//             'koa/lib/application.js',
+//             'use',
+//             wrapUse,
+//             (Koa: any) => Koa.prototype);
+//     } else {
+//         ThundraLogger.debug('<KoaWrapper> Skipping initializing due to running in lambda runtime ...');
+//     }
+// }
+
 export function init() {
     const isKoaDisable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE);
     ThundraLogger.debug('<KoaWrapper> isKoaDisable ...', isKoaDisable);
@@ -103,6 +131,8 @@ export function init() {
         ModuleUtils.instrument(
             ['koa/lib/application.js'], undefined,
             (lib: any, cfg: any) => {
+
+                initWrapperContext();
 
                 ModuleUtils.patchModule(
                     'koa/lib/application.js',

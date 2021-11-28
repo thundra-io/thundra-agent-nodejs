@@ -13,7 +13,6 @@ import WrapperUtils from '../WebWrapperUtils';
 import Utils from '../../utils/Utils';
 
 import * as HapiExecutor from './HapiExecutor';
-import WebWrapperUtils from '../WebWrapperUtils';
 
 const ApplicationClassName = ClassNames.HAPI;
 const ApplicationDomainName = DomainNames.API;
@@ -25,6 +24,26 @@ const modulesWillBepatched: any = {
 
 let _REPORTER: Reporter;
 let _PLUGINS: any[];
+let initialized = false;
+
+const initWrapperContext = () => {
+    if (initialized) {
+        return;
+    }
+
+    ThundraLogger.debug('<HapiWrapper> Initializing ...');
+
+    initialized = true;
+    const {
+        reporter,
+        plugins,
+    } = WrapperUtils.initWrapper(HapiExecutor);
+
+    _REPORTER = reporter;
+    _PLUGINS = plugins;
+
+    WrapperUtils.initAsyncContextManager();
+};
 
 /**
  * Handle Hapi server creation process
@@ -33,18 +52,6 @@ let _PLUGINS: any[];
 function hapiServerWrapper(wrappedFunction: Function) {
 
     return function internalHapiServerWrapper() {
-
-        ThundraLogger.debug('<HapiWrapper> Initializing ...');
-
-        const {
-            reporter,
-            plugins,
-        } = WebWrapperUtils.initWrapper(HapiExecutor);
-
-        WrapperUtils.initAsyncContextManager();
-
-        _REPORTER = reporter;
-        _PLUGINS = plugins;
 
         ThundraLogger.debug('<HapiWrapper> Hapi server wrapped.');
 
@@ -156,6 +163,8 @@ export const init = () => {
             ModuleUtils.instrument(
                 [moduleName], undefined,
                 (lib: any, cfg: any) => {
+
+                    initWrapperContext();
 
                     let moduleWillBeInitilized = false;
                     modulesWillBepatched[moduleName].forEach((methodName: any) => {
