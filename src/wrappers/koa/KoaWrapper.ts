@@ -95,28 +95,6 @@ function wrapUse(originalUse: Function) {
     };
 }
 
-// export function init() {
-//     const isKoaDisable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE);
-//     ThundraLogger.debug('<KoaWrapper> isKoaDisable ...', isKoaDisable);
-
-//     if (isKoaDisable) {
-//         ThundraLogger.debug('<KoaWrapper> Koa integration disabled. Skipping initializing ...');
-//         return;
-//     }
-
-//     ThundraLogger.debug('<KoaWrapper> Initializing ...');
-//     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
-//     if (!lambdaRuntime) {
-//         ModuleUtils.patchModule(
-//             'koa/lib/application.js',
-//             'use',
-//             wrapUse,
-//             (Koa: any) => Koa.prototype);
-//     } else {
-//         ThundraLogger.debug('<KoaWrapper> Skipping initializing due to running in lambda runtime ...');
-//     }
-// }
-
 export function init() {
     const isKoaDisable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE);
     ThundraLogger.debug('<KoaWrapper> isKoaDisable ...', isKoaDisable);
