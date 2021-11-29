@@ -6,7 +6,7 @@ import Utils from '../../utils/Utils';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import {
     DomainNames, ClassNames, LAMBDA_FUNCTION_PLATFORM, THUNDRA_TRACE_KEY,
-    AwsTags, AwsLambdaWrapperTags, TriggerHeaderTags, HttpTags
+    AwsTags, AwsLambdaWrapperTags, TriggerHeaderTags, HttpTags,
 } from '../../Constants';
 import ThundraTracer from '../../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
@@ -262,7 +262,7 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
 }
 
 function extractSpanContext(tracer: ThundraTracer, lambdaEventType: LambdaEventType,
-    originalEvent: any, originalContext: any): opentracing.SpanContext {
+                            originalEvent: any, originalContext: any): opentracing.SpanContext {
     if (lambdaEventType === LambdaEventType.Lambda) {
         return tracer.extract(opentracing.FORMAT_TEXT_MAP, originalContext.clientContext.custom);
     } else if (lambdaEventType === LambdaEventType.APIGatewayProxy && originalEvent.headers) {
@@ -291,7 +291,8 @@ function processAPIGWResponse(response: any, originalEvent: any): void {
 }
 
 function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, execContext: ExecutionContext,
-    lambdaEventType: LambdaEventType, originalEvent: any, originalContext: any, config: TraceConfig): string {
+                           lambdaEventType: LambdaEventType, originalEvent: any, originalContext: any,
+                           config: TraceConfig): string {
     try {
         LambdaEventUtils.extractTraceLinkFromEvent(originalEvent);
         if (lambdaEventType === LambdaEventType.Kinesis) {

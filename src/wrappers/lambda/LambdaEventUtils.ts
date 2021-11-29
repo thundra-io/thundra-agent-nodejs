@@ -452,7 +452,7 @@ class LambdaEventUtils {
         const className = ClassNames.HTTP;
 
         const host = get(originalEvent, 'requestContext.domainName', '');
-        const path = get(originalEvent, 'rawPath', '/')
+        const path = get(originalEvent, 'rawPath', '/');
         const operationName = host + Utils.getNormalizedPath(path, config.httpPathDepth);
 
         const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
