@@ -222,7 +222,6 @@ class LambdaHandlerWrapper {
     }
 
     private onFinish(error: any, result: any): void {
-        this.finishDebuggerProxyIfAvailable();
         if (error && this.reject) {
             ThundraLogger.debug('<LambdaHandlerWrapper> Rejecting returned promise with error:', error);
             this.reject(error);
@@ -479,7 +478,7 @@ class LambdaHandlerWrapper {
         );
     }
 
-    private async executeAfterInvocationAndReport() {
+    private async executeAfterInvocationAndReport(disableTrim: boolean = false) {
         ThundraLogger.debug('<LambdaHandlerWrapper> Execute after invocation and report');
 
         if (this.config.disableMonitoring) {
@@ -495,16 +494,18 @@ class LambdaHandlerWrapper {
         ThundraLogger.debug('<LambdaHandlerWrapper> Sending reports');
 
         if (!execContext.reportingDisabled) {
-            await this.reporter.sendReports(execContext.reports);
+            await this.reporter.sendReports(execContext.reports, disableTrim);
         } else {
             ThundraLogger.debug('<LambdaHandlerWrapper> Skipped reporting as reporting is disabled');
         }
     }
 
-    private async report(error: any, result: any, callback: any) {
+    private async report(error: any, result: any, callback: any, timeout: boolean = false) {
         if (!this.reported) {
             ThundraLogger.debug('<LambdaHandlerWrapper> Reporting with error:', error, 'and result:', result);
             try {
+                this.reported = true;
+
                 const execContext = ExecutionContextManager.get();
                 execContext.response = result;
                 execContext.error = error;
@@ -514,11 +515,10 @@ class LambdaHandlerWrapper {
                     execContext.error = new HttpError('Lambda returned with error response.');
                 }
 
-                this.reported = true;
                 this.destroyTimeoutHandler();
 
                 try {
-                    await this.executeAfterInvocationAndReport();
+                    await this.executeAfterInvocationAndReport(timeout);
                 } catch (e) {
                     ThundraLogger.debug('<LambdaHandlerWrapper> Failed to report:', e);
                 }
@@ -527,10 +527,16 @@ class LambdaHandlerWrapper {
                     callback();
                 }
             } finally {
-                this.onFinish(error, result);
+                this.finishDebuggerProxyIfAvailable();
+                if (!timeout) {
+                    this.onFinish(error, result);
+                }
             }
         } else {
             ThundraLogger.debug('<LambdaHandlerWrapper> Skipped reporting as it is already reported');
+            if (typeof callback === 'function') {
+                callback();
+            }
         }
     }
 
@@ -597,7 +603,7 @@ class LambdaHandlerWrapper {
                 }
             }
             ThundraLogger.debug('<LambdaHandlerWrapper> Reporting timeout error');
-            this.report(new TimeoutError('Lambda is timed out.'), null, null);
+            this.report(new TimeoutError('Lambda is timed out.'), null, null, true);
         }, endTime);
     }
 

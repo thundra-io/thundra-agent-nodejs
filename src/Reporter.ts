@@ -9,6 +9,7 @@ import {
     SPAN_TAGS_TO_TRIM_1,
     SPAN_TAGS_TO_TRIM_2,
     REPORTER_HTTP_TIMEOUT,
+    REPORTER_DATA_SIZE_LIMIT,
 } from './Constants';
 import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
@@ -57,7 +58,13 @@ class Reporter {
                 new SpanTagTrimmer(SPAN_TAGS_TO_TRIM_2),
                 new NonInvocationTrimmer(),
             ];
-        this.maxReportSize = opt.maxReportSize || ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_MAX_SIZE);
+        this.maxReportSize = opt.maxReportSize || ConfigProvider.get<number>(ConfigNames.THUNDRA_REPORT_SIZE_MAX);
+        if (this.maxReportSize > REPORTER_DATA_SIZE_LIMIT) {
+            this.maxReportSize = REPORTER_DATA_SIZE_LIMIT;
+            ThundraLogger.info(
+                `<Reporter> Max report size cannot be bigger than ${REPORTER_DATA_SIZE_LIMIT} ` +
+                         `but it is set to ${this.maxReportSize}. So limiting to ${REPORTER_DATA_SIZE_LIMIT}.`);
+        }
     }
 
     private static getCollectorURL(): string {
@@ -73,10 +80,11 @@ class Reporter {
     /**
      * Reports given data
      * @param reports data to be reported
+     * @param disableTrim flag to disable trimming
      * @return {Promise} the promise to track the result of reporting
      */
-    sendReports(reports: any[]): Promise<void> {
-        ThundraLogger.debug('<Reporter> Sending reports ... ');
+    sendReports(reports: any[], disableTrim: boolean = false): Promise<void> {
+        ThundraLogger.debug('<Reporter> Sending reports ...');
         let compositeReport: any;
         try {
             compositeReport = this.getCompositeReport(reports);
@@ -86,7 +94,7 @@ class Reporter {
 
         return new Promise<void>((resolve, reject) => {
             try {
-                const reportJson: string = this.serializeReport(compositeReport);
+                const reportJson: string = this.serializeReport(compositeReport, disableTrim);
                 this.doReport(reportJson)
                     .then((res: any) => {
                         ThundraLogger.debug('<Reporter> Sent reports successfully');
@@ -174,7 +182,6 @@ class Reporter {
     }
 
     private stripCommonFields(monitoringData: any) {
-
         if (monitoringData instanceof BaseMonitoringData) {
             monitoringData.agentVersion = undefined;
             monitoringData.dataModelVersion = undefined;
@@ -293,9 +300,13 @@ class Reporter {
         });
     }
 
-    private serializeReport(batch: any): string {
+    private serializeReport(batch: any, disableTrim: boolean): string {
+        // If trimming is disabled, trim if and only if data size is bigger than maximum allowed limit
+        const maxReportDataSize: number = disableTrim ? REPORTER_DATA_SIZE_LIMIT : this.maxReportSize;
+
         let json: string = Utils.serializeJSON(batch);
-        if (json.length < this.maxReportSize) {
+
+        if (json.length < maxReportDataSize) {
             return json;
         }
         for (const trimmer of this.trimmers) {
@@ -305,7 +316,7 @@ class Reporter {
                 continue;
             }
             json = Utils.serializeJSON(batch);
-            if (json.length < this.maxReportSize) {
+            if (json.length < maxReportDataSize) {
                 return json;
             }
         }

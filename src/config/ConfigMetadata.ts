@@ -74,7 +74,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
-    [ConfigNames.THUNDRA_REPORT_MAX_SIZE]: {
+    [ConfigNames.THUNDRA_REPORT_SIZE_MAX]: {
         type: 'number',
         defaultValue: 32 * 1024, // 32 KB
     },
@@ -119,6 +119,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     [ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE]: {
         type: 'boolean',
         defaultValue: false,
+    },
+    [ConfigNames.THUNDRA_TRACE_SPAN_COUNT_MAX]: {
+        type: 'number',
+        defaultValue: 200,
     },
     [ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG]: {
         type: 'string',
@@ -182,6 +186,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         defaultValue: false,
     },
     [ConfigNames.THUNDRA_LAMBDA_AWS_STEPFUNCTIONS]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
+    [ConfigNames.THUNDRA_LAMBDA_AWS_APPSYNC]: {
         type: 'boolean',
         defaultValue: false,
     },

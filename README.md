@@ -277,6 +277,12 @@ exports.handler = thundra((event, context) => {
 });
 ```
 
+### NOTES
+
+- In order to activate *AWS Step Functions* trace, `THUNDRA_AGENT_LAMBDA_AWS_STEPFUNCTIONS` environment variable should be set `true`.
+- In order to activate *AWS AppSync* trace, `THUNDRA_AGENT_LAMBDA_AWS_APPSYNC` environment variable should be set `true`.
+- For other integrations' configuration, please take a look environment variables table at the end.
+
 ## Frameworks
 
 The following frameworks are supported by Thundra:
@@ -428,6 +434,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_REPORT_REST_TRUSTALLCERTIFICATES                      |  bool  |              false              |
 | THUNDRA_AGENT_REPORT_REST_LOCAL                                     |  bool  |              false              |
 | THUNDRA_AGENT_REPORT_CLOUDWATCH_ENABLE                              |  bool  |              false              |
+| THUNDRA_AGENT_REPORT_SIZE_MAX                                       | number |         32 * 1024 (32 KB)       |
 | THUNDRA_AGENT_LAMBDA_HANDLER                                        | string |                -                |
 | THUNDRA_AGENT_LAMBDA_WARMUP_WARMUPAWARE                             |  bool  |              false              |
 | THUNDRA_AGENT_LAMBDA_TIMEOUT_MARGIN                                 | number |                -                |
@@ -438,6 +445,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE                  |  bool  |              false              |
 | THUNDRA_AGENT_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE             |  bool  |              false              |
 | THUNDRA_AGENT_LAMBDA_AWS_STEPFUNCTIONS                              |  bool  |              false              |
+| THUNDRA_AGENT_LAMBDA_AWS_APPSYNC                                    |  bool  |              false              |
 | THUNDRA_AGENT_APPLICATION_ID                                        | string |                -                |
 | THUNDRA_AGENT_APPLICATION_INSTANCEID                                | string |                -                |
 | THUNDRA_AGENT_APPLICATION_REGION                                    | string |                -                |
@@ -452,6 +460,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_TRACE_INSTRUMENT_TRACEABLECONFIG                      | string |                -                |
 | THUNDRA_AGENT_TRACE_INSTRUMENT_FILE_PREFIX                          | string |                -                |
 | THUNDRA_AGENT_TRACE_SPAN_LISTENERCONFIG                             | string |                -                |
+| THUNDRA_AGENT_TRACE_SPAN_COUNT_MAX                                  | number |               200               |
 | THUNDRA_AGENT_SAMPLER_TIMEAWARE_TIMEFREQ                            | number |             300000              |
 | THUNDRA_AGENT_SAMPLER_COUNTAWARE_COUNTFREQ                          | number |               100               |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_DISABLE                            |  bool  |              false              |

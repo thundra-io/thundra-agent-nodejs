@@ -51,8 +51,8 @@ class ConfigNames {
         'thundra.agent.report.rest.local';
     public static readonly THUNDRA_REPORT_CLOUDWATCH_ENABLE: string =
         'thundra.agent.report.cloudwatch.enable';
-    public static readonly THUNDRA_REPORT_MAX_SIZE: string =
-        'thundra.agent.report.maxsize';
+    public static readonly THUNDRA_REPORT_SIZE_MAX: string =
+        'thundra.agent.report.size.max';
 
     /////////////////////////////////////////////////////////////////////////////
 
@@ -80,6 +80,8 @@ class ConfigNames {
         'thundra.agent.lambda.trace.cloudwatchlog.request.enable';
     public static readonly THUNDRA_LAMBDA_AWS_STEPFUNCTIONS: string =
         'thundra.agent.lambda.aws.stepfunctions';
+        public static readonly THUNDRA_LAMBDA_AWS_APPSYNC: string =
+            'thundra.agent.lambda.aws.appsync';
 
     /////////////////////////////////////////////////////////////////////////////
 
@@ -97,6 +99,8 @@ class ConfigNames {
 
     /////////////////////////////////////////////////////////////////////////////
 
+    public static readonly THUNDRA_TRACE_SPAN_COUNT_MAX: string =
+        'thundra.agent.trace.span.count.max';
     public static readonly THUNDRA_TRACE_SPAN_LISTENERCONFIG: string =
         'thundra.agent.trace.span.listenerconfig';
 

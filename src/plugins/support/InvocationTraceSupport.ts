@@ -10,6 +10,9 @@ const flatten = require('lodash.flatten');
  */
 class InvocationTraceSupport {
 
+    private static readonly MAX_INCOMING_TRACE_LINK: number = 50;
+    private static readonly MAX_OUTGOING_TRACE_LINK: number = 50;
+
     private constructor() {
     }
 
@@ -79,23 +82,29 @@ class InvocationTraceSupport {
     /**
      * Adds the incoming trace link for the invocation
      * @param {string} traceLink the incoming trace link to be added
+     * @return {boolean} {@code true} if trace link has been added, {@code false} otherwise
      */
-    static addIncomingTraceLink(traceLink: string): void {
+    static addIncomingTraceLink(traceLink: string): boolean {
         const { incomingTraceLinks } = ExecutionContextManager.get();
-        if (incomingTraceLinks) {
+        if (incomingTraceLinks && incomingTraceLinks.length < this.MAX_INCOMING_TRACE_LINK) {
             incomingTraceLinks.push(traceLink);
+            return true;
         }
+        return false;
     }
 
     /**
      * Adds the incoming trace links for the invocation
      * @param {string[]} traceLinks the incoming trace links to be added
+     * @return {boolean} {@code true} if trace link has been added, {@code false} otherwise
      */
-    static addIncomingTraceLinks(traceLinks: string[]): void {
+    static addIncomingTraceLinks(traceLinks: string[]): boolean {
         const { incomingTraceLinks } = ExecutionContextManager.get();
-        if (incomingTraceLinks) {
+        if (incomingTraceLinks && incomingTraceLinks.length + traceLinks.length <= this.MAX_INCOMING_TRACE_LINK) {
             incomingTraceLinks.push(...traceLinks);
+            return true;
         }
+        return false;
     }
 
     /**
@@ -113,23 +122,29 @@ class InvocationTraceSupport {
     /**
      * Adds the outgoing trace link for the invocation
      * @param {string} traceLink the outgoing trace link to be added
+     * @return {boolean} {@code true} if trace link has been added, {@code false} otherwise
      */
-    static addOutgoingTraceLink(traceLink: string): void {
+    static addOutgoingTraceLink(traceLink: string): boolean {
         const { outgoingTraceLinks } = ExecutionContextManager.get();
-        if (outgoingTraceLinks) {
+        if (outgoingTraceLinks && outgoingTraceLinks.length < this.MAX_OUTGOING_TRACE_LINK) {
             outgoingTraceLinks.push(traceLink);
+            return true;
         }
+        return false;
     }
 
     /**
      * Adds the outgoing trace links for the invocation
      * @param {string[]} traceLinks the outgoing trace links to be added
+     * @return {boolean} {@code true} if trace link has been added, {@code false} otherwise
      */
-    static addOutgoingTraceLinks(traceLinks: string[]): void {
+    static addOutgoingTraceLinks(traceLinks: string[]): boolean {
         const { outgoingTraceLinks } = ExecutionContextManager.get();
-        if (outgoingTraceLinks) {
+        if (outgoingTraceLinks && outgoingTraceLinks.length + traceLinks.length <= this.MAX_OUTGOING_TRACE_LINK) {
             outgoingTraceLinks.push(...traceLinks);
+            return true;
         }
+        return false;
     }
 
     /**
@@ -145,9 +160,17 @@ class InvocationTraceSupport {
 
         try {
             const spans = tracer.getSpanList();
+            let traceLinkCount: number = 0;
             const traceLinks = flatten(
-                spans.filter((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS))
-                    .map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
+                spans.
+                    filter((span: ThundraSpan) => {
+                        const tLinks: string[] = span.getTag(SpanTags.TRACE_LINKS);
+                        if (tLinks) {
+                            traceLinkCount += tLinks.length;
+                        }
+                        return tLinks && traceLinkCount <= this.MAX_OUTGOING_TRACE_LINK;
+                    }).
+                    map((span: ThundraSpan) => span.getTag(SpanTags.TRACE_LINKS)),
             );
             if (outgoingTraceLinks) {
                 traceLinks.push(...outgoingTraceLinks);

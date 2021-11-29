@@ -6,7 +6,8 @@ import Utils from '../../utils/Utils';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import {
     DomainNames, ClassNames, LAMBDA_FUNCTION_PLATFORM, THUNDRA_TRACE_KEY,
-    AwsTags, AwsLambdaWrapperTags, TriggerHeaderTags, HttpTags } from '../../Constants';
+    AwsTags, AwsLambdaWrapperTags, TriggerHeaderTags, HttpTags,
+} from '../../Constants';
 import ThundraTracer from '../../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
 import * as opentracing from 'opentracing';
@@ -72,7 +73,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     execContext.rootSpan.startTime = execContext.startTimestamp;
     execContext.triggerClassName =
         injectTriggerTags(execContext.rootSpan, pluginContext, execContext,
-                          lambdaEventType, originalEvent, originalContext);
+            lambdaEventType, originalEvent, originalContext, config);
 
     ThundraLogger.debug(
         '<LambdaExecutor> Injected trigger tags of transaction', execContext.transactionId,
@@ -248,6 +249,8 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
 
     // Inject step functions trace links
     injectStepFunctionInfo(originalEvent, response, execContext);
+    // Inject appsync trace id
+    injectAppsyncInfo(originalEvent, response, execContext);
 
     invocationData.finishTimestamp = finishTimestamp;
     invocationData.duration = finishTimestamp - startTimestamp;
@@ -290,7 +293,8 @@ function processAPIGWResponse(response: any, originalEvent: any): void {
 }
 
 function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, execContext: ExecutionContext,
-                           lambdaEventType: LambdaEventType, originalEvent: any, originalContext: any): string {
+                           lambdaEventType: LambdaEventType, originalEvent: any, originalContext: any,
+                           config: TraceConfig): string {
     try {
         LambdaEventUtils.extractTraceLinkFromEvent(originalEvent);
         if (lambdaEventType === LambdaEventType.Kinesis) {
@@ -311,6 +315,8 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, exec
             return LambdaEventUtils.injectTriggerTagsForCloudWatchLogs(span, originalEvent);
         } else if (lambdaEventType === LambdaEventType.CloudFront) {
             return LambdaEventUtils.injectTriggerTagsForCloudFront(span, originalEvent);
+        } else if (lambdaEventType === LambdaEventType.FunctionURL) {
+            return LambdaEventUtils.injectTriggerTagsForFunctionURL(span, originalEvent, config);
         } else if (lambdaEventType === LambdaEventType.APIGatewayProxy) {
             return LambdaEventUtils.injectTriggerTagsForAPIGatewayProxy(span, originalEvent);
         } else if (lambdaEventType === LambdaEventType.Lambda) {
@@ -330,6 +336,34 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, exec
         }
     } catch (error) {
         ThundraLogger.error('<LambdaExecutor> Cannot inject trigger tags:', error);
+    }
+}
+
+function injectAppsyncInfo(request: any, response: any, execContext: ExecutionContext): any {
+    try {
+        const isAppsync = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_AWS_APPSYNC);
+        ThundraLogger.debug(
+            '<LambdaExecutor> Checked whether AWS Appsync support is enabled for transaction',
+            execContext.transactionId, ':', isAppsync);
+        if (isAppsync) {
+            const traceId = execContext.traceId;
+            if (typeof response === 'object' && response !== null) {
+                const thundraTraceKey = {
+                    trace_id: traceId,
+                };
+                ThundraLogger.debug(
+                    '<LambdaExecutor> Injected Thundra AppSync trace key for transaction',
+                    execContext.transactionId, ':', thundraTraceKey);
+                response[THUNDRA_TRACE_KEY] = thundraTraceKey;
+            } else {
+                ThundraLogger.debug(
+                    '<LambdaExecutor> Since response is not object, \
+                    skipped Thundra AppSync trace key injection for transaction',
+                    execContext.transactionId);
+            }
+        }
+    } catch (error) {
+        ThundraLogger.error('<LambdaExecutor> Failed to inject appsync trace id:', error);
     }
 }
 
