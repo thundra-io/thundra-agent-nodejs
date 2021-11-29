@@ -74,7 +74,7 @@ describe('Google subscription Wrapper Tests', () => {
             expect(spanList.length).toBe(1);
 
             expect(rootSpan.operationName).toBe('incomingResourceName');
-            expect(rootSpan.className).toBe(ClassNames.NODE_HANDLER);
+            expect(rootSpan.className).toBe(ClassNames.GOOGLE_PUBSUB_NODE_HANDLER);
             expect(rootSpan.domainName).toBe(DomainNames.MESSAGING);
             expect(rootSpan.startTime).toBeTruthy();
             expect(rootSpan.finishTime).toBeTruthy();

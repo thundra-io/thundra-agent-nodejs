@@ -12,9 +12,8 @@ import LambdaUtils from '../../../utils/LambdaUtils';
 
 import * as SubscriptionExecutor from './SubscriptionExecutor';
 import WrapperUtils from '../../WebWrapperUtils';
-import ThundraChaosError from '../../../error/ThundraChaosError';
 
-const ApplicationClassName = ClassNames.NODE_HANDLER;
+const ApplicationClassName = ClassNames.GOOGLE_PUBSUB_NODE_HANDLER;
 const ApplicationDomainName = DomainNames.MESSAGING;
 
 let _REPORTER: Reporter;

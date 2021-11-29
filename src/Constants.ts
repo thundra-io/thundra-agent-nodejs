@@ -159,7 +159,7 @@ export const ClassNames = {
     KOA: 'Koa',
     HAPI: 'Hapi',
     GOOGLE_PUBSUB: 'Google-PubSub',
-    NODE_HANDLER: 'Node-Handler',
+    GOOGLE_PUBSUB_NODE_HANDLER: 'Google-PubSub-Node-Handler',
     RABBITMQ: 'RabbitMQ',
 };
 
