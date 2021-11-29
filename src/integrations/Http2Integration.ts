@@ -208,7 +208,7 @@ class Http2Integration implements Integration {
                                     error);
                             }
 
-                            HTTPUtils.fillOperationAndClassNameToSpan(span, responseHeaders);
+                            HTTPUtils.fillOperationAndClassNameToSpan(span, responseHeaders, host);
 
                             const statusCode = responseHeaders[':status'] || 200;
                             if (!config.disableHttp5xxError && `${statusCode}`.startsWith('5')) {
