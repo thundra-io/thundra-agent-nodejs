@@ -249,6 +249,8 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
 
     // Inject step functions trace links
     injectStepFunctionInfo(originalEvent, response, execContext);
+    // Inject appsync trace id
+    injectAppsyncInfo(originalEvent, response, execContext);
 
     invocationData.finishTimestamp = finishTimestamp;
     invocationData.duration = finishTimestamp - startTimestamp;
@@ -334,6 +336,34 @@ function injectTriggerTags(span: ThundraSpan, pluginContext: PluginContext, exec
         }
     } catch (error) {
         ThundraLogger.error('<LambdaExecutor> Cannot inject trigger tags:', error);
+    }
+}
+
+function injectAppsyncInfo(request: any, response: any, execContext: ExecutionContext): any {
+    try {
+        const isAppsync = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_AWS_APPSYNC);
+        ThundraLogger.debug(
+            '<LambdaExecutor> Checked whether AWS Appsync support is enabled for transaction',
+            execContext.transactionId, ':', isAppsync);
+        if (isAppsync) {
+            const traceId = execContext.traceId;
+            if (typeof response === 'object' && response !== null) {
+                const thundraTraceKey = {
+                    trace_id: traceId,
+                };
+                ThundraLogger.debug(
+                    '<LambdaExecutor> Injected Thundra AppSync trace key for transaction',
+                    execContext.transactionId, ':', thundraTraceKey);
+                response[THUNDRA_TRACE_KEY] = thundraTraceKey;
+            } else {
+                ThundraLogger.debug(
+                    '<LambdaExecutor> Since response is not object, \
+                    skipped Thundra AppSync trace key injection for transaction',
+                    execContext.transactionId);
+            }
+        }
+    } catch (error) {
+        ThundraLogger.error('<LambdaExecutor> Failed to inject appsync trace id:', error);
     }
 }
 

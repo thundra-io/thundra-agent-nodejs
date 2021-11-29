@@ -172,6 +172,12 @@ exports.handler = thundra((event, context) => {
 });
 ```
 
+### NOTES
+
+- In order to activate *AWS Step Functions* trace, `THUNDRA_AGENT_LAMBDA_AWS_STEPFUNCTIONS` environment variable should be set `true`.
+- In order to activate *AWS AppSync* trace, `THUNDRA_AGENT_LAMBDA_AWS_APPSYNC` environment variable should be set `true`.
+- For other integrations' configuration, please take a look environment variables table at the end.
+
 ## Frameworks
 
 The following frameworks are supported by Thundra:
@@ -332,6 +338,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE                  |  bool  |              false              |
 | THUNDRA_AGENT_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE             |  bool  |              false              |
 | THUNDRA_AGENT_LAMBDA_AWS_STEPFUNCTIONS                              |  bool  |              false              |
+| THUNDRA_AGENT_LAMBDA_AWS_APPSYNC                                    |  bool  |              false              |
 | THUNDRA_AGENT_APPLICATION_ID                                        | string |                -                |
 | THUNDRA_AGENT_APPLICATION_INSTANCEID                                | string |                -                |
 | THUNDRA_AGENT_APPLICATION_REGION                                    | string |                -                |
