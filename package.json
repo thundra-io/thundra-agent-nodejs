@@ -10,7 +10,7 @@
     "start": "npm-run-all --parallel watch:server watch:build",
     "test-automatic-instrumentation": "node ./test/instrumentation/automated.instrumentation.js",
     "test": "npm run compile && npm run test-automatic-instrumentation && docker-compose up -d && jest --silent; docker-compose stop",
-    "test-ci": "npm run compile && npm run test-automatic-instrumentation && jest --silent --config jest.ci.config.json --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "test-ci": "npm run compile && npm run test-automatic-instrumentation && jest --silent --config jest.ci.config.js --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "tslint --project tsconfig.json -t stylish",
     "release-minor": "npm install; npm run build; release-it minor --ci --git.commit --git.push --git.tag --git.tagName='v${version}' --github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
     "release-minor-without-tag": "npm install; npm run build; release-it minor --ci --no-git.commit --no-git.push --no-git.tag --no-git.tagName='v${version}' --no-git.requireCleanWorkingDir --no-git.requireUpstream --no-github.release --npm.publish",
@@ -76,6 +76,7 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/runtime-corejs2": "^7.0.0",
     "@elastic/elasticsearch": "^6.2.4",
+    "@google-cloud/pubsub": "^2.18.2",
     "@hapi/hapi": "^20.1.5",
     "@types/aws-lambda": "^8.10.85",
     "@types/minimatch": "^3.0.3",
@@ -124,7 +125,7 @@
     "typescript": "^3.9.9"
   },
   "dependencies": {
-    "@thundra/instrumenter": "^1.3.4",
+    "@thundra/instrumenter": "^1.3.6",
     "@thundra/warmup": "1.0.0",
     "fast-copy": "^2.1.0",
     "isomorphic-git": "^1.9.2",

@@ -50,12 +50,14 @@ class TraceConfig extends BasePluginConfig {
     maskEventBridgeDetail: boolean;
     maskHttpBody: boolean;
     maskHttpResponseBody: boolean;
+    maskGooglePubSubMessage: boolean;
     sampler: Sampler<any>;
     runSamplerOnEachSpan: boolean;
     instrumentAWSOnLoad: boolean;
     tracer: ThundraTracer;
     hapiTraceDisabled: boolean;
     koaTraceDisabled: boolean;
+    googlePubSubTraceDisabled: boolean;
 
     constructor(options: any) {
         options = options ? options : {};
@@ -119,6 +121,9 @@ class TraceConfig extends BasePluginConfig {
         this.maskEventBridgeDetail = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_EVENTBRIDGE_DETAIL_MASK,
             options.maskEventBridgeDetail);
+        this.maskGooglePubSubMessage = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK,
+            options.maskGooglePubSubMessage);
 
         this.disableHttp4xxError = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_ON_4XX_DISABLE,
@@ -169,6 +174,9 @@ class TraceConfig extends BasePluginConfig {
         this.koaTraceDisabled = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE,
             options.koaTraceDisabled);
+        this.googlePubSubTraceDisabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_DISABLE,
+            options.googlePubSubTraceDisabled);
 
         for (const configName of ConfigProvider.names()) {
             if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG)) {

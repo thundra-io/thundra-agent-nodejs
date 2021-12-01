@@ -1,6 +1,5 @@
 import {ClassNames, DomainNames} from '../../Constants';
 import WrapperUtils from '../WebWrapperUtils';
-import WebWrapperUtils from '../WebWrapperUtils';
 import ConfigProvider from '../../config/ConfigProvider';
 import * as KoaExecutor from './KoaExecutor';
 import ThundraLogger from '../../ThundraLogger';
@@ -17,20 +16,27 @@ const ApplicationDomainName = DomainNames.API;
 
 let _REPORTER: Reporter;
 let _PLUGINS: any[];
+let initialized = false;
 
-export function koaMiddleWare(opts: any = {}) {
+const initWrapperContext = () => {
+    if (initialized) {
+        return;
+    }
 
-    ThundraLogger.debug('<KoaWrapper> koaMiddleWare running ...');
-
+    ThundraLogger.debug('<KoaWrapper> Initializing ...');
+    initialized = true;
     const {
         reporter,
         plugins,
-    } = WebWrapperUtils.initWrapper(KoaExecutor);
+    } = WrapperUtils.initWrapper(KoaExecutor);
 
     _REPORTER = reporter;
     _PLUGINS = plugins;
 
     WrapperUtils.initAsyncContextManager();
+};
+
+export function koaMiddleWare(opts: any = {}) {
 
     ThundraLogger.debug('<KoaWrapper> Creating Thundra middleware ...');
 
@@ -103,6 +109,8 @@ export function init() {
         ModuleUtils.instrument(
             ['koa/lib/application.js'], undefined,
             (lib: any, cfg: any) => {
+
+                initWrapperContext();
 
                 ModuleUtils.patchModule(
                     'koa/lib/application.js',

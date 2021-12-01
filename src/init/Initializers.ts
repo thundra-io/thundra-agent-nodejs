@@ -5,6 +5,7 @@
 import * as ExpressWrapper from '../wrappers/express/ExpressWrapper';
 import * as KoaWrapper from '../wrappers/koa/KoaWrapper';
 import * as HapiWrapper from '../wrappers/hapi/HapiWrapper';
+import * as SubscriptionWrapper from '../wrappers/google/pubsub/SubscriptionWrapper';
 
 export const INITIALIZERS: any = [
     {
@@ -18,5 +19,9 @@ export const INITIALIZERS: any = [
     {
         name: 'HapiWrapper',
         impl: HapiWrapper,
+    },
+    {
+        name: 'SubscriptionWrapper',
+        impl: SubscriptionWrapper,
     },
 ];

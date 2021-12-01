@@ -86,7 +86,7 @@ class Http2Integration implements Integration {
                     const fullURL = host + path;
                     const queryParams = requestUrl.search || '';
 
-                    if (!HTTPUtils.isValidUrl(host)) {
+                    if (!HTTPUtils.isValidUrl(fullURL)) {
                         ThundraLogger.debug(
                             `<HTTP2Integration> Skipped tracing request as target host is blacklisted: ${host}`);
                         return request.apply(this, [headers, options]);

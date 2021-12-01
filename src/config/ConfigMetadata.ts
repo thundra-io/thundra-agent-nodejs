@@ -253,6 +253,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE]: {
         type: 'boolean',
         defaultValue: false,
@@ -301,6 +305,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'string',
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_DISABLE]: {
         type: 'boolean',
         defaultValue: false,
     },

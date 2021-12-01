@@ -21,17 +21,29 @@ const METHODS = http.METHODS && http.METHODS.map((method: string) => {
     return method.toLowerCase();
 });
 
-export function expressMW(opts: any = {}) {
+let initialized = false;
 
+const initWrapperContext = () => {
+    if (initialized) {
+        return;
+    }
+
+    ThundraLogger.debug('<ExpressWrapper> Initializing ...');
+    initialized = true;
     const {
         reporter,
         plugins,
     } = WrapperUtils.initWrapper(ExpressExecutor);
 
-    WrapperUtils.initAsyncContextManager();
-
     _REPORTER = reporter;
     _PLUGINS = plugins;
+
+    WrapperUtils.initAsyncContextManager();
+};
+
+export function expressMW(opts: any = {}) {
+
+    ThundraLogger.debug('<ExpressWrapper> Creating Thundra middleware ...');
 
     return (req: any, res: any, next: any) => ExecutionContextManager.runWithContext(
         () => {
@@ -209,6 +221,9 @@ export const init = () => {
         ModuleUtils.instrument(
             ['express'], undefined,
             (lib: any, cfg: any) => {
+
+                initWrapperContext();
+
                 ModuleUtils.patchModule(
                     'express',
                     'init',

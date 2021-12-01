@@ -15,6 +15,7 @@ import { AWSv3Integration } from './integrations/AWSv3Integration';
 import ESLegacyIntegration from './integrations/ESLegacyIntegration';
 import ESIntegration from './integrations/ESIntegration';
 import AMQPLIBIntegration from './integrations/AmqplibIntegration';
+import GoogleCloudPubSubIntegration from './integrations/GoogleCloudPubSubIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './listeners/LatencyInjectorSpanListener';
@@ -141,6 +142,8 @@ export const ClassNames = {
     EXPRESS: 'Express',
     KOA: 'Koa',
     HAPI: 'Hapi',
+    GOOGLE_PUBSUB: 'Google-PubSub',
+    GOOGLE_PUBSUB_NODE_HANDLER: 'Google-PubSub-Node-Handler',
     RABBITMQ: 'RabbitMQ',
 };
 
@@ -516,6 +519,16 @@ export const SpanTags = {
     RESOURCE_NAMES: 'resource.names',
 };
 
+export const GooglePubSubTags = {
+    PROJECT_ID: 'google.projectId',
+    SUBSCRIPTION: 'google.pubsub.subscription',
+    TOPIC_NAME: 'google.pubsub.topic.name',
+    MESSAGEIDS: 'google.pubsub.messageIds',
+    MESSAGES: 'google.pubsub.messages',
+    MESSAGE: 'google.pubsub.message',
+    ACK: 'google.pubsub.ack',
+};
+
 export const ErrorTags = {
     ERROR: 'error',
     ERROR_KIND: 'error.kind',
@@ -551,6 +564,7 @@ export const SpanTypes = {
     AWS_SES: 'AWS-SES',
     AWS_STEPFUNCTIONS: 'AWS-StepFunctions',
     RABBITMQ: 'RabbitMQ',
+    GOOGLE_PUBSUB: 'Google-PubSub',
 };
 
 export const INTEGRATIONS: any = {
@@ -574,6 +588,7 @@ export const INTEGRATIONS: any = {
         'amqplib/lib/channel.js',
     ],
     moduleVersion: '>=0.5'},
+    'googlecloud.pubsub': {class: GoogleCloudPubSubIntegration, moduleNames: ['@google-cloud/pubsub'], moduleVersion: '>=1.2'},
 };
 
 export const WRAPPERS: any = {
@@ -598,6 +613,15 @@ export const LISTENERS: any = {
     LatencyInjectorSpanListener,
     TagInjectorSpanListener,
     SecurityAwareSpanListener,
+};
+
+export const GooglePubSubOperationTypes: any = {
+    PULL: 'READ',
+    PUBLISH: 'WRITE',
+    CREATE_SUBSCRIPTION: 'WRITE',
+    DELETE_SUBSCRIPTION: 'DELETE',
+    CREATE_TOPIC: 'WRITE',
+    DELETE_TOPIC: 'DELETE',
 };
 
 export const RedisCommandTypes: any = {
@@ -796,6 +820,10 @@ export const TESTCONTAINERS_HTTP_PATH_PATTERNS: any = {
     PATTERN2: /exec\/\w*/,
     PATTERN3: /containers\/\w*/,
     PATTERN4: /images\/\w*/,
+};
+
+export const GOOGLE_PUBSUB_HTTP_PATTERNS: any = {
+    PATTERN1: /google.pubsub.v1.\w*/,
 };
 
 export const MAX_HTTP_REQUEST_SIZE: number = 10 * 1024; // 10 KB

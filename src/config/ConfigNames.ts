@@ -183,11 +183,17 @@ class ConfigNames {
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK: string =
         'thundra.agent.trace.integrations.aws.ses.mail.destination.mask';
 
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK: string =
+        'thundra.agent.trace.integrations.google.pubsub.message.mask';
+
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE: string =
         'thundra.agent.trace.integrations.hapi.disable';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_KOA_DISABLE: string =
         'thundra.agent.trace.integrations.koa.disable';
+
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_DISABLE: string =
+        'thundra.agent.trace.integrations.google.pubsub.disable';
 
     /////////////////////////////////////////////////////////////////////////////
 
