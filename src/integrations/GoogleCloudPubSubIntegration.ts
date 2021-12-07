@@ -7,6 +7,7 @@ import {
     ClassNames,
     TriggerHeaderTags,
     INTEGRATIONS,
+    GoogleCommonTags,
     GooglePubSubTags,
     GooglePubSubOperationTypes,
 } from '../Constants';
@@ -102,7 +103,7 @@ class GoogleCloudPubSubIntegration implements Integration {
                     const meesageContent = getMessageBody();
 
                     const tags = {
-                        [GooglePubSubTags.PROJECT_ID]: this.projectId,
+                        [GoogleCommonTags.PROJECT_ID]: this.projectId,
                         [GooglePubSubTags.TOPIC_NAME]: topic,
                         ...((meesageContent && !thundraConfig.maskGooglePubSubMessage) ? {
                             [GooglePubSubTags.MESSAGE]: getMessageBody(),
@@ -217,7 +218,7 @@ class GoogleCloudPubSubIntegration implements Integration {
                     });
 
                     const tags = {
-                        [GooglePubSubTags.PROJECT_ID]: getProjectId(),
+                        [GoogleCommonTags.PROJECT_ID]: getProjectId(),
                         [GooglePubSubTags.SUBSCRIPTION]: subscription,
                         [SpanTags.OPERATION_TYPE]: GooglePubSubOperationTypes.PULL,
                         [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLE_PUBSUB,

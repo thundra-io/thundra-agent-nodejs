@@ -10,6 +10,7 @@ import {
     DomainNames,
     GooglePubSubOperationTypes,
     GooglePubSubTags,
+    GoogleCommonTags,
 } from '../../dist/Constants';
 
 import Utils from '../../dist/utils/Utils';
@@ -125,7 +126,7 @@ describe('Google Cloud PubSub Integration', () => {
         expect(createTopicSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
         expect(createTopicSpan.domainName).toBe(DomainNames.MESSAGING);
         expect(createTopicSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.CREATE_TOPIC);
-        expect(createTopicSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
+        expect(createTopicSpan.tags[GoogleCommonTags.PROJECT_ID]).toBe(projectId);
         expect(createTopicSpan.tags[GooglePubSubTags.TOPIC_NAME]).toBe(consoleTopicName);
         expect(createTopicSpan.tags[GooglePubSubTags.MESSAGE]).not.toBeTruthy();
         expect(createTopicSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
@@ -137,7 +138,7 @@ describe('Google Cloud PubSub Integration', () => {
         expect(publishSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
         expect(publishSpan.domainName).toBe(DomainNames.MESSAGING);
         expect(publishSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.PUBLISH);
-        expect(publishSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
+        expect(publishSpan.tags[GoogleCommonTags.PROJECT_ID]).toBe(projectId);
         expect(publishSpan.tags[GooglePubSubTags.TOPIC_NAME]).toBe(consoleTopicName);
         expect(publishSpan.tags[GooglePubSubTags.MESSAGEIDS]).toBe(result);
         expect(publishSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
@@ -156,7 +157,7 @@ describe('Google Cloud PubSub Integration', () => {
             expect(publishSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
             expect(publishSpan.domainName).toBe(DomainNames.MESSAGING);
             expect(publishSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.PUBLISH);
-            expect(publishSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
+            expect(publishSpan.tags[GoogleCommonTags.PROJECT_ID]).toBe(projectId);
             expect(publishSpan.tags[GooglePubSubTags.TOPIC_NAME]).toBe(consoleTopicName);
             expect(publishSpan.tags[GooglePubSubTags.MESSAGE]).toBeTruthy();
             expect(publishSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
@@ -194,7 +195,7 @@ describe('Google Cloud PubSub Integration', () => {
         expect(pullSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
         expect(pullSpan.domainName).toBe(DomainNames.MESSAGING);
         expect(pullSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.PULL);
-        expect(pullSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
+        expect(pullSpan.tags[GoogleCommonTags.PROJECT_ID]).toBe(projectId);
         expect(pullSpan.tags[GooglePubSubTags.SUBSCRIPTION]).toBe(consoleSubscriptionName);
         expect(pullSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
         expect(pullSpan.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
@@ -227,7 +228,7 @@ describe('Google Cloud PubSub Integration', () => {
             expect(pullSpan.className).toBe(ClassNames.GOOGLE_PUBSUB);
             expect(pullSpan.domainName).toBe(DomainNames.MESSAGING);
             expect(pullSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GooglePubSubOperationTypes.PULL);
-            expect(pullSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
+            expect(pullSpan.tags[GoogleCommonTags.PROJECT_ID]).toBe(projectId);
             expect(pullSpan.tags[GooglePubSubTags.SUBSCRIPTION]).toBe(consoleSubscriptionName);
             expect(pullSpan.tags[GooglePubSubTags.MESSAGES]).not.toBeTruthy();
             expect(pullSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);

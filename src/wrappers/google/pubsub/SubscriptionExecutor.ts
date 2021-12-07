@@ -5,6 +5,7 @@ import {
     TriggerHeaderTags,
     SpanTags,
     SpanTypes,
+    GoogleCommonTags,
     GooglePubSubTags,
 } from '../../../Constants';
 import PluginContext from '../../../plugins/PluginContext';
@@ -76,7 +77,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 
     const maskMessage = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK);
     const tags = {
-      [GooglePubSubTags.PROJECT_ID]: subscription.pubsub ? subscription.pubsub.projectId : '',
+      [GoogleCommonTags.PROJECT_ID]: subscription.pubsub ? subscription.pubsub.projectId : '',
       [GooglePubSubTags.SUBSCRIPTION]: subscriptionName,
       ...( !maskMessage ? { [GooglePubSubTags.MESSAGE]:  GooglePubSubUtils.parseMessage(request) } : undefined ),
       [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLE_PUBSUB,

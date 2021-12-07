@@ -6,6 +6,7 @@ import {
     SpanTypes,
     DomainNames,
     GooglePubSubTags,
+    GoogleCommonTags,
 } from '../../../../dist/Constants';
 
 import * as SubscriptionWrapper from '../../../../dist/wrappers/google/pubsub/SubscriptionWrapper';
@@ -78,7 +79,7 @@ describe('Google subscription Wrapper Tests', () => {
             expect(rootSpan.domainName).toBe(DomainNames.MESSAGING);
             expect(rootSpan.startTime).toBeTruthy();
             expect(rootSpan.finishTime).toBeTruthy();
-            expect(rootSpan.tags[GooglePubSubTags.PROJECT_ID]).toBe(projectId);
+            expect(rootSpan.tags[GoogleCommonTags.PROJECT_ID]).toBe(projectId);
             expect(rootSpan.tags[GooglePubSubTags.SUBSCRIPTION]).toBe(subscriptionName);
             expect(rootSpan.tags[GooglePubSubTags.MESSAGES]).not.toBeTruthy();
             expect(rootSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_PUBSUB);
