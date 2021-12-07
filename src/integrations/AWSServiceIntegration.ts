@@ -38,6 +38,23 @@ export class AWSServiceIntegration {
         return messageAttributes;
     }
 
+    public static isSpanContextInjectableToHeader(request: any): boolean {
+        let result = true;
+        const service = AWSServiceIntegration.getServiceFromReq(request);
+        if (service) {
+            if (service.name !== AWSServiceIntegration.name
+                && service.isSpanContextInjectableToHeader) {
+                result = service.isSpanContextInjectableToHeader(request);
+            } else {
+                if (service.name === AWSS3Integration.name) {
+                    result = false;
+                }
+            }
+        }
+
+        return result;
+    }
+
     public static serviceFactory(serviceName: string): any {
         switch (serviceName) {
             case 'sqs':

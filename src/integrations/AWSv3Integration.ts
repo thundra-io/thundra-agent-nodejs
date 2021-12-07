@@ -96,7 +96,8 @@ export class AWSv3Integration implements Integration {
 
                             ThundraLogger.debug('<AWSv3Integration> Build middleware working...');
 
-                            if (args && args.request) {
+                            if (args && args.request
+                                && AWSServiceIntegration.isSpanContextInjectableToHeader(request)) {
                                 const httpRequest = args.request;
                                 const headers = httpRequest.headers ? httpRequest.headers : {};
                                 tracer.inject(activeSpan.spanContext, opentracing.FORMAT_TEXT_MAP, headers);

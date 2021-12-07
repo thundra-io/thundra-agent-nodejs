@@ -65,7 +65,8 @@ export class AWSIntegration implements Integration {
 
                     activeSpan = AWSServiceIntegration.doCreateSpan(tracer, request, config);
 
-                    if (request.httpRequest) {
+                    if (request.httpRequest
+                        && AWSServiceIntegration.isSpanContextInjectableToHeader(request)) {
                         const httpRequest = request.httpRequest;
                         const headers = httpRequest.headers ? httpRequest.headers : {};
                         tracer.inject(activeSpan.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
