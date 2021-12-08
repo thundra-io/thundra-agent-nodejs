@@ -45,10 +45,6 @@ export class AWSServiceIntegration {
             if (service.name !== AWSServiceIntegration.name
                 && service.isSpanContextInjectableToHeader) {
                 result = service.isSpanContextInjectableToHeader(request);
-            } else {
-                if (service.name === AWSS3Integration.name) {
-                    result = false;
-                }
             }
         }
 
@@ -1067,6 +1063,10 @@ export class AWSS3Integration {
 
     static processResponse(span: ThundraSpan, request: any, response: any, config: any): void {
         return;
+    }
+
+    static isSpanContextInjectableToHeader(request: any): boolean {
+        return false;
     }
 
 }
