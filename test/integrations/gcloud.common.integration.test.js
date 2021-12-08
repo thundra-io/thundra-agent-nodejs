@@ -3,17 +3,13 @@ import ThundraTracer from '../../dist/opentracing/Tracer';
 import ExecutionContextManager from '../../dist/context/ExecutionContextManager';
 import ExecutionContext from '../../dist/context/ExecutionContext';
 import {
-    ErrorTags,
     SpanTags,
     ClassNames,
     SpanTypes,
     DomainNames,
-    GoogleCommonOperationTypes,
     GoogleCommonTags,
     GoogleBigQueryTags,
 } from '../../dist/Constants';
-
-import Utils from '../../dist/utils/Utils';
 
 const { BigQuery } = require('@google-cloud/bigquery');
 
@@ -35,9 +31,6 @@ describe('Google Cloud Common Integration', () => {
     let integration;
 
     const mockReqeust = jest.fn((options, config, callback) => {
-        console.log('ab');
-        let currentInstance = mockReqeust.mock.instances[0];
-        console.log('ab');
         callback(null, {
             id: `${projectId}:${location}.jobId`,
             jobReference: {
@@ -67,11 +60,7 @@ describe('Google Cloud Common Integration', () => {
         });
         
         const options = { query };
-        try {
-            await bigquery.createQueryJob(options);
-        } catch (error) {
-            console.warn(error);
-        }
+        await bigquery.createQueryJob(options);
      
         const spanList = tracer.getRecorder().spanList;
 
@@ -80,8 +69,7 @@ describe('Google Cloud Common Integration', () => {
 
         expect(jobSpan.operationName).toBe(service);
         expect(jobSpan.className).toBe(ClassNames.GOOGLE_BIGQUERY);
-        expect(jobSpan.domainName).toBe(DomainNames.API);
-        expect(jobSpan.tags[SpanTags.OPERATION_TYPE]).toBe(GoogleCommonOperationTypes.QUERY);
+        expect(jobSpan.domainName).toBe(DomainNames.DB);
         expect(jobSpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_BIGQUERY);
         expect(jobSpan.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
         expect(jobSpan.tags[GoogleCommonTags.SERVICE]).toBe(service);
@@ -109,8 +97,7 @@ describe('Google Cloud Common Integration', () => {
 
         expect(querySpan.operationName).toBe(service);
         expect(querySpan.className).toBe(ClassNames.GOOGLE_BIGQUERY);
-        expect(querySpan.domainName).toBe(DomainNames.API);
-        expect(querySpan.tags[SpanTags.OPERATION_TYPE]).toBe(GoogleCommonOperationTypes.QUERY);
+        expect(querySpan.domainName).toBe(DomainNames.DB);
         expect(querySpan.tags[SpanTags.SPAN_TYPE]).toBe(SpanTypes.GOOGLE_BIGQUERY);
         expect(querySpan.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
         expect(querySpan.tags[GoogleCommonTags.SERVICE]).toBe(service);

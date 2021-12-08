@@ -631,7 +631,11 @@ export const LISTENERS: any = {
 };
 
 export const GoogleCommonOperationTypes: any = {
-    QUERY: 'READ',
+    GET : 'READ',
+    POST : 'WRITE',
+    PUT : 'WRITE',
+    PATCH : 'WRITE',
+    DELETE : 'DELETE',
 };
 
 export const GooglePubSubOperationTypes: any = {

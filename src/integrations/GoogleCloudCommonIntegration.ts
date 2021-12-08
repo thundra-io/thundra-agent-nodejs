@@ -102,13 +102,14 @@ class GoogleCloudCommonIntegration implements Integration {
                     const projectId = splitUri[3] || '';
                     const path = uri.split(`${projectId}/`)[1];
                     const operation = path.split('/')[0] || '';
+                    const method = options.method;
                     const queryStatement = GoogleCloudCommonIntegration.getQueryStatement(options);
 
                     ThundraLogger.debug(`<GoogleCloudCommonIntegration> Starting makeRequest span with name ${service}`);
 
                     span = tracer._startSpan(service, {
                         childOf: parentSpan,
-                        domainName: DomainNames.API,
+                        domainName: DomainNames.DB,
                         className: ClassNames.GOOGLE_BIGQUERY,
                         disableActiveStart: true,
                     });
@@ -117,8 +118,9 @@ class GoogleCloudCommonIntegration implements Integration {
                         [GoogleCommonTags.PROJECT_ID]: projectId,
                         [GoogleCommonTags.SERVICE]: service,
                         [GoogleBigQueryTags.OPERATION]: operation,
+                        ...(method && GoogleCommonOperationTypes[method]
+                            ? { [SpanTags.OPERATION_TYPE]: GoogleCommonOperationTypes[method] } : undefined),
                         ...(queryStatement ? { [GoogleBigQueryTags.QUERY]: queryStatement } : undefined),
-                        [SpanTags.OPERATION_TYPE]: GoogleCommonOperationTypes.QUERY,
                         [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLE_BIGQUERY,
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     };
@@ -142,10 +144,6 @@ class GoogleCloudCommonIntegration implements Integration {
                             if (responseSize <= responseMaxSize) {
                                 span.addTags({
                                     [GoogleBigQueryTags.RESPONSE]: res,
-                                });
-                            } else if (res.jobReference && res.jobReference.jobId) {
-                                span.addTags({
-                                    [GoogleBigQueryTags.JOB_ID]: res.jobReference.jobId,
                                 });
                             }
                         }
