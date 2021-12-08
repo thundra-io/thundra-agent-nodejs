@@ -38,6 +38,19 @@ export class AWSServiceIntegration {
         return messageAttributes;
     }
 
+    public static isSpanContextInjectableToHeader(request: any): boolean {
+        let result = true;
+        const service = AWSServiceIntegration.getServiceFromReq(request);
+        if (service) {
+            if (service.name !== AWSServiceIntegration.name
+                && service.isSpanContextInjectableToHeader) {
+                result = service.isSpanContextInjectableToHeader(request);
+            }
+        }
+
+        return result;
+    }
+
     public static serviceFactory(serviceName: string): any {
         switch (serviceName) {
             case 'sqs':
@@ -1050,6 +1063,10 @@ export class AWSS3Integration {
 
     static processResponse(span: ThundraSpan, request: any, response: any, config: any): void {
         return;
+    }
+
+    static isSpanContextInjectableToHeader(request: any): boolean {
+        return false;
     }
 
 }
