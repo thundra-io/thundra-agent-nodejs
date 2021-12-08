@@ -298,22 +298,23 @@ The following frameworks are supported by Thundra:
 
 Thundra provides out-of-the-box instrumentation (tracing) for following libraries.
 
-|Library             |Supported Version          |
-|--------------------|---------------------------|
-|logging             |Fully supported            |
-|aws-sdk             |`>=2.0.0`                  |
-|elasticsearch       |`>=10.5.0`                 |
-|http                |Fully supported            |
-|https               |Fully supported            |
-|http2               |Fully supported            |
-|ioredis             |`>=2.0.0`                  |
-|redis               |`>=2.6.0`                  |
-|mongodb             |`>=1.0.0`                  |
-|mysql               |`>=2.0.0`                  |
-|mysql2              |`>=1.5.0`                  |
-|pg                  |`>=6.0.0`                  |
-|amqp 0.9.1          |`>=0.5.0`                  |
-|@google-cloud/pubsub|`>=1.2`                    |
+|Library                 |Supported Version          |
+|------------------------|---------------------------|
+|logging                 |Fully supported            |
+|aws-sdk                 |`>=2.0.0`                  |
+|elasticsearch           |`>=10.5.0`                 |
+|http                    |Fully supported            |
+|https                   |Fully supported            |
+|http2                   |Fully supported            |
+|ioredis                 |`>=2.0.0`                  |
+|redis                   |`>=2.6.0`                  |
+|mongodb                 |`>=1.0.0`                  |
+|mysql                   |`>=2.0.0`                  |
+|mysql2                  |`>=1.5.0`                  |
+|pg                      |`>=6.0.0`                  |
+|amqp 0.9.1              |`>=0.5.0`                  |
+|@google-cloud/pubsub    |`>=1.2`                    |
+|@google-cloud/bigquery  |`>=5.0`                    |
 
 
 
@@ -489,6 +490,8 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SES_MAIL_MASK                  |  bool  |              false              |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK      |  bool  |              false              |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_RABBITMQ_MESSAGE_MASK              |  bool  |              false              |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK         |  bool  |              false              |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_SIZE_MAX  | number |         1 * 1024 (1 KB)         |
 | THUNDRA_AGENT_LOG_CONSOLE_DISABLE                                   |  bool  |              false              |
 | THUNDRA_AGENT_LOG_LOGLEVEL                                          | string |              TRACE              |
 | THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE                                |  bool  |              false              |
@@ -502,6 +505,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN                            | string |                -                |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_HAPI_DISABLE                       |  bool  |              false              |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_KOA_DISABLE                        |  bool  |              false              |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_DISABLE              |  bool  |              false              |
 
 
 
