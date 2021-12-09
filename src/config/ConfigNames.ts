@@ -195,6 +195,12 @@ class ConfigNames {
     public static readonly THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_DISABLE: string =
         'thundra.agent.trace.integrations.google.pubsub.disable';
 
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_QUERY_MASK: string =
+        'thundra.agent.trace.integrations.google.bigquery.query.mask';
+
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_MASK: string =
+        'thundra.agent.trace.integrations.google.bigquery.response.mask';
+
     public static readonly THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_SIZE_MAX: string =
         'thundra.agent.trace.integrations.google.bigquery.response.size.max';
 

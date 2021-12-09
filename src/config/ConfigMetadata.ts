@@ -257,6 +257,14 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_QUERY_MASK]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_MASK]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_SIZE_MAX]: {
         type: 'number',
         defaultValue: 1 * 1024, // 1 KB,

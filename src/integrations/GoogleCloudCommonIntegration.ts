@@ -114,13 +114,16 @@ class GoogleCloudCommonIntegration implements Integration {
                         disableActiveStart: true,
                     });
 
+                    const queryMask = ConfigProvider.get<boolean>(
+                        ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_QUERY_MASK);
+
                     const tags = {
                         [GoogleCommonTags.PROJECT_ID]: projectId,
                         [GoogleCommonTags.SERVICE]: service,
                         [GoogleBigQueryTags.OPERATION]: operation,
                         ...(method && GoogleCommonOperationTypes[method]
                             ? { [SpanTags.OPERATION_TYPE]: GoogleCommonOperationTypes[method] } : undefined),
-                        ...(queryStatement ? { [GoogleBigQueryTags.QUERY]: queryStatement } : undefined),
+                        ...(!queryMask && queryStatement ? { [GoogleBigQueryTags.QUERY]: queryStatement } : undefined),
                         [SpanTags.SPAN_TYPE]: SpanTypes.GOOGLE_BIGQUERY,
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     };
@@ -138,13 +141,17 @@ class GoogleCloudCommonIntegration implements Integration {
                         if (err) {
                             span.setErrorTag(err);
                         } else if (res) {
-                            const responseSize = sizeof(res);
-                            const responseMaxSize = ConfigProvider.get<number>(
-                                ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_SIZE_MAX);
-                            if (responseSize <= responseMaxSize) {
-                                span.addTags({
-                                    [GoogleBigQueryTags.RESPONSE]: res,
-                                });
+                            const responseMask = ConfigProvider.get<boolean>(
+                                ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_MASK);
+                            if (!responseMask) {
+                                const responseSize = sizeof(res);
+                                const responseMaxSize = ConfigProvider.get<number>(
+                                    ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_SIZE_MAX);
+                                if (responseSize <= responseMaxSize) {
+                                    span.addTags({
+                                        [GoogleBigQueryTags.RESPONSE]: res,
+                                    });
+                                }
                             }
                         }
 
@@ -166,8 +173,12 @@ class GoogleCloudCommonIntegration implements Integration {
                         span.close();
                     }
 
-                    if (originalCallback && (reachedToCallOriginalFunc || error instanceof ThundraChaosError)) {
-                        return originalCallback(error);
+                    if (reachedToCallOriginalFunc || error instanceof ThundraChaosError) {
+                        if (originalCallback) {
+                            return originalCallback(error);
+                        } else {
+                            throw error;
+                        }
                     } else {
                         return original.apply(this, [options, config, callback]);
                     }
