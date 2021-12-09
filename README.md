@@ -492,6 +492,8 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_RABBITMQ_MESSAGE_MASK              |  bool  |              false              |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK         |  bool  |              false              |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_SIZE_MAX  | number |         1 * 1024 (1 KB)         |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_QUERY_MASK         |  bool  |              false              |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_MASK      |  bool  |              false              |
 | THUNDRA_AGENT_LOG_CONSOLE_DISABLE                                   |  bool  |              false              |
 | THUNDRA_AGENT_LOG_LOGLEVEL                                          | string |              TRACE              |
 | THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE                                |  bool  |              false              |
