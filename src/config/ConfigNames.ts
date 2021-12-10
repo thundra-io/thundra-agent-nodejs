@@ -94,6 +94,11 @@ class ConfigNames {
 
     /////////////////////////////////////////////////////////////////////////////
 
+    public static readonly THUNDRA_TRACE_KEYS_MASKED: string =
+        'thundra.agent.trace.keys.masked';
+
+    /////////////////////////////////////////////////////////////////////////////
+
     public static readonly THUNDRA_TRACE_INSTRUMENT_DISABLE: string =
         'thundra.agent.trace.instrument.disable';
     public static readonly THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG: string =

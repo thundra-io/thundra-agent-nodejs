@@ -4,10 +4,10 @@ import IntegrationConfig from './IntegrationConfig';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
 import ThundraLogger from '../../ThundraLogger';
-import Integration from '../../integrations/Integration';
 import Instrumenter from '../../opentracing/instrument/Instrumenter';
 import Sampler from '../../samplers/Sampler';
 import ThundraTracer from '../../opentracing/Tracer';
+
 const get = require('lodash.get');
 
 /**
@@ -19,6 +19,7 @@ class TraceConfig extends BasePluginConfig {
     disableResponse: boolean;
     tracerConfig: any;
     traceableConfigs: TraceableConfig[];
+    keysMasked: RegExp[];
     maxSpanCount: number;
     maskRequest: (request: any) => any;
     maskResponse: (response: any) => any;
@@ -72,6 +73,7 @@ class TraceConfig extends BasePluginConfig {
         this.maskResponse = options.maskResponse;
         this.disabledIntegrations = [];
         this.tracerConfig = get(options, 'tracerConfig', {});
+        this.keysMasked = [];
         this.traceableConfigs = [];
 
         this.maxSpanCount = ConfigProvider.get<number>(
@@ -178,6 +180,31 @@ class TraceConfig extends BasePluginConfig {
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_DISABLE,
             options.googlePubSubTraceDisabled);
 
+        // Get configs for keys to be masked
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        let keysToBeMasked: string[] = [];
+        if (options.keysMasked && options.keysMasked.length) {
+            keysToBeMasked = options.keysMasked;
+        } else {
+            const keysMaskedConfig: string = ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_KEYS_MASKED);
+            if (keysMaskedConfig) {
+                keysToBeMasked = keysMaskedConfig.split(',').map((key) => key.trim());
+            }
+        }
+
+        if (keysToBeMasked && keysToBeMasked.length) {
+            for (const key of keysToBeMasked) {
+                try {
+                    this.keysMasked.push(new RegExp(key, 'i'));
+                } catch (e) {
+                    ThundraLogger.error('Invalid key expression to be masked', e);
+                }
+            }
+        }
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Get configs for traceables
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         for (const configName of ConfigProvider.names()) {
             if (configName.startsWith(ConfigNames.THUNDRA_TRACE_INSTRUMENT_TRACEABLECONFIG)) {
                 try {
@@ -195,7 +222,10 @@ class TraceConfig extends BasePluginConfig {
                 this.traceableConfigs.push(option);
             }
         }
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        // Get configs for integrations
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         const disabledIntegrations = ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_DISABLE);
         if (disabledIntegrations) {
             this.disabledIntegrations.push(... this.parseIntegrationsConfig(disabledIntegrations));
@@ -209,6 +239,7 @@ class TraceConfig extends BasePluginConfig {
                 }
             }
         }
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         if (options.tracer) {
             this.tracer = options.tracer;
