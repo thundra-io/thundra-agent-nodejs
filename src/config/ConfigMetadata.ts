@@ -116,6 +116,12 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_INVOCATION_REQUEST_TAGS]: {
+        type: 'string',
+    },
+    [ConfigNames.THUNDRA_INVOCATION_RESPONSE_TAGS]: {
+        type: 'string',
+    },
     [ConfigNames.THUNDRA_TRACE_INSTRUMENT_DISABLE]: {
         type: 'boolean',
         defaultValue: false,
