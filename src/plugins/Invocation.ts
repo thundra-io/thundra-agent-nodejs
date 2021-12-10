@@ -1,5 +1,6 @@
 import Utils from '../utils/Utils';
 import InvocationConfig from './config/InvocationConfig';
+import InvocationSupport from './support/InvocationSupport';
 import PluginContext from './PluginContext';
 import ExecutionContext from '../context/ExecutionContext';
 import ThundraLogger from '../ThundraLogger';
@@ -57,6 +58,18 @@ export default class Invocation implements Plugin {
         if (executor) {
             executor.startInvocation(this.pluginContext, execContext);
         }
+
+        // Tag invocation with configured request tags
+        const { request } = execContext;
+        const requestTags = get(this.options, 'requestTags');
+        if (request && requestTags) {
+            for (const requestTag of requestTags) {
+                const requestTagValue = get(request, requestTag, null);
+                if (requestTagValue != null) {
+                    InvocationSupport.setTag('request.' + requestTag, requestTagValue);
+                }
+            }
+        }
     }
 
     /**
@@ -67,15 +80,25 @@ export default class Invocation implements Plugin {
         ThundraLogger.debug('<Invocation> After invocation of transaction', execContext.transactionId);
 
         const { executor } = this.pluginContext;
+        const { invocationData, response } = execContext;
+        const responseTags = get(this.options, 'responseTags');
+        const { apiKey } = this.pluginContext;
+
+        // Tag invocation with configured response tags
+        if (response && responseTags) {
+            for (const responseTag of responseTags) {
+                const responseTagValue = get(response, responseTag, null);
+                if (responseTagValue != null) {
+                    InvocationSupport.setTag('response.' + responseTag, responseTagValue);
+                }
+            }
+        }
 
         if (executor) {
             executor.finishInvocation(this.pluginContext, execContext);
         }
 
-        const { invocationData } = execContext;
-        const { apiKey } = this.pluginContext;
         const invocation = Utils.generateReport(invocationData, apiKey);
-
         const sampler = get(this.options, 'sampler', { isSampled: () => true });
         const sampled = sampler.isSampled(invocation);
 

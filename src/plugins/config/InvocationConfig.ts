@@ -9,6 +9,8 @@ import ErrorAwareSampler from '../../samplers/ErrorAwareSampler';
  */
 class InvocationConfig extends BasePluginConfig {
     sampler: Sampler<any>;
+    requestTags: string[];
+    responseTags: string[];
 
     constructor(options: any) {
         super(true);
@@ -21,6 +23,24 @@ class InvocationConfig extends BasePluginConfig {
                 ConfigNames.THUNDRA_INVOCATION_SAMPLE_ONERROR, false);
             if (sampleOnError) {
                 this.sampler = new ErrorAwareSampler();
+            }
+        }
+
+        this.requestTags = options.requestTags;
+        if (!this.requestTags) {
+            const requestTagsConfig: string = ConfigProvider.get<string>(
+                ConfigNames.THUNDRA_INVOCATION_REQUEST_TAGS);
+            if (requestTagsConfig) {
+                this.requestTags = requestTagsConfig.split(',').map((tag) => tag.trim());
+            }
+        }
+
+        this.responseTags = options.responseTags;
+        if (!this.responseTags) {
+            const responseTagsConfig: string = ConfigProvider.get<string>(
+                ConfigNames.THUNDRA_INVOCATION_RESPONSE_TAGS);
+            if (responseTagsConfig) {
+                this.responseTags = responseTagsConfig.split(',').map((tag) => tag.trim());
             }
         }
     }

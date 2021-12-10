@@ -457,6 +457,8 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | THUNDRA_AGENT_APPLICATION_VERSION                                   | string |                -                |
 | THUNDRA_AGENT_APPLICATION_TAG                                       |  any   |                -                |
 | THUNDRA_AGENT_INVOCATION_SAMPLE_ONERROR                             |  bool  |              false              |
+| THUNDRA_AGENT_INVOCATION_REQUEST_TAGS                               | string |                -                |
+| THUNDRA_AGENT_INVOCATION_RESPONSE_TAGS                              | string |                -                |
 | THUNDRA_AGENT_TRACE_INSTRUMENT_DISABLE                              |  bool  |              false              |
 | THUNDRA_AGENT_TRACE_INSTRUMENT_TRACEABLECONFIG                      | string |                -                |
 | THUNDRA_AGENT_TRACE_INSTRUMENT_FILE_PREFIX                          | string |                -                |

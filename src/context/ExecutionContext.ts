@@ -29,8 +29,8 @@ export default class ExecutionContext {
     error: any;
     userError: any;
     platformData: any;
-    response: any;
     request: any;
+    response: any;
     incomingTraceLinks: any[];
     outgoingTraceLinks: any[];
     applicationResourceName: string;
@@ -58,8 +58,8 @@ export default class ExecutionContext {
         this.error = opts.error || null;
         this.userError = opts.userError || null;
         this.platformData = opts.platformData || {};
-        this.response = opts.response || {};
         this.request = opts.request || {};
+        this.response = opts.response || {};
         this.incomingTraceLinks = opts.incomingTraceLinks || [];
         this.outgoingTraceLinks = opts.outgoingTraceLinks || [];
         this.captureLog = opts.captureLog || true;
