@@ -59,6 +59,14 @@ class Utils {
     }
 
     /**
+     * Generates short id in UUID format.
+     * @return {string} generated short id
+     */
+    static generateShortUuid(): string {
+        return Utils.generateId().substring(0, 8);
+    }
+
+    /**
      * Generates monitoring data
      * @param data the monitoring data itself
      * @param {string} apiKey the Thundra API key

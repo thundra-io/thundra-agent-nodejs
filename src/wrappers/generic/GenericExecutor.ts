@@ -1,16 +1,8 @@
 import Utils from '../../utils/Utils';
-import {
-    ClassNames,
-    DomainNames,
-    GenericWrapperTags,
-    SpanTags,
-    SpanTypes,
-} from '../../Constants';
+import { GenericWrapperTags } from '../../Constants';
 import PluginContext from '../../plugins/PluginContext';
 import ExecutionContext from '../../context/ExecutionContext';
 import WrapperUtils from '../WebWrapperUtils';
-import InvocationSupport from '../../plugins/support/InvocationSupport';
-import GooglePubSubUtils from '../../utils/GooglePubSubUtils';
 
 const get = require('lodash.get');
 
@@ -48,17 +40,16 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     const contextInformation: any = execContext.getContextInformation();
     const traceId = Utils.generateId();
 
-    const rootSpan = tracer._startSpan(functionName, {
-        propagated: false,
-        rootTraceId: Utils.generateId(),
+    const rootSpan = tracer._startSpan(functionName || get(request, `__THUNDRA_ID__`), {
         domainName: contextInformation.applicationDomainName,
         className: contextInformation.applicationClassName,
+        rootTraceId: traceId,
     });
 
     rootSpan.isRootSpan = true;
 
     const tags = {
-        [GenericWrapperTags.Function_Name]: functionName,
+        [GenericWrapperTags.FUNCTION_NAME]: functionName,
     };
 
     rootSpan.addTags(tags);

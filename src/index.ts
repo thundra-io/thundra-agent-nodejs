@@ -166,7 +166,7 @@ if (global.__thundraMasterModule__) {
         listeners,
         init,
         Foresight,
-        GenericWrapper,
+        nodeWrapper: GenericWrapper.wrapper,
         updateConfig,
         createLogger,
         loadUserHandler,

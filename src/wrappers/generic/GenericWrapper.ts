@@ -5,13 +5,14 @@ import * as GenericExecutor from './GenericExecutor';
 import WrapperUtils from '../WebWrapperUtils';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import ExecutionContext from '../../context/ExecutionContext';
+import Utils from '../../utils/Utils';
 
 const ApplicationClassName = ClassNames.NODE_HANDLER;
 const ApplicationDomainName = DomainNames.NODE_GENERIC;
 
 let _REPORTER: Reporter;
 let _PLUGINS: any[];
-let initialized = false;
+let initialized: boolean = false;
 
 const initWrapperContext = () => {
     if (initialized) {
@@ -31,10 +32,11 @@ const initWrapperContext = () => {
     WrapperUtils.initAsyncContextManager();
 };
 
-const beforeRequest = async ({ name }: any) => {
+const beforeRequest = async ({ name, __THUNDRA_ID__ }: any) => {
     try {
         await WrapperUtils.beforeRequest({
             functionName: name,
+            __THUNDRA_ID__,
         },
         {},
         _PLUGINS);
@@ -43,16 +45,23 @@ const beforeRequest = async ({ name }: any) => {
     }
 };
 
-const afterRequest = async ({ name }: any) => {
+const afterRequest = async ({ name, __THUNDRA_ID__ }: any) => {
     try {
         await WrapperUtils.afterRequest({
             functionName: name,
+            __THUNDRA_ID__,
         },
         {},
         _PLUGINS,
         __PRIVATE__.getReporter());
     } catch (error) {
         ThundraLogger.debug('<GenericWrapper> An error occured while handling afterRequest', error);
+    }
+};
+
+const injectFunctionIdentifier = (func: any) => {
+    if (func && !func.__THUNDRA_ID__) {
+        func.__THUNDRA_ID__ = Utils.generateShortUuid();
     }
 };
 
@@ -64,7 +73,6 @@ const wrapperHandler = async (func: Function, ...args: any[]) => ExecutionContex
         const context: ExecutionContext = this;
         let beforeRequestCalled: boolean = false;
         let asyncFunction: boolean = false;
-        let originalFunction;
 
         try {
             ThundraLogger.debug('<GenericWrapper> Before handling request');
@@ -72,10 +80,10 @@ const wrapperHandler = async (func: Function, ...args: any[]) => ExecutionContex
             await beforeRequest(func);
             beforeRequestCalled = true;
 
-            originalFunction = func(...args);
-            if (originalFunction.then) {
+            const result = func(...args);
+            if (result && result.then && typeof result.then === 'function') {
                 asyncFunction = true;
-                originalFunction.then(async (...data: any[]) => {
+                result.then(async () => {
                     await afterRequest(func);
                 }).catch(async (error: Error) => {
                     context.setError(error);
@@ -85,7 +93,7 @@ const wrapperHandler = async (func: Function, ...args: any[]) => ExecutionContex
                 });
             }
 
-            return originalFunction;
+            return result;
         } catch (error) {
             ThundraLogger.debug('<GenericWrapper> An error occured while handling trigger', error);
             context.setError(error);
@@ -100,6 +108,7 @@ const wrapperHandler = async (func: Function, ...args: any[]) => ExecutionContex
 });
 
 export function wrapper<T extends (...args: any[]) => any>(func: T): T {
+    injectFunctionIdentifier(func);
     initWrapperContext();
     return (async (...args: any[]) => {
         return wrapperHandler(func, ...args);

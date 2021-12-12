@@ -154,7 +154,7 @@ export const ClassNames = {
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
 
 export const GenericWrapperTags = {
-    Function_Name: 'generic.wrapper.function.name',
+    FUNCTION_NAME: 'generic.wrapper.function.name',
 };
 
 export const AwsTags = {

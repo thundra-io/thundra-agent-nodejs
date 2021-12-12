@@ -76,7 +76,7 @@ describe('Generic Wrapper Tests', () => {
         expect(span.domainName).toBe(DomainNames.NODE_GENERIC);
         expect(span.startTime).toBeTruthy();
         expect(span.finishTime).toBeTruthy();
-        expect(span.tags[GenericWrapperTags.Function_Name]).toBe(syncFunction.name);
+        expect(span.tags[GenericWrapperTags.FUNCTION_NAME]).toBe(syncFunction.name);
     });
 
     test('should handle error on sync function wrapped with "wrapper"', async () => { 
@@ -96,7 +96,7 @@ describe('Generic Wrapper Tests', () => {
             expect(span.tags[ErrorTags.ERROR]).toBeTruthy();
             expect(span.tags[ErrorTags.ERROR_KIND]).toBe(testError.name);
             expect(span.tags[ErrorTags.ERROR_MESSAGE]).toBe(testError.message);
-            expect(span.tags[GenericWrapperTags.Function_Name]).toBe(syncErrorFunction.name);
+            expect(span.tags[GenericWrapperTags.FUNCTION_NAME]).toBe(syncErrorFunction.name);
         }
     });
 
@@ -115,7 +115,7 @@ describe('Generic Wrapper Tests', () => {
         expect(span.domainName).toBe(DomainNames.NODE_GENERIC);
         expect(span.startTime).toBeTruthy();
         expect(span.finishTime).toBeTruthy();
-        expect(span.tags[GenericWrapperTags.Function_Name]).toBe(asyncFunction.name);
+        expect(span.tags[GenericWrapperTags.FUNCTION_NAME]).toBe(asyncFunction.name);
     });
 
     test('should handle error on async function wrapped with "wrapper"', async () => { 
@@ -135,7 +135,7 @@ describe('Generic Wrapper Tests', () => {
             expect(span.tags[ErrorTags.ERROR]).toBeTruthy();
             expect(span.tags[ErrorTags.ERROR_KIND]).toBe(testError.name);
             expect(span.tags[ErrorTags.ERROR_MESSAGE]).toBe(testError.message);
-            expect(span.tags[GenericWrapperTags.Function_Name]).toBe(asyncErrorFunction.name);
+            expect(span.tags[GenericWrapperTags.FUNCTION_NAME]).toBe(asyncErrorFunction.name);
         }
     });
 });
