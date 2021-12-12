@@ -114,6 +114,7 @@ export const DomainNames = {
     CACHE: 'Cache',
     SCHEDULE: 'Schedule',
     CDN: 'CDN',
+    NODE_GENERIC: 'Node-Generic',
 };
 
 export const ClassNames = {
@@ -143,6 +144,7 @@ export const ClassNames = {
     EXPRESS: 'Express',
     KOA: 'Koa',
     HAPI: 'Hapi',
+    NODE_HANDLER: 'Node-Handler',
     GOOGLE_BIGQUERY: 'Google-BigQuery',
     GOOGLE_PUBSUB: 'Google-PubSub',
     GOOGLE_PUBSUB_NODE_HANDLER: 'Google-PubSub-Node-Handler',
@@ -150,6 +152,10 @@ export const ClassNames = {
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
+
+export const GenericWrapperTags = {
+    Function_Name: 'generic.wrapper.function.name',
+};
 
 export const AwsTags = {
     AWS_REGION: 'aws.region',
