@@ -40,7 +40,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     const contextInformation: any = execContext.getContextInformation();
     const traceId = Utils.generateId();
 
-    const rootSpan = tracer._startSpan(functionName || get(request, `__THUNDRA_ID__`), {
+    const rootSpan = tracer._startSpan(functionName || ('function-' + get(request, `__THUNDRA_ID__`)), {
         domainName: contextInformation.applicationDomainName,
         className: contextInformation.applicationClassName,
         rootTraceId: traceId,
