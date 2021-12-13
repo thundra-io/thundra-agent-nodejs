@@ -64,7 +64,7 @@ declare module '@thundra/core' {
    * Gets the tags
    * @return the tags
    */
-  export function getTags();
+  export function getTags(): any;
 
   /**
    * Removes the tag
@@ -105,6 +105,13 @@ declare module '@thundra/core' {
    * @return {string} the invocation URL on Thundra Console
    */
   export function getConsoleInvocationURL(): string;
+
+  /**
+   * Wraps the given function
+   * @param func the original function to be wrapped
+   * @return wrapped function
+   */
+  export function nodeWrapper<T extends (...args: any[]) => any>(func: T): T;
 
   /**
     * Thundra's logger implementation
