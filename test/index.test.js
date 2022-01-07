@@ -44,21 +44,24 @@ describe('thundra library', () => {
             const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
+            let returnedPromise;
+            let returnedPromiseResolved;
 
             beforeAll(() => {
                 ConfigProvider.init({ apiKey: 'apiKey' });
 
                 thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
-                return wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise = wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise.then(() => returnedPromiseResolved = true);
             });
 
             it('should invoke the function', () => {
                 expect(originalFunction).toBeCalled();
             });
 
-            it('should invoke the callback', () => {
-                expect(originalCallback).toBeCalled();
+            it('should resolve the returned promise', () => {
+                expect(returnedPromiseResolved).toBe(true);
             });
         });
 
@@ -66,9 +69,13 @@ describe('thundra library', () => {
             const originalEvent = { key: 'value' };
             const originalContext = createMockContext();
             const originalCallback = jest.fn();
-            const originalFunction = jest.fn((event, context, callback) => callback());
+            const originalFunction = jest.fn((event, context, callback) => {
+                return callback();
+            });
             let thundraWrapper;
             let wrappedFunction;
+            let returnedPromise;
+            let returnedPromiseResolved;
 
             beforeAll(() => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_APIKEY, 'apiKey');
@@ -76,15 +83,16 @@ describe('thundra library', () => {
 
                 thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
-                return wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise = wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise.then(() => returnedPromiseResolved = true);
             });
 
             it('should invoke the function', () => {
                 expect(originalFunction).toBeCalled();
             });
 
-            it('should invoke the callback', () => {
-                expect(originalCallback).toBeCalled();
+            it('should resolve the returned promise', () => {
+                expect(returnedPromiseResolved).toBe(true);
             });
         });
     });
@@ -142,20 +150,23 @@ describe('thundra library', () => {
             const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
+            let returnedPromise;
+            let returnedPromiseResolved;
 
             beforeAll(() => {
                 ConfigProvider.init({ apiKey: 'apiKey', disableTrace: true, disableMetric: true });
 
                 thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
-                return wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise = wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise.then(() => returnedPromiseResolved = true);
             });
             
             it('should invoke the function', () => {
                 expect(originalFunction).toBeCalled();
             });
-            it('should invoke the callback', () => {
-                expect(originalCallback).toBeCalled();
+            it('should resolve the returned promise', () => {
+                expect(returnedPromiseResolved).toBe(true);
             });
         });
 
@@ -166,6 +177,8 @@ describe('thundra library', () => {
             const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
+            let returnedPromise;
+            let returnedPromiseResolved;
 
             beforeAll(() => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_TRACE_DISABLE, true);
@@ -174,14 +187,15 @@ describe('thundra library', () => {
 
                 thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
-                return wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise = wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise.then(() => returnedPromiseResolved = true);
             });
 
             it('should invoke the function', () => {
                 expect(originalFunction).toBeCalled();
             });
-            it('should invoke the callback', () => {
-                expect(originalCallback).toBeCalled();
+            it('should resolve the returned promise', () => {
+                expect(returnedPromiseResolved).toBe(true);
             });
         });
 
@@ -192,6 +206,8 @@ describe('thundra library', () => {
             const originalFunction = jest.fn((event, context, callback) => callback());
             let thundraWrapper;
             let wrappedFunction;
+            let returnedPromise;
+            let returnedPromiseResolved;
             
             beforeAll(() => {
                 ConfigProvider.setAsEnvVar(ConfigNames.THUNDRA_TRACE_DISABLE, false);
@@ -200,14 +216,15 @@ describe('thundra library', () => {
 
                 thundraWrapper = Thundra();
                 wrappedFunction = thundraWrapper(originalFunction);
-                return wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise = wrappedFunction(originalEvent, originalContext, originalCallback);
+                returnedPromise.then(() => returnedPromiseResolved = true);
             });
 
             it('should invoke the function', () => {
                 expect(originalFunction).toBeCalled();
             });
-            it('should invoke the callback', () => {
-                expect(originalCallback).toBeCalled();
+            it('should resolve the returned promise', () => {
+                expect(returnedPromiseResolved).toBe(true);
             });
         });
     });
