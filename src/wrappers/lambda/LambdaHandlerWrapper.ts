@@ -41,7 +41,7 @@ class LambdaHandlerWrapper {
     private config: ThundraConfig;
     private plugins: any;
     private pluginContext: PluginContext;
-    private reported: boolean;
+    private completed: boolean;
     private reporter: Reporter;
     private wrappedContext: any;
     private timeout: NodeJS.Timer;
@@ -72,31 +72,25 @@ class LambdaHandlerWrapper {
         this.plugins = plugins;
         this.pluginContext = pluginContext;
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
-        this.reported = false;
+        this.completed = false;
         this.reporter = new Reporter(this.config.apiKey);
         this.wrappedContext = {
             ...context,
             done: (error: any, result: any) => {
-                return this.report(error, result, () => {
-                    ThundraLogger.debug(
-                        '<LambdaHandlerWrapper> Calling "done" over original Lambda context with',
-                        'error:', error, 'and result:', result);
-                    this.originalContext.done(error, result);
-                });
+                ThundraLogger.debug(
+                    '<LambdaHandlerWrapper> Called "done" over Lambda context with',
+                    'error:', error, 'and result:', result);
+                return this.completeInvocation(error, result);
             },
             succeed: (result: any) => {
-                return this.report(null, result, () => {
-                    ThundraLogger.debug(
-                        '<LambdaHandlerWrapper> Calling "succeed" over original Lambda context with result:', result);
-                    this.originalContext.succeed(result);
-                });
+                ThundraLogger.debug(
+                    '<LambdaHandlerWrapper> Called "succeed" over Lambda context with result:', result);
+                return this.completeInvocation(null, result);
             },
             fail: (error: any) => {
-                return this.report(error, null, () => {
-                    ThundraLogger.debug(
-                        '<LambdaHandlerWrapper> Calling "fail" over original Lambda context with error:', error);
-                    this.originalContext.fail(error);
-                });
+                ThundraLogger.debug(
+                    '<LambdaHandlerWrapper> Called "fail" over Lambda context with error:', error);
+                return this.completeInvocation(error, null);
             },
         };
 
@@ -114,6 +108,9 @@ class LambdaHandlerWrapper {
             this.initDebugger();
         }
     }
+
+    // Invocation related stuff                                                                         //
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Invokes wrapper handler which delegates to wrapped original handler
@@ -137,7 +134,7 @@ class LambdaHandlerWrapper {
         execContext.platformData.originalContext = this.originalContext;
         execContext.platformData.originalEvent = this.originalEvent;
 
-        return new Promise((resolve, reject) => {
+        const promise: Promise<any> = new Promise((resolve, reject) => {
             this.resolve = resolve;
             this.reject = reject;
             this.executeHook('before-invocation', execContext, false)
@@ -166,7 +163,7 @@ class LambdaHandlerWrapper {
                             result.then(this.wrappedContext.succeed, this.wrappedContext.fail);
                         }
                     } catch (error) {
-                        this.report(error, null, null);
+                        this.completeInvocation(error, null, null);
                     }
                 })
                 .catch((error) => {
@@ -180,46 +177,134 @@ class LambdaHandlerWrapper {
                             context: this.originalContext,
                         });
                     }
-                    // There is an error on "before-invocation" phase
-                    // So skip Thundra wrapping and call original function directly
-                    const result = this.originalFunction.call(
-                        this.originalThis,
-                        this.originalEvent,
-                        this.originalContext,
-                        this.originalCallback,
-                    );
-                    if (ThundraLogger.isDebugEnabled()) {
-                        ThundraLogger.debug(
-                            '<LambdaHandlerWrapper> Received result of direct original function call:', result);
+                    try {
+                        // There is an error on "before-invocation" phase
+                        // So skip Thundra wrapping and call original function directly
+                        const result = this.originalFunction.call(
+                            this.originalThis,
+                            this.originalEvent,
+                            this.originalContext,
+                            this.originalCallback,
+                        );
+                        if (ThundraLogger.isDebugEnabled()) {
+                            ThundraLogger.debug(
+                                '<LambdaHandlerWrapper> Received result of direct original function call:', result);
+                        }
+                        resolve(result);
+                    } catch (error) {
+                        if (ThundraLogger.isDebugEnabled()) {
+                            ThundraLogger.debug(
+                                '<LambdaHandlerWrapper> Failed direct original function call:', error);
+                            reject(error);
+                        }
                     }
-                    resolve(result);
                 });
         });
+        return promise;
     }
 
     private wrappedCallback = (error: any, result: any) => {
-        return this.report(error, result, () => {
-            this.invokeCallback(error, result);
-        });
+        ThundraLogger.debug(
+            '<LambdaHandlerWrapper> Called Lambda callback with',
+            'error:', error, 'and result:', result);
+        return this.completeInvocation(error, result);
     }
 
-    private shouldInitDebugger(): boolean {
-        const authToken = ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN);
-        const debuggerEnable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, null);
-        if (debuggerEnable != null) {
-            return debuggerEnable && authToken !== undefined;
+    private async completeInvocation(error: any, result: any, timeout: boolean = false) {
+        if (!this.completed) {
+            try {
+                ThundraLogger.debug('<LambdaHandlerWrapper> Completing invocation with error:', error, 'and result:', result);
+
+                this.completed = true;
+
+                const execContext = ExecutionContextManager.get();
+                execContext.response = result;
+                execContext.error = error;
+
+                if (this.isHTTPErrorResponse(result)) {
+                    ThundraLogger.debug('<LambdaHandlerWrapper> Detected HTTP error from result:', result);
+                    execContext.error = new HttpError('Lambda returned with error response.');
+                }
+
+                this.destroyTimeoutHandler();
+
+                try {
+                    await this.executeAfterInvocationAndReport(timeout);
+                } catch (e) {
+                    ThundraLogger.debug('<LambdaHandlerWrapper> Failed to report:', e);
+                }
+
+                this.finishDebuggerProxyIfAvailable();
+            } finally {
+                if (!timeout) {
+                    this.onFinish(error, result);
+                }
+            }
         } else {
-            return authToken !== undefined;
+            ThundraLogger.debug('<LambdaHandlerWrapper> Already completed');
         }
     }
 
-    private invokeCallback(error: any, result: any): void {
-        if (typeof this.originalCallback === 'function') {
+    private async executeHook(hook: string, execContext: ExecutionContext, reverse: boolean) {
+        if (ThundraLogger.isDebugEnabled()) {
             ThundraLogger.debug(
-                '<LambdaHandlerWrapper> Calling original Lambda callback with',
-                'error:', error, 'and result:', result);
-            this.originalCallback(error, result);
+                '<LambdaHandlerWrapper> Executing hook', hook,
+                'with execution context:', execContext.summary());
         }
+
+        this.plugins.sort((p1: any, p2: any) => p1.pluginOrder > p2.pluginOrder ? 1 : -1);
+
+        if (reverse) {
+            this.plugins.reverse();
+        }
+
+        await Promise.all(
+            this.plugins.map((plugin: any) => {
+                if (plugin.hooks && plugin.hooks[hook]) {
+                    return plugin.hooks[hook](execContext);
+                }
+            }),
+        );
+    }
+
+    private async executeAfterInvocationAndReport(disableTrim: boolean = false) {
+        ThundraLogger.debug('<LambdaHandlerWrapper> Execute after invocation and report');
+
+        if (this.config.disableMonitoring) {
+            return;
+        }
+
+        const execContext = ExecutionContextManager.get();
+
+        execContext.finishTimestamp = Date.now();
+
+        await this.executeHook('after-invocation', execContext, true);
+
+        ThundraLogger.debug('<LambdaHandlerWrapper> Sending reports');
+
+        if (!execContext.reportingDisabled) {
+            await this.reporter.sendReports(execContext.reports, disableTrim);
+        } else {
+            ThundraLogger.debug('<LambdaHandlerWrapper> Skipped reporting as reporting is disabled');
+        }
+    }
+
+    private isHTTPErrorResponse(result: any) {
+        let isError = false;
+        if (Utils.isValidHTTPResponse(result) && result.body) {
+            if (typeof result.body === 'string') {
+                if (HTTPUtils.isErrorFreeStatusCode(result.statusCode)) {
+                    return false;
+                }
+
+                if (result.statusCode >= 400 && result.statusCode <= 599) {
+                    isError = true;
+                }
+            } else {
+                isError = true;
+            }
+        }
+        return isError;
     }
 
     private onFinish(error: any, result: any): void {
@@ -229,6 +314,21 @@ class LambdaHandlerWrapper {
         } else if (this.resolve) {
             ThundraLogger.debug('<LambdaHandlerWrapper> Resolving returned promise with result:', result);
             this.resolve(result);
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Debugger related stuff                                                                           //
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private shouldInitDebugger(): boolean {
+        const authToken = ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN);
+        const debuggerEnable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, null);
+        if (debuggerEnable != null) {
+            return debuggerEnable && authToken !== undefined;
+        } else {
+            return authToken !== undefined;
         }
     }
 
@@ -457,116 +557,10 @@ class LambdaHandlerWrapper {
         }
     }
 
-    private async executeHook(hook: string, execContext: ExecutionContext, reverse: boolean) {
-        if (ThundraLogger.isDebugEnabled()) {
-            ThundraLogger.debug(
-                '<LambdaHandlerWrapper> Executing hook', hook,
-                'with execution context:', execContext.summary());
-        }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        this.plugins.sort((p1: any, p2: any) => p1.pluginOrder > p2.pluginOrder ? 1 : -1);
-
-        if (reverse) {
-            this.plugins.reverse();
-        }
-
-        await Promise.all(
-            this.plugins.map((plugin: any) => {
-                if (plugin.hooks && plugin.hooks[hook]) {
-                    return plugin.hooks[hook](execContext);
-                }
-            }),
-        );
-    }
-
-    private async executeAfterInvocationAndReport(disableTrim: boolean = false) {
-        ThundraLogger.debug('<LambdaHandlerWrapper> Execute after invocation and report');
-
-        if (this.config.disableMonitoring) {
-            return;
-        }
-
-        const execContext = ExecutionContextManager.get();
-
-        execContext.finishTimestamp = Date.now();
-
-        await this.executeHook('after-invocation', execContext, true);
-
-        ThundraLogger.debug('<LambdaHandlerWrapper> Sending reports');
-
-        if (!execContext.reportingDisabled) {
-            await this.reporter.sendReports(execContext.reports, disableTrim);
-        } else {
-            ThundraLogger.debug('<LambdaHandlerWrapper> Skipped reporting as reporting is disabled');
-        }
-    }
-
-    private async report(error: any, result: any, callback: any, timeout: boolean = false) {
-        if (!this.reported) {
-            ThundraLogger.debug('<LambdaHandlerWrapper> Reporting with error:', error, 'and result:', result);
-            try {
-                this.reported = true;
-
-                const execContext = ExecutionContextManager.get();
-                execContext.response = result;
-                execContext.error = error;
-
-                if (this.isHTTPErrorResponse(result)) {
-                    ThundraLogger.debug('<LambdaHandlerWrapper> Detected HTTP error from result:', result);
-                    execContext.error = new HttpError('Lambda returned with error response.');
-                }
-
-                this.destroyTimeoutHandler();
-
-                try {
-                    await this.executeAfterInvocationAndReport(timeout);
-                } catch (e) {
-                    ThundraLogger.debug('<LambdaHandlerWrapper> Failed to report:', e);
-                }
-
-                if (typeof callback === 'function') {
-                    callback();
-                }
-            } finally {
-                this.finishDebuggerProxyIfAvailable();
-                if (!timeout) {
-                    this.onFinish(error, result);
-                }
-            }
-        } else {
-            ThundraLogger.debug('<LambdaHandlerWrapper> Skipped reporting as it is already reported');
-            if (typeof callback === 'function') {
-                callback();
-            }
-        }
-    }
-
-    private isHTTPErrorResponse(result: any) {
-        let isError = false;
-        if (Utils.isValidHTTPResponse(result) && result.body) {
-            if (typeof result.body === 'string') {
-                if (HTTPUtils.isErrorFreeStatusCode(result.statusCode)) {
-                    return false;
-                }
-
-                if (result.statusCode >= 400 && result.statusCode <= 599) {
-                    isError = true;
-                }
-            } else {
-                isError = true;
-            }
-        }
-        return isError;
-    }
-
-    private destroyTimeoutHandler() {
-        ThundraLogger.debug('<LambdaHandlerWrapper> Destroying timeout handler');
-        if (this.timeout) {
-            ThundraLogger.debug('<LambdaHandlerWrapper> Clearing timeout handler');
-            clearTimeout(this.timeout);
-            this.timeout = null;
-        }
-    }
+    // Timeout related stuff                                                                            //
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private setupTimeoutHandler(): NodeJS.Timer | undefined {
         ThundraLogger.debug('<LambdaHandlerWrapper> Setting up timeout handler');
@@ -604,9 +598,20 @@ class LambdaHandlerWrapper {
                 }
             }
             ThundraLogger.debug('<LambdaHandlerWrapper> Reporting timeout error');
-            this.report(new TimeoutError('Lambda is timed out.'), null, null, true);
+            return this.completeInvocation(new TimeoutError('Lambda is timed out.'), null, true);
         }, endTime);
     }
+
+    private destroyTimeoutHandler() {
+        ThundraLogger.debug('<LambdaHandlerWrapper> Destroying timeout handler');
+        if (this.timeout) {
+            ThundraLogger.debug('<LambdaHandlerWrapper> Clearing timeout handler');
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
 
