@@ -8,6 +8,7 @@ import {
     ESTags,
     ClassNames,
     INTEGRATIONS,
+    AlreadyTracedHeader,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -52,38 +53,48 @@ class ESIntegration implements Integration {
      */
     wrap(lib: any, config: any) {
         ThundraLogger.debug('<ESIntegration> Wrap');
-
         function wrapRequest(request: any) {
-
             return function requestWithTrace(params: any, options: any, cb: any) {
+                if (!params || (params.method === 'GET' && params.path === '/')) {
+                    /**
+                     * avoid span creation for client version >= 7.0.0 health check request
+                     */
+                    return request.apply(this, arguments);
+                }
 
                 let span: ThundraSpan;
-
                 try {
                     ThundraLogger.debug('<ESIntegration> Tracing Elasticsearch request:', params);
 
                     const { tracer } = ExecutionContextManager.get();
-
                     if (!tracer) {
                         ThundraLogger.debug('<ESIntegration> Skipped tracing request as no tracer is available');
                         return request.call(this, params, options, cb);
                     }
 
-                    const originalCallback = request.length === 2 || typeof options === 'function' ?
-                        options : cb;
+                    if (!options) {
+                        options = {};
+                    }
 
-                    if (typeof originalCallback !== 'function') {
-
+                    if (options[AlreadyTracedHeader]) {
+                        /**
+                         * avoid twice span creation for client version < 7.0.0
+                         */
                         return request.apply(this, arguments);
                     }
 
+                    options[AlreadyTracedHeader] = true;
+
+                    const lastIndex = arguments.length - 1;
+                    cb = arguments[lastIndex];
                     const currentInstace = this;
                     const parentSpan = tracer.getActiveSpan();
-
                     const normalizedPath = Utils.getNormalizedPath(params.path, config.esPathDepth);
+                    if (this.headers && !this.headers[AlreadyTracedHeader]) {
+                        this.headers[AlreadyTracedHeader] = true;
+                    }
 
                     ThundraLogger.debug(`<ESIntegration> Starting Elasticsearch span with name ${normalizedPath}`);
-
                     span = tracer._startSpan(normalizedPath, {
                         childOf: parentSpan,
                         domainName: DomainNames.DB,
@@ -121,9 +132,7 @@ class ESIntegration implements Integration {
                     }
 
                     span._initialized();
-
                     const wrappedCallback = (err: any, res: any) => {
-
                         if (err) {
                             span.setErrorTag(err);
                         }
@@ -139,14 +148,29 @@ class ESIntegration implements Integration {
 
                         ThundraLogger.debug(
                             `<ESIntegration> Closing Elasticsearch span with name ${span.getOperationName()}`);
-
-                        span.closeWithCallback(currentInstace, originalCallback, [err, res]);
+                        span.closeWithCallback(currentInstace, cb, [err, res]);
                     };
 
-                    return request.call(this, params, options, wrappedCallback);
+                    if (typeof cb === 'function') {
+                        return request.call(this, params, options, wrappedCallback);
+                    } else {
+                        const result = request.apply(this, arguments);
+                        if (result && typeof result.then === 'function') {
+                            result.then((res: any) => {
+                                wrappedCallback(null, res);
+                            }).catch((err: any) => {
+                                wrappedCallback(err, null);
+                            });
+                        } else {
+                            if (span) {
+                                span.close();
+                            }
+                        }
+
+                        return result;
+                    }
                 } catch (error) {
                     ThundraLogger.error('<ESIntegration> Error occurred while tracing Elasticsearch request:', error);
-
                     if (span) {
                         ThundraLogger.debug(
                             `<ESIntegration> Because of error, closing Elasticsearch span with name
@@ -165,7 +189,6 @@ class ESIntegration implements Integration {
 
         if (has(lib, 'Transport.prototype.request')) {
             ThundraLogger.debug('<ESIntegration> Wrapping "elasticsearch.request"');
-
             shimmer.wrap(lib.Transport.prototype, 'request', wrapRequest);
         }
     }
@@ -176,9 +199,7 @@ class ESIntegration implements Integration {
      */
     doUnwrap(lib: any) {
         ThundraLogger.debug('<ESIntegration> Do unwrap');
-
         ThundraLogger.debug('<ESIntegration> Unwrapping "elasticsearch.request"');
-
         shimmer.unwrap(lib.Transport.prototype, 'request');
     }
 
@@ -187,7 +208,6 @@ class ESIntegration implements Integration {
      */
     unwrap() {
         ThundraLogger.debug('<ESIntegration> Unwrap');
-
         if (this.instrumentContext.uninstrument) {
             this.instrumentContext.uninstrument();
         }
