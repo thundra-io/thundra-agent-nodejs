@@ -46,7 +46,7 @@ describe('HTTP integration', () => {
         expect(span.tags[ErrorTags.ERROR_MESSAGE]).toBe(undefined);
         expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
         expect(span.tags[HttpTags.BODY]).not.toBeTruthy();
-        expect(span.tags[HttpTags.RESPONSE_BODY]).not.toBeTruthy();
+        expect(span.tags[HttpTags.RESPONSE_BODY]).toBeTruthy();
     });
 
     test('should set 4XX 5XX errors on HTTP calls', async () => {
@@ -72,7 +72,7 @@ describe('HTTP integration', () => {
         expect(span.tags[ErrorTags.ERROR_MESSAGE]).toBe('Not Found');
         expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
         expect(span.tags[HttpTags.BODY]).not.toBeTruthy();
-        expect(span.tags[HttpTags.RESPONSE_BODY]).not.toBeTruthy();
+        expect(span.tags[HttpTags.RESPONSE_BODY]).toBeTruthy();
     });
 
     test('should disable 4XX 5XX errors on HTTP calls', async () => {
@@ -98,7 +98,7 @@ describe('HTTP integration', () => {
         expect(span.tags[ErrorTags.ERROR_MESSAGE]).toBe(undefined);
         expect(span.tags[SpanTags.TOPOLOGY_VERTEX]).toEqual(true);
         expect(span.tags[HttpTags.BODY]).not.toBeTruthy();
-        expect(span.tags[HttpTags.RESPONSE_BODY]).not.toBeTruthy();
+        expect(span.tags[HttpTags.RESPONSE_BODY]).toBeTruthy();
     });
 
     test('should instrument HTTPS POST calls', async () => {

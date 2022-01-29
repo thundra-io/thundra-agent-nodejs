@@ -29,11 +29,11 @@ describe('ESIntegration integration', () => {
             node: 'http://localhost:9200'
         });
 
-        return ES.query(client).then((data) => {
+        return ES.newQuery(client).then((data) => {
 
             const span = tracer.getRecorder().spanList[0];
 
-            expect(span.operationName).toBe('/twitter/tweets');
+            expect(span.operationName).toBe('/twitter/_search');
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
 
@@ -44,8 +44,8 @@ describe('ESIntegration integration', () => {
 
             expect(span.tags['topology.vertex']).toEqual(true);
 
-            expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
-            expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/tweets');
+            expect(span.tags['elasticsearch.uri']).toEqual('/twitter/_search');
+            expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/_search');
             expect(span.tags['elasticsearch.method']).toEqual('POST');
             expect(span.tags['elasticsearch.params']).toEqual('{}');
             expect(span.tags['elasticsearch.body']).toEqual('{"query":{"match":{"body":"elasticsearch"}}}');
@@ -65,7 +65,7 @@ describe('ESIntegration integration', () => {
             nodes: ['http://localhost:9200', 'http://test.elastic.io:9200', 'http://test.elastic.io:9201']
         });
 
-        return ES.queryWithMultipleHost(client).then((data) => {
+        return ES.newQueryWithMultipleHost(client).then((data) => {
 
             const span = tracer.getRecorder().spanList[0];
 
@@ -80,7 +80,7 @@ describe('ESIntegration integration', () => {
 
             expect(span.tags['topology.vertex']).toEqual(true);
 
-            expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
+            expect(span.tags['elasticsearch.uri']).toEqual('/twitter/_search');
             expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter');
             expect(span.tags['elasticsearch.method']).toEqual('POST');
             expect(span.tags['elasticsearch.params']).toEqual('{}');
@@ -100,14 +100,14 @@ describe('ESIntegration integration', () => {
             node: 'http://localhost:9200'
         });
 
-        return ES.query(client).then((data) => {
+        return ES.newQuery(client).then((data) => {
 
             const span = tracer.getRecorder().spanList[0];
 
             expect(span.tags['elasticsearch.params']).not.toBeTruthy();
             expect(span.tags['elasticsearch.body']).not.toBeTruthy();
 
-            expect(span.operationName).toBe('/twitter/tweets');
+            expect(span.operationName).toBe('/twitter/_search');
             expect(span.className).toBe('ELASTICSEARCH');
             expect(span.domainName).toBe('DB');
             expect(span.tags['operation.type']).toBe('POST');
@@ -115,8 +115,8 @@ describe('ESIntegration integration', () => {
             expect(span.tags['db.port']).toBe(9200);
             expect(span.tags['db.type']).toBe('elasticsearch');
             expect(span.tags['topology.vertex']).toEqual(true);
-            expect(span.tags['elasticsearch.uri']).toEqual('/twitter/tweets/_search');
-            expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/tweets');
+            expect(span.tags['elasticsearch.uri']).toEqual('/twitter/_search');
+            expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/_search');
             expect(span.tags['elasticsearch.method']).toEqual('POST');
         });
     });
