@@ -566,9 +566,7 @@ export const TriggerHeaderTags = {
     RESOURCE_NAME: 'x-thundra-resource-name',
 };
 
-export const IntegrationSpecialHeaders = [
-    'x-elastic-client-meta',
-];
+export const AlreadyTracedHeader = 'x-thundra-already-traced';
 
 export const SpanTypes = {
     REDIS: 'Redis',

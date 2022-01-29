@@ -7,7 +7,7 @@ import {
     ClassNames,
     TraceHeaderTags,
     TriggerHeaderTags,
-    IntegrationSpecialHeaders,
+    AlreadyTracedHeader,
 } from '../Constants';
 
 /**
@@ -88,13 +88,19 @@ class HTTPUtils {
      *                   {@code false} otherwise
      */
     static wasAlreadyTraced(headers: any): boolean {
-        if (headers &&
-            (headers[TraceHeaderTags.TRACE_ID]
-            || Object.keys(headers).some((header: any) => IntegrationSpecialHeaders.includes(header)))) {
-            return true;
+        if (!headers) {
+            return false;
         }
 
-        return false;
+        let result = false;
+        if (headers[TraceHeaderTags.TRACE_ID]) {
+            result = true;
+        } else if (headers[AlreadyTracedHeader]) {
+            delete headers[AlreadyTracedHeader];
+            result = true;
+        }
+
+        return result;
     }
 
     /**

@@ -8,6 +8,7 @@ import {
     ESTags,
     ClassNames,
     INTEGRATIONS,
+    AlreadyTracedHeader,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -55,6 +56,9 @@ class ESIntegration implements Integration {
         function wrapRequest(request: any) {
             return function requestWithTrace(params: any, options: any, cb: any) {
                 if (!params || (params.method === 'GET' && params.path === '/')) {
+                    /**
+                     * avoid span creation for client version >= 7.0.0 health check request
+                     */
                     return request.apply(this, arguments);
                 }
 
@@ -68,11 +72,23 @@ class ESIntegration implements Integration {
                         return request.call(this, params, options, cb);
                     }
 
+                    if (options[AlreadyTracedHeader]) {
+                        /**
+                         * avoid twice span creation for client version < 7.0.0
+                         */
+                        return request.apply(this, arguments); 
+                    }
+
+                    options[AlreadyTracedHeader] = true;
+
                     const lastIndex = arguments.length - 1;
                     cb = arguments[lastIndex];
                     const currentInstace = this;
                     const parentSpan = tracer.getActiveSpan();
                     const normalizedPath = Utils.getNormalizedPath(params.path, config.esPathDepth);
+                    if (this.headers && !this.headers[AlreadyTracedHeader]) {
+                        this.headers[AlreadyTracedHeader] = true;
+                    }
 
                     ThundraLogger.debug(`<ESIntegration> Starting Elasticsearch span with name ${normalizedPath}`);
                     span = tracer._startSpan(normalizedPath, {
