@@ -72,11 +72,15 @@ class ESIntegration implements Integration {
                         return request.call(this, params, options, cb);
                     }
 
+                    if (!options) {
+                        options = {};
+                    }
+
                     if (options[AlreadyTracedHeader]) {
                         /**
                          * avoid twice span creation for client version < 7.0.0
                          */
-                        return request.apply(this, arguments); 
+                        return request.apply(this, arguments);
                     }
 
                     options[AlreadyTracedHeader] = true;

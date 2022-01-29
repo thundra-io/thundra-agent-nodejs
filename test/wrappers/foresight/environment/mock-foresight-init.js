@@ -7,21 +7,24 @@ import * as ForesightWrapper from '../../../../dist/wrappers/foresight';
 import * as ThundraJestEnvironment from '../../../../dist/wrappers/foresight/lib/jest/ThundraJestEnvironment';
 import * as TestRunnerSupport from '../../../../dist/wrappers/foresight/TestRunnerSupport';
 
-ThundraJestEnvironment.__PRIVATE__.getSetupFilePath = () => '../../../../bootstrap/foresight/jest/SetupFile.js';
+ThundraJestEnvironment.__PRIVATE__.getSetupFilePath = () => './bootstrap/foresight/jest/SetupFile.js';
 
 ConfigProvider.init();
 ForesightWrapper.init();
 
 TestRunnerSupport.setWrapperContext = (context) => {
+    if (context) {
+        const mockWrapperContext = {
+            ...context,
+            getPlugin: context.getPlugin,
+            getAllowedPlugins: context.getAllowedPlugins,
+            reporter: {
+                addReport: () => {},
+                sendReports: () => {},
+                httpsRequest: () => {},
+            },
+        };
 
-    const mockWrapperContext = {
-        ...context,
-        reporter: {
-            addReport: () => {},
-            sendReports: () => {},
-            httpsRequest: () => {},
-        },
+        TestRunnerSupport.wrapperContext = mockWrapperContext;
     }
-
-    TestRunnerSupport.wrapperContext = mockWrapperContext
-}
+};
