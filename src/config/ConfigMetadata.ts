@@ -243,6 +243,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'number',
         defaultValue: 1,
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_SIZE_MAX]: {
+        type: 'number',
+        defaultValue: 10 * 1024, // 10 KB,
+    },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_MONGODB_COMMAND_MASK]: {
         type: 'boolean',
         defaultValue: false,

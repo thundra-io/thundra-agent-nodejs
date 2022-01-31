@@ -17,9 +17,12 @@ import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 import { Url } from 'url';
+import ConfigNames from '../config/ConfigNames';
+import ConfigProvider from '../config/ConfigProvider';
 
 const has = require('lodash.has');
 const shimmer = require('shimmer');
+const sizeof = require('object-sizeof');
 
 const INTEGRATION_NAME = 'es';
 
@@ -115,10 +118,12 @@ class ESIntegration implements Integration {
                         [SpanTags.OPERATION_TYPE]: params.method,
                     });
 
-                    if (!config.maskElasticSearchBody) {
+                    const requestBody = params.body || params.bulkBody;
+                    if (!config.maskElasticSearchBody && requestBody) {
                         try {
-                            const requestBody: string = JSON.stringify(params.body);
-                            if (requestBody) {
+                            const bodyMaxSize = ConfigProvider.get<number>(
+                                ConfigNames.THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_SIZE_MAX);
+                            if (sizeof(requestBody) <= bodyMaxSize) {
                                 span.setTag(ESTags.ES_BODY, requestBody);
 
                                 /**

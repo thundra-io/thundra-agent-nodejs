@@ -48,7 +48,7 @@ describe('ES integration', () => {
         });
     });
 
-    test('should instrument ES calls with single host', () => {
+    test('should instrument ES calls with multiple host', () => {
         integration.config.esPathDepth = 1;
 
         const hostList = ['localhost', 'test.elastic.io'];

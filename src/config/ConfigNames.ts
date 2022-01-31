@@ -172,8 +172,12 @@ class ConfigNames {
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK: string =
         'thundra.agent.trace.integrations.elasticsearch.body.mask';
+
     public static readonly THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_PATH_DEPTH: string =
         'thundra.agent.trace.integrations.elasticsearch.path.depth';
+
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_SIZE_MAX: string =
+        'thundra.agent.trace.integrations.elasticsearch.body.size.max';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_MONGODB_COMMAND_MASK: string =
         'thundra.agent.trace.integrations.mongodb.command.mask';
