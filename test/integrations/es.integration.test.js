@@ -48,7 +48,7 @@ describe('ESIntegration integration', () => {
             expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter/_search');
             expect(span.tags['elasticsearch.method']).toEqual('POST');
             expect(span.tags['elasticsearch.params']).toEqual('{}');
-            expect(span.tags['elasticsearch.body']).toEqual('{"query":{"match":{"body":"elasticsearch"}}}');
+            expect(span.tags['elasticsearch.body']).toEqual({'query':{'match':{'body':'elasticsearch'}}});
         });
     });
 
@@ -84,7 +84,7 @@ describe('ESIntegration integration', () => {
             expect(span.tags['elasticsearch.normalized_uri']).toEqual('/twitter');
             expect(span.tags['elasticsearch.method']).toEqual('POST');
             expect(span.tags['elasticsearch.params']).toEqual('{}');
-            expect(span.tags['elasticsearch.body']).toEqual('{"query":{"match":{"body":"elasticsearch"}}}');
+            expect(span.tags['elasticsearch.body']).toEqual({'query':{'match':{'body':'elasticsearch'}}});
         });
     });
 
