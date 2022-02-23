@@ -127,16 +127,16 @@ function wrapEnvironment(BaseEnvironment: any) {
             let error: TestRunError;
 
             if (event.test && event.test.parent) {
-              const test = event.test;
+                const test = event.test;
 
-              id = testSuite + '-' + test.parent.name;
-              testName = test.name;
-              testDuration = test.duration;
+                id = testSuite + '-' + test.parent.name;
+                testName = test.name;
+                testDuration = test.duration;
 
-              const errorArr = test.errors;
-              if (errorArr && errorArr.length) {
-                error = ErrorParser.buildError(test.errors, test.asyncError);
-              }
+                const errorArr = test.errors;
+                if (errorArr && errorArr.length) {
+                    error = ErrorParser.buildError(test.errors, test.asyncError);
+                }
             }
 
             return TestSuiteEvent

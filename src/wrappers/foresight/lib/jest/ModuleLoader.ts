@@ -41,7 +41,7 @@ export const wrapTestRequireModule = () => {
         };
     }
 
-    const jestRuntime = require('jest-runtime');
+    const jestRuntime = ModuleUtils.tryRequire('jest-runtime');
     if (jestRuntime) {
         if (has(jestRuntime, 'prototype.requireModule')) {
             ThundraLogger.debug('<ModuleLoader> Wrapping "jest-runtime.requireModule"');
@@ -54,7 +54,7 @@ export const wrapTestRequireModule = () => {
 };
 
 export const unwrapTestRequireModule = () => {
-    const jestRuntime = require('jest-runtime');
+    const jestRuntime = ModuleUtils.tryRequire('jest-runtime');
     if (jestRuntime) {
         if (has(jestRuntime, 'prototype.requireModule')) {
             ThundraLogger.debug('<ModuleLoader> Unwrapping "jest-runtime.requireModule"');
@@ -78,7 +78,7 @@ export const wrapTestTransformFile = (tracePlugin: Trace) => {
         };
     }
 
-    const jestRuntime = require('jest-runtime');
+    const jestRuntime = ModuleUtils.tryRequire('jest-runtime');
     if (jestRuntime) {
         if (has(jestRuntime, 'prototype.transformFile')) {
             ThundraLogger.debug('<ModuleLoader> Wrapping "jest-runtime.transformFile"');
@@ -91,7 +91,7 @@ export const wrapTestTransformFile = (tracePlugin: Trace) => {
 };
 
 export const unwrapTestTransformFile = () => {
-    const jestRuntime = require('jest-runtime');
+    const jestRuntime = ModuleUtils.tryRequire('jest-runtime');
     if (jestRuntime) {
         if (has(jestRuntime, 'prototype.transformFile')) {
             ThundraLogger.debug('<ModuleLoader> Unwrapping "jest-runtime.transformFile"');
@@ -126,7 +126,7 @@ export const wrapTestTransformFileAsync = (tracePlugin: Trace) => {
         };
     }
 
-    const jestRuntime = require('jest-runtime');
+    const jestRuntime = ModuleUtils.tryRequire('jest-runtime');
     if (jestRuntime) {
         if (has(jestRuntime, 'prototype.transformFileAsync')) {
             ThundraLogger.debug('<ModuleLoader> Wrapping "jest-runtime.transformFileAsync"');
@@ -139,7 +139,7 @@ export const wrapTestTransformFileAsync = (tracePlugin: Trace) => {
 };
 
 export const unwrapTestTransformFileAsync = () => {
-    const jestRuntime = require('jest-runtime');
+    const jestRuntime = ModuleUtils.tryRequire('jest-runtime');
     if (jestRuntime) {
         if (has(jestRuntime, 'prototype.transformFileAsync')) {
             ThundraLogger.debug('<ModuleLoader> Unwrapping "jest-runtime.transformFileAsync"');
