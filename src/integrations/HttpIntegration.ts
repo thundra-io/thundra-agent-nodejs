@@ -210,7 +210,7 @@ class HttpIntegration implements Integration {
                             let chunks: Buffer[] = [];
                             let totalSize: Number = 0;
 
-                            res.on('data', (chunk: any) => {
+                            res.prependListener('data', (chunk: any) => {
                                 if (!chunk) {
                                     return;
                                 }
