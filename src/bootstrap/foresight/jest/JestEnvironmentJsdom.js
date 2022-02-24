@@ -1,3 +1,5 @@
 require('../index');
 
-module.exports = require('jest-environment-jsdom');
+const { ModuleUtils } = require('../../../thundraInternalApi');
+
+module.exports = ModuleUtils.tryRequire('jest-environment-jsdom');

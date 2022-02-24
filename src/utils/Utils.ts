@@ -28,8 +28,8 @@ import { ApplicationInfo } from '../application/ApplicationInfo';
 import ThundraSpanListener from '../listeners/ThundraSpanListener';
 import PluginContext from '../plugins/PluginContext';
 
-const uuidv4 = require('uuid/v4');
-const uuidv5 = require('uuid/v5');
+import { v4 as uuidv4 } from 'uuid';
+import { v5 as uuidv5 } from 'uuid';
 const zlib = require('zlib');
 
 const globalAppID = uuidv4();
