@@ -14,7 +14,7 @@
     "lint": "tslint --project tsconfig.json -t stylish",
     "release-minor": "npm install; npm run build; release-it minor --ci --git.commit --git.push --git.tag --git.tagName='v${version}' --github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
     "release-minor-without-tag": "npm install; npm run build; release-it minor --ci --no-git.commit --no-git.push --no-git.tag --no-git.tagName='v${version}' --no-git.requireCleanWorkingDir --no-git.requireUpstream --no-github.release --npm.publish",
-    "release": "npm install; npm run build; release-it --ci --git.commit --git.push --git.tag --git.tagName='v${version}' --github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
+    "release": "npm install; npm run build; release-it ${RELEASE_SCALE} --ci --git.commit --git.push --git.tag --git.tagName='v${version}' --github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
     "release-without-tag": "npm install; npm run build; release-it --ci --no-git.commit --no-git.push --no-git.tag --no-git.tagName='v${version}' --no-github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
     "release-dry-run": "npm install; npm run build; release-it minor --dry-run --ci --no-git.commit --no-git.push --no-git.tag --no-git.tagName='v${version}' --no-git.requireCleanWorkingDir --no-git.requireUpstream --no-github.release --no-npm.publish"
   },
