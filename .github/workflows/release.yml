@@ -1,0 +1,36 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_scale:
+        type: choice
+        description: Release Scale
+        options:
+        - patch
+        - minor
+        - major
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with: 
+          token: ${{ secrets.THUNDRA_GITHUB_ACCESS_TOKEN }}
+      - name: Configure Git User
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+      - name: Use Node.js 12.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: "12.x"
+          registry-url: https://registry.npmjs.org
+
+      - name: NPM Release
+        run: npm run release
+        env:
+          RELEASE_SCALE: ${{ github.event.inputs.version_scale }}
+          NODE_AUTH_TOKEN: ${{ secrets.THUNDRA_NPM_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.THUNDRA_GITHUB_ACCESS_TOKEN }}
