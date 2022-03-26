@@ -1,5 +1,7 @@
 import ThundraLogger from '../ThundraLogger';
 import ModuleVersionValidator from './ModuleVersionValidator';
+import Utils from '../utils/Utils';
+import { EnvVariableKeys } from '../Constants';
 
 const Hook = require('require-in-the-middle');
 const shimmer = require('shimmer');
@@ -35,7 +37,12 @@ class ModuleUtils {
             if (paths) {
                 resolvedPath = customReq.resolve(name, { paths });
             } else {
-                resolvedPath = customReq.resolve(name);
+                const lambdaTaskRoot = Utils.getEnvVar(EnvVariableKeys.LAMBDA_TASK_ROOT);
+                if (lambdaTaskRoot) {
+                    resolvedPath = customReq.resolve(name, { paths: [lambdaTaskRoot] });
+                } else {
+                    resolvedPath = customReq.resolve(name);
+                }
             }
             return customReq(resolvedPath);
         } catch (e) {
