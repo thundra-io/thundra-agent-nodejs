@@ -201,14 +201,19 @@ class ModuleUtils {
     private static getModuleInfo(name: string, paths?: string[]): any {
         try {
             let modulePath;
-            if (paths !== undefined) {
+            if (paths) {
                 modulePath = customReq.resolve(name, { paths });
             } else {
-                modulePath = customReq.resolve(name);
+                const lambdaTaskRoot = Utils.getEnvVar(EnvVariableKeys.LAMBDA_TASK_ROOT);
+                if (lambdaTaskRoot) {
+                    modulePath = customReq.resolve(name, { paths: [lambdaTaskRoot] });
+                } else {
+                    modulePath = customReq.resolve(name);
+                }
             }
             return parse(modulePath);
         } catch (e) {
-            ThundraLogger.debug(`<ModuleUtils> Couldn't get info of module ${name} in the paths ${paths}:`, e);
+            ThundraLogger.debug(`<ModuleUtils> Couldn't get info of module ${name} in the paths ${paths}:`, e.message);
             return {};
         }
     }
