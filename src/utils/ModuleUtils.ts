@@ -39,7 +39,7 @@ class ModuleUtils {
             }
             return customReq(resolvedPath);
         } catch (e) {
-            ThundraLogger.debug(`<ModuleUtils> Couldn't require module ${name} in the paths ${paths}:`, e);
+            ThundraLogger.debug(`<ModuleUtils> Couldn't require module ${name} in the paths ${paths}:`, e.message);
         }
     }
 
@@ -213,7 +213,7 @@ class ModuleUtils {
         if (version) {
             const isValidVersion = ModuleVersionValidator.validateModuleVersion(basedir, version);
             if (!isValidVersion) {
-                ThundraLogger.error(
+                ThundraLogger.debug(
                     `<ModuleUtils> Invalid module version for ${moduleName} integration. Supported version is ${version}`);
             } else {
                 isValid = true;
