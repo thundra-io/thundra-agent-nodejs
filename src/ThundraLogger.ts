@@ -37,7 +37,7 @@ class ThundraLogger {
         if (ThundraLogger.isDebugEnabled()) {
             this.consoleDebug.apply(
                 console,
-                ['[THUNDRA]', 'DEBUG', '-', new Date().toUTCString(), '|', message, ...optionalParams]);
+                ['[THUNDRA]', 'DEBUG', '-', new Date().toISOString(), '|', message, ...optionalParams]);
         }
     }
 
@@ -49,7 +49,7 @@ class ThundraLogger {
     static info(message: any, ...optionalParams: any[]) {
         this.consoleInfo.apply(
             console,
-            ['[THUNDRA]', 'INFO', '-', new Date().toUTCString(), '|', message, ...optionalParams]);
+            ['[THUNDRA]', 'INFO', '-', new Date().toISOString(), '|', message, ...optionalParams]);
     }
 
     /**
@@ -60,7 +60,7 @@ class ThundraLogger {
     static error(error: any, ...optionalParams: any[]) {
         this.consoleError.apply(
             console,
-            ['[THUNDRA]', 'ERROR', '-', new Date().toUTCString(), '|', error, ...optionalParams]);
+            ['[THUNDRA]', 'ERROR', '-', new Date().toISOString(), '|', error, ...optionalParams]);
     }
 
     private static getConsoleMethod(methodName: string): Function {
