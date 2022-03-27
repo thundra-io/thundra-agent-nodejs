@@ -185,7 +185,7 @@ export default class WebWrapperUtils {
         invocationData.erroneous = false;
         invocationData.errorType = '';
         invocationData.errorMessage = '';
-        invocationData.coldStart = pluginContext.requestCount === 0;
+        invocationData.coldStart = false;
         invocationData.timeout = false;
 
         invocationData.traceId = execContext.traceId;
