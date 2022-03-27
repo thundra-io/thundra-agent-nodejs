@@ -136,6 +136,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     [ConfigNames.THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX]: {
         type: 'string',
     },
+    [ConfigNames.THUNDRA_TRACE_INSTRUMENT_ONLOAD]: {
+        type: 'boolean',
+        defaultValue: true,
+    },
     [ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG]: {
         type: 'string',
     },

@@ -3,6 +3,9 @@
  */
 import { INITIALIZERS } from './Initializers';
 import ThundraLogger from '../ThundraLogger';
+import ModuleUtils from '../utils/ModuleUtils';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
 
 /**
  * Manages initialization of initializers
@@ -20,6 +23,10 @@ class InitManager {
     static init(): void {
         ThundraLogger.debug(`<InitManager> Initializing initializers ...`);
         if (!InitManager.initialized) {
+            const instrumentOnLoad: boolean =
+                ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INSTRUMENT_ONLOAD);
+            ModuleUtils.setInstrumentOnLoad(instrumentOnLoad);
+
             INITIALIZERS.forEach((initializer: any) => {
                 ThundraLogger.debug(`<InitManager> Initializing ${initializer.name} ...`);
                 if (!initializer.initialized) {
