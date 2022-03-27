@@ -7,6 +7,7 @@ import ThundraSpanContext from '../../opentracing/SpanContext';
 import {
     DomainNames, ClassNames, LAMBDA_FUNCTION_PLATFORM, THUNDRA_TRACE_KEY,
     AwsTags, AwsLambdaWrapperTags, TriggerHeaderTags, HttpTags,
+    EnvVariableKeys, LAMBDA_INIT_TYPE_PROVISIONED_CONCURRENCY,
 } from '../../Constants';
 import ThundraTracer from '../../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
@@ -142,6 +143,20 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
     rootSpan.finishTime = finishTimestamp;
 }
 
+function isColdStart(pluginContext: PluginContext): boolean {
+    const firstRequest: boolean = pluginContext.requestCount === 0;
+    if (firstRequest) {
+        const initType: string = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_INITIALIZATION_TYPE);
+        if (initType === LAMBDA_INIT_TYPE_PROVISIONED_CONCURRENCY) {
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        return false;
+    }
+}
+
 /**
  * Starts invocation for AWS Lambda request
  * @param {PluginContext} pluginContext the {@link PluginContext}
@@ -162,7 +177,7 @@ export function startInvocation(pluginContext: PluginContext, execContext: Execu
     invocationData.erroneous = false;
     invocationData.errorType = '';
     invocationData.errorMessage = '';
-    invocationData.coldStart = pluginContext.requestCount === 0;
+    invocationData.coldStart = isColdStart(pluginContext);
     invocationData.timeout = false;
 
     invocationData.traceId = execContext.traceId;

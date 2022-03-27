@@ -35,6 +35,7 @@ export const EnvVariableKeys = {
     AWS_REGION: 'AWS_REGION',
     AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',
     AWS_LAMBDA_FUNCTION_NAME: 'AWS_LAMBDA_FUNCTION_NAME',
+    AWS_LAMBDA_INITIALIZATION_TYPE: 'AWS_LAMBDA_INITIALIZATION_TYPE',
 
     _X_AMZN_TRACE_ID: '_X_AMZN_TRACE_ID',
 
@@ -62,6 +63,7 @@ export const TIMEOUT_MARGIN: number = getTimeoutMargin(process.env[EnvVariableKe
 export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
 export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
 export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
+export const LAMBDA_INIT_TYPE_PROVISIONED_CONCURRENCY = 'provisioned-concurrency';
 
 export function getDefaultCollectorEndpoint() {
     const region = process.env[EnvVariableKeys.AWS_REGION];
