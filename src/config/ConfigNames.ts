@@ -100,6 +100,8 @@ class ConfigNames {
         'thundra.agent.trace.instrument.traceableconfig';
     public static readonly THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX: string =
         'thundra.agent.trace.instrument.file.prefix';
+    public static readonly THUNDRA_TRACE_INSTRUMENT_ONLOAD: string =
+        'thundra.agent.trace.instrument.onload';
 
     /////////////////////////////////////////////////////////////////////////////
 

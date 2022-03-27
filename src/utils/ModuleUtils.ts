@@ -21,8 +21,25 @@ class ModuleUtils {
 
     private static readonly instrumenters: any = [];
     private static readonly pendingModulesToInstrument: any = [];
+    private static instrumentOnLoad: boolean = true;
 
     private constructor() {
+    }
+
+    /**
+     * Gets the load time instrumentation mode flag
+     * @return the load time instrumentation mode flag
+     */
+    static isInstrumentOnLoad(): boolean {
+        return ModuleUtils.instrumentOnLoad;
+    }
+
+    /**
+     * Sets the load time instrumentation mode flag
+     * @param instrumentOnLoad the load time instrumentation mode flag to be set
+     */
+    static setInstrumentOnLoad(instrumentOnLoad: boolean): void {
+        ModuleUtils.instrumentOnLoad = instrumentOnLoad;
     }
 
     /**
@@ -145,13 +162,15 @@ class ModuleUtils {
                     ModuleUtils.doInstrument(requiredLib, libs, null, moduleName, null, wrapper, config);
                 }
             }
-            const hook = Hook(moduleName, { internals: true }, (lib: any, name: string, basedir: string) => {
-                if (name === moduleName) {
-                    ModuleUtils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
-                }
-                return lib;
-            });
-            hooks.push(hook);
+            if (ModuleUtils.instrumentOnLoad) {
+                const hook = Hook(moduleName, {internals: true}, (lib: any, name: string, basedir: string) => {
+                    if (name === moduleName) {
+                        ModuleUtils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
+                    }
+                    return lib;
+                });
+                hooks.push(hook);
+            }
         }
         return {
             uninstrument: () => {
