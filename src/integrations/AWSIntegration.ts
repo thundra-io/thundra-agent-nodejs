@@ -25,6 +25,8 @@ export class AWSIntegration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<AWSIntegration> Activating AWS integration');
+
         this.wrappedFuncs = {};
         this.config = config || {};
         const awsIntegration = INTEGRATIONS[INTEGRATION_NAME];

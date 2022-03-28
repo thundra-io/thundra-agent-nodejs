@@ -152,8 +152,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         defaultValue: 100,
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_DISABLE]: {
-        type: 'boolean',
-        defaultValue: false,
+        type: 'string',
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ON_LOAD]: {
         type: 'boolean',
