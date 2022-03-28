@@ -3,7 +3,6 @@ import ModuleVersionValidator from './ModuleVersionValidator';
 import Utils from '../utils/Utils';
 import { EnvVariableKeys } from '../Constants';
 
-const Hook = require('require-in-the-middle');
 const shimmer = require('shimmer');
 const path = require('path');
 const parse = require('module-details-from-path');
@@ -163,6 +162,7 @@ class ModuleUtils {
                 }
             }
             if (ModuleUtils.instrumentOnLoad) {
+                const Hook = require('require-in-the-middle');
                 const hook = Hook(moduleName, {internals: true}, (lib: any, name: string, basedir: string) => {
                     if (name === moduleName) {
                         ModuleUtils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
