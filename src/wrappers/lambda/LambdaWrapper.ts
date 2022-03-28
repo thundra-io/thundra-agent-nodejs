@@ -24,7 +24,6 @@ import ExecutionContext from '../../context/ExecutionContext';
 import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 import ThundraLogger from '../../ThundraLogger';
 
-const ThundraWarmup = require('@thundra/warmup');
 const get = require('lodash.get');
 
 interface WrappedFunction extends Function {
@@ -87,6 +86,7 @@ function createWrapperWithPlugins(config: ThundraConfig,
         ThundraLogger.debug('<LambdaWrapper> Wrapped with Lambda wrapper:', originalFunc.name);
 
         if (config.warmupAware) {
+            const ThundraWarmup = require('@thundra/warmup');
             const warmupWrapper = ThundraWarmup(() => pluginContext.requestCount++);
             ThundraLogger.debug(
                 '<LambdaWrapper> Wrapped with warmup aware wrapper for detecting warmup requests');
