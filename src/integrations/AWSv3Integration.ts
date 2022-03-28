@@ -27,6 +27,8 @@ export class AWSv3Integration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<AWSv3Integration> Activating AWS v3 integration');
+
         this.wrappedFuncs = {};
         this.config = config || {};
         const awsSdkv3Integration = INTEGRATIONS[INTEGRATION_NAME];
@@ -49,15 +51,11 @@ export class AWSv3Integration implements Integration {
 
         const integration = this;
         function wrapper(wrappedFunction: any, wrappedFunctionName: string) {
-
             integration.wrappedFuncs[wrappedFunctionName] = wrappedFunction;
-
             return function AWSSDKWrapper(command: any, optionsOrCb: any, cb: any) {
-
-                ThundraLogger.debug('<AWSv3Integration> Tracing HTTP request:', command);
+                ThundraLogger.debug('<AWSv3Integration> Tracing AWS request:', command);
 
                 const currentInstance = this;
-
                 let activeSpan: ThundraSpan;
                 let reachedToCallOriginalFunc: boolean = false;
                 try {
@@ -93,7 +91,6 @@ export class AWSv3Integration implements Integration {
 
                     command.middlewareStack.add(
                         (next: any, context: any) => async (args: any) => {
-
                             ThundraLogger.debug('<AWSv3Integration> Build middleware working...');
 
                             if (args && args.request
@@ -118,7 +115,6 @@ export class AWSv3Integration implements Integration {
 
                     command.middlewareStack.add(
                         (next: any, context: any) => async (args: any) => {
-
                             ThundraLogger.debug('<AWSv3Integration> Deserialize middleware working...');
 
                             request.service.config.region = await currentInstance.config.region();
@@ -141,7 +137,6 @@ export class AWSv3Integration implements Integration {
                     );
 
                     const wrappedCallback = function (err: any, data: any, closeWithCallback = false) {
-
                         ThundraLogger.debug('<AWSv3Integration> WrappedCallback working...');
 
                         if (!activeSpan) {
@@ -207,7 +202,6 @@ export class AWSv3Integration implements Integration {
 
                     reachedToCallOriginalFunc = true;
                     if (originalCallback) {
-
                         return originalFunction.apply(
                             this,
                             [
@@ -218,18 +212,14 @@ export class AWSv3Integration implements Integration {
                                 },
                             ]);
                     } else {
-
                         const result = originalFunction.apply(this, [command, originalOptions, cb]);
                         if (result && typeof result.then === 'function') {
                             result.then((data: any) => {
-
                                 wrappedCallback(null, data);
                             }).catch((error: any) => {
-
                                 wrappedCallback(error, null);
                             });
                         } else {
-
                             if (activeSpan) {
                                 activeSpan.close();
                             }
@@ -238,7 +228,6 @@ export class AWSv3Integration implements Integration {
                         return result;
                     }
                 } catch (error) {
-
                     if (activeSpan) {
                         activeSpan.close();
                     }
@@ -246,7 +235,6 @@ export class AWSv3Integration implements Integration {
                     if (reachedToCallOriginalFunc || error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-
                         ThundraLogger.error('<AWSv3Integration> An error occurred while tracing.', error);
                         const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
                         return originalFunction.apply(this, [command, optionsOrCb, cb]);
@@ -256,7 +244,6 @@ export class AWSv3Integration implements Integration {
         }
 
         if (has(lib, 'Client.prototype.send')) {
-
             ThundraLogger.debug('<AWSv3Integration> Wrapping "Client.prototype.send"');
             shimmer.wrap(lib.Client.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));
         }
@@ -284,4 +271,5 @@ export class AWSv3Integration implements Integration {
     private getOriginalFunction(wrappedFunctionName: string) {
         return get(this, `wrappedFuncs.${wrappedFunctionName}`);
     }
+
 }
