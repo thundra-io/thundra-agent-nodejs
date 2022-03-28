@@ -599,7 +599,7 @@ export const INTEGRATIONS: any = {
     mysql: {class: MySQLIntegration, moduleNames: ['mysql'], moduleVersion: '>=2'},
     redis: {class: RedisIntegration, moduleNames: ['redis'], moduleVersion: '>=2.6'},
     ioredis: {class: IORedisIntegration, moduleNames: ['ioredis'], moduleVersion: '>=2'},
-    aws: {class: AWSIntegration, moduleNames: ['aws-sdk', 'aws-sdk/lib/core.js'], moduleVersion: '2.x'},
+    aws: {class: AWSIntegration, moduleNames: ['aws-sdk/global', 'aws-sdk/lib/core.js'], moduleVersion: '2.x'},
     aws3: {class: AWSv3Integration, moduleNames: ['@aws-sdk/smithy-client'], moduleVersion: '3.x'},
     es: {class: ESIntegration, moduleNames: ['@elastic/elasticsearch'], moduleVersion: '>=5.6.16'},
     esLegacy: {class: ESLegacyIntegration, moduleNames: ['elasticsearch'], moduleVersion: '>=10.5'},
