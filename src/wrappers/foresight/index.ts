@@ -5,7 +5,6 @@ import ModuleVersionValidator from '../../utils/ModuleVersionValidator';
 import libs from './lib';
 
 const path = require('path');
-const Hook = require('require-in-the-middle');
 
 /**
  * Handler method for global setup process
@@ -48,6 +47,8 @@ export function init() {
     }
 
     ThundraLogger.debug('<ForesightInit> Initializing ...');
+
+    const Hook = require('require-in-the-middle');
 
     libs.forEach((value: any, key: any) => {
         [].concat(value)
