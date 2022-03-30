@@ -235,7 +235,7 @@ class InvocationSupport {
         if (applicationInfo && applicationInfo.applicationId
             && execContext && execContext.transactionId) {
             return encodeURI(
-                `https://console.thundra.io/functions/${applicationInfo.applicationId}/${execContext.transactionId}/trace-chart`);
+                `https://apm.thundra.io/functions/${applicationInfo.applicationId}/${execContext.transactionId}/trace-chart`);
         }
         return null;
     }
