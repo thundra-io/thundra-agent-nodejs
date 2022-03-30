@@ -158,7 +158,7 @@ class InvocationTraceSupport {
             return [];
         }
 
-        try {
+        try {
             const spans = tracer.getSpanList();
             let traceLinkCount: number = 0;
             const traceLinks = flatten(

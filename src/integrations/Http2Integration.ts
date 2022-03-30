@@ -119,7 +119,6 @@ class Http2Integration implements Integration {
                         [HttpTags.HTTP_PATH]: path,
                         [HttpTags.HTTP_URL]: fullURL,
                         [HttpTags.QUERY_PARAMS]: queryParams,
-                        [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     });
 
