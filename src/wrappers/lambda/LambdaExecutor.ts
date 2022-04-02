@@ -7,7 +7,6 @@ import ThundraSpanContext from '../../opentracing/SpanContext';
 import {
     DomainNames, ClassNames, LAMBDA_FUNCTION_PLATFORM, THUNDRA_TRACE_KEY,
     AwsTags, AwsLambdaWrapperTags, TriggerHeaderTags, HttpTags,
-    EnvVariableKeys, LAMBDA_INIT_TYPE_PROVISIONED_CONCURRENCY,
 } from '../../Constants';
 import ThundraTracer from '../../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
@@ -27,6 +26,8 @@ import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 import ExecutionContext from '../../context/ExecutionContext';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
+import LambdaUtils from '../../utils/LambdaUtils';
+import { SpanOptions } from 'opentracing/lib/tracer';
 
 const get = require('lodash.get');
 
@@ -75,6 +76,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     execContext.triggerClassName =
         injectTriggerTags(execContext.rootSpan, pluginContext, execContext,
             lambdaEventType, originalEvent, originalContext, config);
+    execContext.coldStart = LambdaUtils.isColdStart(pluginContext);
 
     ThundraLogger.debug(
         '<LambdaExecutor> Injected trigger tags of transaction', execContext.transactionId,
@@ -86,7 +88,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
     execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_MEMORY_LIMIT] = parseInt(originalContext.memoryLimitInMB, 10);
     execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_LOG_GROUP_NAME] = originalContext.logGroupName;
     execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_LOG_STREAM_NAME] = originalContext.logStreamName;
-    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_COLDSTART] = pluginContext.requestCount === 0;
+    execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_COLDSTART] = execContext.coldStart;
     execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST_ID] = originalContext.awsRequestId;
 
     const request = getRequest(originalEvent, execContext.triggerClassName, config);
@@ -94,6 +96,25 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
         '<LambdaExecutor> Captured invocation request of transaction',
         execContext.transactionId, ':', request);
     execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST] = request;
+
+    if (execContext.coldStart && __PRIVATE__.isInitTracingEnabled()) {
+        const initStartTime: number = execContext.startTimestamp;
+        const initFinishTime: number = Date.now();
+        const initSpan: ThundraSpan =
+            tracer.startSpan(
+                'init',
+                {
+                    startTime: initStartTime,
+                    disableActiveStart: true,
+                    domainName: DomainNames.SERVERLESS,
+                    className: ClassNames.LAMBDA_INIT,
+                } as SpanOptions,
+            ) as ThundraSpan;
+        initSpan.finish(initFinishTime);
+
+        execContext.initDuration = initFinishTime - initStartTime;
+        execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INIT_DURATION] = execContext.initDuration;
+    }
 }
 
 /**
@@ -143,20 +164,6 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
     rootSpan.finishTime = finishTimestamp;
 }
 
-function isColdStart(pluginContext: PluginContext): boolean {
-    const firstRequest: boolean = pluginContext.requestCount === 0;
-    if (firstRequest) {
-        const initType: string = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_INITIALIZATION_TYPE);
-        if (initType === LAMBDA_INIT_TYPE_PROVISIONED_CONCURRENCY) {
-            return false;
-        } else {
-            return true;
-        }
-    } else {
-        return false;
-    }
-}
-
 /**
  * Starts invocation for AWS Lambda request
  * @param {PluginContext} pluginContext the {@link PluginContext}
@@ -177,7 +184,7 @@ export function startInvocation(pluginContext: PluginContext, execContext: Execu
     invocationData.erroneous = false;
     invocationData.errorType = '';
     invocationData.errorMessage = '';
-    invocationData.coldStart = isColdStart(pluginContext);
+    invocationData.coldStart = execContext.coldStart;
     invocationData.timeout = false;
 
     invocationData.traceId = execContext.traceId;
@@ -196,7 +203,8 @@ function setInvocationTags(invocationData: any, pluginContext: PluginContext, ex
 
     invocationData.tags[AwsTags.AWS_REGION] = pluginContext.applicationInfo.applicationRegion;
     invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_MEMORY_LIMIT] = pluginContext.maxMemory;
-    invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_COLDSTART] = pluginContext.requestCount === 0;
+    invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_COLDSTART] = execContext.coldStart;
+    invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INIT_DURATION] = execContext.initDuration;
     invocationData.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_TIMEOUT] = false;
 
     if (originalContext) {
@@ -471,3 +479,11 @@ function getResponse(response: any, config: TraceConfig): any {
 
     return response;
 }
+
+/* test-code */
+export const __PRIVATE__ = {
+    isInitTracingEnabled: () => {
+        return true;
+    },
+};
+/* end-test-code */

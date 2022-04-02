@@ -18,6 +18,7 @@ import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import ExecutionContext from '../../context/ExecutionContext';
 import HTTPUtils from '../../utils/HTTPUtils';
+import LambdaUtils from '../../utils/LambdaUtils';
 
 const path = require('path');
 
@@ -128,8 +129,17 @@ class LambdaHandlerWrapper {
 
         const execContext = ExecutionContextManager.get();
 
+        const coldStart: boolean = LambdaUtils.isColdStart(this.pluginContext);
+        const currentTimestamp: number = Date.now();
+        let startTimestamp: number = currentTimestamp;
+        if (coldStart) {
+            const upTime: number = Math.floor(1000 * process.uptime());
+            // At coldstart, start the invocation from the process start time to cover init duration
+            startTimestamp = currentTimestamp - upTime;
+        }
+
         // Execution context initialization
-        execContext.startTimestamp = Date.now();
+        execContext.startTimestamp = startTimestamp;
         execContext.request = this.originalEvent;
         execContext.platformData.originalContext = this.originalContext;
         execContext.platformData.originalEvent = this.originalEvent;

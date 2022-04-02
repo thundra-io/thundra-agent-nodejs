@@ -1,8 +1,9 @@
 import {
     AWS_SERVICE_REQUEST,
-    EnvVariableKeys,
+    EnvVariableKeys, LAMBDA_INIT_TYPE_PROVISIONED_CONCURRENCY,
 } from '../Constants';
 import Utils from './Utils';
+import PluginContext from '../plugins/PluginContext';
 
 const get = require('lodash.get');
 
@@ -41,6 +42,21 @@ export class LambdaUtils {
         }
         return false;
     }
+
+    static isColdStart(pluginContext: PluginContext): boolean {
+        const firstRequest: boolean = pluginContext.requestCount === 0;
+        if (firstRequest) {
+            const initType: string = Utils.getEnvVar(EnvVariableKeys.AWS_LAMBDA_INITIALIZATION_TYPE);
+            if (initType === LAMBDA_INIT_TYPE_PROVISIONED_CONCURRENCY) {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
 }
 
 export default LambdaUtils;
