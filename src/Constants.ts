@@ -107,6 +107,7 @@ export const logLevels: any = {
 };
 
 export const DomainNames = {
+    SERVERLESS: 'Serverless',
     AWS: 'AWS',
     DB: 'DB',
     MESSAGING: 'Messaging',
@@ -128,6 +129,7 @@ export const ClassNames = {
     FIREHOSE: 'AWS-Firehose',
     S3: 'AWS-S3',
     LAMBDA: 'AWS-Lambda',
+    LAMBDA_INIT: 'AWS-Lambda-Init',
     RDB: 'RDB',
     REDIS: 'Redis',
     HTTP: 'HTTP',
@@ -178,6 +180,7 @@ export const AwsLambdaWrapperTags = {
     AWS_LAMBDA_INVOCATION_TIMEOUT: 'aws.lambda.invocation.timeout',
     AWS_LAMBDA_INVOCATION_REQUEST: 'aws.lambda.invocation.request',
     AWS_LAMBDA_INVOCATION_RESPONSE: 'aws.lambda.invocation.response',
+    AWS_LAMBDA_INIT_DURATION: 'aws.lambda.init_duration',
 };
 
 export const VercelTags = {
