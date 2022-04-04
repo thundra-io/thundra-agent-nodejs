@@ -1,5 +1,3 @@
-const thundra = require('../../thundraBridge');
-
 const ORIGINAL_HANDLER_ENV_VAR_NAME = '_HANDLER';
 const THUNDRA_HANDLER_ENV_VAR_NAME = 'THUNDRA_AGENT_LAMBDA_HANDLER';
 const LAMBDA_TASK_ROOT_ENV_VAR_NAME = 'LAMBDA_TASK_ROOT';
@@ -21,5 +19,3 @@ if (thundraHandler.endsWith(JS_FILE_EXTENSION)) {
 // Switch user handler with Thundra handler
 process.env[ORIGINAL_HANDLER_ENV_VAR_NAME] = thundraHandler + '.wrapper';
 process.env[THUNDRA_HANDLER_ENV_VAR_NAME] = userHandler;
-
-thundra.init();
