@@ -110,7 +110,7 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
                     className: ClassNames.LAMBDA_INIT,
                 } as SpanOptions,
             ) as ThundraSpan;
-        initSpan.finish(initFinishTime);
+        initSpan.close(initFinishTime);
 
         execContext.initDuration = initFinishTime - initStartTime;
         execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INIT_DURATION] = execContext.initDuration;
