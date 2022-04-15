@@ -22,6 +22,7 @@ const MAX_LINES: number = 100;
 const MAX_VAR_VALUE_SIZE: number = 8192; // 8KB
 const MAX_ELEMENTS: number = 100;
 const MAX_PROPS: number = 20;
+const MASKED_VALUE: string = '*****';
 
 /**
  * Instruments specified/configured modules/method during load time
@@ -30,12 +31,14 @@ class Instrumenter {
 
     private traceableConfigs: TraceableConfig[];
     private traceableConfigPrefix: string;
+    private keysMasked: RegExp[];
     private origCompile: any;
     private sourceCodeInstrumenter: ThundraSourceCodeInstrumenter;
 
     constructor(traceConfig: TraceConfig) {
         this.traceableConfigs = get(traceConfig, 'traceableConfigs');
         this.traceableConfigPrefix = ConfigProvider.get<string>(ConfigNames.THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX);
+        this.keysMasked = get(traceConfig, 'keysMasked');
 
         this.sourceCodeInstrumenter = new ThundraSourceCodeInstrumenter(this.traceableConfigs, this.traceableConfigPrefix);
     }
@@ -155,10 +158,11 @@ class Instrumenter {
 
                 if (args.args) {
                     for (let i = 0; i < args.args.length; i++) {
+                        const argName = args.argNames[i];
                         const argValue = args.args[i];
                         const argType = typeof argValue;
-                        const packedArgValue = me.packValue(argValue);
-                        spanArguments.push(new Argument(args.argNames[i], argType, packedArgValue));
+                        const packedArgValue = me.shouldMaskValue(argName) ? MASKED_VALUE : me.packValue(argValue);
+                        spanArguments.push(new Argument(argName, argType, packedArgValue));
                     }
                 }
 
@@ -219,7 +223,7 @@ class Instrumenter {
                         const varName = varNames[i];
                         const varValue = varValues[i];
                         const varType = typeof varValue;
-                        const packedVarValue = me.packValue(varValue);
+                        const packedVarValue = me.shouldMaskValue(varName) ? MASKED_VALUE : me.packValue(varValue);
                         const localVar: any = {
                             name: varName,
                             value: packedVarValue,
@@ -315,6 +319,17 @@ class Instrumenter {
             ThundraLogger.debug('<Instrumenter> Unable to check value size:', e);
             return true;
         }
+    }
+
+    private shouldMaskValue(name: string): boolean {
+        if (this.keysMasked && this.keysMasked.length) {
+            for (const keyMasked of this.keysMasked) {
+                if (keyMasked.test(name)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private packValue(value: any) {
