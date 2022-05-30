@@ -33,6 +33,7 @@ const brokerSocket = new WebSocket(
             'x-thundra-session-timeout': SESSION_TIMEOUT,
             'x-thundra-runtime': RUNTIME,
         },
+        followRedirects: true,
     },
 );
 

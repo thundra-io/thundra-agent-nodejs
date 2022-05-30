@@ -320,7 +320,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     },
     [ConfigNames.THUNDRA_LAMBDA_DEBUGGER_BROKER_HOST]: {
         type: 'string',
-        defaultValue: 'debug.thundra.io',
+        defaultValue: 'broker.service.serverlessdebugger.com',
     },
     [ConfigNames.THUNDRA_LAMBDA_DEBUGGER_SESSION_NAME]: {
         type: 'string',
