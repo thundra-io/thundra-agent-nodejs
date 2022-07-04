@@ -57,11 +57,13 @@ function wrapEnvironment(BaseEnvironment: any) {
             this.toBeAttachedToJestTestScope();
             this.setSamplersToConfig();
 
+            const projectConfig = config.projectConfig || config;
+
             // Add default SetupFile
             const setupFilePath = resolveFromRoot(__PRIVATE__.getSetupFilePath());
-            config.setupFiles.push(setupFilePath);
+            projectConfig.setupFiles.push(setupFilePath);
 
-            this.testSuite = TestRunnerUtils.getTestFileName(context.testPath, config.cwd);
+            this.testSuite = TestRunnerUtils.getTestFileName(context.testPath, projectConfig.cwd);
 
             TestRunnerSupport.setTestSuiteName(this.testSuite);
 
@@ -243,7 +245,7 @@ const patch = (Environment: any) => {
     }
 
     TestRunnerSupport.setProjectId(projectId);
-    return wrapEnvironment(Environment);
+    return wrapEnvironment(Environment.default ? Environment.default : Environment);
 };
 
 export default [{
