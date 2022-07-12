@@ -2,17 +2,18 @@
  * The entry point of Thundra Node.js agent
  */
 
+import path from 'path';
 import ConfigProvider from './config/ConfigProvider';
 import config from './plugins/config';
 import listeners from './listeners';
 import samplers from './samplers';
 import Utils from './utils/Utils';
-import {EnvVariableKeys} from './Constants';
+import { EnvVariableKeys } from './Constants';
 import InvocationSupport from './plugins/support/InvocationSupport';
 import InvocationTraceSupport from './plugins/support/InvocationTraceSupport';
 import support from './plugins/support';
 import ConfigNames from './config/ConfigNames';
-import {loadHandler} from './wrappers/lambda/lambdaRuntimeSupport';
+import { loadHandler } from './wrappers/lambda/lambdaRuntimeSupport';
 import * as ExpressWrapper from './wrappers/express/ExpressWrapper';
 import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
 import ExecutionContextManager from './context/ExecutionContextManager';
@@ -22,11 +23,18 @@ import ModuleUtils from './utils/ModuleUtils';
 import * as Foresight from './foresight';
 import * as GenericWrapper from './wrappers/generic/GenericWrapper';
 
+let modulePath: string = '?';
+try {
+    modulePath = path.dirname(require.resolve('.'));
+} catch (error) {
+    // Ignore error
+}
+
 // Check if multiple instances of package exist
 if (!global.__thundraImports__) {
     global.__thundraImports__ = {};
 }
-global.__thundraImports__[__filename] = true;
+global.__thundraImports__[modulePath] = true;
 if (Object.keys(global.__thundraImports__).length > 1) {
     let message = '[THUNDRA] Beware that multiple instances of "@thundra/core" package exist in the following locations!';
     for (const location in global.__thundraImports__) {
@@ -148,8 +156,8 @@ if (global.__thundraMasterModule__) {
 
     const thundraMasterModule = global.__thundraMasterModule__;
 
-    console.warn(`[THUNDRA] Thundra master module detected at ${thundraMasterModule.fileName}.`,
-        `So delegating from current module at ${__filename} to the master module.`);
+    console.warn(`[THUNDRA] Thundra master module detected at ${thundraMasterModule.modulePath}.`,
+        `So delegating from current module at ${modulePath} to the master module.`);
 
     // Expose master module exports
     module.exports = thundraMasterModule.moduleExports;
@@ -183,7 +191,7 @@ if (global.__thundraMasterModule__) {
     });
 
     global.__thundraMasterModule__ = {
-        fileName: __filename,
+        modulePath,
         moduleExports: module.exports,
     };
 }
