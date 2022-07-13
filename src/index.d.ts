@@ -41,6 +41,15 @@ declare module '@thundra/core' {
   export function tracer(): ThundraTracer;
 
   /**
+   * Instruments given module if it is supported
+   * @param moduleName {string} name of the module to be instrumented
+   * @param module the module to be instrumented
+   * @return {boolean} {@code true} if the given has been instrumented,
+   *                   {@code false} otherwise
+   */
+  export function instrumentModule(moduleName: string, module: any): boolean;
+
+  /**
    * Sets the tag
    * @param {string} name the tag name
    * @param value the tag value
