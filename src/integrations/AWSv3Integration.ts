@@ -67,9 +67,12 @@ export class AWSv3Integration implements Integration {
 
                     const originalOptions = typeof optionsOrCb !== 'function' ? optionsOrCb : undefined;
                     const originalCallback = typeof optionsOrCb === 'function' ? optionsOrCb : cb;
+                    const originalCommandName: string = command.constructor.name;
+                    const cmdIdx: number = originalCommandName.indexOf('Command');
+                    const operationName: string = cmdIdx > 0 ? originalCommandName.substring(0, cmdIdx) : originalCommandName;
 
                     const request: any = {
-                        operation: Utils.makeLowerCase(command.constructor.name.replace('Command', '')),
+                        operation: Utils.makeLowerCase(operationName),
                         /** if needed use deep copy instead of shallow */
                         params: command.input,
                         service: {
