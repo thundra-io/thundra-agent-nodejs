@@ -7,8 +7,6 @@ import {
     DomainNames,
     ClassNames,
     TriggerHeaderTags,
-    MAX_HTTP_REQUEST_SIZE,
-    MAX_HTTP_RESPONSE_SIZE,
     INTEGRATIONS,
 } from '../Constants';
 import Utils from '../utils/Utils';
@@ -169,7 +167,7 @@ class HttpIntegration implements Integration {
                                 if (arguments[0]
                                     && (typeof arguments[0] === 'string' || arguments[0] instanceof Buffer)) {
                                     const requestData: string | Buffer = arguments[0];
-                                    if (requestData.length <= MAX_HTTP_REQUEST_SIZE) {
+                                    if (requestData.length <= config.maxHttpBodySize) {
                                         const requestBody: string = requestData.toString('utf8');
                                         if (ThundraLogger.isDebugEnabled()) {
                                             ThundraLogger.debug(`<HTTPIntegration> Captured request body: ${requestBody}`);
@@ -196,7 +194,7 @@ class HttpIntegration implements Integration {
                                 // If there is no `content-length` header, `contentLength` will be `NaN`
                                 const contentLength: Number | undefined =
                                     res.headers && parseInt(res.headers['content-length'], 0);
-                                const responseTooBig = contentLength && contentLength > MAX_HTTP_RESPONSE_SIZE;
+                                const responseTooBig = contentLength && contentLength > config.maxHttpResponseBodySize;
                                 if (responseTooBig) {
                                     return;
                                 }
@@ -214,7 +212,7 @@ class HttpIntegration implements Integration {
                                     return;
                                 }
                                 totalSize += chunk.length;
-                                if (totalSize <= MAX_HTTP_RESPONSE_SIZE) {
+                                if (totalSize <= config.maxHttpResponseBodySize) {
                                     chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
                                 } else {
                                     // No need to capture partial response body

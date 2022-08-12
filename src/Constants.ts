@@ -863,9 +863,6 @@ export const GOOGLE_CLOUD_HTTP_PATTERNS: any = {
     PATTERN2: /google.pubsub.v1.\w*/,
 };
 
-export const MAX_HTTP_REQUEST_SIZE: number = 10 * 1024; // 10 KB
-export const MAX_HTTP_RESPONSE_SIZE: number = 10 * 1024; // 10 KB
-
 export const REPORTER_HTTP_TIMEOUT: number = 3000;
 export const REPORTER_DATA_SIZE_LIMIT: number = 1_000_000; // 1MB
 
