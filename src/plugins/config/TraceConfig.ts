@@ -49,7 +49,9 @@ class TraceConfig extends BasePluginConfig {
     maskLambdaPayload: boolean;
     maskEventBridgeDetail: boolean;
     maskHttpBody: boolean;
+    maxHttpBodySize: number;
     maskHttpResponseBody: boolean;
+    maxHttpResponseBodySize: number;
     maskGooglePubSubMessage: boolean;
     sampler: Sampler<any>;
     runSamplerOnEachSpan: boolean;
@@ -115,9 +117,15 @@ class TraceConfig extends BasePluginConfig {
         this.maskHttpBody = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_MASK,
             options.maskHttpBody);
+        this.maxHttpBodySize = ConfigProvider.get<number>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_SIZE_MAX,
+            options.maxHttpBodySize);
         this.maskHttpResponseBody = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_MASK,
             options.maskHttpResponseBody);
+        this.maxHttpResponseBodySize = ConfigProvider.get<number>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_SIZE_MAX,
+            options.maxHttpResponseBodySize);
         this.maskEventBridgeDetail = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_EVENTBRIDGE_DETAIL_MASK,
             options.maskEventBridgeDetail);
