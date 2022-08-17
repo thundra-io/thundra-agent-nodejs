@@ -127,6 +127,7 @@
   },
   "dependencies": {
     "@thundra/instrumenter": "^1.3.6",
+    "@thundra/slsdebugger": "^0.0.1",
     "@thundra/warmup": "^1.1.2",
     "fast-copy": "^2.1.0",
     "isomorphic-git": "^1.11.1",

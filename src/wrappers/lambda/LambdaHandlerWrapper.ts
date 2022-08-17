@@ -4,23 +4,12 @@ import HttpError from '../../error/HttpError';
 import ThundraConfig from '../../plugins/config/ThundraConfig';
 import PluginContext from '../../plugins/PluginContext';
 import ThundraLogger from '../../ThundraLogger';
-import {
-    BROKER_WS_HTTP_ERR_CODE_TO_MSG,
-    BROKER_WS_HTTP_ERROR_PATTERN,
-    BROKER_WS_PROTOCOL,
-    BROKER_WSS_PROTOCOL,
-    DEBUG_BRIDGE_FILE_NAME,
-} from '../../Constants';
 import Utils from '../../utils/Utils';
-import { readFileSync } from 'fs';
-import ConfigProvider from '../../config/ConfigProvider';
-import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import ExecutionContext from '../../context/ExecutionContext';
 import HTTPUtils from '../../utils/HTTPUtils';
 import LambdaUtils from '../../utils/LambdaUtils';
-
-const path = require('path');
+import SLSDebugger from '@thundra/slsdebugger/dist/debugger/SlsDebugger';
 
 /**
  * Wraps the Lambda handler function.
@@ -48,22 +37,10 @@ class LambdaHandlerWrapper {
     private timeout: NodeJS.Timer;
     private resolve: any;
     private reject: any;
-    private inspector: any;
-    private fork: any;
-    private debuggerPort: number;
-    private debuggerMaxWaitTime: number;
-    private debuggerIOWaitTime: number;
-    private brokerHost: string;
-    private sessionName: string;
-    private brokerProtocol: string;
-    private authToken: string;
-    private sessionTimeout: number;
-    private brokerPort: number;
-    private debuggerProxy: any;
-    private debuggerLogsEnabled: boolean;
+    private slsDebugger?: SLSDebugger;
 
     constructor(self: any, event: any, context: any, callback: any, originalFunction: any,
-                plugins: any, pluginContext: PluginContext, config: ThundraConfig) {
+                plugins: any, pluginContext: PluginContext, config: ThundraConfig, slsDebugger?: SLSDebugger) {
         this.originalThis = self;
         this.originalEvent = event;
         this.originalContext = context;
@@ -75,6 +52,7 @@ class LambdaHandlerWrapper {
         this.pluginContext.maxMemory = parseInt(context.memoryLimitInMB, 10);
         this.completed = false;
         this.reporter = new Reporter(this.config.apiKey);
+        this.slsDebugger = slsDebugger;
         this.wrappedContext = {
             ...context,
             done: (error: any, result: any) => {
@@ -104,10 +82,6 @@ class LambdaHandlerWrapper {
                 return me.originalContext.callbackWaitsForEmptyEventLoop;
             },
         }, this.wrappedContext);
-
-        if (this.shouldInitDebugger()) {
-            this.initDebugger();
-        }
     }
 
     // Invocation related stuff                                                                         //
@@ -122,7 +96,9 @@ class LambdaHandlerWrapper {
 
         this.config.refreshConfig();
 
-        await this.startDebuggerProxyIfAvailable();
+        if (this.slsDebugger) {
+            await this.slsDebugger.start();
+        }
 
         this.resolve = undefined;
         this.reject = undefined;
@@ -244,7 +220,9 @@ class LambdaHandlerWrapper {
                     ThundraLogger.debug('<LambdaHandlerWrapper> Failed to report:', e);
                 }
 
-                this.finishDebuggerProxyIfAvailable();
+                if (this.slsDebugger) {
+                    this.slsDebugger.close();
+                }
             } finally {
                 if (!timeout) {
                     this.onFinish(error, result);
@@ -329,246 +307,6 @@ class LambdaHandlerWrapper {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Debugger related stuff                                                                           //
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private shouldInitDebugger(): boolean {
-        const authToken = ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN);
-        const debuggerEnable = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_ENABLE, null);
-        if (debuggerEnable != null) {
-            return debuggerEnable && authToken !== undefined;
-        } else {
-            return authToken !== undefined;
-        }
-    }
-
-    private initDebugger(): void {
-        try {
-            this.inspector = require('inspector');
-            this.fork = require('child_process').fork;
-
-            const debuggerPort =
-                ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_PORT);
-            const brokerHost =
-                ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_BROKER_HOST);
-            const brokerPort =
-                ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_BROKER_PORT);
-            const authToken =
-                ConfigProvider.get<string>(
-                    ConfigNames.THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN,
-                    '');
-            const sessionName =
-                ConfigProvider.get<string>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_SESSION_NAME);
-            const debuggerMaxWaitTime =
-                ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_WAIT_MAX);
-            const debuggerIOWaitTime =
-                ConfigProvider.get<number>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_IO_WAIT);
-            const debuggerLogsEnabled =
-                ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_DEBUGGER_LOGS_ENABLE);
-            let brokerProtocol = BROKER_WSS_PROTOCOL;
-
-            if (brokerHost.startsWith(BROKER_WS_PROTOCOL) || brokerHost.startsWith(BROKER_WSS_PROTOCOL)) {
-                // If WebSocket protocol is already included in the broker address, do not add protocol string
-                brokerProtocol = '';
-            }
-
-            if (ThundraLogger.isDebugEnabled()) {
-                ThundraLogger.debug('<LambdaHandlerWrapper> Initializing debugger with the following configurations:', {
-                    debuggerPort, debuggerMaxWaitTime, debuggerIOWaitTime,
-                    brokerProtocol, brokerHost, brokerPort,
-                    sessionName, authToken, debuggerLogsEnabled,
-                });
-            }
-
-            if (brokerPort === -1) {
-                throw new Error(
-                    'For debugging, you must set debug broker port through \
-                    \'thundra_agent_lambda_debug_broker_port\' environment variable');
-            }
-
-            this.debuggerPort = debuggerPort;
-            this.debuggerMaxWaitTime = debuggerMaxWaitTime;
-            this.debuggerIOWaitTime = debuggerIOWaitTime;
-            this.brokerProtocol = brokerProtocol;
-            this.brokerPort = brokerPort;
-            this.brokerHost = brokerHost;
-            this.sessionName = sessionName;
-            this.sessionTimeout = Date.now() + this.originalContext.getRemainingTimeInMillis();
-            this.authToken = authToken;
-            this.debuggerLogsEnabled = debuggerLogsEnabled;
-        } catch (e) {
-            this.fork = null;
-            this.inspector = null;
-        }
-    }
-
-    private getDebuggerProxyIOMetrics(): any {
-        try {
-            const ioContent = readFileSync('/proc/' + this.debuggerProxy.pid + '/io', 'utf8');
-            const ioMetrics = ioContent.split('\n');
-            return {
-                rchar: ioMetrics[0],
-                wchar: ioMetrics[1],
-            };
-        } catch (e) {
-            return null;
-        }
-    }
-
-    private async waitForDebugger() {
-        let prevRchar = 0;
-        let prevWchar = 0;
-        let initCompleted = false;
-        ThundraLogger.info('<LambdaHandlerWrapper> Waiting for debugger to handshake ...');
-
-        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-        const startTime = Date.now();
-        while ((Date.now() - startTime) < this.debuggerMaxWaitTime) {
-            try {
-                const debuggerIoMetrics = this.getDebuggerProxyIOMetrics();
-                if (ThundraLogger.isDebugEnabled()) {
-                    ThundraLogger.debug(
-                        '<LambdaHandlerWrapper> Got debugger proxy process IO metrics:', debuggerIoMetrics);
-                }
-                if (!debuggerIoMetrics) {
-                    await sleep(this.debuggerIOWaitTime);
-                    ThundraLogger.debug(
-                        '<LambdaHandlerWrapper> No IO metrics was able to detected for debugger proxy process, \
-                        finished waiting for handshake');
-                    break;
-                }
-                if (ThundraLogger.isDebugEnabled()) {
-                    ThundraLogger.debug('<LambdaHandlerWrapper> Checking debugger proxy process IO metrics:', {
-                        prevRchar, prevWchar,
-                        rchar: debuggerIoMetrics.rchar, wchar: debuggerIoMetrics.wchar,
-                    });
-                }
-                if (prevRchar !== 0 && prevWchar !== 0 &&
-                    debuggerIoMetrics.rchar === prevRchar && debuggerIoMetrics.wchar === prevWchar) {
-                    ThundraLogger.debug(
-                        '<LambdaHandlerWrapper> Debugger proxy process is idle since latest check, \
-                        finished waiting for handshake');
-                    initCompleted = true;
-                    break;
-                }
-                prevRchar = debuggerIoMetrics.rchar;
-                prevWchar = debuggerIoMetrics.wchar;
-            } catch (e) {
-                ThundraLogger.error(
-                    '<LambdaHandlerWrapper> Error occurred while waiting debugger handshake to complete:', e);
-                break;
-            }
-            await sleep(this.debuggerIOWaitTime);
-        }
-        if (initCompleted) {
-            ThundraLogger.info('<LambdaHandlerWrapper> Completed debugger handshake');
-        } else {
-            ThundraLogger.error(
-                '<LambdaHandlerWrapper> Couldn\'t complete debugger handshake in ' + this.debuggerMaxWaitTime + ' milliseconds.');
-        }
-    }
-
-    private async startDebuggerProxyIfAvailable() {
-        ThundraLogger.debug('<LambdaHandlerWrapper> Start debugger proxy if available');
-        if (this.debuggerProxy) {
-            this.finishDebuggerProxyIfAvailable();
-        }
-        if (this.fork && this.inspector) {
-            try {
-                ThundraLogger.debug('<LambdaHandlerWrapper> Forking debugger proxy process');
-                this.debuggerProxy = this.fork(
-                    path.join(__dirname, DEBUG_BRIDGE_FILE_NAME),
-                    [],
-                    {
-                        detached: true,
-                        env: {
-                            BROKER_HOST: this.brokerHost,
-                            BROKER_PORT: this.brokerPort,
-                            SESSION_NAME: this.sessionName,
-                            SESSION_TIMEOUT: this.sessionTimeout,
-                            AUTH_TOKEN: this.authToken,
-                            DEBUGGER_PORT: this.debuggerPort,
-                            LOGS_ENABLED: this.debuggerLogsEnabled,
-                            BROKER_PROTOCOL: this.brokerProtocol,
-                        },
-                    },
-                );
-
-                ThundraLogger.debug('<LambdaHandlerWrapper> Opening inspector');
-                this.inspector.open(this.debuggerPort, 'localhost', false);
-
-                const waitForBrokerConnection = () => new Promise((resolve) => {
-                    this.debuggerProxy.once('message', (mes: any) => {
-                        if (mes === 'brokerConnect') {
-                            return resolve(false);
-                        }
-
-                        let errMessage: string;
-                        if (typeof mes === 'string') {
-                            const match = mes.match(BROKER_WS_HTTP_ERROR_PATTERN);
-
-                            if (match) {
-                                const errCode = Number(match[1]);
-                                errMessage = BROKER_WS_HTTP_ERR_CODE_TO_MSG[errCode];
-                            }
-                        }
-
-                        // If errMessage is undefined replace it with the raw incoming message
-                        errMessage = errMessage || mes;
-                        ThundraLogger.error(
-                            '<LambdaHandlerWrapper> Received error message from Thundra Debugger:', errMessage);
-
-                        return resolve(true);
-                    });
-                });
-
-                ThundraLogger.debug('<LambdaHandlerWrapper> Waiting for broker connection ...');
-                const brokerHasErr = await waitForBrokerConnection();
-
-                if (brokerHasErr) {
-                    ThundraLogger.debug('<LambdaHandlerWrapper> Failed waiting for broker connection');
-                    this.finishDebuggerProxyIfAvailable();
-                    return;
-                }
-
-                await this.waitForDebugger();
-            } catch (e) {
-                this.debuggerProxy = null;
-                ThundraLogger.error('<LambdaHandlerWrapper> Error occurred while starting debugger proxy:', e);
-            }
-        }
-    }
-
-    private finishDebuggerProxyIfAvailable(): void {
-        ThundraLogger.debug('<LambdaHandlerWrapper> Finish debugger proxy if available');
-        try {
-            if (this.inspector) {
-                ThundraLogger.debug('<LambdaHandlerWrapper> Closing inspector');
-                this.inspector.close();
-                this.inspector = null;
-            }
-        } catch (e) {
-            ThundraLogger.error(
-                '<LambdaHandlerWrapper> Error occurred while finishing debugger proxy:', e);
-        }
-        if (this.debuggerProxy) {
-            try {
-                if (!this.debuggerProxy.killed) {
-                    ThundraLogger.debug('<LambdaHandlerWrapper> Killing debugger proxy process');
-                    this.debuggerProxy.kill();
-                }
-            } catch (e) {
-                ThundraLogger.error(
-                    '<LambdaHandlerWrapper> Error occurred while killing debugger proxy process:', e);
-            } finally {
-                this.debuggerProxy = null;
-            }
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-
     // Timeout related stuff                                                                            //
     //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -594,18 +332,8 @@ class LambdaHandlerWrapper {
 
         return setTimeout(() => {
             ThundraLogger.debug('<LambdaHandlerWrapper> Detected timeout');
-            if (this.debuggerProxy) {
-                // Debugger proxy exists, let it know about the timeout
-                try {
-                    if (!this.debuggerProxy.killed) {
-                        ThundraLogger.debug('<LambdaHandlerWrapper> Killing debugger proxy process on timeout');
-                        this.debuggerProxy.kill('SIGHUP');
-                    }
-                } catch (e) {
-                    ThundraLogger.error('<LambdaHandlerWrapper> Error occurred while killing debugger proxy:', e);
-                } finally {
-                    this.debuggerProxy = null;
-                }
+            if (this.slsDebugger) {
+                this.slsDebugger.kill();
             }
             ThundraLogger.debug('<LambdaHandlerWrapper> Reporting timeout error');
             return this.completeInvocation(new TimeoutError('Lambda is timed out.'), null, true);

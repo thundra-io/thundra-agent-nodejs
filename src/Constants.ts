@@ -807,7 +807,6 @@ export const StdErrorLogContext = 'STDERR';
 
 export const DefaultMongoCommandSizeLimit = 128 * 1024;
 
-export const DEBUG_BRIDGE_FILE_NAME = 'debugBridge.js';
 export const BROKER_WS_PROTOCOL = 'ws://';
 export const BROKER_WSS_PROTOCOL = 'wss://';
 export const BROKER_WS_HTTP_ERROR_PATTERN = /:\s*\D*(\d+)/;
