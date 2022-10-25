@@ -589,7 +589,7 @@ class Utils {
 
     static getNormalizedPath(pathStr: string, depth: number): string {
         try {
-            if (depth <= 0) {
+            if (!pathStr || pathStr === '' || depth <= 0) {
                 return '';
             }
             const normalizedPath = '/' + pathStr.split('/').filter((c) => c !== '').slice(0, depth).join('/');
