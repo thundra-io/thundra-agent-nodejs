@@ -173,7 +173,7 @@ class HTTPUtils {
             return { url, options, callback };
         }
 
-        // Check whether first arg is URL 
+        // Check whether first arg is URL
         if (['string', 'URL'].includes(typeof a)) {
           if (typeof b === 'object' && !c) {
             // handling case of "request(url, options)"
@@ -189,7 +189,7 @@ class HTTPUtils {
             url = undefined;
             options = a;
             callback = b;
-        } 
+        }
 
         return { url, options, callback };
     }
