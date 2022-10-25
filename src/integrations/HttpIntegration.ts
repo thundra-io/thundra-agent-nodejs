@@ -89,8 +89,6 @@ class HttpIntegration implements Integration {
                     );
 
                     if (callback && callback.__thundra_wrapped) {
-                        // we are already tracing this request. can happen in
-                        // https->http cases
                         ThundraLogger.debug(`<HTTPIntegration> Skipped tracing request as filtered patched callback ${host}`);
                         return request.apply(this, [a, b, c]);
                     }
