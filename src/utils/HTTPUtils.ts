@@ -162,18 +162,6 @@ class HTTPUtils {
         let url = a;
         let options = b;
         let callback = c;
-        // handling case of request(options, callback)
-        if (!(['string', 'URL'].includes(typeof url)) && !callback) {
-            callback = b;
-            options = a;
-            url = undefined;
-        }
-
-        // handling case of request(url, callback)
-        if ((typeof options === 'function') && (!callback)) {
-            callback = options;
-            options = null;
-        }
 
         // handling case of got.post(url, options)
         if (a.constructor && a.constructor.name === 'URL' && typeof b === 'object' && !c) {
@@ -181,7 +169,27 @@ class HTTPUtils {
             url.path = url.pathname;
             options = b;
             callback = undefined;
+
+            return { url, options, callback };
         }
+
+        // Check whether first arg is URL 
+        if (['string', 'URL'].includes(typeof a)) {
+          if (typeof b === 'object' && !c) {
+            // handling case of "request(url, options)"
+            options = b;
+            callback = undefined;
+          } else if (typeof b === 'function' && !c) {
+            // handling case of "request(url, callback)"
+            options = undefined;
+            callback = b;
+          }
+        } else if (typeof a === 'object' && typeof b === 'function' && !c) {
+            // handling case of "request(options, callback)"
+            url = undefined;
+            options = a;
+            callback = b;
+        } 
 
         return { url, options, callback };
     }
