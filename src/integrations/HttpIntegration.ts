@@ -11,7 +11,7 @@ import {
 } from '../Constants';
 import Utils from '../utils/Utils';
 import ModuleUtils from '../utils/ModuleUtils';
-import * as url from 'url';
+import * as Url from 'url';
 import ThundraLogger from '../ThundraLogger';
 import HttpError from '../error/HttpError';
 import ThundraSpan from '../opentracing/Span';
@@ -58,46 +58,70 @@ class HttpIntegration implements Integration {
         ThundraLogger.debug('<HTTPIntegration> Wrap');
 
         const nodeVersion = process.version;
-
         function wrapper(request: any) {
-            return function requestWrapper(options: any, callback: any) {
+            return function requestWrapper(a: any, b: any, c: any) {
                 let span: ThundraSpan;
+                const args = HTTPUtils.parseArgs(a, b, c);
+                const url = args.url;
+                let options = args.options;
+                const callback = args.callback;
                 try {
                     ThundraLogger.debug('<HTTPIntegration> Tracing HTTP request:', options);
 
                     const { tracer } = ExecutionContextManager.get();
-
                     if (!tracer) {
                         ThundraLogger.debug('<HTTPIntegration> Skipped tracing request as no tracer is available');
-                        return request.apply(this, [options, callback]);
+                        return request.apply(this, [a, b, c]);
                     }
 
-                    const method = (options.method || 'GET').toUpperCase();
-                    options = typeof options === 'string' ? url.parse(options) : options;
-                    const host = options.hostname || options.host || 'localhost';
-                    let path = options.path || options.pathname || '/';
+                    let parsedUrl = url;
+                    if (typeof parsedUrl === 'string') {
+                        parsedUrl = Url.parse(parsedUrl);
+                    }
+
+                    const host = (
+                        (parsedUrl && parsedUrl.hostname) ||
+                        (parsedUrl && parsedUrl.host) ||
+                        (options && options.hostname) ||
+                        (options && options.host) ||
+                        (options && options.uri && options.uri.hostname) ||
+                        'localhost'
+                    );
+
+                    if (callback && callback.__thundra_wrapped) {
+                        ThundraLogger.debug(`<HTTPIntegration> Skipped tracing request as filtered patched callback ${host}`);
+                        return request.apply(this, [a, b, c]);
+                    }
+
+                    const method = (options && options.method) || 'GET'.toUpperCase();
+                    let path = (
+                        (options && options.path) ||
+                        (options && options.pathname) ||
+                        (parsedUrl && parsedUrl.path) ||
+                        (parsedUrl && parsedUrl.href) ||
+                        ('')
+                    );
+
                     const fullURL = host + path;
                     const splittedPath = path.split('?');
                     const queryParams = splittedPath.length > 1 ? splittedPath[1] : '';
-
                     path = splittedPath[0];
-
                     if (HTTPUtils.isTestContainersRequest(options, host)) {
                         ThundraLogger.debug(
                             `<HTTPIntegration> Skipped tracing request as test containers docker request`);
-                        return request.apply(this, [options, callback]);
+                        return request.apply(this, [a, b, c]);
                     }
 
                     if (!HTTPUtils.isValidUrl(host)) {
                         ThundraLogger.debug(
                             `<HTTPIntegration> Skipped tracing request as target host is blacklisted: ${host}`);
-                        return request.apply(this, [options, callback]);
+                        return request.apply(this, [a, b, c]);
                     }
 
-                    if (HTTPUtils.wasAlreadyTraced(options.headers)) {
+                    if (options && HTTPUtils.wasAlreadyTraced(options.headers)) {
                         ThundraLogger.debug(
                             `<HTTPIntegration> Skipped tracing request as it is already traced: ${host}`);
-                        return request.apply(this, [options, callback]);
+                        return request.apply(this, [a, b, c]);
                     }
 
                     const parentSpan = tracer.getActiveSpan();
@@ -113,6 +137,13 @@ class HttpIntegration implements Integration {
                     });
 
                     if (!config.httpTraceInjectionDisabled) {
+                        /**
+                         * in case of missing options for inject trace create an empty options
+                         */
+                        if (!options) {
+                            options = {};
+                        }
+
                         const headers = options.headers ? options.headers : {};
                         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
                         headers[TriggerHeaderTags.RESOURCE_NAME] = operationName;
@@ -131,7 +162,6 @@ class HttpIntegration implements Integration {
                     });
 
                     const me = this;
-
                     const wrappedCallback = (res: any) => {
                         if (span) {
                             HTTPUtils.fillOperationAndClassNameToSpan(span, res.headers, host);
@@ -158,8 +188,8 @@ class HttpIntegration implements Integration {
 
                     span._initialized();
 
-                    const req = request.call(this, options, wrappedCallback);
-
+                    (wrappedCallback as any).__thundra_wrapped = true;
+                    const req = request.apply(this, HTTPUtils.buildParams(url, options, wrappedCallback));
                     if (!config.maskHttpBody && req.write && typeof req.write === 'function') {
                         const write = req.write;
                         req.write = function () {
@@ -206,7 +236,6 @@ class HttpIntegration implements Integration {
 
                             let chunks: Buffer[] = [];
                             let totalSize: Number = 0;
-
                             res.prependListener('data', (chunk: any) => {
                                 if (!chunk) {
                                     return;
@@ -262,7 +291,7 @@ class HttpIntegration implements Integration {
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        return request.apply(this, [options, callback]);
+                        return request.apply(this, [a, b, c]);
                     }
                 }
             };

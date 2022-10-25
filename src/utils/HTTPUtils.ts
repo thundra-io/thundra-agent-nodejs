@@ -157,6 +157,55 @@ class HTTPUtils {
 
         return result;
     }
+
+    static parseArgs(a: any, b: any, c: any) {
+        let url = a;
+        let options = b;
+        let callback = c;
+
+        // handling case of got.post(url, options)
+        if (a.constructor && a.constructor.name === 'URL' && typeof b === 'object' && !c) {
+            url = a;
+            url.path = url.pathname;
+            options = b;
+            callback = undefined;
+
+            return { url, options, callback };
+        }
+
+        // Check whether first arg is URL
+        if (['string', 'URL'].includes(typeof a)) {
+          if (typeof b === 'object' && !c) {
+            // handling case of "request(url, options)"
+            options = b;
+            callback = undefined;
+          } else if (typeof b === 'function' && !c) {
+            // handling case of "request(url, callback)"
+            options = undefined;
+            callback = b;
+          }
+        } else if (typeof a === 'object' && typeof b === 'function' && !c) {
+            // handling case of "request(options, callback)"
+            url = undefined;
+            options = a;
+            callback = b;
+        }
+
+        return { url, options, callback };
+    }
+
+    static buildParams(url: any, options: any, callback: any) {
+        if (url && options) {
+            // in case of both input and options returning all three
+            return [url, options, callback];
+        }
+        if (url && !options) {
+            // in case of missing options returning only url and callback
+            return [url, callback];
+        }
+        // url is missing - returning options and callback
+        return [options, callback];
+    }
 }
 
 export default HTTPUtils;
