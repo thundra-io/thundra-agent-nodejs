@@ -76,7 +76,7 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/runtime-corejs2": "^7.0.0",
     "@elastic/elasticsearch": "^7.0.0",
-    "@google-cloud/pubsub": "^2.18.5",
+    "@google-cloud/pubsub": "^3.2.0",
     "@google-cloud/bigquery": "^5.10.0",
     "@hapi/hapi": "^20.1.5",
     "@types/aws-lambda": "^8.10.85",
