@@ -61,7 +61,10 @@ class HttpIntegration implements Integration {
         function wrapper(request: any) {
             return function requestWrapper(a: any, b: any, c: any) {
                 let span: ThundraSpan;
-                let { url, options, callback } = HTTPUtils.parseArgs(a, b, c);
+                const args = HTTPUtils.parseArgs(a, b, c);
+                const url = args.url;
+                let options = args.options;
+                const callback = args.callback;
                 try {
                     ThundraLogger.debug('<HTTPIntegration> Tracing HTTP request:', options);
 
@@ -76,7 +79,7 @@ class HttpIntegration implements Integration {
                         parsedUrl = Url.parse(parsedUrl);
                     }
 
-                    let host = (
+                    const host = (
                         (parsedUrl && parsedUrl.hostname) ||
                         (parsedUrl && parsedUrl.host) ||
                         (options && options.hostname) ||
@@ -100,7 +103,7 @@ class HttpIntegration implements Integration {
                         (parsedUrl && parsedUrl.href) ||
                         ('')
                     );
-        
+
                     const fullURL = host + path;
                     const splittedPath = path.split('?');
                     const queryParams = splittedPath.length > 1 ? splittedPath[1] : '';
