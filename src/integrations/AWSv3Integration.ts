@@ -120,10 +120,14 @@ export class AWSv3Integration implements Integration {
                         (next: any, context: any) => async (args: any) => {
                             ThundraLogger.debug('<AWSv3Integration> Deserialize middleware working...');
 
-                            request.service.config.region = await currentInstance.config.region();
-                            request.service.config.endpoint = await currentInstance.config.endpoint();
+                            if (typeof currentInstance.config?.region === 'function') {
+                                request.service.config.region = await currentInstance.config.region();
+                            }
+                            if (typeof currentInstance.config?.endpoint === 'function') {
+                                request.service.config.endpoint = await currentInstance.config.endpoint();
+                            }
 
-                            if (activeSpan.tags[DB_INSTANCE] === '') {
+                            if (request.service.config.endpoint && activeSpan.tags[DB_INSTANCE] === '') {
                                 activeSpan.tags[DB_INSTANCE] = request.service.config.endpoint.hostname;
                             }
 
