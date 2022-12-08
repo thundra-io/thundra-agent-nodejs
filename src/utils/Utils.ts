@@ -8,6 +8,7 @@ import {
     LISTENERS, AGENT_VERSION,
     AGENT_UUID_CONST,
     DEFAULT_APPLICATION_NAME,
+    MAX_ERROR_STACK_LENGTH,
 } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
@@ -263,7 +264,7 @@ class Utils {
      * @return parameter is error
      */
     static isThundraGeneratedError(err: any): boolean {
-        return Utils.isError(err) && err.____thundraGenerated;
+        return Utils.isError(err) && err.__thundraGenerated;
     }
 
     /**
@@ -277,23 +278,32 @@ class Utils {
             error.errorType = err.name;
             error.errorMessage = err.message;
             error.stack = err.stack;
+            error.code = (err as any).code;
         } else if (typeof err === 'string') {
             error.errorMessage = err.toString();
         } else {
-            try {
-                error.errorMessage = JSON.stringify(err);
-            } catch (e) {
-                // the comment below is for ignoring in unit tests, do not remove it
-                // istanbul ignore next
-                error.errorMessage = '';
+            error.errorType = err.type || err.name || error.errorType;
+            error.errorMessage = err.message || error.errorMessage;
+            error.stack = err.stack || error.stack;
+            error.code = err.code || error.code;
+            if (!error.errorMessage) {
+                try {
+                    error.errorMessage = JSON.stringify(err);
+                } catch (e) {
+                    error.errorMessage = '';
+                }
             }
-        }
-        if (!Utils.isString(error.errorMessage)) {
-            error.errorMessage = JSON.stringify(error.errorMessage);
+            if (!Utils.isString(error.errorMessage)) {
+                error.errorMessage = JSON.stringify(error.errorMessage);
+            }
         }
 
         const maskErrorStackTrace = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK);
         error.stack = maskErrorStackTrace ? '' : error.stack;
+
+        if (error.stack && typeof err.stack === 'string' && err.stack.length > MAX_ERROR_STACK_LENGTH) {
+            error.stack = error.stack.substring(0, MAX_ERROR_STACK_LENGTH) + ' ...';
+        }
 
         return error;
     }
