@@ -234,12 +234,21 @@ class Utils {
     }
 
     /**
-     * Check parameter is error
+     * Check whether parameter is error
      * @param err the error to be checked
      * @return parameter is error
      */
     static isError(err: any): boolean {
         return err && err.stack && err.message;
+    }
+
+    /**
+     * Check whether parameter is Thundra generated error
+     * @param err the error to be checked
+     * @return parameter is error
+     */
+    static isThundraGeneratedError(err: any): boolean {
+        return Utils.isError(err) && err.____thundraGenerated;
     }
 
     /**
