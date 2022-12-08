@@ -142,12 +142,8 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
         rootSpan.tags.error = true;
         rootSpan.tags['error.message'] = parsedErr.errorMessage;
         rootSpan.tags['error.kind'] = parsedErr.errorType;
-        if (parsedErr.code) {
-            rootSpan.tags['error.code'] = parsedErr.code;
-        }
-        if (parsedErr.stack) {
-            rootSpan.tags['error.stack'] = parsedErr.stack;
-        }
+        rootSpan.tags['error.stack'] = parsedErr.stack;
+        rootSpan.tags['error.code'] = parsedErr.code;
     }
 
     if (triggerClassName === ClassNames.APIGATEWAY) {
@@ -261,12 +257,7 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
         invocationData.tags['error.message'] = parsedErr.errorMessage;
         invocationData.tags['error.kind'] = parsedErr.errorType;
         invocationData.tags['error.stack'] = parsedErr.stack;
-        if (parsedErr.code) {
-            invocationData.tags['error.code'] = parsedErr.code;
-        }
-        if (parsedErr.stack) {
-            invocationData.tags['error.stack'] = parsedErr.stack;
-        }
+        invocationData.tags['error.code'] = parsedErr.code;
     }
 
     invocationData.setTags(InvocationSupport.getAgentTags());

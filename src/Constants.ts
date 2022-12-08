@@ -914,3 +914,5 @@ export const KNOWN_TEST_FILE_PATHS = new Set([
 ]);
 
 export const DEFAULT_APPLICATION_NAME = 'thundra-app';
+
+export const MAX_ERROR_STACK_LENGTH = 4 * 1024;

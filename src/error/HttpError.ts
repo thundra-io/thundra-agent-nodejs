@@ -10,7 +10,7 @@ class HttpError extends Error {
         super();
         this.message = message;
         this.name = 'HttpError';
-        Error.captureStackTrace(this, HttpError);
+        this.stack = '...';
         Object.setPrototypeOf(this, HttpError.prototype);
     }
 
