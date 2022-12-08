@@ -90,6 +90,21 @@ class Utils {
     }
 
     /**
+     * Checks whether there is any environment variables starts with given prefix
+     * @param {string} prefix the prefix
+     * @return {@code true} if the there is any environment variable starts with given prefix,
+     *         {@code false} otherwise
+     */
+    static hasEnvVarPrefixedWith(prefix: string): boolean {
+        for (const envVarName of Object.keys(process.env)) {
+            if (envVarName.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Gets the environment variable as number
      * @param {string} name the name of the environment variable
      * @param defaultValue default value for the environment variable
