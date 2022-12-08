@@ -3,6 +3,9 @@
  */
 class HttpError extends Error {
 
+    /* tslint:disable: variable-name */
+    readonly __thundraGenerated: boolean = true;
+
     constructor(message: string) {
         super();
         this.message = message;
