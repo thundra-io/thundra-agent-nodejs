@@ -131,8 +131,11 @@ class LambdaHandlerWrapper {
 
         const coldStart: boolean = LambdaUtils.isColdStart(this.pluginContext);
         const currentTimestamp: number = Date.now();
+        const sstLocal: boolean = LambdaUtils.isRunningOnLocalWithSST();
         let startTimestamp: number = currentTimestamp;
-        if (coldStart) {
+        // We skip taking care of initialization time for SST local (live Lambda development),
+        // because SST local reloads local function without creating new process by workers.
+        if (coldStart && !sstLocal) {
             const upTime: number = Math.floor(1000 * process.uptime());
             // At coldstart, start the invocation from the process start time to cover init duration
             startTimestamp = currentTimestamp - upTime;

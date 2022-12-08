@@ -57,6 +57,10 @@ export class LambdaUtils {
         }
     }
 
+    static isRunningOnLocalWithSST(): boolean {
+        return Utils.getEnvVar(EnvVariableKeys.SST_LOCAL) && Utils.hasEnvVarPrefixedWith('SST_');
+    }
+
 }
 
 export default LambdaUtils;
