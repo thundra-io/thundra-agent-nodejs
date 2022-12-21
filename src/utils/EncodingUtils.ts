@@ -13,24 +13,22 @@ class EncodingUtils {
     private constructor() {
     }
 
-    static getJsonPayload(data: any, encoding: string) {
+    static getPayload(data: any, encoding: string, maxLength: number): string | undefined {
         try {
             let decodedData = data;
-            if (ENCODING_FUNCTIONS[encoding]) {
+            if (encoding && ENCODING_FUNCTIONS[encoding]) {
                 try {
                     decodedData = ENCODING_FUNCTIONS[encoding](data);
+                    if (decodedData.length > maxLength) {
+                        return;
+                    }
                 } catch (err) {
                     ThundraLogger.debug(`<EncodingUtils> Could decode data with ${encoding}`, err.message);
                 }
             }
 
-            const decodedDataRef = decodedData;
             try {
-                /**
-                 * Make sure data is json
-                 */
-                JSON.parse(decodedDataRef);
-                return decodedData.toString();
+                return decodedData.toString('utf8');
             } catch (err) {
                 ThundraLogger.debug('<EncodingUtils> An error occured while parsing json data.', err.message);
             }

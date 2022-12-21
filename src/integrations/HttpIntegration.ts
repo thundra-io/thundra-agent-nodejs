@@ -257,13 +257,16 @@ class HttpIntegration implements Integration {
                                         const contentEncoding = HTTPUtils.obtainIncomingMessageEncoding(res);
                                         const responseBody: string =
                                             contentEncoding
-                                                ? (EncodingUtils.getJsonPayload(concatedChunks, contentEncoding)
-                                                    || concatedChunks.toString('utf8'))
+                                                ? (EncodingUtils.getPayload(
+                                                    concatedChunks, contentEncoding, config.maxHttpResponseBodySize))
                                                 : concatedChunks.toString('utf8');
                                         if (ThundraLogger.isDebugEnabled()) {
                                             ThundraLogger.debug(`<HTTPIntegration> Captured response body: ${responseBody}`);
                                         }
-                                        span.setTag(HttpTags.RESPONSE_BODY, responseBody);
+
+                                        if (responseBody) {
+                                            span.setTag(HttpTags.RESPONSE_BODY, responseBody);
+                                        }
                                     }
                                 } catch (error) {
                                     ThundraLogger.error(
