@@ -10,6 +10,8 @@ import {
     AlreadyTracedHeader,
 } from '../Constants';
 
+import http from 'http';
+
 /**
  * Utility class for HTTP instrument related stuff
  */
@@ -205,6 +207,24 @@ class HTTPUtils {
         }
         // url is missing - returning options and callback
         return [options, callback];
+    }
+
+    static obtainIncomingMessageEncoding(incomingMessage: http.IncomingMessage): string {
+        if (!incomingMessage || !incomingMessage.headers || !incomingMessage.rawHeaders) {
+            return;
+        }
+
+        let contentEncoding = incomingMessage.headers 
+            && (incomingMessage.headers['content-encoding']);
+        if (!contentEncoding) {
+            const encodingIndex = incomingMessage.rawHeaders.indexOf('Content-Encoding');
+            const candidateIndex = encodingIndex + 1;
+            if (encodingIndex && candidateIndex < incomingMessage.rawHeaders.length) {
+                contentEncoding = incomingMessage.rawHeaders[candidateIndex];
+            }
+        }
+
+        return contentEncoding;
     }
 }
 

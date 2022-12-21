@@ -19,6 +19,7 @@ import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 
 import HTTPUtils from '../utils/HTTPUtils';
+import EncodingUtils from '../utils/EncodingUtils';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -252,7 +253,13 @@ class HttpIntegration implements Integration {
                             res.on('end', () => {
                                 try {
                                     if (chunks && chunks.length) {
-                                        const responseBody: string = Buffer.concat(chunks).toString('utf8');
+                                        const concatedChunks = Buffer.concat(chunks);
+                                        const contentEncoding = HTTPUtils.obtainIncomingMessageEncoding(res);
+                                        const responseBody: string = 
+                                            contentEncoding 
+                                                ? (EncodingUtils.getJsonPayload(concatedChunks, contentEncoding) 
+                                                    || concatedChunks.toString('utf8'))
+                                                : concatedChunks.toString('utf8');
                                         if (ThundraLogger.isDebugEnabled()) {
                                             ThundraLogger.debug(`<HTTPIntegration> Captured response body: ${responseBody}`);
                                         }
