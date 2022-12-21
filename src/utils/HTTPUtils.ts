@@ -214,7 +214,7 @@ class HTTPUtils {
             return;
         }
 
-        let contentEncoding = incomingMessage.headers 
+        let contentEncoding = incomingMessage.headers
             && (incomingMessage.headers['content-encoding']);
         if (!contentEncoding) {
             const encodingIndex = incomingMessage.rawHeaders.indexOf('Content-Encoding');

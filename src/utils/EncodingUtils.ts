@@ -15,21 +15,21 @@ class EncodingUtils {
 
     static getJsonPayload(data: any, encoding: string) {
         try {
-            let _decodedData = data;
+            let decodedData = data;
             if (ENCODING_FUNCTIONS[encoding]) {
                 try {
-                    _decodedData = ENCODING_FUNCTIONS[encoding](data);
+                    decodedData = ENCODING_FUNCTIONS[encoding](data);
                 } catch (err) {
                     ThundraLogger.debug(`<EncodingUtils> Could decode data with ${encoding}`, err.message);
                 }
             }
 
-            const decodedData = _decodedData;
+            const decodedDataRef = decodedData;
             try {
                 /**
-                 * Make sure data is json 
-                 */ 
-                JSON.parse(decodedData);
+                 * Make sure data is json
+                 */
+                JSON.parse(decodedDataRef);
                 return decodedData.toString();
             } catch (err) {
                 ThundraLogger.debug('<EncodingUtils> An error occured while parsing json data.', err.message);

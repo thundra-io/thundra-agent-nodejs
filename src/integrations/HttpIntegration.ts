@@ -255,9 +255,9 @@ class HttpIntegration implements Integration {
                                     if (chunks && chunks.length) {
                                         const concatedChunks = Buffer.concat(chunks);
                                         const contentEncoding = HTTPUtils.obtainIncomingMessageEncoding(res);
-                                        const responseBody: string = 
-                                            contentEncoding 
-                                                ? (EncodingUtils.getJsonPayload(concatedChunks, contentEncoding) 
+                                        const responseBody: string =
+                                            contentEncoding
+                                                ? (EncodingUtils.getJsonPayload(concatedChunks, contentEncoding)
                                                     || concatedChunks.toString('utf8'))
                                                 : concatedChunks.toString('utf8');
                                         if (ThundraLogger.isDebugEnabled()) {
