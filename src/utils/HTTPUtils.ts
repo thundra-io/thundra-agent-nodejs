@@ -210,17 +210,19 @@ class HTTPUtils {
     }
 
     static obtainIncomingMessageEncoding(incomingMessage: http.IncomingMessage): string {
-        if (!incomingMessage || !incomingMessage.headers || !incomingMessage.rawHeaders) {
+        if (!incomingMessage || (!incomingMessage.headers && !incomingMessage.rawHeaders)) {
             return;
         }
 
         let contentEncoding = incomingMessage.headers
             && (incomingMessage.headers['content-encoding']);
-        if (!contentEncoding) {
+        if (!contentEncoding && incomingMessage.rawHeaders) {
             const encodingIndex = incomingMessage.rawHeaders.indexOf('Content-Encoding');
-            const candidateIndex = encodingIndex + 1;
-            if (encodingIndex && candidateIndex < incomingMessage.rawHeaders.length) {
-                contentEncoding = incomingMessage.rawHeaders[candidateIndex];
+            if (encodingIndex >= 0) {
+                const candidateIndex = encodingIndex + 1;
+                if (encodingIndex && candidateIndex < incomingMessage.rawHeaders.length) {
+                    contentEncoding = incomingMessage.rawHeaders[candidateIndex];
+                }
             }
         }
 

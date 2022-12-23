@@ -19,6 +19,9 @@ import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 
 import HTTPUtils from '../utils/HTTPUtils';
+import EncodingUtils from '../utils/EncodingUtils';
+
+import http from 'http';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -192,12 +195,23 @@ class Http2Integration implements Integration {
                     clientRequest.once('end', () => {
                         if (span) {
                             try {
-                                if (chunks && chunks.length) {
-                                    const responseBody: string = Buffer.concat(chunks).toString('utf8');
+                                if (chunks && chunks.length && responseHeaders) {
+                                    const concatedChunks = Buffer.concat(chunks);
+                                    const contentEncoding =
+                                        HTTPUtils.obtainIncomingMessageEncoding(
+                                            { headers: responseHeaders } as http.IncomingMessage);
+                                    const responseBody: string =
+                                        contentEncoding
+                                            ? (EncodingUtils.getPayload(
+                                                concatedChunks, contentEncoding, config.maxHttpResponseBodySize))
+                                            : concatedChunks.toString('utf8');
                                     if (ThundraLogger.isDebugEnabled()) {
                                         ThundraLogger.debug(`<HTTP2Integration> Captured response body: ${responseBody}`);
                                     }
-                                    span.setTag(HttpTags.RESPONSE_BODY, responseBody);
+
+                                    if (responseBody) {
+                                        span.setTag(HttpTags.RESPONSE_BODY, responseBody);
+                                    }
                                 }
                             } catch (error) {
                                 ThundraLogger.error(
