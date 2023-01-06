@@ -1,4 +1,4 @@
-name: Thundra CI Check
+name: npm-ci-check
 
 on:
   push:
