@@ -109,9 +109,10 @@ export class AWSv3Integration implements Integration {
                             const result = await next(args);
                             return result;
                         }, {
+                            name: 'thundra_build_middleware',
                             step: 'build',
                             priority: 'low',
-                            name: 'thundra_build_middileware',
+                            override: true,
                             tags: ['__thundra__'],
                         },
                     );
@@ -136,9 +137,10 @@ export class AWSv3Integration implements Integration {
                             request.response = result.response;
                             return result;
                         }, {
+                            name: 'thundra_deserialize_middleware',
                             step: 'deserialize',
                             priority: 'low',
-                            name: 'thundra_deserialize_middileware',
+                            override: true,
                             tags: ['__thundra__'],
                         },
                     );
