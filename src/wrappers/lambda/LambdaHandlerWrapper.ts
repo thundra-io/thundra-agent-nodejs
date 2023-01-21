@@ -310,8 +310,11 @@ class LambdaHandlerWrapper {
                     return false;
                 }
 
-                if (result.statusCode >= 400 && result.statusCode <= 599) {
-                    isError = true;
+                const statusCodeGroup = Math.floor(result.statusCode / 100);
+                if (statusCodeGroup === 4) {
+                    isError = !this.config.traceConfig.disableHttp4xxError;
+                } else if (statusCodeGroup === 5) {
+                    isError = !this.config.traceConfig.disableHttp5xxError;
                 }
             } else {
                 isError = true;
