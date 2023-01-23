@@ -3,7 +3,11 @@
  */
 
 import { default as createLambdaWrapper } from '@thundra/core';
+import { init } from './initializer.cjs';
 import { loadUserHandler } from './loader.cjs';
+
+// Initialize first.
+await init();
 
 // Lambda wrapper should be created and initialized before user handler.
 const lambdaWrapper = createLambdaWrapper();
