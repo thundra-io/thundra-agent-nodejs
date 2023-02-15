@@ -23,6 +23,7 @@ import ThundraTracer from '../../opentracing/Tracer';
 import ExecutionContext from '../../context/ExecutionContext';
 import { LambdaPlatformUtils } from './LambdaPlatformUtils';
 import ThundraLogger from '../../ThundraLogger';
+import * as SLSDebuggerAdaptor from '../../adaptor/slsdebugger';
 
 const get = require('lodash.get');
 
@@ -108,6 +109,8 @@ function createWrapperWithPlugins(config: ThundraConfig,
  */
 function createWrappedHandler(pluginContext: PluginContext, originalFunc: Function,
                               plugins: any[], config: ThundraConfig): WrappedFunction {
+
+    const slsdebuggerEnable = process.env[ConfigNames.SLSDEBUGGER_AUTH_TOKEN];
     const wrappedFunction = (originalEvent: any,
                              originalContext: any,
                              originalCallback: any) => ExecutionContextManager.runWithContext(
@@ -118,6 +121,13 @@ function createWrappedHandler(pluginContext: PluginContext, originalFunc: Functi
                 applicationId: LambdaPlatformUtils.getApplicationId(originalContext),
             });
 
+            let slsDebugger;
+            if (slsdebuggerEnable) {
+                slsDebugger = SLSDebuggerAdaptor.get({
+                    remainingTimeInMillis: originalContext.getRemainingTimeInMillis()
+                });
+            }
+
             const thundraWrapper = new LambdaHandlerWrapper(
                 this,
                 originalEvent,
@@ -127,6 +137,7 @@ function createWrappedHandler(pluginContext: PluginContext, originalFunc: Functi
                 plugins,
                 pluginContext,
                 config,
+                slsDebugger,
             );
             return await thundraWrapper.invoke();
         },

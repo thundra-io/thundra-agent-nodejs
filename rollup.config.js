@@ -50,28 +50,6 @@ module.exports = [
         ]
     },
     {
-        input: './src/debugBridge.ts',
-        output: {
-            file: 'dist/debugBridge.js',
-            format: 'cjs',
-        },
-        plugins: [
-            typescript(),
-            terser({
-                warnings: 'verbose',
-                compress: {
-                    warnings: 'verbose',
-                },
-                mangle: {
-                    keep_fnames: true,
-                },
-                output: {
-                    beautify: false,
-                },
-            }),
-        ],
-    },
-    {
         input: './src/handler.ts',
         output: {
             file: 'dist/handler.js',

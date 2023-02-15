@@ -227,24 +227,8 @@ class ConfigNames {
 
     /////////////////////////////////////////////////////////////////////////////
 
-    public static readonly THUNDRA_LAMBDA_DEBUGGER_ENABLE: string =
-        'thundra.agent.lambda.debugger.enable';
-    public static readonly THUNDRA_LAMBDA_DEBUGGER_PORT: string =
-        'thundra.agent.lambda.debugger.port';
-    public static readonly THUNDRA_LAMBDA_DEBUGGER_LOGS_ENABLE: string =
-        'thundra.agent.lambda.debugger.logs.enable';
-    public static readonly THUNDRA_LAMBDA_DEBUGGER_WAIT_MAX: string =
-        'thundra.agent.lambda.debugger.wait.max';
-    public static readonly THUNDRA_LAMBDA_DEBUGGER_IO_WAIT: string =
-        'thundra.agent.lambda.debugger.io.wait';
-    public static readonly THUNDRA_LAMBDA_DEBUGGER_BROKER_PORT: string =
-        'thundra.agent.lambda.debugger.broker.port';
-    public static readonly THUNDRA_LAMBDA_DEBUGGER_BROKER_HOST: string =
-        'thundra.agent.lambda.debugger.broker.host';
-    public static readonly THUNDRA_LAMBDA_DEBUGGER_SESSION_NAME: string =
-        'thundra.agent.lambda.debugger.session.name';
-    public static readonly THUNDRA_LAMBDA_DEBUGGER_AUTH_TOKEN: string =
-        'thundra.agent.lambda.debugger.auth.token';
+    public static readonly SLSDEBUGGER_AUTH_TOKEN: string =
+        'SLSDEBUGGER_AUTH_TOKEN';
 
     /////////////////////////////////////////////////////////////////////////////
 
