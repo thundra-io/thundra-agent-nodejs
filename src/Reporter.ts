@@ -8,6 +8,7 @@ import {
     LOCAL_COLLECTOR_ENDPOINT,
     SPAN_TAGS_TO_TRIM_1,
     SPAN_TAGS_TO_TRIM_2,
+    SPAN_TAGS_TO_TRIM_3,
     REPORTER_HTTP_TIMEOUT,
     REPORTER_DATA_SIZE_LIMIT,
 } from './Constants';
@@ -56,6 +57,7 @@ class Reporter {
                 new LogAndMetricTrimmer(),
                 new SpanTagTrimmer(SPAN_TAGS_TO_TRIM_1),
                 new SpanTagTrimmer(SPAN_TAGS_TO_TRIM_2),
+                new SpanTagTrimmer(SPAN_TAGS_TO_TRIM_3),
                 new NonInvocationTrimmer(),
             ];
         this.maxReportSize = opt.maxReportSize || ConfigProvider.get<number>(ConfigNames.THUNDRA_REPORT_SIZE_MAX);
