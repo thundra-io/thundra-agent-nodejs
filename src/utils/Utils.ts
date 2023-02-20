@@ -301,7 +301,7 @@ class Utils {
         const maskErrorStackTrace = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK);
         error.stack = maskErrorStackTrace ? '' : error.stack;
 
-        if (error.stack && typeof err.stack === 'string' && err.stack.length > MAX_ERROR_STACK_LENGTH) {
+        if (error.stack && typeof error.stack === 'string' && error.stack.length > MAX_ERROR_STACK_LENGTH) {
             error.stack = error.stack.substring(0, MAX_ERROR_STACK_LENGTH) + ' ...';
         }
 
