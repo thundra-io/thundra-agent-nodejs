@@ -197,6 +197,15 @@ class InvocationSupport {
             const execContext = ExecutionContextManager.get();
             if (execContext) {
                 execContext.userError = error;
+                const cause: any = (error as any).cause;
+                if (cause) {
+                    InvocationSupport.setTag('cause', {
+                        name: cause.name,
+                        message: cause.message,
+                        stack: cause.stack,
+                        code: cause.code,
+                    });
+                }
             }
         } else {
             ThundraLogger.debug(
@@ -235,7 +244,7 @@ class InvocationSupport {
         if (applicationInfo && applicationInfo.applicationId
             && execContext && execContext.transactionId) {
             return encodeURI(
-                `https://console.thundra.io/functions/${applicationInfo.applicationId}/${execContext.transactionId}/trace-chart`);
+                `https://apm.thundra.io/functions/${applicationInfo.applicationId}/${execContext.transactionId}/trace-chart`);
         }
         return null;
     }

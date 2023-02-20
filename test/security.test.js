@@ -10,6 +10,7 @@ import RedisCalls from './integrations/utils/redis.integration.utils';
 import MySQLCalls from './integrations/utils/mysql.integration.utils';
 import MongoCalls from './integrations/utils/mongodb.integration.utils';
 import LambdaHandlerWrapper from '../dist/wrappers/lambda/LambdaHandlerWrapper';
+import * as LambdaExecutor from '../dist/wrappers/lambda/LambdaExecutor';
 import Recorder from '../dist/opentracing/Recorder';
 import { AWSIntegration } from '../dist/integrations/AWSIntegration';
 import ExecutionContextManager from '../dist/context/ExecutionContextManager';
@@ -17,6 +18,8 @@ import ExecutionContextManager from '../dist/context/ExecutionContextManager';
 import TestUtils from './utils.js';
 
 const thundra = require('../dist/index');
+
+LambdaExecutor.__PRIVATE__.isInitTracingEnabled = () => false;
 
 beforeEach(() => {
     TestUtils.clearEnvironmentVariables();

@@ -167,7 +167,7 @@ class ThundraTracer extends Tracer {
                 operationName: fields.operationName || name,
                 parent: parentContext,
                 tags: Object.assign(tags, this.tags, fields.tags),
-                startTime: fields.startTime,
+                startTime: fields.startTime || Date.now(),
                 rootTraceId,
                 className: fields.className,
                 domainName: fields.domainName,
@@ -175,11 +175,11 @@ class ThundraTracer extends Tracer {
             });
         } else {
             span = new ThundraSpan(this, {
-                operationName: name,
+                operationName: fields.operationName || name,
                 parent: parentSpan ? parentSpan.spanContext : null,
                 tags: Object.assign(tags, this.tags, fields.tags),
                 rootTraceId,
-                startTime: Date.now(),
+                startTime: fields.startTime || Date.now(),
                 className: fields.className,
                 domainName: fields.domainName,
                 transactionId: this.transactionId,

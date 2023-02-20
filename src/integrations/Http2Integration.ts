@@ -7,8 +7,6 @@ import {
     DomainNames,
     ClassNames,
     TriggerHeaderTags,
-    MAX_HTTP_REQUEST_SIZE,
-    MAX_HTTP_RESPONSE_SIZE,
     INTEGRATIONS,
 } from '../Constants';
 import Utils from '../utils/Utils';
@@ -21,6 +19,9 @@ import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
 
 import HTTPUtils from '../utils/HTTPUtils';
+import EncodingUtils from '../utils/EncodingUtils';
+
+import http from 'http';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -119,7 +120,6 @@ class Http2Integration implements Integration {
                         [HttpTags.HTTP_PATH]: path,
                         [HttpTags.HTTP_URL]: fullURL,
                         [HttpTags.QUERY_PARAMS]: queryParams,
-                        [SpanTags.TRACE_LINKS]: [span.spanContext.spanId],
                         [SpanTags.TOPOLOGY_VERTEX]: true,
                     });
 
@@ -134,7 +134,7 @@ class Http2Integration implements Integration {
                                 if (arguments[0]
                                     && (typeof arguments[0] === 'string' || arguments[0] instanceof Buffer)) {
                                     const requestData: string | Buffer = arguments[0];
-                                    if (requestData.length <= MAX_HTTP_REQUEST_SIZE) {
+                                    if (requestData.length <= config.maxHttpBodySize) {
                                         const requestBody: string = requestData.toString('utf8');
                                         if (ThundraLogger.isDebugEnabled()) {
                                             ThundraLogger.debug(`<HTTP2Integration> Captured request body: ${requestBody}`);
@@ -166,7 +166,7 @@ class Http2Integration implements Integration {
                             // If there is no `content-length` header, `contentLength` will be `NaN`
                             const contentLength: Number | undefined =
                                 res.headers && parseInt(res.headers['content-length'], 0);
-                            const responseTooBig = contentLength && contentLength > MAX_HTTP_RESPONSE_SIZE;
+                            const responseTooBig = contentLength && contentLength > config.maxHttpResponseBodySize;
                             if (responseTooBig) {
                                 return;
                             }
@@ -182,7 +182,7 @@ class Http2Integration implements Integration {
                                     return;
                                 }
                                 totalSize += chunk.length;
-                                if (totalSize <= MAX_HTTP_RESPONSE_SIZE) {
+                                if (totalSize <= config.maxHttpResponseBodySize) {
                                     chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
                                 } else {
                                     // No need to capture partial response body
@@ -195,12 +195,23 @@ class Http2Integration implements Integration {
                     clientRequest.once('end', () => {
                         if (span) {
                             try {
-                                if (chunks && chunks.length) {
-                                    const responseBody: string = Buffer.concat(chunks).toString('utf8');
+                                if (chunks && chunks.length && responseHeaders) {
+                                    const concatedChunks = Buffer.concat(chunks);
+                                    const contentEncoding =
+                                        HTTPUtils.obtainIncomingMessageEncoding(
+                                            { headers: responseHeaders } as http.IncomingMessage);
+                                    const responseBody: string =
+                                        contentEncoding
+                                            ? (EncodingUtils.getPayload(
+                                                concatedChunks, contentEncoding, config.maxHttpResponseBodySize))
+                                            : concatedChunks.toString('utf8');
                                     if (ThundraLogger.isDebugEnabled()) {
                                         ThundraLogger.debug(`<HTTP2Integration> Captured response body: ${responseBody}`);
                                     }
-                                    span.setTag(HttpTags.RESPONSE_BODY, responseBody);
+
+                                    if (responseBody) {
+                                        span.setTag(HttpTags.RESPONSE_BODY, responseBody);
+                                    }
                                 }
                             } catch (error) {
                                 ThundraLogger.error(

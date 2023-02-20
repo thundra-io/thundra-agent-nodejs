@@ -100,6 +100,8 @@ class ConfigNames {
         'thundra.agent.trace.instrument.traceableconfig';
     public static readonly THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX: string =
         'thundra.agent.trace.instrument.file.prefix';
+    public static readonly THUNDRA_TRACE_INSTRUMENT_ONLOAD: string =
+        'thundra.agent.trace.instrument.onload';
 
     /////////////////////////////////////////////////////////////////////////////
 
@@ -148,8 +150,12 @@ class ConfigNames {
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_MASK: string =
         'thundra.agent.trace.integrations.http.body.mask';
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_SIZE_MAX: string =
+        'thundra.agent.trace.integrations.http.body.size.max';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_MASK: string =
         'thundra.agent.trace.integrations.http.response.body.mask';
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_SIZE_MAX: string =
+        'thundra.agent.trace.integrations.http.response.body.size.max';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH: string =
         'thundra.agent.trace.integrations.http.url.depth';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE: string =

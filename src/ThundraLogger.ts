@@ -35,7 +35,9 @@ class ThundraLogger {
      */
     static debug(message: any, ...optionalParams: any[]) {
         if (ThundraLogger.isDebugEnabled()) {
-            this.consoleDebug.apply(console, ['[THUNDRA]', message, ...optionalParams]);
+            this.consoleDebug.apply(
+                console,
+                ['[THUNDRA]', 'DEBUG', '-', new Date().toISOString(), '|', message, ...optionalParams]);
         }
     }
 
@@ -45,7 +47,9 @@ class ThundraLogger {
      * @param optionalParams the optional parameters to be logged
      */
     static info(message: any, ...optionalParams: any[]) {
-        this.consoleInfo.apply(console, ['[THUNDRA]', message, ...optionalParams]);
+        this.consoleInfo.apply(
+            console,
+            ['[THUNDRA]', 'INFO', '-', new Date().toISOString(), '|', message, ...optionalParams]);
     }
 
     /**
@@ -54,7 +58,9 @@ class ThundraLogger {
      * @param optionalParams the optional parameters to be logged
      */
     static error(error: any, ...optionalParams: any[]) {
-        this.consoleError.apply(console, ['[THUNDRA]', error, ...optionalParams]);
+        this.consoleError.apply(
+            console,
+            ['[THUNDRA]', 'ERROR', '-', new Date().toISOString(), '|', error, ...optionalParams]);
     }
 
     private static getConsoleMethod(methodName: string): Function {

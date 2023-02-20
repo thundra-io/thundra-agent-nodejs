@@ -27,6 +27,8 @@ export class AWSv3Integration implements Integration {
     private instrumentContext: any;
 
     constructor(config: any) {
+        ThundraLogger.debug('<AWSv3Integration> Activating AWS v3 integration');
+
         this.wrappedFuncs = {};
         this.config = config || {};
         const awsSdkv3Integration = INTEGRATIONS[INTEGRATION_NAME];
@@ -49,15 +51,11 @@ export class AWSv3Integration implements Integration {
 
         const integration = this;
         function wrapper(wrappedFunction: any, wrappedFunctionName: string) {
-
             integration.wrappedFuncs[wrappedFunctionName] = wrappedFunction;
-
             return function AWSSDKWrapper(command: any, optionsOrCb: any, cb: any) {
-
-                ThundraLogger.debug('<AWSv3Integration> Tracing HTTP request:', command);
+                ThundraLogger.debug('<AWSv3Integration> Tracing AWS request:', command);
 
                 const currentInstance = this;
-
                 let activeSpan: ThundraSpan;
                 let reachedToCallOriginalFunc: boolean = false;
                 try {
@@ -69,11 +67,14 @@ export class AWSv3Integration implements Integration {
 
                     const originalOptions = typeof optionsOrCb !== 'function' ? optionsOrCb : undefined;
                     const originalCallback = typeof optionsOrCb === 'function' ? optionsOrCb : cb;
+                    const originalCommandName: string = command.constructor.name;
+                    const cmdIdx: number = originalCommandName.indexOf('Command');
+                    const operationName: string = cmdIdx > 0 ? originalCommandName.substring(0, cmdIdx) : originalCommandName;
 
                     const request: any = {
-                        operation: Utils.makeLowerCase(command.constructor.name.replace('Command', '')),
+                        operation: Utils.makeLowerCase(operationName),
                         /** if needed use deep copy instead of shallow */
-                        params: { ...command.input },
+                        params: command.input,
                         service: {
                             serviceIdentifier: currentInstance.config.serviceId.toLowerCase(),
                             config: {},
@@ -93,7 +94,6 @@ export class AWSv3Integration implements Integration {
 
                     command.middlewareStack.add(
                         (next: any, context: any) => async (args: any) => {
-
                             ThundraLogger.debug('<AWSv3Integration> Build middleware working...');
 
                             if (args && args.request
@@ -109,22 +109,26 @@ export class AWSv3Integration implements Integration {
                             const result = await next(args);
                             return result;
                         }, {
+                            name: 'thundra_build_middleware',
                             step: 'build',
                             priority: 'low',
-                            name: 'thundra_build_middileware',
+                            override: true,
                             tags: ['__thundra__'],
                         },
                     );
 
                     command.middlewareStack.add(
                         (next: any, context: any) => async (args: any) => {
-
                             ThundraLogger.debug('<AWSv3Integration> Deserialize middleware working...');
 
-                            request.service.config.region = await currentInstance.config.region();
-                            request.service.config.endpoint = await currentInstance.config.endpoint();
+                            if (typeof currentInstance.config?.region === 'function') {
+                                request.service.config.region = await currentInstance.config.region();
+                            }
+                            if (typeof currentInstance.config?.endpoint === 'function') {
+                                request.service.config.endpoint = await currentInstance.config.endpoint();
+                            }
 
-                            if (activeSpan.tags[DB_INSTANCE] === '') {
+                            if (request.service.config.endpoint && activeSpan.tags[DB_INSTANCE] === '') {
                                 activeSpan.tags[DB_INSTANCE] = request.service.config.endpoint.hostname;
                             }
 
@@ -133,15 +137,15 @@ export class AWSv3Integration implements Integration {
                             request.response = result.response;
                             return result;
                         }, {
+                            name: 'thundra_deserialize_middleware',
                             step: 'deserialize',
                             priority: 'low',
-                            name: 'thundra_deserialize_middileware',
+                            override: true,
                             tags: ['__thundra__'],
                         },
                     );
 
                     const wrappedCallback = function (err: any, data: any, closeWithCallback = false) {
-
                         ThundraLogger.debug('<AWSv3Integration> WrappedCallback working...');
 
                         if (!activeSpan) {
@@ -207,7 +211,6 @@ export class AWSv3Integration implements Integration {
 
                     reachedToCallOriginalFunc = true;
                     if (originalCallback) {
-
                         return originalFunction.apply(
                             this,
                             [
@@ -218,18 +221,14 @@ export class AWSv3Integration implements Integration {
                                 },
                             ]);
                     } else {
-
                         const result = originalFunction.apply(this, [command, originalOptions, cb]);
                         if (result && typeof result.then === 'function') {
                             result.then((data: any) => {
-
                                 wrappedCallback(null, data);
                             }).catch((error: any) => {
-
                                 wrappedCallback(error, null);
                             });
                         } else {
-
                             if (activeSpan) {
                                 activeSpan.close();
                             }
@@ -238,7 +237,6 @@ export class AWSv3Integration implements Integration {
                         return result;
                     }
                 } catch (error) {
-
                     if (activeSpan) {
                         activeSpan.close();
                     }
@@ -246,7 +244,6 @@ export class AWSv3Integration implements Integration {
                     if (reachedToCallOriginalFunc || error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-
                         ThundraLogger.error('<AWSv3Integration> An error occurred while tracing.', error);
                         const originalFunction = integration.getOriginalFunction(wrappedFunctionName);
                         return originalFunction.apply(this, [command, optionsOrCb, cb]);
@@ -256,7 +253,6 @@ export class AWSv3Integration implements Integration {
         }
 
         if (has(lib, 'Client.prototype.send')) {
-
             ThundraLogger.debug('<AWSv3Integration> Wrapping "Client.prototype.send"');
             shimmer.wrap(lib.Client.prototype, 'send', (wrapped: Function) => wrapper(wrapped, 'send'));
         }
@@ -284,4 +280,5 @@ export class AWSv3Integration implements Integration {
     private getOriginalFunction(wrappedFunctionName: string) {
         return get(this, `wrappedFuncs.${wrappedFunctionName}`);
     }
+
 }

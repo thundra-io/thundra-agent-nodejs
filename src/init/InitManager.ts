@@ -3,6 +3,10 @@
  */
 import { INITIALIZERS } from './Initializers';
 import ThundraLogger from '../ThundraLogger';
+import ModuleUtils from '../utils/ModuleUtils';
+import ConfigProvider from '../config/ConfigProvider';
+import ConfigNames from '../config/ConfigNames';
+import LambdaUtils from '../utils/LambdaUtils';
 
 /**
  * Manages initialization of initializers
@@ -20,6 +24,19 @@ class InitManager {
     static init(): void {
         ThundraLogger.debug(`<InitManager> Initializing initializers ...`);
         if (!InitManager.initialized) {
+            let instrumentOnLoad =
+                ConfigProvider.get(ConfigNames.THUNDRA_TRACE_INSTRUMENT_ONLOAD, null);
+            if (instrumentOnLoad === null) {
+                // If instrument on-load configuration is not specified
+                const lambdaRuntime: boolean = LambdaUtils.isLambdaRuntime();
+                if (lambdaRuntime) {
+                    // In AWS-Lambda environment, we can disable instrument on-load by default (unless it is specified)
+                    // to get rid of performance overhead of hooking via `require-in-the-middle`.
+                    instrumentOnLoad = false;
+                }
+            }
+            ModuleUtils.setInstrumentOnLoad(instrumentOnLoad);
+
             INITIALIZERS.forEach((initializer: any) => {
                 ThundraLogger.debug(`<InitManager> Initializing ${initializer.name} ...`);
                 if (!initializer.initialized) {

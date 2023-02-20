@@ -38,6 +38,8 @@ export default class ExecutionContext {
     captureLog: boolean;
     logs: LogData[];
     reportingDisabled: boolean;
+    coldStart: boolean;
+    initDuration: number;
     timeout: boolean;
     parentContext: ExecutionContext;
     compatibleContextModes: ContextMode[] = [];

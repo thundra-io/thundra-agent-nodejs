@@ -72,12 +72,10 @@ class ESLegacyIntegration implements Integration {
     wrap(lib: any, config: any) {
         ThundraLogger.debug('<ESLegacyIntegration> Wrap');
 
-        const integration = this;
-
         function wrapRequest(request: any) {
-            let span: ThundraSpan;
-
             return async function requestWithTrace(params: any, cb: any) {
+                let span: ThundraSpan;
+
                 try {
                     ThundraLogger.debug('<ESLegacyIntegration> Tracing Elasticsearch request:', params);
 

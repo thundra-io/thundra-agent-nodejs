@@ -136,6 +136,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     [ConfigNames.THUNDRA_TRACE_INSTRUMENT_FILE_PREFIX]: {
         type: 'string',
     },
+    [ConfigNames.THUNDRA_TRACE_INSTRUMENT_ONLOAD]: {
+        type: 'boolean',
+        defaultValue: true,
+    },
     [ConfigNames.THUNDRA_TRACE_SPAN_LISTENERCONFIG]: {
         type: 'string',
     },
@@ -148,8 +152,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         defaultValue: 100,
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_DISABLE]: {
-        type: 'boolean',
-        defaultValue: false,
+        type: 'string',
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ON_LOAD]: {
         type: 'boolean',
@@ -203,9 +206,17 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_SIZE_MAX]: {
+        type: 'number',
+        defaultValue: 10 * 1024,
+    },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_MASK]: {
         type: 'boolean',
         defaultValue: true,
+    },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_SIZE_MAX]: {
+        type: 'number',
+        defaultValue: 10 * 1024,
     },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH]: {
         type: 'number',
@@ -317,7 +328,7 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
     },
     [ConfigNames.THUNDRA_LAMBDA_DEBUGGER_BROKER_HOST]: {
         type: 'string',
-        defaultValue: 'debug.thundra.io',
+        defaultValue: 'broker.service.serverlessdebugger.com',
     },
     [ConfigNames.THUNDRA_LAMBDA_DEBUGGER_SESSION_NAME]: {
         type: 'string',

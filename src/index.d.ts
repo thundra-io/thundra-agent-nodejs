@@ -19,7 +19,7 @@ declare module '@thundra/core' {
    * @param options the options (configs, etc ...) to initialize agent
    * @return {LambdaWrapper} the AWS Lambda wrapper to wrap the original handler
    */
-  export function createLambdaWrapper(options?: any): <F extends Function>(f: F) => F;
+  export default function createLambdaWrapper(options?: any): <F extends Function>(f: F) => F;
 
   /**
    * Wraps the given original AWS Lambda handler
@@ -39,6 +39,15 @@ declare module '@thundra/core' {
    * @return {Tracer} the tracer
    */
   export function tracer(): ThundraTracer;
+
+  /**
+   * Instruments given module if it is supported
+   * @param moduleName {string} name of the module to be instrumented
+   * @param module the module to be instrumented
+   * @return {boolean} {@code true} if the given has been instrumented,
+   *                   {@code false} otherwise
+   */
+  export function instrumentModule(moduleName: string, module: any): boolean;
 
   /**
    * Sets the tag
@@ -195,6 +204,4 @@ declare module '@thundra/core' {
    * automatically from the base class.
    */
   export class Tracer { }
-
-  export = createLambdaWrapper;
 }

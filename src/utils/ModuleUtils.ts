@@ -1,7 +1,8 @@
 import ThundraLogger from '../ThundraLogger';
 import ModuleVersionValidator from './ModuleVersionValidator';
+import Utils from '../utils/Utils';
+import { EnvVariableKeys } from '../Constants';
 
-const Hook = require('require-in-the-middle');
 const shimmer = require('shimmer');
 const path = require('path');
 const parse = require('module-details-from-path');
@@ -19,8 +20,25 @@ class ModuleUtils {
 
     private static readonly instrumenters: any = [];
     private static readonly pendingModulesToInstrument: any = [];
+    private static instrumentOnLoad: boolean = true;
 
     private constructor() {
+    }
+
+    /**
+     * Gets the load time instrumentation mode flag
+     * @return the load time instrumentation mode flag
+     */
+    static isInstrumentOnLoad(): boolean {
+        return ModuleUtils.instrumentOnLoad;
+    }
+
+    /**
+     * Sets the load time instrumentation mode flag
+     * @param instrumentOnLoad the load time instrumentation mode flag to be set
+     */
+    static setInstrumentOnLoad(instrumentOnLoad: boolean): void {
+        ModuleUtils.instrumentOnLoad = instrumentOnLoad;
     }
 
     /**
@@ -35,11 +53,16 @@ class ModuleUtils {
             if (paths) {
                 resolvedPath = customReq.resolve(name, { paths });
             } else {
-                resolvedPath = customReq.resolve(name);
+                const lambdaTaskRoot = Utils.getEnvVar(EnvVariableKeys.LAMBDA_TASK_ROOT);
+                if (lambdaTaskRoot) {
+                    resolvedPath = customReq.resolve(name, { paths: [lambdaTaskRoot] });
+                } else {
+                    resolvedPath = customReq.resolve(name);
+                }
             }
             return customReq(resolvedPath);
         } catch (e) {
-            ThundraLogger.debug(`<ModuleUtils> Couldn't require module ${name} in the paths ${paths}:`, e);
+            ThundraLogger.debug(`<ModuleUtils> Couldn't require module ${name} in the paths ${paths}:`, e.message);
         }
     }
 
@@ -138,13 +161,16 @@ class ModuleUtils {
                     ModuleUtils.doInstrument(requiredLib, libs, null, moduleName, null, wrapper, config);
                 }
             }
-            const hook = Hook(moduleName, { internals: true }, (lib: any, name: string, basedir: string) => {
-                if (name === moduleName) {
-                    ModuleUtils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
-                }
-                return lib;
-            });
-            hooks.push(hook);
+            if (ModuleUtils.instrumentOnLoad) {
+                const Hook = require('require-in-the-middle');
+                const hook = Hook(moduleName, {internals: true}, (lib: any, name: string, basedir: string) => {
+                    if (name === moduleName) {
+                        ModuleUtils.doInstrument(lib, libs, basedir, moduleName, version, wrapper, config);
+                    }
+                    return lib;
+                });
+                hooks.push(hook);
+            }
         }
         return {
             uninstrument: () => {
@@ -194,14 +220,19 @@ class ModuleUtils {
     private static getModuleInfo(name: string, paths?: string[]): any {
         try {
             let modulePath;
-            if (paths !== undefined) {
+            if (paths) {
                 modulePath = customReq.resolve(name, { paths });
             } else {
-                modulePath = customReq.resolve(name);
+                const lambdaTaskRoot = Utils.getEnvVar(EnvVariableKeys.LAMBDA_TASK_ROOT);
+                if (lambdaTaskRoot) {
+                    modulePath = customReq.resolve(name, { paths: [lambdaTaskRoot] });
+                } else {
+                    modulePath = customReq.resolve(name);
+                }
             }
             return parse(modulePath);
         } catch (e) {
-            ThundraLogger.debug(`<ModuleUtils> Couldn't get info of module ${name} in the paths ${paths}:`, e);
+            ThundraLogger.debug(`<ModuleUtils> Couldn't get info of module ${name} in the paths ${paths}:`, e.message);
             return {};
         }
     }
@@ -213,7 +244,7 @@ class ModuleUtils {
         if (version) {
             const isValidVersion = ModuleVersionValidator.validateModuleVersion(basedir, version);
             if (!isValidVersion) {
-                ThundraLogger.error(
+                ThundraLogger.debug(
                     `<ModuleUtils> Invalid module version for ${moduleName} integration. Supported version is ${version}`);
             } else {
                 isValid = true;

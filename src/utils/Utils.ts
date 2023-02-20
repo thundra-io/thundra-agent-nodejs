@@ -8,6 +8,7 @@ import {
     LISTENERS, AGENT_VERSION,
     AGENT_UUID_CONST,
     DEFAULT_APPLICATION_NAME,
+    MAX_ERROR_STACK_LENGTH,
 } from '../Constants';
 import ConfigProvider from '../config/ConfigProvider';
 import ConfigNames from '../config/ConfigNames';
@@ -87,6 +88,21 @@ class Utils {
      */
     static getEnvVar(name: string, defaultValue?: any): any {
         return process.env[name] ? process.env[name] : defaultValue;
+    }
+
+    /**
+     * Checks whether there is any environment variables starts with given prefix
+     * @param {string} prefix the prefix
+     * @return {@code true} if the there is any environment variable starts with given prefix,
+     *         {@code false} otherwise
+     */
+    static hasEnvVarPrefixedWith(prefix: string): boolean {
+        for (const envVarName of Object.keys(process.env)) {
+            if (envVarName.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -234,12 +250,21 @@ class Utils {
     }
 
     /**
-     * Check parameter is error
+     * Check whether parameter is error
      * @param err the error to be checked
      * @return parameter is error
      */
     static isError(err: any): boolean {
         return err && err.stack && err.message;
+    }
+
+    /**
+     * Check whether parameter is Thundra generated error
+     * @param err the error to be checked
+     * @return parameter is error
+     */
+    static isThundraGeneratedError(err: any): boolean {
+        return Utils.isError(err) && err.__thundraGenerated;
     }
 
     /**
@@ -253,23 +278,32 @@ class Utils {
             error.errorType = err.name;
             error.errorMessage = err.message;
             error.stack = err.stack;
+            error.code = (err as any).code;
         } else if (typeof err === 'string') {
             error.errorMessage = err.toString();
         } else {
-            try {
-                error.errorMessage = JSON.stringify(err);
-            } catch (e) {
-                // the comment below is for ignoring in unit tests, do not remove it
-                // istanbul ignore next
-                error.errorMessage = '';
+            error.errorType = err.type || err.name || error.errorType;
+            error.errorMessage = err.message || error.errorMessage;
+            error.stack = err.stack || error.stack;
+            error.code = err.code || error.code;
+            if (!error.errorMessage) {
+                try {
+                    error.errorMessage = JSON.stringify(err);
+                } catch (e) {
+                    error.errorMessage = '';
+                }
             }
-        }
-        if (!Utils.isString(error.errorMessage)) {
-            error.errorMessage = JSON.stringify(error.errorMessage);
+            if (!Utils.isString(error.errorMessage)) {
+                error.errorMessage = JSON.stringify(error.errorMessage);
+            }
         }
 
         const maskErrorStackTrace = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LAMBDA_ERROR_STACKTRACE_MASK);
         error.stack = maskErrorStackTrace ? '' : error.stack;
+
+        if (error.stack && typeof error.stack === 'string' && error.stack.length > MAX_ERROR_STACK_LENGTH) {
+            error.stack = error.stack.substring(0, MAX_ERROR_STACK_LENGTH) + ' ...';
+        }
 
         return error;
     }
@@ -589,7 +623,7 @@ class Utils {
 
     static getNormalizedPath(pathStr: string, depth: number): string {
         try {
-            if (depth <= 0) {
+            if (!pathStr || pathStr === '' || depth <= 0) {
                 return '';
             }
             const normalizedPath = '/' + pathStr.split('/').filter((c) => c !== '').slice(0, depth).join('/');

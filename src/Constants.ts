@@ -35,11 +35,13 @@ export const EnvVariableKeys = {
     AWS_REGION: 'AWS_REGION',
     AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',
     AWS_LAMBDA_FUNCTION_NAME: 'AWS_LAMBDA_FUNCTION_NAME',
+    AWS_LAMBDA_INITIALIZATION_TYPE: 'AWS_LAMBDA_INITIALIZATION_TYPE',
 
     _X_AMZN_TRACE_ID: '_X_AMZN_TRACE_ID',
 
     SLS_LOCAL: 'IS_LOCAL',
     AWS_SAM_LOCAL: 'AWS_SAM_LOCAL',
+    SST_LOCAL: 'IS_LOCAL',
 
     NODE_TLS_REJECT_UNAUTHORIZED: 'NODE_TLS_REJECT_UNAUTHORIZED',
     _HANDLER: '_HANDLER',
@@ -62,6 +64,7 @@ export const TIMEOUT_MARGIN: number = getTimeoutMargin(process.env[EnvVariableKe
 export const LAMBDA_APPLICATION_DOMAIN_NAME = 'API';
 export const LAMBDA_APPLICATION_CLASS_NAME = 'AWS-Lambda';
 export const LAMBDA_FUNCTION_PLATFORM = 'AWS Lambda';
+export const LAMBDA_INIT_TYPE_PROVISIONED_CONCURRENCY = 'provisioned-concurrency';
 
 export function getDefaultCollectorEndpoint() {
     const region = process.env[EnvVariableKeys.AWS_REGION];
@@ -105,6 +108,7 @@ export const logLevels: any = {
 };
 
 export const DomainNames = {
+    SERVERLESS: 'Serverless',
     AWS: 'AWS',
     DB: 'DB',
     MESSAGING: 'Messaging',
@@ -126,6 +130,7 @@ export const ClassNames = {
     FIREHOSE: 'AWS-Firehose',
     S3: 'AWS-S3',
     LAMBDA: 'AWS-Lambda',
+    LAMBDA_INIT: 'AWS-Lambda-Init',
     RDB: 'RDB',
     REDIS: 'Redis',
     HTTP: 'HTTP',
@@ -176,6 +181,7 @@ export const AwsLambdaWrapperTags = {
     AWS_LAMBDA_INVOCATION_TIMEOUT: 'aws.lambda.invocation.timeout',
     AWS_LAMBDA_INVOCATION_REQUEST: 'aws.lambda.invocation.request',
     AWS_LAMBDA_INVOCATION_RESPONSE: 'aws.lambda.invocation.response',
+    AWS_LAMBDA_INIT_DURATION: 'aws.lambda.init_duration',
 };
 
 export const VercelTags = {
@@ -597,7 +603,7 @@ export const INTEGRATIONS: any = {
     mysql: {class: MySQLIntegration, moduleNames: ['mysql'], moduleVersion: '>=2'},
     redis: {class: RedisIntegration, moduleNames: ['redis'], moduleVersion: '>=2.6'},
     ioredis: {class: IORedisIntegration, moduleNames: ['ioredis'], moduleVersion: '>=2'},
-    aws: {class: AWSIntegration, moduleNames: ['aws-sdk', 'aws-sdk/lib/core.js'], moduleVersion: '2.x'},
+    aws: {class: AWSIntegration, moduleNames: ['aws-sdk/global', 'aws-sdk/lib/core.js'], moduleVersion: '2.x'},
     aws3: {class: AWSv3Integration, moduleNames: ['@aws-sdk/smithy-client'], moduleVersion: '3.x'},
     es: {class: ESIntegration, moduleNames: ['@elastic/elasticsearch'], moduleVersion: '>=5.6.16'},
     esLegacy: {class: ESLegacyIntegration, moduleNames: ['elasticsearch'], moduleVersion: '>=10.5'},
@@ -821,8 +827,6 @@ export const SPAN_TAGS_TO_TRIM_1: string[] = [
     LineByLineTags.SOURCE,
 ];
 export const SPAN_TAGS_TO_TRIM_2: string[] = [
-    AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST,
-    AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_RESPONSE,
     HttpTags.BODY,
     HttpTags.RESPONSE_BODY,
     DBTags.DB_STATEMENT,
@@ -839,6 +843,10 @@ export const SPAN_TAGS_TO_TRIM_2: string[] = [
     AwsSESTags.TEMPLATE_DATA,
     AwsEventBridgeTags.ENTRIES,
     AwsStepFunctionsTags.EXECUTION_INPUT,
+];
+export const SPAN_TAGS_TO_TRIM_3: string[] = [
+    AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_REQUEST,
+    AwsLambdaWrapperTags.AWS_LAMBDA_INVOCATION_RESPONSE,
 ];
 
 export const THUNDRA_COLLECTOR_ENDPOINT_PATTERNS: any = {
@@ -857,9 +865,6 @@ export const GOOGLE_CLOUD_HTTP_PATTERNS: any = {
     PATTERN1: /.googleapis.com\w*/,
     PATTERN2: /google.pubsub.v1.\w*/,
 };
-
-export const MAX_HTTP_REQUEST_SIZE: number = 10 * 1024; // 10 KB
-export const MAX_HTTP_RESPONSE_SIZE: number = 10 * 1024; // 10 KB
 
 export const REPORTER_HTTP_TIMEOUT: number = 3000;
 export const REPORTER_DATA_SIZE_LIMIT: number = 1_000_000; // 1MB
@@ -911,3 +916,5 @@ export const KNOWN_TEST_FILE_PATHS = new Set([
 ]);
 
 export const DEFAULT_APPLICATION_NAME = 'thundra-app';
+
+export const MAX_ERROR_STACK_LENGTH = 4 * 1024;

@@ -7,6 +7,7 @@
 const path = require('path');
 const fs = require('fs');
 const semver = require('semver');
+import ThundraLogger from '../../ThundraLogger';
 
 class InvalidModule extends Error { }
 class InvalidHandler extends Error { }
@@ -24,6 +25,8 @@ const UPPER_FOLDER_SUBSTRING = '..';
  * @return the loaded user handler
  */
 export function loadHandler(appPath: string, handlerString: string) {
+    ThundraLogger.debug(`<LambdaRuntimeSupport> Looading user handler ${handlerString} from ${appPath} ...`);
+
     if (handlerString.includes(UPPER_FOLDER_SUBSTRING)) {
         throw new BadHandlerFormat(
             `'${handlerString}' is not a valid handler name. Try to use absolute paths.`,
@@ -94,6 +97,8 @@ export function loadHandler(appPath: string, handlerString: string) {
     if (typeof handlerFunc !== 'function') {
         throw new InvalidHandler(`Type of ${handlerString} is not a function`);
     }
+
+    ThundraLogger.debug(`<LambdaRuntimeSupport> Looaded user handler ${handlerString} from ${appPath}`);
 
     return handlerFunc;
 }

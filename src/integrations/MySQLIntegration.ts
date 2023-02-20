@@ -41,6 +41,14 @@ class MySQLIntegration implements Integration {
             FILE_NAME);
     }
 
+    private static _parseQueryArgs(arg1: any, arg2: any): any {
+        const paramNotSet = (arg2 === undefined && arg1 instanceof Function);
+        const callback = (paramNotSet) ? arg1 : arg2;
+        const params = (paramNotSet) ? [] : arg1;
+
+        return { params, callback };
+    }
+
     /**
      * @inheritDoc
      */
@@ -48,9 +56,9 @@ class MySQLIntegration implements Integration {
         ThundraLogger.debug('<MySQLIntegration> Wrap');
 
         function wrapper(query: any) {
-            let span: ThundraSpan;
+            return function queryWrapper(sql: any, arg1: any, arg2: any) {
+                let span: ThundraSpan;
 
-            return function queryWrapper(sql: any, values: any, cb: any) {
                 try {
                     ThundraLogger.debug('<MySQLIntegration> Tracing MySQL query:', sql);
 
@@ -58,10 +66,37 @@ class MySQLIntegration implements Integration {
 
                     if (!tracer) {
                         ThundraLogger.debug('<MySQLIntegration> Skipped tracing query as no tracer is available');
-                        return query.call(this, sql, values, cb);
+                        return query.call(this, sql, arg1, arg2);
                     }
 
-                    const me = this;
+                    // Find query, params and callback
+
+                    let queryString: string;
+                    let params: any;
+                    let callback: any;
+                    let overrideInnerCallback = false;
+
+                    if (typeof sql !== 'string') {
+                        queryString = sql.sql;
+                    } else {
+                        queryString = sql;
+                    }
+                    if (sql.onResult) {
+                        params = sql.values;
+                        callback = sql.onResult;
+                    } else {
+                        ({ params, callback } = MySQLIntegration._parseQueryArgs(arg1, arg2));
+                    }
+                    if (callback === undefined && sql._callback) {
+                        // In pool connection, no callback passed, but _callback is being used.
+                        callback = sql._callback;
+                        overrideInnerCallback = true;
+                    }
+
+                    const originalCallback = callback;
+
+                    // Start trace
+
                     const parentSpan = tracer.getActiveSpan();
 
                     ThundraLogger.debug(`<MySQLIntegration> Starting MySQL span with name ${this.config.database}`);
@@ -90,48 +125,49 @@ class MySQLIntegration implements Integration {
                         span.addTags({
                             [DBTags.DB_STATEMENT_TYPE]: statementType,
                             [DBTags.DB_STATEMENT]: config.maskRdbStatement ? undefined : statement,
-                            [SpanTags.OPERATION_TYPE]: SQLQueryOperationTypes[statementType] ?
-                                SQLQueryOperationTypes[statementType] : '',
+                            [SpanTags.OPERATION_TYPE]: SQLQueryOperationTypes[statementType]
+                                ? SQLQueryOperationTypes[statementType]
+                                : '',
                         });
                     }
 
                     span._initialized();
 
-                    const sequence = query.call(this, sql, values, cb);
+                    // Wrap the query and then let it execute
 
-                    const originalCallback = sequence.onResult;
-
-                    const wrappedCallback = (err: any, res: any) => {
+                    const wrappedCallback = (err: any, res: any, fields: any) => {
                         if (err) {
                             span.setErrorTag(err);
                         }
                         ThundraLogger.debug(`<MySQLIntegration> Closing MySQL span with name ${span.getOperationName()}`);
-                        span.closeWithCallback(me, originalCallback, [err, res]);
+                        span.closeWithCallback(this, originalCallback, [err, res, fields]);
                     };
 
-                    if (sequence.onResult) {
-                        sequence.onResult = wrappedCallback;
+                    if (sql.onResult) {
+                        sql.onResult = wrappedCallback;
                     } else {
-                        sequence.on('end', () => {
-                            ThundraLogger.debug(`<MySQLIntegration> Closing MySQL span with name ${span.getOperationName()}`);
-                            span.close();
-                        });
+                        callback = wrappedCallback;
+                    }
+                    if (overrideInnerCallback) {
+                        sql._callback = wrappedCallback;
                     }
 
-                    return sequence;
+                    return query.call(this, sql, params, callback);
                 } catch (error) {
                     ThundraLogger.error('<MySQLIntegration> Error occurred while tracing MySQL query:', error);
 
                     if (span) {
                         ThundraLogger.debug(
                             `<MySQLIntegration> Because of error, closing MySQL span with name ${span.getOperationName()}`);
+
+                        span.setErrorTag(error);
                         span.close();
                     }
 
                     if (error instanceof ThundraChaosError) {
                         throw error;
                     } else {
-                        query.call(this, sql, values, cb);
+                        return query.call(this, sql, arg1, arg2);
                     }
                 }
             };

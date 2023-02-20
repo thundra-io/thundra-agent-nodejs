@@ -23,6 +23,7 @@ describe('HTTP integration', () => {
 
     test('should instrument HTTP GET calls ', async () => {
         integration.config.httpPathDepth = 2;
+        integration.config.maxHttpResponseBodySize = 100;
 
         const sdk = require('http');
 
@@ -51,6 +52,7 @@ describe('HTTP integration', () => {
 
     test('should set 4XX 5XX errors on HTTP calls', async () => {
         integration.config.httpPathDepth = 2;
+        integration.config.maxHttpResponseBodySize = 100;
 
         const sdk = require('http');
 
@@ -77,6 +79,7 @@ describe('HTTP integration', () => {
 
     test('should disable 4XX 5XX errors on HTTP calls', async () => {
         integration.config.disableHttp4xxError = true;
+        integration.config.maxHttpResponseBodySize = 100;
 
         const sdk = require('http');
 
@@ -103,6 +106,7 @@ describe('HTTP integration', () => {
 
     test('should instrument HTTPS POST calls', async () => {
         integration.config.httpPathDepth = 0;
+        integration.config.maxHttpBodySize = 100;
 
         const sdk = require('http');
 

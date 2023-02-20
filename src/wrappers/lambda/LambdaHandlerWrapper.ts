@@ -18,6 +18,7 @@ import ConfigNames from '../../config/ConfigNames';
 import ExecutionContextManager from '../../context/ExecutionContextManager';
 import ExecutionContext from '../../context/ExecutionContext';
 import HTTPUtils from '../../utils/HTTPUtils';
+import LambdaUtils from '../../utils/LambdaUtils';
 
 const path = require('path');
 
@@ -128,8 +129,20 @@ class LambdaHandlerWrapper {
 
         const execContext = ExecutionContextManager.get();
 
+        const coldStart: boolean = LambdaUtils.isColdStart(this.pluginContext);
+        const currentTimestamp: number = Date.now();
+        const sstLocal: boolean = LambdaUtils.isRunningOnLocalWithSST();
+        let startTimestamp: number = currentTimestamp;
+        // We skip taking care of initialization time for SST local (live Lambda development),
+        // because SST local reloads local function without creating new process by workers.
+        if (coldStart && !sstLocal) {
+            const upTime: number = Math.floor(1000 * process.uptime());
+            // At coldstart, start the invocation from the process start time to cover init duration
+            startTimestamp = currentTimestamp - upTime;
+        }
+
         // Execution context initialization
-        execContext.startTimestamp = Date.now();
+        execContext.startTimestamp = startTimestamp;
         execContext.request = this.originalEvent;
         execContext.platformData.originalContext = this.originalContext;
         execContext.platformData.originalEvent = this.originalEvent;
@@ -297,8 +310,11 @@ class LambdaHandlerWrapper {
                     return false;
                 }
 
-                if (result.statusCode >= 400 && result.statusCode <= 599) {
-                    isError = true;
+                const statusCodeGroup = Math.floor(result.statusCode / 100);
+                if (statusCodeGroup === 4) {
+                    isError = !this.config.traceConfig.disableHttp4xxError;
+                } else if (statusCodeGroup === 5) {
+                    isError = !this.config.traceConfig.disableHttp5xxError;
                 }
             } else {
                 isError = true;
