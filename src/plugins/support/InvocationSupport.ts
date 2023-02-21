@@ -191,20 +191,32 @@ class InvocationSupport {
     /**
      * Sets the {@link Error} to the invocation
      * @param {Error} error the {@link Error} to be set
+     * @param {string} severity the severity ('critical', 'warning', etc ...) of the  {@link Error}
      */
-    static setError(error: any): void {
+    static setError(error: any, severity?: string): void {
         if (error instanceof Error) {
             const execContext = ExecutionContextManager.get();
             if (execContext) {
                 execContext.userError = error;
                 const cause: any = (error as any).cause;
                 if (cause) {
-                    InvocationSupport.setTag('cause', {
+                    InvocationSupport.setTag('error.cause', {
                         name: cause.name,
                         message: cause.message,
                         stack: cause.stack,
                         code: cause.code,
                     });
+                } else {
+                    // Clear error cause tag as it might be left over
+                    // from previous call of this method for another error.
+                    InvocationSupport.removeTag('error.cause');
+                }
+                if (severity) {
+                    InvocationSupport.setTag('error.severity', severity);
+                } else {
+                    // Clear error severity tag as it might be left over
+                    // from previous call of this method for another error.
+                    InvocationSupport.removeTag('error.severity');
                 }
             }
         } else {
