@@ -9,7 +9,7 @@
     "build": "rollup -c",
     "start": "npm-run-all --parallel watch:server watch:build",
     "test-automatic-instrumentation": "node ./test/instrumentation/automated.instrumentation.js",
-    "test": "npm run compile && npm run test-automatic-instrumentation && jest --silent --config jest.ci.config.js",
+    "test": "npm run compile && npm run test-automatic-instrumentation && jest --runInBand --force-exit --silent --config jest.ci.config.js",
     "test-ci": "npm run compile && npm run test-automatic-instrumentation && jest --silent --config jest.ci.config.js --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "tslint --project tsconfig.json -t stylish",
     "release-minor": "npm install; npm run build; release-it minor --ci --git.commit --git.push --git.tag --git.tagName='v${version}' --github.release --no-git.requireCleanWorkingDir --no-git.requireUpstream --npm.publish",
