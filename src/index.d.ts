@@ -95,8 +95,9 @@ declare module '@thundra/core' {
   /**
    * Sets the {@link Error} to the invocation
    * @param {Error} error the {@link Error} to be set
+   * @param {string} severity the severity ('critical', 'warning', etc ...) of the  {@link Error}
    */
-  export function setError(error: any): void;
+  export function setError(error: any, severity?: string): void;
 
   /**
    * Gets the {@link Error} to the invocation
