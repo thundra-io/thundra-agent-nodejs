@@ -20,5 +20,9 @@ jobs:
         run: npm install
       - name: NPM Linter
         run: npm run lint
+      - name: Docker Up
+        run: docker-compose up -d
       - name: NPM Test CI
         run: npm run test
+      - name: Docker Stop
+        run: docker-compose stop
