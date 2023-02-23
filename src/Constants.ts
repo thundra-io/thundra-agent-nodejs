@@ -212,6 +212,8 @@ export const DBTags = {
     DB_HOST: 'db.host',
     DB_PORT: 'db.port',
     DB_USER: 'db.user',
+    DB_RESULT_COUNT: 'db.result.count',
+    DB_RESULTS: 'db.results',
 };
 
 export const SecurityTags = {
@@ -830,6 +832,7 @@ export const SPAN_TAGS_TO_TRIM_2: string[] = [
     HttpTags.BODY,
     HttpTags.RESPONSE_BODY,
     DBTags.DB_STATEMENT,
+    DBTags.DB_RESULTS,
     RedisTags.REDIS_COMMAND,
     RedisTags.REDIS_COMMANDS,
     RedisTags.REDIS_COMMAND_ARGS,
@@ -918,3 +921,5 @@ export const KNOWN_TEST_FILE_PATHS = new Set([
 export const DEFAULT_APPLICATION_NAME = 'thundra-app';
 
 export const MAX_ERROR_STACK_LENGTH = 4 * 1024;
+
+export const MAX_DB_RESULT_COUNT = 100;
