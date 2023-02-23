@@ -172,6 +172,8 @@ class ConfigNames {
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK: string =
         'thundra.agent.trace.integrations.rdb.statement.mask';
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_RDB_RESULT_MASK: string =
+        'thundra.agent.trace.integrations.rdb.result.mask';
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_RABBITMQ_MESSAGE_MASK: string =
     'thundra.agent.trace.integrations.rabbitmq.message.mask';

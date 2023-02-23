@@ -1,6 +1,14 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, ClassNames, INTEGRATIONS,
+    DBTags,
+    SpanTags,
+    SpanTypes,
+    DomainNames,
+    DBTypes,
+    SQLQueryOperationTypes,
+    ClassNames,
+    INTEGRATIONS,
+    MAX_DB_RESULT_COUNT,
 } from '../Constants';
 import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
@@ -132,6 +140,25 @@ class MySQL2Integration implements Integration {
                     const wrappedCallback = (err: any, res: any, fields: any) => {
                         if (err) {
                             span.setErrorTag(err);
+                        } else {
+                            try {
+                                let {rowCount, rows} = res;
+                                if (!rowCount && res instanceof Array) {
+                                    rowCount = res.length;
+                                    rows = res;
+                                }
+                                span.addTags({
+                                    [DBTags.DB_RESULT_COUNT]: rowCount,
+                                    [DBTags.DB_RESULTS]:
+                                        config.maskRdbResult
+                                            ? undefined
+                                            : (rows.length > MAX_DB_RESULT_COUNT
+                                                ? rows.slice(0, MAX_DB_RESULT_COUNT)
+                                                : rows),
+                                });
+                            } catch (e) {
+                                ThundraLogger.debug(`<MySQL2Integration> Unable to capture DB results`, e);
+                            }
                         }
                         ThundraLogger.debug(`<MySQL2Integration> Closing MySQL span with name ${span.getOperationName()}`);
                         span.closeWithCallback(this, originalCallback, [err, res, fields]);

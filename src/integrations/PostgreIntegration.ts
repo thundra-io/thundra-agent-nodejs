@@ -1,6 +1,13 @@
 import Integration from './Integration';
 import {
-    DBTags, SpanTags, SpanTypes, DomainNames, DBTypes, SQLQueryOperationTypes, INTEGRATIONS,
+    DBTags,
+    SpanTags,
+    SpanTypes,
+    DomainNames,
+    DBTypes,
+    SQLQueryOperationTypes,
+    INTEGRATIONS,
+    MAX_DB_RESULT_COUNT,
 } from '../Constants';
 import ModuleUtils from '../utils/ModuleUtils';
 import ThundraLogger from '../ThundraLogger';
@@ -111,6 +118,25 @@ class PostgreIntegration implements Integration {
                         const wrappedCallback = (err: any, res: any) => {
                             if (err) {
                                 span.setErrorTag(err);
+                            } else {
+                                try {
+                                    let {rowCount, rows} = res;
+                                    if (!rowCount && res instanceof Array) {
+                                        rowCount = res.length;
+                                        rows = res;
+                                    }
+                                    span.addTags({
+                                        [DBTags.DB_RESULT_COUNT]: rowCount,
+                                        [DBTags.DB_RESULTS]:
+                                            config.maskRdbResult
+                                                ? undefined
+                                                : (rows.length > MAX_DB_RESULT_COUNT
+                                                    ? rows.slice(0, MAX_DB_RESULT_COUNT)
+                                                    : rows),
+                                    });
+                                } catch (e) {
+                                    ThundraLogger.debug(`<PostgreIntegration> Unable to capture DB results`, e);
+                                }
                             }
                             ThundraLogger.debug(`<PostgreIntegration> Closing Postgre span with name ${span.getOperationName()}`);
                             span.closeWithCallback(me, originalCallback, [err, res]);
