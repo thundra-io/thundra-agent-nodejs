@@ -357,25 +357,28 @@ class Reporter {
 
     private serializeMasked(batch: any, maskedKeys: MaskedKey[], hide?: boolean): string {
         if (maskedKeys && maskedKeys.length) {
-            ThundraLogger.debug(`<Reporter> Serializing masked ...`);
+            try {
+                ThundraLogger.debug(`<Reporter> Serializing masked ...`);
 
-            const maskCheckSet: WeakSet<any> = new WeakSet<any>();
+                const maskCheckSet: WeakSet<any> = new WeakSet<any>();
 
-            for (const monitoringData of batch.data.allMonitoringData) {
-                if (monitoringData.tags) {
-                    maskCheckSet.add(monitoringData.tags);
+                for (const monitoringData of batch.data.allMonitoringData) {
+                    if (monitoringData.tags) {
+                        maskCheckSet.add(monitoringData.tags);
+                    }
                 }
+
+                const result: string =
+                    JSON.stringify(batch, this.createMaskingReplacer(maskCheckSet, maskedKeys, hide));
+
+                ThundraLogger.debug(`<Reporter> Serialized masked`);
+
+                return result;
+            } catch (err) {
+                ThundraLogger.debug(`<Reporter> Error occurred while serializing masked`, err);
             }
-
-            const result: string =
-                JSON.stringify(batch, this.createMaskingReplacer(maskCheckSet, maskedKeys, hide));
-
-            ThundraLogger.debug(`<Reporter> Serialized masked`);
-
-            return result;
-        } else {
-            return Utils.serializeJSON(batch);
         }
+        return Utils.serializeJSON(batch);
     }
 
     private isMasked(key: string, maskedKeys: MaskedKey[]): boolean {
