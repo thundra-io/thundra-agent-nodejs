@@ -78,6 +78,13 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'number',
         defaultValue: 32 * 1024, // 32 KB
     },
+    [ConfigNames.THUNDRA_REPORT_MASKED_KEYS]: {
+        type: 'string',
+    },
+    [ConfigNames.THUNDRA_REPORT_HIDE]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_LAMBDA_HANDLER]: {
         type: 'string',
     },
