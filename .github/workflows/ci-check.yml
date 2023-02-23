@@ -12,17 +12,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Collect Workflow Telemetry
+        if: always()
+        uses: runforesight/foresight-workflow-kit-action@v1
+        with:
+          api_key: ${{ secrets.FORESIGHT_PROD_API_KEY }}
+
       - name: Use Node.js 10.x
         uses: actions/setup-node@v2
         with:
           node-version: "10.x"
       - name: NPM Install
-        run: npm install
+        run: npm install -D jest-junit-reporter
       - name: NPM Linter
         run: npm run lint
       - name: Docker Up
         run: docker-compose up -d
       - name: NPM Test CI
-        run: npm run test
+        run: npm run test -- --testResultsProcessor="./node_modules/jest-junit-reporter"
+      - name: Analyze Test and/or Coverage Results
+        if: always()
+        uses: runforesight/foresight-test-kit-action@v1
+        with:
+          api_key: ${{ secrets.FORESIGHT_PROD_API_KEY }}
+          test_framework: jest
+          test_format: junit
+          test_path: "./test-report.xml"
+
       - name: Docker Stop
         run: docker-compose stop
