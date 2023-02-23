@@ -8,6 +8,7 @@ module.exports = {
         '<rootDir>/test/opentracing/*.js',
         '<rootDir>/test/integration/*.js'
     ],
+    'maxWorkers': 1,
     'transform': {
         '.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
     },
