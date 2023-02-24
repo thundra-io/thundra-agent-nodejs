@@ -148,20 +148,19 @@ class MySQLIntegration implements Integration {
                             span.setErrorTag(err);
                         } else {
                             try {
-                                let {rowCount, rows} = res;
+                                let { rowCount, rows } = res;
                                 if (!rowCount && res instanceof Array) {
                                     rowCount = res.length;
                                     rows = res;
                                 }
-                                span.addTags({
-                                    [DBTags.DB_RESULT_COUNT]: rowCount,
-                                    [DBTags.DB_RESULTS]:
-                                        config.maskRdbResult
-                                            ? undefined
-                                            : (rows.length > MAX_DB_RESULT_COUNT
-                                                ? rows.slice(0, MAX_DB_RESULT_COUNT)
-                                                : rows),
-                                });
+                                span.setTag(DBTags.DB_RESULT_COUNT, rowCount);
+                                if (!config.maskRdbResult && Array.isArray(rows) && rows.length) {
+                                    span.setTag(
+                                        DBTags.DB_RESULTS,
+                                        rows.length > MAX_DB_RESULT_COUNT
+                                            ? rows.slice(0, MAX_DB_RESULT_COUNT)
+                                            : rows);
+                                }
                             } catch (e) {
                                 ThundraLogger.debug(`<MySQLIntegration> Unable to capture DB results`, e);
                             }

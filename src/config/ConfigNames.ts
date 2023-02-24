@@ -53,6 +53,10 @@ class ConfigNames {
         'thundra.agent.report.cloudwatch.enable';
     public static readonly THUNDRA_REPORT_SIZE_MAX: string =
         'thundra.agent.report.size.max';
+    public static readonly THUNDRA_REPORT_MASKED_KEYS: string =
+        'thundra.agent.report.masked.keys';
+    public static readonly THUNDRA_REPORT_HIDE: string =
+        'thundra.agent.report.hide';
 
     /////////////////////////////////////////////////////////////////////////////
 

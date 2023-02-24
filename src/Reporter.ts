@@ -4,13 +4,13 @@ import * as https from 'https';
 import * as url from 'url';
 import {
     COMPOSITE_MONITORING_DATA_PATH,
-    getDefaultCollectorEndpoint,
     LOCAL_COLLECTOR_ENDPOINT,
     SPAN_TAGS_TO_TRIM_1,
     SPAN_TAGS_TO_TRIM_2,
     SPAN_TAGS_TO_TRIM_3,
     REPORTER_HTTP_TIMEOUT,
     REPORTER_DATA_SIZE_LIMIT,
+    getDefaultCollectorEndpoint,
 } from './Constants';
 import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
@@ -30,6 +30,11 @@ const httpsAgent = new https.Agent({
     keepAlive: true,
 });
 
+const REGEXP_PATTERN = /^\/(.*?)\/([gimyu]*)$/;
+const MASKED_VALUE = '*****';
+
+type MaskedKey = string | RegExp;
+
 /**
  * Reports given telemetry data to given/configured Thundra collector endpoint
  */
@@ -43,6 +48,8 @@ class Reporter {
     private async: boolean;
     private trimmers: Trimmer[];
     private maxReportSize: number;
+    private maskedKeys: MaskedKey[];
+    private hide: boolean;
 
     constructor(apiKey: string, opt: any = {}) {
         this.url = url.parse(opt.url || Reporter.getCollectorURL());
@@ -66,6 +73,29 @@ class Reporter {
             ThundraLogger.info(
                 `<Reporter> Max report size cannot be bigger than ${REPORTER_DATA_SIZE_LIMIT} ` +
                          `but it is set to ${this.maxReportSize}. So limiting to ${REPORTER_DATA_SIZE_LIMIT}.`);
+        }
+        this.maskedKeys = opt.maskedKeys || Reporter.getMaskedKeys();
+        this.hide = opt.hide ||  ConfigProvider.get<boolean>(ConfigNames.THUNDRA_REPORT_HIDE);
+    }
+
+    private static getMaskedKeys(): MaskedKey[] | undefined {
+        const maskedKeysConfig: string | undefined =
+            ConfigProvider.get<string>(ConfigNames.THUNDRA_REPORT_MASKED_KEYS);
+        const maskedKeys: MaskedKey[] = [];
+        if (maskedKeysConfig) {
+            for (const maskedKey of maskedKeysConfig.split(',')) {
+                const regexpParts: string[] = maskedKey.match(REGEXP_PATTERN);
+                if (regexpParts) {
+                    maskedKeys.push(new RegExp(regexpParts[1], regexpParts[2]));
+                } else {
+                    maskedKeys.push(maskedKey);
+                }
+            }
+        }
+        if (maskedKeys && maskedKeys.length) {
+            return maskedKeys;
+        } else {
+            return undefined;
         }
     }
 
@@ -306,7 +336,7 @@ class Reporter {
         // If trimming is disabled, trim if and only if data size is bigger than maximum allowed limit
         const maxReportDataSize: number = disableTrim ? REPORTER_DATA_SIZE_LIMIT : this.maxReportSize;
 
-        let json: string = Utils.serializeJSON(batch);
+        let json: string = this.serializeMasked(batch, this.maskedKeys, this.hide);
 
         if (json.length < maxReportDataSize) {
             return json;
@@ -317,12 +347,105 @@ class Reporter {
             if (!trimResult.mutated) {
                 continue;
             }
-            json = Utils.serializeJSON(batch);
+            json = this.serializeMasked(batch, this.maskedKeys, this.hide);
             if (json.length < maxReportDataSize) {
                 return json;
             }
         }
+        return this.serializeMasked(batch, this.maskedKeys, this.hide);
+    }
+
+    private serializeMasked(batch: any, maskedKeys: MaskedKey[], hide?: boolean): string {
+        if (maskedKeys && maskedKeys.length) {
+            try {
+                ThundraLogger.debug(`<Reporter> Serializing masked ...`);
+
+                const maskCheckSet: WeakSet<any> = new WeakSet<any>();
+
+                for (const monitoringData of batch.data.allMonitoringData) {
+                    if (monitoringData.tags) {
+                        maskCheckSet.add(monitoringData.tags);
+                    }
+                }
+
+                const result: string =
+                    JSON.stringify(batch, this.createMaskingReplacer(maskCheckSet, maskedKeys, hide));
+
+                ThundraLogger.debug(`<Reporter> Serialized masked`);
+
+                return result;
+            } catch (err) {
+                ThundraLogger.debug(`<Reporter> Error occurred while serializing masked`, err);
+            }
+        }
         return Utils.serializeJSON(batch);
+    }
+
+    private isMasked(key: string, maskedKeys: MaskedKey[]): boolean {
+        for (const maskedKey of maskedKeys) {
+            if (typeof maskedKey === 'string' && maskedKey === key) {
+                return true;
+            }
+            if (maskedKey instanceof RegExp && maskedKey.test(key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private createMaskingReplacer(maskCheckSet: WeakSet<any>, maskedKeys: MaskedKey[], hide?: boolean)
+            : (this: any, key: string, value: any) => any {
+        const isObject: Function = (o: any) => o != null && typeof o === 'object';
+        const isArray: Function = (o: any) => o != null && Array.isArray(o);
+        const isObjectOrArray: Function = (o: any) => isObject(o) || isArray(o);
+        const isJson = (str: any) =>
+            typeof str === 'string' &&
+            (
+                (str.charAt(0) === '{' && str.charAt(str.length - 1) === '}') ||
+                (str.charAt(0) === '[' && str.charAt(str.length - 1) === ']')
+            );
+
+        const seen: WeakSet<any> = new WeakSet<any>();
+        const me = this;
+
+        return function (key: string, value: any) {
+            if (isObject(value)) {
+                if (seen.has(value)) {
+                    return;
+                }
+                seen.add(value);
+            }
+
+            // The parent needs to be checked to check the current property
+            const checkForMask: boolean = maskCheckSet.has(this);
+            if (checkForMask) {
+                if (me.isMasked(key, maskedKeys)) {
+                    if (ThundraLogger.isDebugEnabled()) {
+                        ThundraLogger.debug(`<Reporter> Masking (hide=${hide}) key ${key} ...`);
+                    }
+                    return hide ? undefined : MASKED_VALUE;
+                } else {
+                    if (isObjectOrArray(value)) {
+                        maskCheckSet.add(value);
+                    }  else if (isJson(value)) {
+                        try {
+                            const jsonObj: any = JSON.parse(value);
+                            const jsonMaskCheckSet: WeakSet<any> = new WeakSet<any>();
+                            jsonMaskCheckSet.add(jsonObj);
+                            const maskedJson =
+                                JSON.stringify(jsonObj, me.createMaskingReplacer(jsonMaskCheckSet, maskedKeys, hide));
+                            if (maskedJson) {
+                                value = maskedJson;
+                            }
+                        } catch (e) {
+                            ThundraLogger.debug(
+                                `<Reporter> Unable to mask (hide=${hide}) json with key ${key}: ${value}`, e);
+                        }
+                    }
+                }
+            }
+            return value;
+        };
     }
 
 }

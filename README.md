@@ -38,9 +38,7 @@ Check out [example projects](https://github.com/thundra-io/thundra-examples-lamb
   - [How to build](#how-to-build)
   - [How to test](#how-to-test)
   - [Changelog](#changelog)
-
-
-
+  
 ## Installation
 
 ```bash
@@ -48,6 +46,7 @@ npm install @thundra/core --save
 ```
 
 ## Configuration
+
 You can configure Thundra using **environment variables** or **module initialization parameters**.
 
 Environment variables have **higher precedence** over initialization parameters.
@@ -70,15 +69,13 @@ Check out the [configuration part](https://apm.docs.thundra.io/node.js/nodejs-co
 | THUNDRA_AGENT_REPORT_REST_BASEURL      | string | https://collector.thundra.io/v1 |
 | THUNDRA_AGENT_REPORT_CLOUDWATCH_ENABLE |  bool  |              false              |
 
-
-
 ## Usage
 
 ### Integration Options for Containers and VMs  
 
 ```shell
-export THUNDRA_APIKEY=<your_thundra_api_key>
-export THUNDRA_AGENT_APPLICATION_NAME=<your_application_name>
+export THUNDRA_APIKEY=<YOUR-THUNDRA-API-KEY>
+export THUNDRA_AGENT_APPLICATION_NAME=<YOUR-APP-NAME>
 ```
 
 For `Dockerfile`, you just replace `export` with `ENV`.
@@ -252,13 +249,12 @@ if (ackIds.length !== 0) {
 
 Integrating Thundra using AWS Lambda Layers is the recommended (and easier) way to get started with Thundra. For latest layer version(layer arn) and details of the integration see the [doc](https://apm.docs.thundra.io/node.js/nodejs-integration-options) 
 
-
 #### Without Layers 
 
 Just require this module, pass your api key to it and wrap your handler:
 
 ```js
-const thundra = require("@thundra/core")({ apiKey: "your_thundra_api_key" });
+const thundra = require("@thundra/core")({ apiKey: "<YOUR-THUNDRA-API-KEY>" });
 
 exports.handler = thundra((event, context,callback) => {
     callback(null, "Hello Thundra!");
@@ -270,7 +266,7 @@ Thundra will monitor your AWS lambda function and report automatically!
 `context.done`, `context.succeed` and `context.fail` are also supported:
 
 ```js
-const thundra = require("@thundra/core")({ apiKey: "your_thundra_api_key" });
+const thundra = require("@thundra/core")({ apiKey: "<YOUR-THUNDRA-API-KEY>" });
 
 exports.handler = thundra((event, context) => {
     context.succeed("Hello Thundra!");
@@ -316,18 +312,16 @@ Thundra provides out-of-the-box instrumentation (tracing) for following librarie
 |@google-cloud/pubsub    |`>=1.2`                    |
 |@google-cloud/bigquery  |`>=5.0`                    |
 
-
-
-
 ## Async Monitoring with Zero Overhead
+
 By default, Thundra agent reports by making an HTTPS request. This adds an overhead to your lambda function.
 
 Instead, you can [setup async monitoring](https://apm.docs.thundra.io/performance/zero-overhead-with-asynchronous-monitoring) in **2 minutes** and monitor your lambda functions with **zero overhead**!
 
 Check out our async monitoring example at our [example projects](https://github.com/thundra-io/thundra-examples-lambda-nodejs)  for a quick start.
 
-
 ## Log Support
+
 You can monitor your logs using Thundra and enjoy the three pillars of observability in one place!
 
 ```js
@@ -394,7 +388,7 @@ logger.log("trace", "Hey, I am %s", "tracing.");
 
 In increasing precedence: **`trace`**, **`debug`**, **`info`**, **`warn`**, **`error`**, **`fatal`**.
 
-You can set the log level by setting the environment variable `thundra_log_logLevel` to one of the following:
+You can set the log level by setting the environment variable `THUNDRA_AGENT_LOG_LOGLEVEL` to one of the following:
 * `trace`
 * `debug`
 * `info`
@@ -403,118 +397,139 @@ You can set the log level by setting the environment variable `thundra_log_logLe
 * `fatal`
 * `none`
 
-For instance, if `thundra_log_logLevel` is:
+For instance, if `THUNDRA_AGENT_LOG_LOGLEVEL` is:
 * `debug`, only `debug` and higher precedence logs will be reported.
 * `none`, none of the logs will be reported.
 
+## Mask Sensitive Data
 
+You can specify the keys to be masked in the trace by passing the key names 
+(separated by comma (`,`) if there are multiple) through the `THUNDRA_AGENT_REPORT_MASKED_KEYS` environment variable.
+Here, key names can be string for exact match or [regexp](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp) pattern.
+
+For example, 
+```
+THUNDRA_AGENT_REPORT_MASKED_KEYS=password
+```
+masks all the keys/properties whose names **exactly** match to `password`.
+
+As another example,
+```
+THUNDRA_AGENT_REPORT_MASKED_KEYS=/.*password.*/
+```
+masks all the keys/properties whose names **contain** (partially match) `password`.
+
+If there are multiple key names or patterns you want to specify, you can separate them by comma (`,`).
+```
+THUNDRA_AGENT_REPORT_MASKED_KEYS=/.*password.*/,/.*secret.*/
+```
+
+By default, masked data is replaced with `*****`.
+But if you want to remove the masked data completely, you can set `THUNDRA_AGENT_REPORT_HIDE` environment variable to `true`.
 
 ## Warmup Support
+
 You can cut down cold starts easily by deploying our lambda function [`thundra-lambda-warmup`](https://github.com/thundra-io/thundra-lambda-warmup).
 
-Our agent handles warmup requests automatically so you don't need to make any code changes.
+By default, Thundra agent doesn't recognize warmup requests by default, but you can enable it 
+by setting `THUNDRA_AGENT_LAMBDA_WARMUP_WARMUPAWARE` environment variable to `true`
 
-You just need to deploy `thundra-lambda-warmup` once, then you can enable warming up for your lambda by 
-* setting its environment variable `thundra_agent_lambda_warmup_warmupAware` **true** OR
-* adding its name to `thundra-lambda-warmup`'s environment variable `thundra_agent_lambda_warmup_function`.
-
-Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs for more information.
-
+Check out [this part](https://apm.docs.thundra.io/performance/dealing-with-cold-starts) in our docs for more information.
 
 ## All Environment Variables
 
-| Name                                                                |  Type   |          Default Value          |
-|:--------------------------------------------------------------------|:-------:|:-------------------------------:|
-| THUNDRA_APIKEY                                                      | string  |                -                |
-| THUNDRA_AGENT_DISABLE                                               |  bool   |              false              |
-| THUNDRA_AGENT_DEBUG_ENABLE                                          |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_DISABLE                                         |  bool   |              false              |
-| THUNDRA_AGENT_METRIC_DISABLE                                        |  bool   |              true               |
-| THUNDRA_AGENT_LOG_DISABLE                                           |  bool   |              true               |
-| THUNDRA_AGENT_REPORT_REST_BASEURL                                   | string  | https://collector.thundra.io/v1 |
-| THUNDRA_AGENT_REPORT_REST_TRUSTALLCERTIFICATES                      |  bool   |              false              |
-| THUNDRA_AGENT_REPORT_REST_LOCAL                                     |  bool   |              false              |
-| THUNDRA_AGENT_REPORT_CLOUDWATCH_ENABLE                              |  bool   |              false              |
-| THUNDRA_AGENT_REPORT_SIZE_MAX                                       | number  |        32 * 1024 (32 KB)        |
-| THUNDRA_AGENT_LAMBDA_HANDLER                                        | string  |                -                |
-| THUNDRA_AGENT_LAMBDA_WARMUP_WARMUPAWARE                             |  bool   |              false              |
-| THUNDRA_AGENT_LAMBDA_TIMEOUT_MARGIN                                 | number  |                -                |
-| THUNDRA_AGENT_LAMBDA_ERROR_STACKTRACE_MASK                          |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_REQUEST_SKIP                                    |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_RESPONSE_SKIP                                   |  bool   |              false              |
-| THUNDRA_AGENT_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE                   |  bool   |              false              |
-| THUNDRA_AGENT_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE                  |  bool   |              false              |
-| THUNDRA_AGENT_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE             |  bool   |              false              |
-| THUNDRA_AGENT_LAMBDA_AWS_STEPFUNCTIONS                              |  bool   |              false              |
-| THUNDRA_AGENT_LAMBDA_AWS_APPSYNC                                    |  bool   |              false              |
-| THUNDRA_AGENT_APPLICATION_ID                                        | string  |                -                |
-| THUNDRA_AGENT_APPLICATION_INSTANCEID                                | string  |                -                |
-| THUNDRA_AGENT_APPLICATION_REGION                                    | string  |                -                |
-| THUNDRA_AGENT_APPLICATION_NAME                                      | string  |                -                |
-| THUNDRA_AGENT_APPLICATION_STAGE                                     | string  |                -                |
-| THUNDRA_AGENT_APPLICATION_DOMAINNAME                                | string  |                -                |
-| THUNDRA_AGENT_APPLICATION_CLASSNAME                                 | string  |                -                |
-| THUNDRA_AGENT_APPLICATION_VERSION                                   | string  |                -                |
-| THUNDRA_AGENT_APPLICATION_TAG                                       |   any   |                -                |
-| THUNDRA_AGENT_INVOCATION_SAMPLE_ONERROR                             |  bool   |              false              |
-| THUNDRA_AGENT_INVOCATION_REQUEST_TAGS                               | string  |                -                |
-| THUNDRA_AGENT_INVOCATION_RESPONSE_TAGS                              | string  |                -                |
-| THUNDRA_AGENT_TRACE_INSTRUMENT_DISABLE                              |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INSTRUMENT_TRACEABLECONFIG                      | string  |                -                |
-| THUNDRA_AGENT_TRACE_INSTRUMENT_FILE_PREFIX                          | string  |                -                |
-| THUNDRA_AGENT_TRACE_SPAN_LISTENERCONFIG                             | string  |                -                |
-| THUNDRA_AGENT_TRACE_SPAN_COUNT_MAX                                  | number  |               200               |
-| THUNDRA_AGENT_SAMPLER_TIMEAWARE_TIMEFREQ                            | number  |             300000              |
-| THUNDRA_AGENT_SAMPLER_COUNTAWARE_COUNTFREQ                          | number  |               100               |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_DISABLE                            |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ONLOAD              |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SNS_MESSAGE_MASK               |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE     |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SQS_MESSAGE_MASK               |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE     |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_LAMBDA_PAYLOAD_MASK            |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE  |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK        |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_DYNAMODB_TRACEINJECTION_ENABLE |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_ATHENA_STATEMENT_MASK          |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_BODY_MASK                     |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_BODY_SIZE_MAX                 | number  |        10 * 1024 (10 KB)        |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_MASK            |  bool   |              true               |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_SIZE_MAX        | number  |        10 * 1024 (10 KB)        |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_URL_DEPTH                     | number  |                1                |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE        |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_ERROR_ON4XX_DISABLE           |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_ERROR_ON5XX_DISABLE           |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK                 |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK                 |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_RDB_RESULT_MASK                    |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK            |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_ELASTICSEARCH_PATH_DEPTH           | number  |                1                |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_MONGODB_COMMAND_MASK               |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_EVENTBRIDGE_DETAIL_MASK        |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SES_MAIL_MASK                  |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK      |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_RABBITMQ_MESSAGE_MASK              |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK         |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_SIZE_MAX  | number  |         1 * 1024 (1 KB)         |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_QUERY_MASK         |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_MASK      |  bool   |              false              |
-| THUNDRA_AGENT_LOG_CONSOLE_DISABLE                                   |  bool   |              false              |
-| THUNDRA_AGENT_LOG_LOGLEVEL                                          | string  |              TRACE              |
-| THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE                                |  bool   |              false              |
-| THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT                                  | number  |              1111               |
-| THUNDRA_AGENT_LAMBDA_DEBUGGER_LOGS_ENABLE                           |  bool   |              false              |
-| THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX                              | number  |              60000              |
-| THUNDRA_AGENT_LAMBDA_DEBUGGER_IO_WAIT                               | number  |              60000              |
-| THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT                           | number  |               444               |
-| THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST                           | string  |        debug.thundra.io         |
-| THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME                          | string  |             default             |
-| THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN                            | string  |                -                |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_HAPI_DISABLE                       |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_KOA_DISABLE                        |  bool   |              false              |
-| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_DISABLE              |  bool   |              false              |
-
-
+| Name                                                                |  Type  |          Default Value          | Description                                                                       |
+|:--------------------------------------------------------------------|:------:|:-------------------------------:|:----------------------------------------------------------------------------------|
+| THUNDRA_APIKEY                                                      | string |                -                |                                                                                   |
+| THUNDRA_AGENT_DISABLE                                               |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_DEBUG_ENABLE                                          |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_DISABLE                                         |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_METRIC_DISABLE                                        |  bool  |              true               |                                                                                   |
+| THUNDRA_AGENT_LOG_DISABLE                                           |  bool  |              true               |                                                                                   |
+| THUNDRA_AGENT_REPORT_REST_BASEURL                                   | string | https://collector.thundra.io/v1 |                                                                                   |
+| THUNDRA_AGENT_REPORT_REST_TRUSTALLCERTIFICATES                      |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_REPORT_REST_LOCAL                                     |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_REPORT_CLOUDWATCH_ENABLE                              |  bool  |              false              |                                                                                   | 
+| THUNDRA_AGENT_REPORT_SIZE_MAX                                       | number |        32 * 1024 (32 KB)        |                                                                                   |
+| THUNDRA_AGENT_REPORT_MASKED_KEYS                                    | string |                -                | Comma (,) separated key names (can be string or regexp) to be masked in the trace | 
+| THUNDRA_AGENT_REPORT_HIDE                                           |  bool  |              false              | Hides masked keys instead of masking them                                         | 
+| THUNDRA_AGENT_LAMBDA_HANDLER                                        | string |                -                |                                                                                   | 
+| THUNDRA_AGENT_LAMBDA_WARMUP_WARMUPAWARE                             |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_TIMEOUT_MARGIN                                 | number |                -                |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_ERROR_STACKTRACE_MASK                          |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_REQUEST_SKIP                                    |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_RESPONSE_SKIP                                   |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE                   |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE                  |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE             |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_AWS_STEPFUNCTIONS                              |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_AWS_APPSYNC                                    |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_APPLICATION_ID                                        | string |                -                |                                                                                   |
+| THUNDRA_AGENT_APPLICATION_INSTANCEID                                | string |                -                |                                                                                   |
+| THUNDRA_AGENT_APPLICATION_REGION                                    | string |                -                |                                                                                   |
+| THUNDRA_AGENT_APPLICATION_NAME                                      | string |                -                |                                                                                   |
+| THUNDRA_AGENT_APPLICATION_STAGE                                     | string |                -                |                                                                                   |
+| THUNDRA_AGENT_APPLICATION_DOMAINNAME                                | string |                -                |                                                                                   |
+| THUNDRA_AGENT_APPLICATION_CLASSNAME                                 | string |                -                |                                                                                   |
+| THUNDRA_AGENT_APPLICATION_VERSION                                   | string |                -                |                                                                                   |
+| THUNDRA_AGENT_APPLICATION_TAG                                       |  any   |                -                |                                                                                   |
+| THUNDRA_AGENT_INVOCATION_SAMPLE_ONERROR                             |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_INVOCATION_REQUEST_TAGS                               | string |                -                |                                                                                   |
+| THUNDRA_AGENT_INVOCATION_RESPONSE_TAGS                              | string |                -                |                                                                                   |
+| THUNDRA_AGENT_TRACE_INSTRUMENT_DISABLE                              |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INSTRUMENT_TRACEABLECONFIG                      | string |                -                |                                                                                   |
+| THUNDRA_AGENT_TRACE_INSTRUMENT_FILE_PREFIX                          | string |                -                |                                                                                   |
+| THUNDRA_AGENT_TRACE_SPAN_LISTENERCONFIG                             | string |                -                |                                                                                   |
+| THUNDRA_AGENT_TRACE_SPAN_COUNT_MAX                                  | number |               200               |                                                                                   |
+| THUNDRA_AGENT_SAMPLER_TIMEAWARE_TIMEFREQ                            | number |             300000              |                                                                                   |
+| THUNDRA_AGENT_SAMPLER_COUNTAWARE_COUNTFREQ                          | number |               100               |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_DISABLE                            |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ONLOAD              |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SNS_MESSAGE_MASK               |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SNS_TRACEINJECTION_DISABLE     |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SQS_MESSAGE_MASK               |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SQS_TRACEINJECTION_DISABLE     |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_LAMBDA_PAYLOAD_MASK            |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_LAMBDA_TRACEINJECTION_DISABLE  |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK        |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_DYNAMODB_TRACEINJECTION_ENABLE |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_ATHENA_STATEMENT_MASK          |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_BODY_MASK                     |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_BODY_SIZE_MAX                 | number |        10 * 1024 (10 KB)        |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_MASK            |  bool  |              true               |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_SIZE_MAX        | number |        10 * 1024 (10 KB)        |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_URL_DEPTH                     | number |                1                |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE        |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_ERROR_ON4XX_DISABLE           |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_ERROR_ON5XX_DISABLE           |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK                 |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_RDB_STATEMENT_MASK                 |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_RDB_RESULT_MASK                    |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_ELASTICSEARCH_BODY_MASK            |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_ELASTICSEARCH_PATH_DEPTH           | number |                1                |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_MONGODB_COMMAND_MASK               |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_EVENTBRIDGE_DETAIL_MASK        |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SES_MAIL_MASK                  |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_SES_MAIL_DESTINATION_MASK      |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_RABBITMQ_MESSAGE_MASK              |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_MESSAGE_MASK         |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_SIZE_MAX  | number |         1 * 1024 (1 KB)         |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_QUERY_MASK         |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_BIGQUERY_RESPONSE_MASK      |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LOG_CONSOLE_DISABLE                                   |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LOG_LOGLEVEL                                          | string |              TRACE              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_DEBUGGER_ENABLE                                |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_DEBUGGER_PORT                                  | number |              1111               |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_DEBUGGER_LOGS_ENABLE                           |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_DEBUGGER_WAIT_MAX                              | number |              60000              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_DEBUGGER_IO_WAIT                               | number |              60000              |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_PORT                           | number |               444               |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_DEBUGGER_BROKER_HOST                           | string |        debug.thundra.io         |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_DEBUGGER_SESSION_NAME                          | string |             default             |                                                                                   |
+| THUNDRA_AGENT_LAMBDA_DEBUGGER_AUTH_TOKEN                            | string |                -                |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HAPI_DISABLE                       |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_KOA_DISABLE                        |  bool  |              false              |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_GOOGLE_PUBSUB_DISABLE              |  bool  |              false              |                                                                                   |
 
 ### Module initialization parameters
 
@@ -524,9 +539,8 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 | disableThundra |  bool  |     false     |
 | plugins        |  array |      [ ]      |
 
-
-
 ## How to build
+
 [Webpack](https://webpack.js.org/) is used as a module bundler.
 
 To build the project,
@@ -536,6 +550,7 @@ To build the project,
  ```
 
 ## How to test
+
 Tests are written using [Jest](https://facebook.github.io/jest/).
 
 To run tests,
