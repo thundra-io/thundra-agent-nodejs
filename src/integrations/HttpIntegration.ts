@@ -145,10 +145,17 @@ class HttpIntegration implements Integration {
                             options = {};
                         }
 
-                        const headers = options.headers ? options.headers : {};
-                        tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, headers);
-                        headers[TriggerHeaderTags.RESOURCE_NAME] = operationName;
-                        options.headers = headers;
+                        const tempHeaders = options.headers ? options.headers : {};
+
+                        if (!config.maskHttpHeaders) {
+                            // Shallow copy headers not to include injected one by Thundra
+                            const copiedHeaders =  Object.assign({}, tempHeaders);
+                            span.setTag(HttpTags.HEADERS, copiedHeaders);
+                        }
+
+                        tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, tempHeaders);
+                        tempHeaders[TriggerHeaderTags.RESOURCE_NAME] = operationName;
+                        options.headers = tempHeaders;
                     }
 
                     span.addTags({
@@ -178,8 +185,11 @@ class HttpIntegration implements Integration {
 
                             span.setTag(HttpTags.HTTP_STATUS, res.statusCode);
 
-                            if (res && res.headers) {
+                            if (res.headers) {
                                 res.headers = HTTPUtils.extractHeaders(res.headers);
+                                if (!config.maskHttpResponseHeaders) {
+                                    span.setTag(HttpTags.RESPONSE_HEADERS, res.headers);
+                                }
                             }
 
                             ThundraLogger.debug(`<HTTPIntegration> Closing HTTP span with name ${operationName}`);

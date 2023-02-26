@@ -496,8 +496,10 @@ Check out [this part](https://apm.docs.thundra.io/performance/dealing-with-cold-
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_AWS_ATHENA_STATEMENT_MASK          |  bool  |              false              |                                                                                   |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_BODY_MASK                     |  bool  |              false              |                                                                                   |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_BODY_SIZE_MAX                 | number |        10 * 1024 (10 KB)        |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_HEADERS_MASK                  |  bool  |              false              |                                                                                   |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_MASK            |  bool  |              true               |                                                                                   |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_SIZE_MAX        | number |        10 * 1024 (10 KB)        |                                                                                   |
+| THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_RESPONSE_HEADERS_MASK         |  bool  |              false              |                                                                                   |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_URL_DEPTH                     | number |                1                |                                                                                   |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE        |  bool  |              false              |                                                                                   |
 | THUNDRA_AGENT_TRACE_INTEGRATIONS_HTTP_ERROR_ON4XX_DISABLE           |  bool  |              false              |                                                                                   |

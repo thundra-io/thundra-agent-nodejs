@@ -156,10 +156,14 @@ class ConfigNames {
         'thundra.agent.trace.integrations.http.body.mask';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_BODY_SIZE_MAX: string =
         'thundra.agent.trace.integrations.http.body.size.max';
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_HEADERS_MASK: string =
+        'thundra.agent.trace.integrations.http.headers.mask';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_MASK: string =
         'thundra.agent.trace.integrations.http.response.body.mask';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_BODY_SIZE_MAX: string =
         'thundra.agent.trace.integrations.http.response.body.size.max';
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_RESPONSE_HEADERS_MASK: string =
+        'thundra.agent.trace.integrations.http.response.headers.mask';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_URL_DEPTH: string =
         'thundra.agent.trace.integrations.http.url.depth';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE: string =
@@ -170,7 +174,6 @@ class ConfigNames {
         'thundra.agent.trace.integrations.http.error.on5xx.disable';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_HTTP_ERROR_IGNORED_STATUS_CODES: string =
         'thundra.agent.trace.integrations.http.error.ignored.status.codes';
-
     public static readonly THUNDRA_TRACE_INTEGRATIONS_REDIS_COMMAND_MASK: string =
         'thundra.agent.trace.integrations.redis.command.mask';
 

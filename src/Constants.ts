@@ -418,7 +418,9 @@ export const HttpTags = {
     HTTP_ROUTE_PATH: 'http.route_path',
     QUERY_PARAMS: 'http.query_params',
     BODY: 'http.body',
+    HEADERS: 'http.headers',
     RESPONSE_BODY: 'http.response.body',
+    RESPONSE_HEADERS: 'http.response.headers',
 };
 
 export const RedisTags = {

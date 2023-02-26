@@ -107,6 +107,13 @@ class Http2Integration implements Integration {
 
                     if (!config.httpTraceInjectionDisabled) {
                         const tempHeaders = headers ? headers : {};
+
+                        if (!config.maskHttpHeaders) {
+                            // Shallow copy headers not to include injected one by Thundra
+                            const copiedHeaders =  Object.assign({}, tempHeaders);
+                            span.setTag(HttpTags.HEADERS, copiedHeaders);
+                        }
+
                         tracer.inject(span.spanContext, opentracing.FORMAT_TEXT_MAP, tempHeaders);
                         tempHeaders[TriggerHeaderTags.RESOURCE_NAME] = operationName;
                         headers = tempHeaders;
@@ -160,6 +167,10 @@ class Http2Integration implements Integration {
                         ThundraLogger.debug(`<HTTP2Integration> On response of HTTP2 span with name ${operationName}`);
 
                         responseHeaders = HTTPUtils.extractHeaders(res);
+
+                        if (!config.maskHttpResponseHeaders) {
+                            span.setTag(HttpTags.RESPONSE_HEADERS, responseHeaders);
+                        }
 
                         try {
                             // If there is no headers, "contentLength" will be undefined
