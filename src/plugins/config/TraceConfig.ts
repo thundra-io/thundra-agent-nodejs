@@ -31,6 +31,7 @@ class TraceConfig extends BasePluginConfig {
     maskRdbStatement: boolean;
     maskRdbResult: boolean;
     maskDynamoDBStatement: boolean;
+    maskDynamoDBResult: boolean;
     maskElasticSearchBody: boolean;
     maskRabbitmqMessage: boolean;
     maskMongoDBCommand: boolean;
@@ -103,6 +104,9 @@ class TraceConfig extends BasePluginConfig {
         this.maskDynamoDBStatement = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK,
             options.maskDynamoDBStatement);
+        this.maskDynamoDBResult = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_RESULT_MASK,
+            options.maskDynamoDBResult);
         this.maskSQSMessage = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_SQS_MESSAGE_MASK,
             options.maskSQSMessage);
