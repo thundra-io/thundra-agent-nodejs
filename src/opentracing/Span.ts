@@ -40,7 +40,7 @@ class ThundraSpan extends Span {
         this.rootTraceId = fields.rootTraceId || null;
         this.isRootSpan = fields.isRootSpan || false;
         this.transactionId = fields.transactionId || null;
-        this.spanContext = this._createContext(parent);
+        this.spanContext = this._createContext(fields.spanId, parent);
         this.logs = [];
         this.className = fields.className;
         this.domainName = fields.domainName;
@@ -147,7 +147,7 @@ class ThundraSpan extends Span {
         }
     }
 
-    _createContext(parent: any) {
+    _createContext(spanId: string, parent: any) {
         if (!this.parentTracer) {
             return;
         }
@@ -156,17 +156,17 @@ class ThundraSpan extends Span {
         if (parent) {
             spanContext = new ThundraSpanContext({
                 traceId: parent.traceId,
-                spanId: Utils.generateId(),
+                transactionId: parent.transactionId,
+                spanId: spanId || Utils.generateId(),
                 parentId: parent.spanId,
                 sampled: parent.sampled,
                 baggageItems: Object.assign({}, parent.baggageItems),
-                transactionId: parent.transactionId,
             });
         } else {
             spanContext = new ThundraSpanContext({
                 traceId: this.rootTraceId,
-                spanId: Utils.generateId(),
                 transactionId: this.transactionId,
+                spanId: spanId || Utils.generateId(),
                 sampled: this.parentTracer._isSampled(this),
             });
         }

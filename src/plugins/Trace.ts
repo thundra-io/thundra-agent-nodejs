@@ -123,7 +123,8 @@ export default class Trace implements Plugin {
                     const spanData = this.buildSpanData(span, execContext);
                     const spanReportData = Utils.generateReport(spanData, apiKey);
 
-                    const shouldBeReported: boolean = span.isRootSpan;
+                    // At coldstart, all the spans should be reported (there might be many module load spans to trace coldstart)
+                    const shouldBeReported: boolean = span.isRootSpan || execContext.coldStart;
                     // On-going (not finished) spans have higher priority (for ex. in case of timeout)
                     const highPriority: boolean = !span.isFinished();
 

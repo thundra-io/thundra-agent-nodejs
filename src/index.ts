@@ -16,12 +16,14 @@ import ConfigNames from './config/ConfigNames';
 import { loadHandler } from './wrappers/lambda/lambdaRuntimeSupport';
 import * as ExpressWrapper from './wrappers/express/ExpressWrapper';
 import * as LambdaWrapper from './wrappers/lambda/LambdaWrapper';
+import * as LambdaInitializer from './wrappers/lambda/LambdaInitializer';
 import ExecutionContextManager from './context/ExecutionContextManager';
 import LogManager from './plugins/LogManager';
 import InitManager from './init/InitManager';
 import ModuleUtils from './utils/ModuleUtils';
 import * as Foresight from './foresight';
 import * as GenericWrapper from './wrappers/generic/GenericWrapper';
+import LambdaUtils from './utils/LambdaUtils';
 
 let modulePath: string = '?';
 try {
@@ -52,6 +54,9 @@ let initialized = false;
 function init(options?: any) {
     if (!initialized) {
         ConfigProvider.init(options);
+        if (LambdaUtils.isLambdaRuntime()) {
+            LambdaInitializer.init();
+        }
         InitManager.init();
         initialized = true;
     }

@@ -154,35 +154,34 @@ class ThundraTracer extends Tracer {
     _startSpan(name: any, fields: any) {
         const tags: any = {};
         let span;
-        const rootTraceId = fields.rootTraceId ? fields.rootTraceId : Utils.generateId();
-        const parentContext = fields.parentContext ? fields.parentContext : Utils.getParentContext(fields.references);
-        const parentSpan = fields.childOf ? fields.childOf : this.getActiveSpan();
-
-        if (!fields.propagated && (parentContext && !this.activeSpans.get(parentContext.spanId))) {
-            throw new Error('Invalid spanId : ' + parentContext.spanId);
-        }
+        const spanId = fields.spanId || Utils.generateId();
+        const rootTraceId = fields.rootTraceId || Utils.generateId();
+        const parentContext = fields.parentContext || Utils.getParentContext(fields.references);
+        const parentSpan = fields.childOf || this.getActiveSpan();
 
         if (parentContext) {
             span = new ThundraSpan(this, {
-                operationName: fields.operationName || name,
-                parent: parentContext,
-                tags: Object.assign(tags, this.tags, fields.tags),
-                startTime: fields.startTime || Date.now(),
                 rootTraceId,
+                transactionId: this.transactionId,
+                spanId,
+                parent: parentContext,
+                operationName: fields.operationName || name,
+                startTime: fields.startTime || Date.now(),
                 className: fields.className,
                 domainName: fields.domainName,
-                transactionId: this.transactionId,
+                tags: Object.assign(tags, this.tags, fields.tags),
             });
         } else {
             span = new ThundraSpan(this, {
-                operationName: fields.operationName || name,
-                parent: parentSpan ? parentSpan.spanContext : null,
-                tags: Object.assign(tags, this.tags, fields.tags),
                 rootTraceId,
+                transactionId: this.transactionId,
+                spanId,
+                parent: parentSpan ? parentSpan.spanContext : null,
+                operationName: fields.operationName || name,
                 startTime: fields.startTime || Date.now(),
                 className: fields.className,
                 domainName: fields.domainName,
-                transactionId: this.transactionId,
+                tags: Object.assign(tags, this.tags, fields.tags),
             });
         }
 
