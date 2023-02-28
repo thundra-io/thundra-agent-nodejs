@@ -154,6 +154,7 @@ export const ClassNames = {
     GOOGLE_PUBSUB: 'Google-PubSub',
     GOOGLE_PUBSUB_NODE_HANDLER: 'Google-PubSub-Node-Handler',
     RABBITMQ: 'RabbitMQ',
+    NODEJS_MODULE_LOAD: 'Nodejs-Module-Load',
 };
 
 export const AWS_SERVICE_REQUEST = 'AWSServiceRequest';
@@ -238,6 +239,19 @@ export const LineByLineTags = {
     START_LINE: 'method.startLine',
     NEXT_SPAN_IDS: 'nextSpanIds',
     LINES_OVERFLOW: 'method.linesOverflow',
+};
+
+export const NodejsModuleLoadTags = {
+    MODULE_NAME: 'nodejs.module.name',
+    MODULE_FILENAME: 'nodejs.module.filename',
+    MODULE_TYPE: 'nodejs.module.type',
+};
+
+export const NodejsModuleTypes = {
+    MODULE: 'MODULE',
+    CORE: 'CORE',
+    RUNTIME: 'RUNTIME',
+    LAYER: 'LAYER',
 };
 
 export const MongoDBCommandTypes = {

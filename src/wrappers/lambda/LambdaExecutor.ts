@@ -6,7 +6,7 @@ import Utils from '../../utils/Utils';
 import ThundraSpanContext from '../../opentracing/SpanContext';
 import {
     DomainNames, ClassNames, LAMBDA_FUNCTION_PLATFORM, THUNDRA_TRACE_KEY,
-    AwsTags, AwsLambdaWrapperTags, TriggerHeaderTags, HttpTags,
+    AwsTags, AwsLambdaWrapperTags, TriggerHeaderTags, HttpTags, NodejsModuleLoadTags,
 } from '../../Constants';
 import ThundraTracer from '../../opentracing/Tracer';
 import LambdaEventUtils, { LambdaEventType } from './LambdaEventUtils';
@@ -22,6 +22,7 @@ import InvocationTraceSupport from '../../plugins/support/InvocationTraceSupport
 import TraceConfig from '../../plugins/config/TraceConfig';
 import { LambdaContextProvider } from './LambdaContextProvider';
 import { LambdaPlatformUtils } from './LambdaPlatformUtils';
+import { getTracedRequires, deactivate, RequireTrace } from './ModuleLoadTracer';
 import ExecutionContext from '../../context/ExecutionContext';
 import ConfigProvider from '../../config/ConfigProvider';
 import ConfigNames from '../../config/ConfigNames';
@@ -110,9 +111,56 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
                 } as SpanOptions,
             ) as ThundraSpan;
         initSpan.close(initFinishTime);
+        const initSpanContext: ThundraSpanContext = initSpan.context() as ThundraSpanContext;
 
         execContext.initDuration = initFinishTime - initStartTime;
         execContext.rootSpan.tags[AwsLambdaWrapperTags.AWS_LAMBDA_INIT_DURATION] = execContext.initDuration;
+
+        try {
+            const tracedRequires: RequireTrace[] = getTracedRequires();
+            deactivate();
+
+            const filteredRequires: RequireTrace[] = tracedRequires
+                .filter((a: RequireTrace) => !a.ignored)
+                .sort((a: RequireTrace, b: RequireTrace) => {
+                    if (a.duration === b.duration) {
+                        return a.depth - b.depth;
+                    } else {
+                        return b.duration - a.duration;
+                    }
+                })
+                .slice(0, config.lambdaColdStartTraceTopModuleLoadDuration);
+            for (const tracedRequire of filteredRequires) {
+                const requireSpan: ThundraSpan =
+                    tracer.startSpan(
+                        tracedRequire.moduleId,
+                        {
+                            spanId: tracedRequire.id,
+                            startTime: tracedRequire.startTimestamp,
+                            disableActiveStart: true,
+                            domainName: DomainNames.SERVERLESS,
+                            className: ClassNames.NODEJS_MODULE_LOAD,
+                            parentContext: {
+                                traceId: execContext.traceId,
+                                transactionId: execContext.transactionId,
+                                spanId: tracedRequire.parentId || initSpanContext.spanId,
+                                sampled: true,
+                            },
+                            tags: {
+                                [NodejsModuleLoadTags.MODULE_NAME]: tracedRequire.moduleId,
+                                [NodejsModuleLoadTags.MODULE_FILENAME]: tracedRequire.fileName,
+                                [NodejsModuleLoadTags.MODULE_TYPE]: tracedRequire.moduleType,
+                            },
+                        } as SpanOptions,
+                    ) as ThundraSpan;
+                if (tracedRequire.error) {
+                    requireSpan.setErrorTag(tracedRequire.error);
+                }
+                requireSpan.close(tracedRequire.finishTimestamp);
+            }
+        } catch (e) {
+            ThundraLogger.debug('<LambdaExecutor> Error occurred while creating spans for traced requires', e);
+        }
     }
 }
 
@@ -440,15 +488,15 @@ function getRequest(originalEvent: any, triggerClassName: string, config: TraceC
     }
 
     let enableRequestData = true;
-    if (triggerClassName === ClassNames.CLOUDWATCH && !config.enableCloudWatchRequest) {
+    if (triggerClassName === ClassNames.CLOUDWATCH && !config.lambdaCloudWatchRequestTraceEnabled) {
         enableRequestData = false;
     }
 
-    if (triggerClassName === ClassNames.FIREHOSE && !config.enableFirehoseRequest) {
+    if (triggerClassName === ClassNames.FIREHOSE && !config.lambdaFirehoseRequestTraceEnabled) {
         enableRequestData = false;
     }
 
-    if (triggerClassName === ClassNames.KINESIS && !config.enableKinesisRequest) {
+    if (triggerClassName === ClassNames.KINESIS && !config.lambdaKinesisRequestTraceEnabled) {
         enableRequestData = false;
     }
 

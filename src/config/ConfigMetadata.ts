@@ -107,6 +107,22 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_LAMBDA_TRACE_COLDSTART_ENABLE]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
+    [ConfigNames.THUNDRA_LAMBDA_TRACE_COLDSTART_MODULE_LOAD_DURATION_TOP]: {
+        type: 'number',
+        defaultValue: 100,
+    },
+    [ConfigNames.THUNDRA_LAMBDA_TRACE_COLDSTART_MODULE_LOAD_DURATION_MIN]: {
+        type: 'number',
+        defaultValue: -1,
+    },
+    [ConfigNames.THUNDRA_LAMBDA_TRACE_COLDSTART_MODULE_LOAD_DEPTH_MAX]: {
+        type: 'number',
+        defaultValue: 10,
+    },
     [ConfigNames.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE]: {
         type: 'boolean',
         defaultValue: false,

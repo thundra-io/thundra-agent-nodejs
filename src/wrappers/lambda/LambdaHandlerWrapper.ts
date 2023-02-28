@@ -242,7 +242,7 @@ class LambdaHandlerWrapper {
                 this.destroyTimeoutHandler();
 
                 try {
-                    await this.executeAfterInvocationAndReport(timeout);
+                    await this.executeAfterInvocationAndReport(timeout || execContext.coldStart);
                 } catch (e) {
                     ThundraLogger.debug('<LambdaHandlerWrapper> Failed to report:', e);
                 }

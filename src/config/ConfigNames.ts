@@ -76,6 +76,14 @@ class ConfigNames {
         'thundra.agent.trace.request.skip';
     public static readonly THUNDRA_TRACE_RESPONSE_SKIP: string =
         'thundra.agent.trace.response.skip';
+    public static readonly THUNDRA_LAMBDA_TRACE_COLDSTART_ENABLE: string =
+        'thundra.agent.lambda.trace.coldstart.enable';
+    public static readonly THUNDRA_LAMBDA_TRACE_COLDSTART_MODULE_LOAD_DURATION_TOP: string =
+        'thundra.agent.lambda.trace.coldstart.module.load.duration.top';
+    public static readonly THUNDRA_LAMBDA_TRACE_COLDSTART_MODULE_LOAD_DURATION_MIN: string =
+        'thundra.agent.lambda.trace.coldstart.module.load.duration.min';
+    public static readonly THUNDRA_LAMBDA_TRACE_COLDSTART_MODULE_LOAD_DEPTH_MAX: string =
+        'thundra.agent.lambda.trace.coldstart.module.load.depth.max';
     public static readonly THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE: string =
         'thundra.agent.lambda.trace.kinesis.request.enable';
     public static readonly THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE: string =

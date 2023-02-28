@@ -41,9 +41,13 @@ class TraceConfig extends BasePluginConfig {
     httpTraceInjectionDisabled: boolean;
     httpPathDepth: number;
     esPathDepth: number;
-    enableCloudWatchRequest: boolean;
-    enableFirehoseRequest: boolean;
-    enableKinesisRequest: boolean;
+    lambdaCloudWatchRequestTraceEnabled: boolean;
+    lambdaFirehoseRequestTraceEnabled: boolean;
+    lambdaKinesisRequestTraceEnabled: boolean;
+    lambdaColdStartTraceEnabled: boolean;
+    lambdaColdStartTraceTopModuleLoadDuration: number;
+    lambdaColdStartTraceMinModuleLoadDuration: number;
+    lambdaColdStartTraceMaxModuleLoadDepth: number;
     maskSNSMessage: boolean;
     maskSQSMessage: boolean;
     maskAthenaStatement: boolean;
@@ -168,15 +172,27 @@ class TraceConfig extends BasePluginConfig {
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HTTP_TRACEINJECTION_DISABLE,
             options.httpTraceInjectionDisabled);
 
-        this.enableCloudWatchRequest = ConfigProvider.get<boolean>(
+        this.lambdaCloudWatchRequestTraceEnabled = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_CLOUDWATCHLOG_REQUEST_ENABLE,
-            options.enableCloudWatchRequest);
-        this.enableFirehoseRequest = ConfigProvider.get<boolean>(
+            options.lambdaCloudWatchRequestTraceEnabled);
+        this.lambdaFirehoseRequestTraceEnabled = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_FIREHOSE_REQUEST_ENABLE,
-            options.enableFirehoseRequest);
-        this.enableKinesisRequest = ConfigProvider.get<boolean>(
+            options.lambdaFirehoseRequestTraceEnabled);
+        this.lambdaKinesisRequestTraceEnabled = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_LAMBDA_TRACE_KINESIS_REQUEST_ENABLE,
-            options.enableKinesisRequest);
+            options.lambdaKinesisRequestTraceEnabled);
+        this.lambdaColdStartTraceEnabled = ConfigProvider.get<boolean>(
+            ConfigNames.THUNDRA_LAMBDA_TRACE_COLDSTART_ENABLE,
+            options.lambdaColdStartTraceEnabled);
+        this.lambdaColdStartTraceTopModuleLoadDuration = ConfigProvider.get<number>(
+            ConfigNames.THUNDRA_LAMBDA_TRACE_COLDSTART_MODULE_LOAD_DURATION_TOP,
+            options.lambdaColdStartTraceTopModuleLoadDuration);
+        this.lambdaColdStartTraceMinModuleLoadDuration = ConfigProvider.get<number>(
+            ConfigNames.THUNDRA_LAMBDA_TRACE_COLDSTART_MODULE_LOAD_DURATION_MIN,
+            options.lambdaColdStartTraceMinModuleLoadDuration);
+        this.lambdaColdStartTraceMaxModuleLoadDepth = ConfigProvider.get<number>(
+            ConfigNames.THUNDRA_LAMBDA_TRACE_COLDSTART_MODULE_LOAD_DEPTH_MAX,
+            options.lambdaColdStartTraceMaxModuleLoadDepth);
 
         this.instrumentAWSOnLoad = ConfigProvider.get<boolean>(
             ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_INSTRUMENT_ON_LOAD,
