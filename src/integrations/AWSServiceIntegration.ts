@@ -923,7 +923,9 @@ export class AWSDynamoDBIntegration {
     }
 
     public static processResponse(span: ThundraSpan, request: any, response: any, config: any): void {
-        return;
+        if (response.data && !config.maskDynamoDBResponse) {
+            span.setTag(DBTags.DB_RESULTS, { ...response.data });
+        }
     }
 
     public static generateDynamoTraceLinks(attributes: any, operationType: string,

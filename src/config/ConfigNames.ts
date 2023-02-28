@@ -154,6 +154,8 @@ class ConfigNames {
 
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_STATEMENT_MASK: string =
         'thundra.agent.trace.integrations.aws.dynamodb.statement.mask';
+    public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_RESULT_MASK: string =
+        'thundra.agent.trace.integrations.aws.dynamodb.result.mask';
     public static readonly THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_TRACEINJECTION_ENABLE: string =
         'thundra.agent.trace.integrations.aws.dynamodb.traceinjection.enable';
 

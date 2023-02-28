@@ -209,6 +209,10 @@ export const ConfigMetadata: {[key: string]: { type: string, defaultValue?: any 
         type: 'boolean',
         defaultValue: false,
     },
+    [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_RESULT_MASK]: {
+        type: 'boolean',
+        defaultValue: false,
+    },
     [ConfigNames.THUNDRA_TRACE_INTEGRATIONS_AWS_DYNAMODB_TRACEINJECTION_ENABLE]: {
         type: 'boolean',
         defaultValue: false,
