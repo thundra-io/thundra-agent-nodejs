@@ -11,6 +11,7 @@ import {
     SpanTags
 } from '../../../dist/Constants';
 import * as ExpressWrapper from '../../../dist/wrappers/express/ExpressWrapper';
+import WebWrapperUtils from '../../../dist/wrappers/WebWrapperUtils';
 
 const request = require('supertest');
 const express = require('express');
@@ -239,6 +240,8 @@ describe('express wrapper', () => {
     });
 
     test('should handle parallel requests', async () => {
+        WebWrapperUtils.initAsyncContextManager();
+
         const wait = (ms) => new Promise(r => setTimeout(r, ms));
         const doSomeWork = (spanName) => new Promise((res, rej) => {
             setTimeout(async () => {

@@ -20,7 +20,7 @@ describe('AMQP 0-9-1 integration', () => {
         tracer.destroy();
     });
 
-    test('should intrument AMQP with promise', () => {
+    test('should instrument AMQP with promise', () => {
         const sdk = require('amqplib');      
         
         return AMQP.promise_model(sdk).then((data) => {

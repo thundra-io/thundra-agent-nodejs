@@ -142,7 +142,7 @@ describe('parse error', () => {
         };
 
         it('should set error.message as string', () => {
-            expect(Utils.parseError(error).errorMessage).toEqual(JSON.stringify(error.message));
+            expect(Utils.parseError(error).errorMessage).toEqual(error.message);
         });
     });
 
