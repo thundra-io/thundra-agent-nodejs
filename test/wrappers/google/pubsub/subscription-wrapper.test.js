@@ -23,10 +23,10 @@ describe('Google subscription Wrapper Tests', () => {
             const data = {
                 _handled: true,
                 attributes: {
-                    'x-thundra-transaction-id': 'incomingTransactionId',
-                    'x-thundra-trace-id': 'incomingTraceId',
-                    'x-thundra-span-id': 'incomingSpanId',
-                    'x-thundra-resource-name': 'incomingResourceName',
+                    'x-catchpoint-transaction-id': 'incomingTransactionId',
+                    'x-catchpoint-trace-id': 'incomingTraceId',
+                    'x-catchpoint-span-id': 'incomingSpanId',
+                    'x-catchpoint-resource-name': 'incomingResourceName',
                 },
                 data: {},
                 _subscriber: {

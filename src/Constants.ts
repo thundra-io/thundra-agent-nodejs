@@ -580,17 +580,17 @@ export const ErrorTags = {
 };
 
 export const TraceHeaderTags = {
-    TRACE_ID: 'x-thundra-trace-id',
-    TRANSACTION_ID: 'x-thundra-transaction-id',
-    SPAN_ID: 'x-thundra-span-id',
-    BAGGAGE_PREFIX: 'x-thundra-baggage-',
+    TRACE_ID: 'x-catchpoint-trace-id',
+    TRANSACTION_ID: 'x-catchpoint-transaction-id',
+    SPAN_ID: 'x-catchpoint-span-id',
+    BAGGAGE_PREFIX: 'x-catchpoint-baggage-',
 };
 
 export const TriggerHeaderTags = {
-    RESOURCE_NAME: 'x-thundra-resource-name',
+    RESOURCE_NAME: 'x-catchpoint-resource-name',
 };
 
-export const AlreadyTracedHeader = 'x-thundra-already-traced';
+export const AlreadyTracedHeader = 'x-catchpoint-already-traced';
 
 export const SpanTypes = {
     REDIS: 'Redis',

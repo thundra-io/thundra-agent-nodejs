@@ -127,19 +127,19 @@ const createMockSQSEvent = () => {
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
                 messageAttributes: {
-                    'x-thundra-span-id': {
+                    'x-catchpoint-span-id': {
                         stringValue: 'spanId',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-transaction-id': {
+                    'x-catchpoint-transaction-id': {
                         stringValue: 'transactionId',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-trace-id': {
+                    'x-catchpoint-trace-id': {
                         stringValue: 'traceId',
                         stringListValues: [],
                         binaryListValues: [],
@@ -169,19 +169,19 @@ const createBatchMockSQSEventDifferentIds = () => {
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
                 messageAttributes: {
-                    'x-thundra-span-id': {
+                    'x-catchpoint-span-id': {
                         stringValue: 'spanId',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-transaction-id': {
+                    'x-catchpoint-transaction-id': {
                         stringValue: 'transactionId',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-trace-id': {
+                    'x-catchpoint-trace-id': {
                         stringValue: 'traceId',
                         stringListValues: [],
                         binaryListValues: [],
@@ -204,19 +204,19 @@ const createBatchMockSQSEventDifferentIds = () => {
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
                 messageAttributes: {
-                    'x-thundra-span-id': {
+                    'x-catchpoint-span-id': {
                         stringValue: 'differentSpanId',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-transaction-id': {
+                    'x-catchpoint-transaction-id': {
                         stringValue: 'differentTransactionId2',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-trace-id': {
+                    'x-catchpoint-trace-id': {
                         stringValue: 'differentTraceId',
                         stringListValues: [],
                         binaryListValues: [],
@@ -246,19 +246,19 @@ const createBatchMockSQSEventSameIds = () => {
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
                 messageAttributes: {
-                    'x-thundra-span-id': {
+                    'x-catchpoint-span-id': {
                         stringValue: 'spanId',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-transaction-id': {
+                    'x-catchpoint-transaction-id': {
                         stringValue: 'transactionId',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-trace-id': {
+                    'x-catchpoint-trace-id': {
                         stringValue: 'traceId',
                         stringListValues: [],
                         binaryListValues: [],
@@ -281,19 +281,19 @@ const createBatchMockSQSEventSameIds = () => {
                     ApproximateFirstReceiveTimestamp: '1523232000001'
                 },
                 messageAttributes: {
-                    'x-thundra-span-id': {
+                    'x-catchpoint-span-id': {
                         stringValue: 'spanId',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-transaction-id': {
+                    'x-catchpoint-transaction-id': {
                         stringValue: 'transactionId',
                         stringListValues: [],
                         binaryListValues: [],
                         dataType: 'String'
                     },
-                    'x-thundra-trace-id': {
+                    'x-catchpoint-trace-id': {
                         stringValue: 'traceId',
                         stringListValues: [],
                         binaryListValues: [],
@@ -328,15 +328,15 @@ const createMockSNSEvent = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id': {
+                        'x-catchpoint-trace-id': {
                             Type: 'String',
                             Value: 'traceId'
                         },
-                        'x-thundra-transaction-id': {
+                        'x-catchpoint-transaction-id': {
                             Type: 'String',
                             Value: 'transactionId'
                         },
-                        'x-thundra-span-id': {
+                        'x-catchpoint-span-id': {
                             Type: 'String',
                             Value: 'spanId'
                         }
@@ -366,15 +366,15 @@ const createBatchMockSNSEventWithDifferentIds = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id': {
+                        'x-catchpoint-trace-id': {
                             Type: 'String',
                             Value: 'differentTraceId'
                         },
-                        'x-thundra-transaction-id': {
+                        'x-catchpoint-transaction-id': {
                             Type: 'String',
                             Value: 'differentTransactionId'
                         },
-                        'x-thundra-span-id': {
+                        'x-catchpoint-span-id': {
                             Type: 'String',
                             Value: 'differentSpanId'
                         }
@@ -397,15 +397,15 @@ const createBatchMockSNSEventWithDifferentIds = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id': {
+                        'x-catchpoint-trace-id': {
                             Type: 'String',
                             Value: 'traceId'
                         },
-                        'x-thundra-transaction-id': {
+                        'x-catchpoint-transaction-id': {
                             Type: 'String',
                             Value: 'transactionId'
                         },
-                        'x-thundra-span-id': {
+                        'x-catchpoint-span-id': {
                             Type: 'String',
                             Value: 'spanId'
                         }
@@ -435,15 +435,15 @@ const createBatchMockSNSEventWithSameIds = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id': {
+                        'x-catchpoint-trace-id': {
                             Type: 'String',
                             Value: 'traceId'
                         },
-                        'x-thundra-transaction-id': {
+                        'x-catchpoint-transaction-id': {
                             Type: 'String',
                             Value: 'transactionId'
                         },
-                        'x-thundra-span-id': {
+                        'x-catchpoint-span-id': {
                             Type: 'String',
                             Value: 'spanId'
                         }
@@ -466,15 +466,15 @@ const createBatchMockSNSEventWithSameIds = () => {
                     SigningCertUrl: 'EXAMPLE',
                     UnsubscribeUrl: 'EXAMPLE',
                     MessageAttributes: {
-                        'x-thundra-trace-id': {
+                        'x-catchpoint-trace-id': {
                             Type: 'String',
                             Value: 'traceId'
                         },
-                        'x-thundra-transaction-id': {
+                        'x-catchpoint-transaction-id': {
                             Type: 'String',
                             Value: 'transactionId'
                         },
-                        'x-thundra-span-id': {
+                        'x-catchpoint-span-id': {
                             Type: 'String',
                             Value: 'spanId'
                         }
@@ -488,9 +488,9 @@ const createBatchMockSNSEventWithSameIds = () => {
 const createMockApiGatewayProxy = () => {
     return {
         headers: {
-            'x-thundra-trace-id': 'traceId',
-            'x-thundra-transaction-id': 'transactionId',
-            'x-thundra-span-id': 'spanId',
+            'x-catchpoint-trace-id': 'traceId',
+            'x-catchpoint-transaction-id': 'transactionId',
+            'x-catchpoint-span-id': 'spanId',
         },
         resource: '/',
         path: '/',
@@ -507,10 +507,10 @@ const createMockApiGatewayProxy = () => {
 const createMockClientContext = () => {
     return {
         custom: {
-            'x-thundra-trace-id': 'traceId',
-            'x-thundra-transaction-id': 'transactionId',
-            'x-thundra-span-id': 'spanId',
-            'x-thundra-lambda-trigger-operation-name': 'lambda-function',
+            'x-catchpoint-trace-id': 'traceId',
+            'x-catchpoint-transaction-id': 'transactionId',
+            'x-catchpoint-span-id': 'spanId',
+            'x-catchpoint-lambda-trigger-operation-name': 'lambda-function',
         }
     };
 };

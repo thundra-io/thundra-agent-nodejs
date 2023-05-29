@@ -4,7 +4,7 @@ import {
     AwsKinesisTags, AwsS3Tags, AwsLambdaTags,
     AwsStepFunctionsTags, SpanTypes, ClassNames, DomainNames,
     DBTags, DBTypes, AwsFirehoseTags, AWS_SERVICE_REQUEST,
-    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY,
+    AwsAthenaTags, AwsEventBridgeTags, AwsSESTags, THUNDRA_TRACE_KEY, TraceHeaderTags,
 } from '../Constants';
 import Utils from '../utils/Utils';
 import LambdaUtils from '../utils/LambdaUtils';
@@ -910,8 +910,8 @@ export class AWSDynamoDBIntegration {
                 params.Key, 'SAVE', tableName, region, timestamp, timestamp2);
         } else if (operationName === 'deleteItem') {
             if (config.dynamoDBTraceInjectionEnabled &&
-                AWSServiceIntegration.hasInResponseData(response, 'Attributes.x-thundra-span-id')) {
-                const spanId = AWSServiceIntegration.getFromResponseData(response, 'Attributes.x-thundra-span-id');
+                AWSServiceIntegration.hasInResponseData(response, `Attributes.${TraceHeaderTags.SPAN_ID}`)) {
+                const spanId = AWSServiceIntegration.getFromResponseData(response, `Attributes.${TraceHeaderTags.SPAN_ID}`);
                 traceLinks = [`DELETE:${spanId}`];
             } else {
                 traceLinks = AWSDynamoDBIntegration.generateDynamoTraceLinks(
@@ -978,7 +978,7 @@ export class AWSDynamoDBIntegration {
     private static injectDynamoDBTraceLinkOnPut(requestParams: any, span: ThundraSpan): void {
         const spanId = span.spanContext.spanId;
         requestParams.Item = Object.assign({},
-            { 'x-thundra-span-id': { S: spanId } },
+            { [TraceHeaderTags.SPAN_ID]: { S: spanId } },
             requestParams.Item,
         );
         span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
@@ -993,15 +993,15 @@ export class AWSDynamoDBIntegration {
             };
 
             requestParams.AttributeUpdates = Object.assign({},
-                { 'x-thundra-span-id': thundraAttr },
+                { [TraceHeaderTags.SPAN_ID]: thundraAttr },
                 requestParams.AttributeUpdates,
             );
 
             span.setTag(SpanTags.TRACE_LINKS, [`SAVE:${spanId}`]);
         } else if (has(requestParams, 'UpdateExpression')) {
             const exp: string = requestParams.UpdateExpression;
-            const thundraAttrName = { '#xThundraSpanId': 'x-thundra-span-id' };
-            const thundraAttrVal = { ':xThundraSpanId': { S: spanId } };
+            const thundraAttrName = { '#xCatchpointSpanId': TraceHeaderTags.SPAN_ID };
+            const thundraAttrVal = { ':xCatchpointSpanId': { S: spanId } };
 
             requestParams.ExpressionAttributeNames = Object.assign({}, requestParams.ExpressionAttributeNames, thundraAttrName);
             requestParams.ExpressionAttributeValues = Object.assign({}, requestParams.ExpressionAttributeValues, thundraAttrVal);

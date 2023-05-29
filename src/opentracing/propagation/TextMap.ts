@@ -40,9 +40,7 @@ class TextMapPropagator {
      * @return the extracted {@link ThundraSpanContext}
      */
     extract(carrier: any) {
-        if (!carrier[TextMapPropagator.TRACE_ID_KEY]
-            || !carrier[TextMapPropagator.SPAN_ID_KEY]
-            || !carrier[TextMapPropagator.TRANSACTION_ID_KEY]) {
+        if (!carrier[TextMapPropagator.TRACE_ID_KEY]) {
             return null;
         }
 

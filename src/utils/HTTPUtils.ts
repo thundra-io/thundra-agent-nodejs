@@ -112,7 +112,7 @@ class HTTPUtils {
      */
     static extractHeaders = (headers: any) => {
         return Object.entries(headers)
-            .filter(([key]) => !key.startsWith('x-thundra'))
+            .filter(([key]) => !key.startsWith('x-catchpoint'))
             .reduce((obj: any, header: any) => {
                 const [key, value] = header;
                 obj[key] = value;

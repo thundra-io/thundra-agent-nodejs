@@ -223,10 +223,10 @@ describe('express wrapper', () => {
     test('should pass trace context', async () => {
         const res = await doRequest(app)
             .get('/')
-            .set('x-thundra-transaction-id', 'incomingTransactionId')
-            .set('x-thundra-trace-id', 'incomingTraceId')
-            .set('x-thundra-span-id', 'incomingSpanId')
-            .set('x-thundra-resource-name', 'incomingResourceName');
+            .set('x-catchpoint-transaction-id', 'incomingTransactionId')
+            .set('x-catchpoint-trace-id', 'incomingTraceId')
+            .set('x-catchpoint-span-id', 'incomingSpanId')
+            .set('x-catchpoint-resource-name', 'incomingResourceName');
 
         const execContext = ExecutionContextManager.get();
         const {invocationData} = execContext;
