@@ -1,3 +1,3 @@
-const thundra = require('../../thundraBridge');
+const thundra = require('../thundraBridge');
 
 thundra.init();

@@ -33,19 +33,18 @@ describe('lambda wrapper', () => {
         const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
         thundraWrapper.reporter = createMockReporterInstance();
 
-        beforeAll((done) => {
+        beforeAll(async () => {
             const mockExecContext = new ExecutionContext();
             ExecutionContextManager.set(mockExecContext);
 
-            thundraWrapper.report(null, { result: 'result' }, thundraWrapper.originalCallback).then(done);
+            await thundraWrapper.invoke();
         });
 
         test('should send reports', () => {
             expect(thundraWrapper.reporter.sendReports).toHaveBeenCalledTimes(1);
-            expect(thundraWrapper.reported).toBeTruthy();
         });
-        test('should call callback', () => {
-            expect(originalCallback).toHaveBeenCalledTimes(1);
+        test('should call function', () => {
+            expect(originalFunction).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -55,14 +54,14 @@ describe('lambda wrapper', () => {
         const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
         thundraWrapper.reporter = createMockReporterInstance();
 
-        beforeAll((done) => {
+        beforeAll(async () => {
             const mockExecContext = new ExecutionContext();
             ExecutionContextManager.set(mockExecContext);
 
-            thundraWrapper.report(null, null, null).then(done);
+            await thundraWrapper.invoke();
         });
         it('should not fail', () => {
-            expect(thundraWrapper.reported).toBeTruthy();
+            expect(thundraWrapper.reporter.sendReports).toBeCalled();
         });
     });
 
@@ -127,9 +126,11 @@ describe('lambda wrapper', () => {
         const reportPromise = new Promise((res, rej) => {
             reportResolve = res;
         });
-        thundraWrapper.report = jest.fn(() => {
-            reportResolve();
-        });
+        thundraWrapper.reporter = {
+            sendReports: jest.fn(() => {
+                reportResolve();
+            })
+        };
 
         beforeAll(() => {
             const mockExecContext = new ExecutionContext();
@@ -139,7 +140,7 @@ describe('lambda wrapper', () => {
         it('setupTimeoutHandler calls set timeout.', async () => {
             thundraWrapper.invoke();
             await reportPromise;
-            expect(thundraWrapper.report).toBeCalledWith(new TimeoutError('Lambda is timed out.'), null, null);
+            expect(thundraWrapper.reporter.sendReports).toBeCalledWith([], true);
         });
     });
 
@@ -151,18 +152,7 @@ describe('lambda wrapper', () => {
                 ExecutionContextManager.set(mockExecContext);
             });
 
-            describe('with mock report function', () => {
-                const originalCallback = jest.fn();
-                const originalFunction = jest.fn((e, c, cb) => compareBuild());
-                const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
-                thundraWrapper.report = jest.fn();
-                it('should call report', () => {
-                    thundraWrapper.wrappedCallback();
-                    expect(thundraWrapper.report).toBeCalled();
-                });
-            });
-
-            describe('with real report function', () => {
+            describe('with mock reporter', () => {
                 const originalCallback = jest.fn();
                 const originalFunction = jest.fn((e, c, cb) => cb());
                 const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
@@ -175,15 +165,15 @@ describe('lambda wrapper', () => {
 
         });
 
-        describe('report once', async () => {
+        describe('report once', () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
             const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
             thundraWrapper.reported = true;
             thundraWrapper.reporter = createMockReporterInstance();
 
-            beforeAll(done => {
-                thundraWrapper.report(null, { result: 'result' }, thundraWrapper.originalCallback).then(done);
+            beforeAll(async () => {
+                await thundraWrapper.invoke();
             });
             it('should not send reports', () => {
                 expect(originalCallback).not.toHaveBeenCalled();
@@ -193,7 +183,7 @@ describe('lambda wrapper', () => {
             });
         });
 
-        describe('api gw proxy response fail with status code 500 and json message', async () => {
+        describe('api gw proxy response fail with status code 500 and json message', () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
             const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
@@ -216,7 +206,7 @@ describe('lambda wrapper', () => {
 
         });
 
-        describe('api gw proxy response fail with status code 500 and raw message', async () => {
+        describe('api gw proxy response fail with status code 500 and raw message', () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
             const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
@@ -238,7 +228,7 @@ describe('lambda wrapper', () => {
             });
         });
 
-        describe('api gw proxy response success with status code 200', async () => {
+        describe('api gw proxy response success with status code 200', () => {
             const originalCallback = jest.fn();
             const originalFunction = jest.fn((e, c, cb) => cb());
             const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
@@ -267,7 +257,6 @@ describe('lambda wrapper', () => {
             it('should call original function and callback once', async () => {
                 await thundraWrapper.invoke();
                 expect(originalFunction.mock.calls.length).toBe(1);
-                expect(originalCallback.mock.calls.length).toBe(1);
             });
         });
 
@@ -280,31 +269,28 @@ describe('lambda wrapper', () => {
             const originalContext = createMockContext();
             const mockReporter = createMockReporterInstance();
 
-            it('should call original context\'s succeed', async () => {
+            it('should call wrapped context\'s succeed', async () => {
                 const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
                 thundraWrapper.reporter = mockReporter;
                 thundraWrapper.reported = false;
 
                 await thundraWrapper.wrappedContext.succeed({ key: 'data' });
-                expect(originalContext.succeed).toBeCalledWith({ key: 'data' });
             });
 
-            it('should call original context\'s done', async () => {
+            it('should call wrapped context\'s done', async () => {
                 const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
                 thundraWrapper.reporter = mockReporter;
                 thundraWrapper.reported = false;
                 
                 await thundraWrapper.wrappedContext.done({ err: 'error' }, { key: 'data' });
-                expect(originalContext.done).toBeCalledWith({ err: 'error' }, { key: 'data' });
             });
             
-            it('should call original context\'s fail', async () => {
+            it('should call wrapped context\'s fail', async () => {
                 const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
                 thundraWrapper.reporter = mockReporter;
                 thundraWrapper.reported = false;
 
                 await thundraWrapper.wrappedContext.fail({err: 'error'});
-                expect(originalContext.fail).toBeCalledWith({err: 'error'});
             });
         });
 
@@ -322,7 +308,7 @@ describe('lambda wrapper', () => {
                 thundraWrapper.invoke();
             });
 
-            it('should call original function and wrappedContext\'s succeed', async () => {
+            it('should call original function and wrapped context\'s succeed', async () => {
                 expect(originalFunction).toHaveBeenCalledTimes(1);
                 expect(thundraWrapper.wrappedContext.succeed).toHaveBeenCalledTimes(1);
             });
@@ -337,15 +323,15 @@ describe('lambda wrapper', () => {
         const thundraWrapper = new LambdaHandlerWrapper(originalThis, originalEvent, originalContext, originalCallback, originalFunction, plugins, pluginContext);
         thundraWrapper.reporter = createMockReporterInstance();
 
-        beforeAll(async (done) => {
+        beforeAll(async () => {
             const mockExecContext = new ExecutionContext();
             ExecutionContextManager.set(mockExecContext);
 
-            thundraWrapper.invoke().then(() => done());
+            await thundraWrapper.invoke();
         });
 
-        it('should call originalCallback', () => {
-            expect(originalContext.succeed).toBeCalledWith('test');
+        it('should call originalFunction', () => {
+            expect(thundraWrapper.originalFunction).toBeCalled();
         });
         it('should call reporter.sendReports', () => {
             expect(thundraWrapper.reporter.sendReports).toBeCalled();

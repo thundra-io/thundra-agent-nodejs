@@ -320,7 +320,7 @@ const createMockAPIGatewayProxyEvent = () => {
             'X-Forwarded-For': '127.0.0.1, 127.0.0.2',
             'X-Forwarded-Port': '443',
             'X-Forwarded-Proto': 'https',
-            'x-thundra-span-id': 'spanId',
+            'x-catchpoint-span-id': 'spanId',
         },
         requestContext: {
             accountId: '123456789012',

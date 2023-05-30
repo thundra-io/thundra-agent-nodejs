@@ -46,6 +46,8 @@ describe('HTTP2 integration', () => {
     
     test('should instrument HTTP2 POST calls ', async () => {
         integration.config.httpPathDepth = 2;
+        integration.config.maxHttpBodySize = 1000;
+        integration.config.maxHttpResponseBodySize = 1000;
         
         const http2Client = HTTP2Util.http2Client(serverUrl, { caPath });
         

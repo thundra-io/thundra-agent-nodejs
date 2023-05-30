@@ -1,7 +1,7 @@
 import ThundraSpan from '../../opentracing/Span';
 import {
     SpanTags, DomainNames, ClassNames, VercelTags,
-    VercelConstants, NetlifyConstants, EnvVariableKeys, THUNDRA_TRACE_KEY,
+    VercelConstants, NetlifyConstants, EnvVariableKeys, THUNDRA_TRACE_KEY, TraceHeaderTags,
 } from '../../Constants';
 import ThundraLogger from '../../ThundraLogger';
 import * as zlib from 'zlib';
@@ -25,7 +25,7 @@ const MAX_TRACE_LINK_COUNT = 10;
  */
 class LambdaEventUtils {
 
-    private static readonly LAMBDA_TRIGGER_OPERATION_NAME = 'x-thundra-lambda-trigger-operation-name';
+    private static readonly LAMBDA_TRIGGER_OPERATION_NAME = 'x-catchpoint-lambda-trigger-operation-name';
 
     private constructor() {
     }
@@ -196,13 +196,13 @@ class LambdaEventUtils {
             // Find trace links
             let traceLinkFound: boolean = false;
             if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
-                const spanId = get(record, 'dynamodb.NewImage.x-thundra-span-id', false);
+                const spanId = get(record, `dynamodb.NewImage.${TraceHeaderTags.SPAN_ID}`, false);
                 if (spanId) {
                     traceLinkFound = true;
                     traceLinks.push(`SAVE:${spanId}`);
                 }
             } else if (record.eventName === 'REMOVE') {
-                const spanId = get(record, 'dynamodb.OldImage.x-thundra-span-id', false);
+                const spanId = get(record, `dynamodb.OldImage.${TraceHeaderTags.SPAN_ID}`, false);
                 if (spanId) {
                     traceLinkFound = true;
                     traceLinks.push(`DELETE:${spanId}`);
@@ -304,7 +304,7 @@ class LambdaEventUtils {
                 queueNames.add(queue);
             }
             for (const record of originalEvent.rmqMessagesByQueue[`${queue}`]) {
-                const spanIdBytes = get(record, 'basicProperties.headers.x-thundra-span-id.bytes', false);
+                const spanIdBytes = get(record, `basicProperties.headers.${TraceHeaderTags.SPAN_ID}.bytes`, false);
                 if (spanIdBytes) {
                     const spanId = Buffer.from(spanIdBytes, 'base64').toString();
                     if (traceLinks.length < MAX_TRACE_LINK_COUNT) {
@@ -455,7 +455,7 @@ class LambdaEventUtils {
         const path = get(originalEvent, 'rawPath', '/');
         const operationName = host + Utils.getNormalizedPath(path, config.httpPathDepth);
 
-        const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
+        const incomingSpanId = get(originalEvent, `headers.${TraceHeaderTags.SPAN_ID}`, false);
 
         if (incomingSpanId) {
             InvocationTraceSupport.addIncomingTraceLinks([incomingSpanId]);
@@ -476,7 +476,7 @@ class LambdaEventUtils {
         const domainName = DomainNames.API;
         const className = ClassNames.APIGATEWAY;
         const operationName = LambdaEventUtils.getApigatewayResource(originalEvent);
-        const incomingSpanId = get(originalEvent, 'headers.x-thundra-span-id', false);
+        const incomingSpanId = get(originalEvent, `headers.${TraceHeaderTags.SPAN_ID}`, false);
 
         if (incomingSpanId) {
             InvocationTraceSupport.addIncomingTraceLinks([incomingSpanId]);
@@ -693,14 +693,14 @@ class LambdaEventUtils {
         for (const queue of Object.keys(originalEvent.rmqMessagesByQueue)) {
             const queueData = originalEvent.rmqMessagesByQueue[queue];
             for (const data of queueData) {
-                const traceIdBytes = get(data, 'basicProperties.headers.x-thundra-trace-id.bytes', null);
+                const traceIdBytes = get(data, `basicProperties.headers.${TraceHeaderTags.TRACE_ID}.bytes`, null);
                 const traceId = traceIdBytes ? Buffer.from(traceIdBytes, 'base64').toString() : null;
                 if (!traceId) {
                     continue;
                 }
-                const transactionIdBytes = get(data, 'basicProperties.headers.x-thundra-transaction-id.bytes', null);
+                const transactionIdBytes = get(data, `basicProperties.headers.${TraceHeaderTags.TRANSACTION_ID}.bytes`, null);
                 const transactionId = transactionIdBytes ? Buffer.from(transactionIdBytes, 'base64').toString() : null;
-                const spanIdBytes = get(data, 'basicProperties.headers.x-thundra-span-id.bytes', null);
+                const spanIdBytes = get(data, `basicProperties.headers.${TraceHeaderTags.SPAN_ID}.bytes`, null);
                 const spanId = spanIdBytes ? Buffer.from(spanIdBytes, 'base64').toString() : null;
                 sc = new ThundraSpanContext({ transactionId, spanId, traceId });
                 if (sc) {
