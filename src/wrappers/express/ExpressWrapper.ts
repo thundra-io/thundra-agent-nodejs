@@ -42,7 +42,6 @@ const initWrapperContext = () => {
 };
 
 export function expressMW(opts: any = {}) {
-
     ThundraLogger.debug('<ExpressWrapper> Creating Thundra middleware ...');
 
     return (req: any, res: any, next: any) => ExecutionContextManager.runWithContext(
@@ -50,7 +49,6 @@ export function expressMW(opts: any = {}) {
             return WrapperUtils.createExecContext(ApplicationClassName, ApplicationDomainName);
         },
         async function () {
-
             ThundraLogger.debug('<ExpressWrapper> Running with execution context');
             const context: ExecutionContext = this;
             req.thundra = {
@@ -83,14 +81,11 @@ export function expressMW(opts: any = {}) {
 }
 
 function initWrapper(wrappedFunction: any) {
-
     ThundraLogger.debug('<ExpressWrapper> Wrapping original middleware ...');
 
     return function internalExpressWrapper() {
-
         let thundraExpressMW;
         if (!this._thundra) {
-
             this._thundra = true;
 
             thundraExpressMW = expressMW();
@@ -173,37 +168,41 @@ function wrapMethod(originalMethod: Function, name: string) {
 function wrapUse(originalUse: Function) {
     ThundraLogger.debug('<ExpressWrapper> Wrapping "app.use" ...');
     return function useWrapper() {
-        if (arguments.length > 1) {
-            const middleware = arguments[1];
-            // If second argument is a function and not a Thundra middleware
+        if (arguments.length > 0) {
+            const middlewareIdx = arguments.length === 1 ? 0 : 1;
+            const middleware = arguments[middlewareIdx];
+            // If middleware argument is a function and not a Thundra middleware
             if (typeof middleware === 'function' && !middleware._thundra) {
-                arguments[1] = wrapMiddleware(middleware);
+                arguments[middlewareIdx] = wrapMiddleware(middleware);
             }
         }
-
         ThundraLogger.debug('<ExpressWrapper> Calling original "app.use"');
         return originalUse.apply(this, arguments);
     };
 }
 
+function createErrorAwareMiddleware() {
+    const errorAwareMiddleware = function (err: Error, req: any, res: any, next: Function) {
+        if (err && req.thundra) {
+            ThundraLogger.debug(
+                '<ExpressWrapper> Setting error into execution context by Thundra error aware middleware:', err);
+            req.thundra.setError(err);
+        }
+        next(err);
+    };
+    // Mark error aware middleware as Thundra middleware
+    Object.defineProperty(errorAwareMiddleware, '_thundra', {
+        value: true,
+        writable: false,
+    });
+    return errorAwareMiddleware;
+}
+
 function wrapListen(originalListen: Function) {
     ThundraLogger.debug('<ExpressWrapper> Wrapping "app.listen" ...');
     return function listenWrapper() {
-
         ThundraLogger.debug('<ExpressWrapper> Calling original "app.listen"');
-        const errorAwareMiddleware = function (err: Error, req: any, res: any, next: Function) {
-            if (err && req.thundra) {
-                ThundraLogger.debug(
-                    '<ExpressWrapper> Setting error into execution context by Thundra error aware middleware:', err);
-                req.thundra.setError(err);
-            }
-            next(err);
-        };
-        // Mark error aware middleware as Thundra middleware
-        Object.defineProperty(errorAwareMiddleware, '_thundra', {
-            value: true,
-            writable: false,
-        });
+        const errorAwareMiddleware = createErrorAwareMiddleware();
         const result = originalListen.apply(this, arguments);
         this.use(errorAwareMiddleware);
         ThundraLogger.debug('<ExpressWrapper> Added Thundra error aware middleware');
@@ -212,16 +211,13 @@ function wrapListen(originalListen: Function) {
 }
 
 export const init = () => {
-
     ThundraLogger.debug('<ExpressWrapper> Initializing ...');
 
     const lambdaRuntime = LambdaUtils.isLambdaRuntime();
     if (!lambdaRuntime) {
-
         ModuleUtils.instrument(
             ['express'], undefined,
             (lib: any, cfg: any) => {
-
                 initWrapperContext();
 
                 ModuleUtils.patchModule(
@@ -232,15 +228,15 @@ export const init = () => {
                     lib);
                 ModuleUtils.patchModule(
                     'express',
-                    'use',
-                    wrapUse,
-                    (express: any) => express.Router,
-                    lib);
-                ModuleUtils.patchModule(
-                    'express',
                     'listen',
                     wrapListen,
                     (express: any) => express.application,
+                    lib);
+                ModuleUtils.patchModule(
+                    'express',
+                    'use',
+                    wrapUse,
+                    (express: any) => express.Router,
                     lib);
                 METHODS.forEach((method: string) => {
                     ModuleUtils.patchModule(
