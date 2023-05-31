@@ -3,23 +3,21 @@ import * as http from 'http';
 import * as https from 'https';
 import * as url from 'url';
 import {
-    COMPOSITE_MONITORING_DATA_PATH,
     LOCAL_COLLECTOR_ENDPOINT,
     SPAN_TAGS_TO_TRIM_1,
     SPAN_TAGS_TO_TRIM_2,
     SPAN_TAGS_TO_TRIM_3,
     REPORTER_HTTP_TIMEOUT,
     REPORTER_DATA_SIZE_LIMIT,
+    MONITORING_DATA_PATH,
+    MAX_MONITOR_DATA_BATCH_SIZE,
     getDefaultCollectorEndpoint,
 } from './Constants';
 import Utils from './utils/Utils';
 import ThundraLogger from './ThundraLogger';
-import BaseMonitoringData from './plugins/data/base/BaseMonitoringData';
 import MonitoringDataType from './plugins/data/base/MonitoringDataType';
 import ConfigNames from './config/ConfigNames';
 import ConfigProvider from './config/ConfigProvider';
-import CompositeMonitoringData from './plugins/data/composite/CompositeMonitoringData';
-import MonitorDataType from './plugins/data/base/MonitoringDataType';
 
 const httpAgent = new http.Agent({
     keepAlive: true,
@@ -117,16 +115,60 @@ class Reporter {
      */
     sendReports(reports: any[], disableTrim: boolean = false): Promise<void> {
         ThundraLogger.debug('<Reporter> Sending reports ...');
-        let compositeReport: any;
-        try {
-            compositeReport = this.getCompositeReport(reports);
-        } catch (err) {
-            ThundraLogger.error('<Reporter> Cannot create batch request will send no report:', err);
-        }
+
+        // Split reports into batches
+        const batchedReports: any[] = this.getBatchedReports(reports);
+
+        const reportPromises: Array<Promise<void>> = [];
+        // Report each batch asynchronously in parallel
+        batchedReports.forEach((batch: any) => {
+            reportPromises.push(this.doSendReports(batch, disableTrim));
+        });
 
         return new Promise<void>((resolve, reject) => {
             try {
-                const reportJson: string = this.serializeReport(compositeReport, disableTrim);
+                const allPromises: Promise<void[]> = Promise.all(reportPromises);
+                allPromises
+                    .then(() => {
+                        ThundraLogger.debug('<Reporter> Sent all reports successfully');
+                        resolve();
+                    })
+                    .catch((err) => {
+                        ThundraLogger.debug('<Reporter> Failed to send all reports:', err);
+                        reject(err);
+                    });
+            } catch (err) {
+                ThundraLogger.debug('<Reporter> Unable to send all reports:', err);
+                reject(err);
+            }
+        });
+    }
+
+    private getBatchedReports(reports: any[]): any[] {
+        const batchedReports: any[] = [];
+        const batchCount: number = Math.ceil(reports.length / MAX_MONITOR_DATA_BATCH_SIZE);
+
+        for (let i = 0; i < batchCount; i++) {
+            const batch: any[] = [];
+            for (let j = 0; j < MAX_MONITOR_DATA_BATCH_SIZE; j++) {
+                const report = reports[i * MAX_MONITOR_DATA_BATCH_SIZE + j];
+                if (!report) {
+                    continue;
+                }
+                batch.push(report);
+            }
+            batchedReports.push(batch);
+        }
+
+        return batchedReports;
+    }
+
+    private doSendReports(monitoringDataList: any[], disableTrim: boolean = false): Promise<void> {
+        ThundraLogger.debug('<Reporter> Sending batch ...');
+
+        return new Promise<void>((resolve, reject) => {
+            try {
+                const reportJson: string = this.serializeReport(monitoringDataList, disableTrim);
                 this.doReport(reportJson)
                     .then((res: any) => {
                         ThundraLogger.debug('<Reporter> Sent reports successfully');
@@ -157,7 +199,7 @@ class Reporter {
     }
 
     private createRequestOptions(u?: url.URL): http.RequestOptions {
-        const path = COMPOSITE_MONITORING_DATA_PATH;
+        const path = MONITORING_DATA_PATH;
 
         return {
             timeout: REPORTER_HTTP_TIMEOUT,
@@ -191,6 +233,7 @@ class Reporter {
         };
     }
 
+    /*
     private getCompositeReport(reports: any[]): any {
         ThundraLogger.debug('<Reporter> Generating composite report ...');
 
@@ -230,6 +273,7 @@ class Reporter {
 
         return monitoringData;
     }
+    */
 
     private doReport(reportJson: string) {
         ThundraLogger.debug('<Reporter> Reporting ...');
@@ -332,44 +376,44 @@ class Reporter {
         });
     }
 
-    private serializeReport(batch: any, disableTrim: boolean): string {
+    private serializeReport(monitoringDataList: any[], disableTrim: boolean): string {
         // If trimming is disabled, trim if and only if data size is bigger than maximum allowed limit
         const maxReportDataSize: number = disableTrim ? REPORTER_DATA_SIZE_LIMIT : this.maxReportSize;
 
-        let json: string = this.serializeMasked(batch, this.maskedKeys, this.hide);
+        let json: string = this.serializeMasked(monitoringDataList, this.maskedKeys, this.hide);
 
         if (json.length < maxReportDataSize) {
             return json;
         }
         for (const trimmer of this.trimmers) {
-            const trimResult: TrimResult = trimmer.trim(batch.data.allMonitoringData);
-            batch.data.allMonitoringData = trimResult.monitoringDataList;
+            const trimResult: TrimResult = trimmer.trim(monitoringDataList);
+            monitoringDataList = trimResult.monitoringDataList;
             if (!trimResult.mutated) {
                 continue;
             }
-            json = this.serializeMasked(batch, this.maskedKeys, this.hide);
+            json = this.serializeMasked(monitoringDataList, this.maskedKeys, this.hide);
             if (json.length < maxReportDataSize) {
                 return json;
             }
         }
-        return this.serializeMasked(batch, this.maskedKeys, this.hide);
+        return this.serializeMasked(monitoringDataList, this.maskedKeys, this.hide);
     }
 
-    private serializeMasked(batch: any, maskedKeys: MaskedKey[], hide?: boolean): string {
+    private serializeMasked(monitoringDataList: any[], maskedKeys: MaskedKey[], hide?: boolean): string {
         if (maskedKeys && maskedKeys.length) {
             try {
                 ThundraLogger.debug(`<Reporter> Serializing masked ...`);
 
                 const maskCheckSet: WeakSet<any> = new WeakSet<any>();
 
-                for (const monitoringData of batch.data.allMonitoringData) {
+                for (const monitoringData of monitoringDataList) {
                     if (monitoringData.tags) {
                         maskCheckSet.add(monitoringData.tags);
                     }
                 }
 
                 const result: string =
-                    JSON.stringify(batch, this.createMaskingReplacer(maskCheckSet, maskedKeys, hide));
+                    JSON.stringify(monitoringDataList, this.createMaskingReplacer(maskCheckSet, maskedKeys, hide));
 
                 ThundraLogger.debug(`<Reporter> Serialized masked`);
 
@@ -378,7 +422,7 @@ class Reporter {
                 ThundraLogger.debug(`<Reporter> Error occurred while serializing masked`, err);
             }
         }
-        return Utils.serializeJSON(batch);
+        return Utils.serializeJSON(monitoringDataList);
     }
 
     private isMasked(key: string, maskedKeys: MaskedKey[]): boolean {

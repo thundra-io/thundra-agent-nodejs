@@ -26,7 +26,7 @@ class TestRunnerUtils {
 
         const testRunIdSeed = environment + '_' + repoURL + '_' + commitHash + '_' + testRunKey;
 
-        return Utils.generareIdFrom(testRunIdSeed);
+        return Utils.generateIdFrom(testRunIdSeed);
     }
 
     /**

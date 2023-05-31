@@ -21,7 +21,7 @@ class Resource {
 
     constructor(opt: any = {}) {
         this.resourceType = opt.resourceType;
-        this.resourceName = opt.resourceOperation;
+        this.resourceName = opt.resourceName;
         this.resourceOperation = opt.resourceOperation;
         this.resourceCount = opt.resourceCount;
         this.resourceErrorCount = opt.resourceErrorCount;

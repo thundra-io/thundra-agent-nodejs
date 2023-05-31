@@ -17,11 +17,24 @@ import MonitoringDataType from '../plugins/data/base/MonitoringDataType';
 import InvocationData from '../plugins/data/invocation/InvocationData';
 import InvocationSupport from '../plugins/support/InvocationSupport';
 import InvocationTraceSupport from '../plugins/support/InvocationTraceSupport';
-import { HttpTags, SpanTags, TriggerHeaderTags, DEFAULT_APPLICATION_NAME } from '../Constants';
+import {
+    DEFAULT_APPLICATION_NAME,
+    HttpTags,
+    SpanTags,
+    TriggerHeaderTags,
+    HTTPHeaders,
+    TraceHeaderTags,
+    CatchpointProperties,
+    CatchpointHeaders,
+    CatchpointTags,
+} from '../Constants';
 import ThundraSpanContext from '../opentracing/SpanContext';
 import { ApplicationInfo } from '../application/ApplicationInfo';
 import HttpError from '../error/HttpError';
 import WrapperContext from './WrapperContext';
+import ThundraSpan from '../opentracing/Span';
+import Resource from '../plugins/data/invocation/Resource';
+import SpanData from '../plugins/data/trace/SpanData';
 
 const get = require('lodash.get');
 
@@ -81,7 +94,8 @@ export default class WebWrapperUtils {
         context.reports = [];
         try {
             // Run plugins and let them to generate reports
-            for (const plugin of plugins) {
+            for (let i = plugins.length - 1; i >= 0; i--) {
+                const plugin = plugins[i];
                 await plugin.afterInvocation(context);
             }
             reports = context.reports;
@@ -112,12 +126,12 @@ export default class WebWrapperUtils {
             plugins.push(tracePlugin);
         }
 
+        const invocationPlugin = new InvocationPlugin(config.invocationConfig);
+        plugins.push(invocationPlugin);
+
         if (!ConfigProvider.get<boolean>(ConfigNames.THUNDRA_LOG_DISABLE) && config.logConfig.enabled) {
             plugins.push(new LogPlugin(config.logConfig));
         }
-
-        const invocationPlugin = new InvocationPlugin(config.invocationConfig);
-        plugins.push(invocationPlugin);
 
         // Set plugin context for plugins
         plugins.forEach((plugin: any) => { plugin.setPluginContext(pluginContext); });
@@ -281,6 +295,10 @@ export default class WebWrapperUtils {
 
         // If root span is already finished, it won't have any effect
         rootSpan.finish(finishTimestamp);
+
+        WebWrapperUtils.onFinish(
+            pluginContext, execContext,
+            execContext.request, execContext.response, rootSpan);
     }
 
     static mergePathAndRoute(path: string, route: string) {
@@ -305,4 +323,202 @@ export default class WebWrapperUtils {
 
         return normalizedPath;
     }
+
+    private static onFinish(pluginContext: PluginContext, execContext: ExecutionContext,
+                            request: any, response: any, span: ThundraSpan): void {
+        if (WebWrapperUtils.isTriggeredFromCatchpoint(request, response)) {
+            WebWrapperUtils.onCatchpointRequestFinish(pluginContext, execContext, request, response, span);
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static isTriggeredFromCatchpoint(request: any, response: any): boolean {
+        const userAgent: string = request.headers && request.headers[HTTPHeaders.USER_AGENT.toLowerCase()];
+        return userAgent && userAgent.includes('Catchpoint');
+    }
+
+    private static getCatchpointApplicationInfo(request: any, appName: string, appRegion: string): ApplicationInfo {
+        const appId: string = CatchpointProperties.APP_ID_TEMPLATE.
+                replace(CatchpointProperties.APP_NAME_PLACEHOLDER, appName).
+                replace(CatchpointProperties.APP_REGION_PLACEHOLDER, appRegion);
+        return {
+            applicationId: appId,
+            applicationInstanceId: Utils.generateIdFrom(appId),
+            applicationName: appName,
+            applicationClassName: CatchpointProperties.APP_CLASS_NAME,
+            applicationDomainName: CatchpointProperties.APP_DOMAIN_NAME,
+            applicationRegion: appRegion,
+            applicationVersion: '',
+            applicationRuntime: undefined,
+            applicationRuntimeVersion: undefined,
+            applicationStage: '',
+            applicationTags: {},
+        };
+    }
+
+    private static getCatchpointRequestResource(execContext: ExecutionContext,
+                                                request: any, span: ThundraSpan, duration: number, error: any): Resource {
+        return new Resource({
+            resourceType: CatchpointProperties.HTTP_REQUEST_CLASS_NAME,
+            resourceName: execContext.triggerOperationName || span.operationName,
+            resourceOperation: request.method,
+            resourceCount: 1,
+            resourceErrorCount: error ? 1 : 0,
+            resourceErrors: error ? [error.errorType] : undefined,
+            resourceDuration: duration,
+            resourceMaxDuration: duration,
+            resourceAvgDuration: duration,
+        });
+    }
+
+    private static generateCatchpointAppName(regionName: string, countryName: string, cityName: string): string {
+        return cityName || countryName || regionName || DEFAULT_APPLICATION_NAME;
+    }
+
+    private static createCatchpointRequestInvocation(execContext: ExecutionContext, applicationInfo: ApplicationInfo,
+                                                     regionName: string, countryName: string, cityName: string, testId: string,
+                                                     traceId: string, transactionId: string, spanId: string,
+                                                     startTimestamp: number, finishTimestamp: number,
+                                                     resource: Resource, error: any): InvocationData {
+        const invocationData: InvocationData = new InvocationData();
+
+        Utils.injectCommonApplicationProperties(invocationData, applicationInfo);
+
+        invocationData.id = Utils.generateId();
+        invocationData.agentVersion = CatchpointProperties.AGENT_VERSION;
+        invocationData.traceId = traceId;
+        invocationData.transactionId = transactionId;
+        invocationData.spanId = spanId;
+        invocationData.applicationRegion = regionName || '';
+        invocationData.tags = {
+            [CatchpointTags.REGION_NAME]: regionName,
+            [CatchpointTags.COUNTRY_NAME]: countryName,
+            [CatchpointTags.CITY_NAME]: cityName,
+            [CatchpointTags.TEST_ID]: testId,
+        };
+        invocationData.resources = [
+            resource,
+        ];
+        invocationData.userTags = {};
+        invocationData.startTimestamp = startTimestamp;
+        invocationData.finishTimestamp = finishTimestamp;
+        invocationData.duration = finishTimestamp - startTimestamp;
+        invocationData.applicationPlatform = '';
+        invocationData.erroneous = error ? true : false;
+        invocationData.errorType = error ? (error.errorType || '') : '';
+        invocationData.errorMessage = error ? (error.errorMessage || '') : '';
+        invocationData.coldStart = false;
+        invocationData.timeout = false;
+        invocationData.incomingTraceLinks = [];
+        invocationData.outgoingTraceLinks = [];
+
+        return invocationData;
+    }
+
+    private static createCatchpointRequestSpan(execContext: ExecutionContext,
+                                               applicationInfo: ApplicationInfo, rootSpan: ThundraSpan, resource: Resource,
+                                               regionName: string, countryName: string, cityName: string, testId: string,
+                                               traceId: string, transactionId: string, spanId: string,
+                                               startTimestamp: number, finishTimestamp: number): SpanData {
+        const spanData: SpanData = new SpanData();
+
+        Utils.injectCommonApplicationProperties(spanData, applicationInfo);
+
+        spanData.id = spanId;
+        spanData.domainName = CatchpointProperties.HTTP_REQUEST_DOMAIN_NAME;
+        spanData.className = CatchpointProperties.HTTP_REQUEST_CLASS_NAME;
+        spanData.serviceName = applicationInfo.applicationName;
+        spanData.transactionId = transactionId;
+        spanData.traceId = traceId;
+        spanData.spanOrder = 0;
+        spanData.operationName = resource.resourceName;
+        spanData.startTimestamp = startTimestamp;
+        spanData.finishTimestamp = finishTimestamp;
+        spanData.duration = finishTimestamp - startTimestamp;
+        spanData.tags = {
+            [HttpTags.HTTP_URL]: rootSpan.tags[HttpTags.HTTP_URL],
+            [HttpTags.HTTP_HOST]: rootSpan.tags[HttpTags.HTTP_HOST],
+            [HttpTags.HTTP_PATH]: rootSpan.tags[HttpTags.HTTP_PATH],
+            [HttpTags.HTTP_METHOD]: rootSpan.tags[HttpTags.HTTP_METHOD],
+            [HttpTags.QUERY_PARAMS]: rootSpan.tags[HttpTags.QUERY_PARAMS],
+            [HttpTags.HTTP_STATUS]: rootSpan.tags[HttpTags.HTTP_STATUS],
+            [CatchpointTags.REGION_NAME]: regionName,
+            [CatchpointTags.COUNTRY_NAME]: countryName,
+            [CatchpointTags.CITY_NAME]: cityName,
+            [CatchpointTags.TEST_ID]: testId,
+        };
+
+        return spanData;
+    }
+
+    private static onCatchpointRequestFinish(pluginContext: PluginContext, execContext: ExecutionContext,
+                                             request: any, response: any, span: ThundraSpan): void {
+        const spanContext: ThundraSpanContext = span.context() as ThundraSpanContext;
+
+        const headers: any = request.headers || {};
+
+        const regionName: string = headers[CatchpointHeaders.REGION_NAME];
+        const countryName: string = headers[CatchpointHeaders.COUNTRY_NAME];
+        const cityName: string = headers[CatchpointHeaders.CITY_NAME];
+        const testId: string = headers[CatchpointHeaders.TEST_ID];
+        const time: string = headers[CatchpointHeaders.TIME];
+
+        const appName: string = WebWrapperUtils.generateCatchpointAppName(regionName, countryName, cityName);
+        const appRegion = regionName || '';
+        const startTime: number = span.startTime;
+        // TODO Handle time header to calculate start time more accurately
+        /*
+        if (time) {
+            try {
+                // Parse time in "yyyyMMddHHmmssSSS" format
+                startTime = parseTime(time);
+                if (startTime > span.finishTime
+                        || (startTime < span.startTime - CatchpointProperties.TIME_MAX_DIFF)) {
+                    startTime = span.startTime;
+                    ThundraLogger.debug(`<WebWrapperUtils> Invalid Catchpoint time: ${time}`);
+                }
+            } catch (error) {
+                ThundraLogger.debug(`<WebWrapperUtils> Unable to parse Catchpoint time: ${time}`, err);
+            }
+        }
+        */
+        const traceId: string = spanContext.traceId;
+        const transactionId: string = Utils.generateId();
+        const spanId: string  = Utils.generateId();
+        const startTimestamp: number = startTime;
+        const finishTimestamp: number = span.finishTime;
+        const duration: number = finishTimestamp - startTimestamp;
+        const applicationInfo: ApplicationInfo = WebWrapperUtils.getCatchpointApplicationInfo(request, appName, appRegion);
+        const error = execContext.error ? Utils.parseError(execContext.error) : undefined;
+
+        const resource: Resource =
+            WebWrapperUtils.getCatchpointRequestResource(
+                execContext, request, span, duration, error);
+        const catchpointInvocationData: InvocationData =
+            WebWrapperUtils.createCatchpointRequestInvocation(
+                execContext, applicationInfo,
+                regionName, countryName, cityName, testId,
+                traceId, transactionId, spanId,
+                startTimestamp, finishTimestamp,
+                resource, error);
+
+        const catchpointInvocation =
+            Utils.generateReport(catchpointInvocationData, pluginContext.apiKey);
+        execContext.report(catchpointInvocation);
+
+        const catchpointSpanData: SpanData =
+            WebWrapperUtils.createCatchpointRequestSpan(
+                execContext, applicationInfo, span, resource,
+                regionName, countryName, cityName, testId,
+                traceId, transactionId, spanId,
+                startTimestamp, finishTimestamp);
+        const catchpointSpan =
+            Utils.generateReport(catchpointSpanData, pluginContext.apiKey);
+        execContext.report(catchpointSpan);
+
+        response.headers = response.headers || {};
+        response.headers[TraceHeaderTags.TRACE_ID] = spanContext.traceId;
+    }
+
 }

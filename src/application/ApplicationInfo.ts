@@ -9,6 +9,8 @@ export interface ApplicationInfo {
     applicationDomainName: string;
     applicationRegion: string;
     applicationVersion: string;
+    applicationRuntime: string;
+    applicationRuntimeVersion: string;
     applicationStage: string;
     applicationTags: any;
 }
