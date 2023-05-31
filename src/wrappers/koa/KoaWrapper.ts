@@ -37,7 +37,6 @@ const initWrapperContext = () => {
 };
 
 export function koaMiddleWare(opts: any = {}) {
-
     ThundraLogger.debug('<KoaWrapper> Creating Thundra middleware ...');
 
     return async (ctx: any, next: any) => ExecutionContextManager.runWithContext(
@@ -109,7 +108,6 @@ export function init() {
         ModuleUtils.instrument(
             ['koa/lib/application.js'], undefined,
             (lib: any, cfg: any) => {
-
                 initWrapperContext();
 
                 ModuleUtils.patchModule(

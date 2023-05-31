@@ -32,7 +32,6 @@ export function finishInvocation(pluginContext: PluginContext, execContext: Exec
  * @param {ExecutionContext} execContext
  */
 export function startTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-
     WrapperUtils.startTrace(pluginContext, execContext);
 
     const {
@@ -83,8 +82,6 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
  * @param {ExecutionContext} execContext
  */
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-    WrapperUtils.finishTrace(pluginContext, execContext);
-
     const {
         rootSpan,
         response,
@@ -107,7 +104,6 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
                         ...{ [TriggerHeaderTags.RESOURCE_NAME]: triggerOperationName },
                     };
                 }
-
                 statusCode = response.output.statusCode;
             }
         }
@@ -116,4 +112,6 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
     InvocationSupport.setAgentTag(HttpTags.HTTP_STATUS, statusCode);
     Utils.copyProperties(request.route, ['path'], rootSpan.tags, [HttpTags.HTTP_ROUTE_PATH]);
     rootSpan.tags[HttpTags.HTTP_STATUS] = statusCode;
+
+    WrapperUtils.finishTrace(pluginContext, execContext);
 }
