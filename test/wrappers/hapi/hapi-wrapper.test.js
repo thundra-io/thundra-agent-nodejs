@@ -23,7 +23,6 @@ describe('Hapijs Wrapper Tests', () => {
     let server;
  
     beforeAll(async () => {
-
         ConfigProvider.init({ apiKey: 'foo' });
 
         HapiWrapper.__PRIVATE__.getReporter = jest.fn(() => createMockReporterInstance());
@@ -41,7 +40,6 @@ describe('Hapijs Wrapper Tests', () => {
     });
 
     test('should create root span', async () => {
-
         const { headers } = await request(server.listener).get('/');
 
         expect(headers[TriggerHeaderTags.RESOURCE_NAME]).toBeTruthy();
@@ -64,7 +62,6 @@ describe('Hapijs Wrapper Tests', () => {
     });
 
     test('should trace error', async () => {
-
         await request(server.listener).get('/error');
 
         const execContext = ExecutionContextManager.get();
@@ -89,7 +86,6 @@ describe('Hapijs Wrapper Tests', () => {
     });
 
     test('should trace 404 not found', async () => {
-        
         await request(server.listener).get('/404');
 
         const execContext = ExecutionContextManager.get();
@@ -112,7 +108,6 @@ describe('Hapijs Wrapper Tests', () => {
     });
 
     test('should pass trace context', async () => {
-
         await request(server.listener)
             .get('/')
             .set('x-catchpoint-transaction-id', 'incomingTransactionId')
@@ -131,7 +126,6 @@ describe('Hapijs Wrapper Tests', () => {
     });
 
     test('should fill execution context', async () => {
-
         await request(server.listener).get('/', () => {
             const execContext = ExecutionContextManager.get();
 
@@ -169,7 +163,6 @@ describe('Hapijs Wrapper Tests', () => {
     });
 
     test('Hapijs Wrapper Custom Span Tests', async () => {
-
         let execContext;
 
         const wait = (ms) => new Promise(r => setTimeout(r, ms));

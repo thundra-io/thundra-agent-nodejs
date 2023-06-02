@@ -77,6 +77,7 @@ export function getDefaultCollectorEndpoint() {
 export const MONITORING_DATA_PATH = '/monitoring-data';
 export const COMPOSITE_MONITORING_DATA_PATH = '/composite-monitoring-data';
 export const LOCAL_COLLECTOR_ENDPOINT = 'localhost:3333';
+export const MAX_MONITOR_DATA_BATCH_SIZE = 100;
 
 export const PROC_STAT_PATH: string = '/proc/self/stat';
 export const PROC_IO_PATH: string = '/proc/self/io';
@@ -572,6 +573,13 @@ export const GoogleBigQueryTags = {
     RESPONSE: 'google.bigquery.response',
 };
 
+export const CatchpointTags = {
+    REGION_NAME: 'catchpoint.region.name',
+    COUNTRY_NAME: 'catchpoint.country.name',
+    CITY_NAME: 'catchpoint.city.name',
+    TEST_ID: 'catchpoint.test.id',
+};
+
 export const ErrorTags = {
     ERROR: 'error',
     ERROR_KIND: 'error.kind',
@@ -588,6 +596,33 @@ export const TraceHeaderTags = {
 
 export const TriggerHeaderTags = {
     RESOURCE_NAME: 'x-catchpoint-resource-name',
+};
+
+export const HTTPHeaders = {
+    USER_AGENT: 'User-Agent',
+    CONTENT_TYPE: 'Content-Type',
+    AUTHORIZATION: 'Authorization',
+};
+
+export const CatchpointHeaders = {
+    REGION_NAME: 'x-catchpoint-region-name',
+    COUNTRY_NAME: 'x-catchpoint-country-name',
+    CITY_NAME: 'x-catchpoint-city-name',
+    TEST_ID: 'x-catchpoint-test-id',
+    TIME: 'x-catchpoint-time',
+};
+
+export const CatchpointProperties = {
+    DEFAULT_APP_NAME: 'Catchpoint',
+    APP_DOMAIN_NAME: 'Monitoring',
+    APP_CLASS_NAME: 'Catchpoint',
+    APP_REGION_PLACEHOLDER: '${cp-app-region}',
+    APP_NAME_PLACEHOLDER: '${cp-app-name}',
+    APP_ID_TEMPLATE: ':catchpoint:${cp-app-region}:${cp-app-name}',
+    HTTP_REQUEST_DOMAIN_NAME: 'API',
+    HTTP_REQUEST_CLASS_NAME: 'HTTP',
+    TIME_MAX_DIFF: 30000,
+    AGENT_VERSION: 'Catchpoint',
 };
 
 export const AlreadyTracedHeader = 'x-catchpoint-already-traced';

@@ -58,8 +58,6 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 }
 
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-    WrapperUtils.finishTrace(pluginContext, execContext);
-
     const {rootSpan, response, request} = execContext;
 
     if (request._matchedRoute) {
@@ -76,7 +74,8 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
     Utils.copyProperties(request, ['path'], rootSpan.tags, [HttpTags.HTTP_ROUTE_PATH]);
 
     if (execContext.triggerOperationName) {
-
         response.set(TriggerHeaderTags.RESOURCE_NAME, execContext.triggerOperationName);
     }
+
+    WrapperUtils.finishTrace(pluginContext, execContext);
 }

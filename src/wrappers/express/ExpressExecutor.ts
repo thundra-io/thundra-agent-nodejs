@@ -59,8 +59,6 @@ export function startTrace(pluginContext: PluginContext, execContext: ExecutionC
 }
 
 export function finishTrace(pluginContext: PluginContext, execContext: ExecutionContext) {
-    WrapperUtils.finishTrace(pluginContext, execContext);
-
     const {
         rootSpan,
         response,
@@ -70,6 +68,8 @@ export function finishTrace(pluginContext: PluginContext, execContext: Execution
     InvocationSupport.setAgentTag(HttpTags.HTTP_STATUS, response.statusCode);
     Utils.copyProperties(response, ['statusCode'], rootSpan.tags, [HttpTags.HTTP_STATUS]);
     Utils.copyProperties(request.route, ['path'], rootSpan.tags, [HttpTags.HTTP_ROUTE_PATH]);
+
+    WrapperUtils.finishTrace(pluginContext, execContext);
 }
 
 function handleRoutePath(context: ExecutionContext, resourceName: string) {

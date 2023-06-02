@@ -50,9 +50,7 @@ const initWrapperContext = () => {
  * @param {Function} wrappedFunction
  */
 function hapiServerWrapper(wrappedFunction: Function) {
-
     return function internalHapiServerWrapper() {
-
         ThundraLogger.debug('<HapiWrapper> Hapi server wrapped.');
 
         const server = wrappedFunction.apply(this, arguments);
@@ -65,25 +63,23 @@ function hapiServerWrapper(wrappedFunction: Function) {
                 return WrapperUtils.createExecContext(ApplicationClassName, ApplicationDomainName);
             },
             async function () {
+                ThundraLogger.debug('<HapiWrapper> Running with execution context');
 
-            ThundraLogger.debug('<HapiWrapper> Running with execution context');
+                const context: ExecutionContext = this;
 
-            const context: ExecutionContext = this;
+                request.hostname = request.info.hostname;
+                request.thundra = {
+                    executionContext: context,
+                };
 
-            request.hostname = request.info.hostname;
-            request.thundra = {
-                executionContext: context,
-            };
-
-            ThundraLogger.debug('<HapiWrapper> Before handling request');
-            await WrapperUtils.beforeRequest(request, request.response, _PLUGINS);
-        });
+                ThundraLogger.debug('<HapiWrapper> Before handling request');
+                await WrapperUtils.beforeRequest(request, request.response, _PLUGINS);
+            });
 
         /**
          * Handler method for outgoing response & finish instrumentation process
          */
         const finishInstrument = async (request: any, response: any) => {
-
             ThundraLogger.debug('<HapiWrapper> Finish Instrumentation');
 
             if (request.thundra && request.thundra.executionContext) {
@@ -105,11 +101,10 @@ function hapiServerWrapper(wrappedFunction: Function) {
          * Attach onPreHandler event of Hapi server
          * it will start instrumentation process
          */
-        server.ext('onPreHandler', (request: any, h: any) => {
-
+        server.ext('onPreHandler', async (request: any, h: any) => {
             ThundraLogger.debug(`<HapiWrapper> Instrumentation started for request: ${request}`);
 
-            startInstrument(request);
+            await startInstrument(request);
 
             return h.continue;
         });
@@ -119,7 +114,6 @@ function hapiServerWrapper(wrappedFunction: Function) {
          * it will finish instrumentation process
          */
         server.ext('onPreResponse', async (request: any, h: any) => {
-
             ThundraLogger.debug(`<HapiWrapper> Instrumentation finished for request: ${request}`);
 
             const response = request.response;
@@ -130,7 +124,7 @@ function hapiServerWrapper(wrappedFunction: Function) {
                      * if statusCode equels to 404 onPreHandler will not fired
                      * so instrumentation process must be started in here
                      */
-                    startInstrument(request);
+                    await startInstrument(request);
                 }
             }
 
@@ -147,11 +141,10 @@ function hapiServerWrapper(wrappedFunction: Function) {
  * Instrument Hapi wrapper & wrap Hapi server process
  */
 export const init = () => {
-
-    const isHapiTracingDisabled = ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE);
+    const isHapiTracingDisabled =
+        ConfigProvider.get<boolean>(ConfigNames.THUNDRA_TRACE_INTEGRATIONS_HAPI_DISABLE);
 
     if (isHapiTracingDisabled) {
-
         ThundraLogger.debug('<HapiWrapper> Hapi wrapper disabled ...');
 
         return false;
@@ -163,7 +156,6 @@ export const init = () => {
             ModuleUtils.instrument(
                 [moduleName], undefined,
                 (lib: any, cfg: any) => {
-
                     initWrapperContext();
 
                     let moduleWillBeInitilized = false;

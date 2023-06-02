@@ -40,6 +40,8 @@ export class LambdaApplicationInfoProvider implements ApplicationInfoProvider {
             applicationRegion: region ? region : '',
             applicationStage: '',
             applicationVersion: functionVersion ? functionVersion : '',
+            applicationRuntime: 'node',
+            applicationRuntimeVersion: process.version,
             applicationTags: Utils.getApplicationTags(),
         };
     }

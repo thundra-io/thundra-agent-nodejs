@@ -55,7 +55,7 @@ class Utils {
      * Generates id in UUID format with given value
      * @param value value
      */
-    static generareIdFrom(value: string): string {
+    static generateIdFrom(value: string): string {
         return uuidv5(value, AGENT_UUID_CONST);
     }
 
@@ -384,24 +384,33 @@ class Utils {
      * Injects common application properties into given {@link BaseMonitoringData} monitoring data
      * @param {BaseMonitoringData} monitoringData the @link BaseMonitoringData} monitoring data
      *        in which common application properties will be injected to
+     * @param {ApplicationInfo} applicationInfo the the {@link ApplicationInfo} to be injected into
      */
-    static injectCommonApplicationProperties(monitoringData: BaseMonitoringData) {
-        const applicationInfo = ApplicationManager.getApplicationInfo();
+    static injectCommonApplicationProperties(monitoringData: BaseMonitoringData,
+                                             applicationInfo?: ApplicationInfo) {
+        const appInfo = applicationInfo || ApplicationManager.getApplicationInfo();
 
         monitoringData.agentVersion = AGENT_VERSION;
         monitoringData.dataModelVersion = DATA_MODEL_VERSION;
+        monitoringData.applicationRuntime = 'node';
         monitoringData.applicationRuntimeVersion = process.version;
-        if (applicationInfo) {
-            monitoringData.applicationInstanceId = applicationInfo.applicationInstanceId;
-            monitoringData.applicationId = applicationInfo.applicationId;
-            monitoringData.applicationName = applicationInfo.applicationName;
-            monitoringData.applicationClassName = applicationInfo.applicationClassName;
-            monitoringData.applicationDomainName = applicationInfo.applicationDomainName;
-            monitoringData.applicationStage = applicationInfo.applicationStage;
-            monitoringData.applicationVersion = applicationInfo.applicationVersion;
+        if (appInfo) {
+            if (appInfo.applicationRuntime) {
+                monitoringData.applicationRuntime = appInfo.applicationRuntime;
+            }
+            if (appInfo.applicationRuntimeVersion) {
+                monitoringData.applicationRuntimeVersion = appInfo.applicationRuntimeVersion;
+            }
+            monitoringData.applicationInstanceId = appInfo.applicationInstanceId;
+            monitoringData.applicationId = appInfo.applicationId;
+            monitoringData.applicationName = appInfo.applicationName;
+            monitoringData.applicationClassName = appInfo.applicationClassName;
+            monitoringData.applicationDomainName = appInfo.applicationDomainName;
+            monitoringData.applicationStage = appInfo.applicationStage;
+            monitoringData.applicationVersion = appInfo.applicationVersion;
             monitoringData.applicationTags = {
                 ...monitoringData.applicationTags,
-                ...applicationInfo.applicationTags,
+                ...appInfo.applicationTags,
             };
         }
     }
@@ -570,6 +579,8 @@ class Utils {
             ...(applicationRegion ? { applicationRegion } : undefined),
             ...(applicationVersion ? { applicationVersion } : undefined),
             ...(applicationStage ? { applicationStage } : undefined),
+            applicationRuntime: 'node',
+            applicationRuntimeVersion: process.version,
             applicationTags: Utils.getApplicationTags(),
         };
     }
