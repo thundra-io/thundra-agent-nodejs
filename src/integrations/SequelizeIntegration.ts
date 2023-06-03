@@ -13,6 +13,7 @@ import ThundraSpan from '../opentracing/Span';
 import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
+import ScopeContext from '../context/ScopeContext';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -135,6 +136,11 @@ class SequelizeIntegration implements Integration {
                     });
 
                     span._initialized();
+
+                    const scopeContext: ScopeContext = ExecutionContextManager.getScope();
+                    if (scopeContext) {
+                        scopeContext.stopTracing();
+                    }
 
                     return query.call(this, sql, options)
                         .then((res: any) => {

@@ -14,6 +14,7 @@ import ThundraLogger from '../ThundraLogger';
 import ThundraSpan from '../opentracing/Span';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
+import ScopeContext from '../context/ScopeContext';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -59,6 +60,12 @@ class PostgreIntegration implements Integration {
 
                     if (!tracer) {
                         ThundraLogger.debug('<PostgreIntegration> Skipped tracing query as no tracer is available');
+                        return query.apply(this, arguments);
+                    }
+
+                    const scopeContext: ScopeContext = ExecutionContextManager.getScope();
+                    if (scopeContext && scopeContext.wasTracingStopped()) {
+                        ThundraLogger.debug('<PostgreIntegration> Skipped tracing query as tracing was stopped at current scope');
                         return query.apply(this, arguments);
                     }
 

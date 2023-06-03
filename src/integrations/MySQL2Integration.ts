@@ -15,6 +15,7 @@ import ThundraSpan from '../opentracing/Span';
 import ModuleUtils from '../utils/ModuleUtils';
 import ThundraChaosError from '../error/ThundraChaosError';
 import ExecutionContextManager from '../context/ExecutionContextManager';
+import ScopeContext from '../context/ScopeContext';
 
 const shimmer = require('shimmer');
 const has = require('lodash.has');
@@ -71,6 +72,12 @@ class MySQL2Integration implements Integration {
 
                     if (!tracer) {
                         ThundraLogger.debug('<MySQL2Integration> Skipped tracing query as no tracer is available');
+                        return query.call(this, sql, arg1, arg2);
+                    }
+
+                    const scopeContext: ScopeContext = ExecutionContextManager.getScope();
+                    if (scopeContext && scopeContext.wasTracingStopped()) {
+                        ThundraLogger.debug('<MySQL2Integration> Skipped tracing query as tracing was stopped at current scope');
                         return query.call(this, sql, arg1, arg2);
                     }
 

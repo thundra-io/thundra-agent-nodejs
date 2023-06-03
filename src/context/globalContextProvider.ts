@@ -8,7 +8,7 @@ let globalContext: ExecutionContext;
 
 export const PROVIDER_NAME = 'Global Context Provider';
 
-export function canChangeablebleContext() {
+export function canChangeableContext() {
     return true;
 }
 
