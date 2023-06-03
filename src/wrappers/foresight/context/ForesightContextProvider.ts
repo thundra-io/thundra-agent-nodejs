@@ -51,7 +51,7 @@ function _setContext(execContext: ExecutionContext) {
 
 export const PROVIDER_NAME = 'Foresight Context Provider';
 
-export function canChangeablebleContext() {
+export function canChangeableContext() {
     return false;
 }
 

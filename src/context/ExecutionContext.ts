@@ -7,8 +7,8 @@ import { ApplicationInfo } from '../application/ApplicationInfo';
 import Utils from '../utils/Utils';
 
 /**
- * Represents the scope of execution (request, invocation, etc ...)
- * and holds scope specific data.
+ * Represents the context of execution (request, invocation, etc ...)
+ * and holds execution specific data.
  */
 export default class ExecutionContext {
 
@@ -81,7 +81,6 @@ export default class ExecutionContext {
     }
 
     isContextCompatibleWith(contextMode: ContextMode) {
-
         return this.compatibleContextModes.includes(contextMode);
     }
 
@@ -125,7 +124,6 @@ export default class ExecutionContext {
     }
 
     getContextInformation(): any  {
-
         return {
             applicationId: this.applicationInfo ? this.applicationInfo.applicationId : '',
             applicationClassName: this.applicationInfo ? this.applicationInfo.applicationClassName : '',
@@ -134,20 +132,18 @@ export default class ExecutionContext {
     }
 
     getAdditionalStartTags(): any {
-
         return {
         };
     }
 
     getAdditionalFinishTags(): any  {
-
         return {
         };
     }
 
     protected initContextMode() {
-
         this.compatibleContextModes.push(ContextMode.GlobalMode);
         this.compatibleContextModes.push(ContextMode.AsyncMode);
     }
+
 }

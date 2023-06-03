@@ -24,6 +24,7 @@ describe('Sequelize integration', () => {
     beforeAll(async () => {
         tracer = new ThundraTracer();
         ExecutionContextManager.set(new ExecutionContext({ tracer }));
+        ExecutionContextManager.init();
         integration = new SequelizeIntegration();
 
         const {

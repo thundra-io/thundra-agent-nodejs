@@ -1,6 +1,8 @@
 import ThundraLogger from '../ThundraLogger';
 import ExecutionContext from './ExecutionContext';
 import * as globalContextProvider from './globalContextProvider';
+import ScopeContextManager from './ScopeContextManager';
+import ScopeContext from './ScopeContext';
 
 let contextProvider: any = globalContextProvider;
 
@@ -15,6 +17,7 @@ export default class ExecutionContextManager {
      */
     static init() {
         contextProvider.init();
+        ScopeContextManager.init();
     }
 
     /**
@@ -22,16 +25,13 @@ export default class ExecutionContextManager {
      * @param provided the {@link ExecutionContext} provider to be set
      */
     static setProvider(provider: any) {
-
-        const contextCanChangeable = contextProvider.canChangeablebleContext();
+        const contextCanChangeable = contextProvider.canChangeableContext();
         if (!contextCanChangeable) {
-
-            ThundraLogger.debug(`<ExecutionContextManager> Default context provider set as ${contextProvider.PROVIDER_NAME}.`
-            + 'It is not changeable.');
-
+            ThundraLogger.debug(
+                `<ExecutionContextManager> Default context provider set as ${contextProvider.PROVIDER_NAME}. ` +
+                'It is not changeable.');
             return;
         }
-
         contextProvider = provider;
     }
 
@@ -71,6 +71,14 @@ export default class ExecutionContextManager {
      */
     static set(execCtx: ExecutionContext) {
         return contextProvider.set(execCtx);
+    }
+
+    /**
+     * Gets the current {@link ScopeContext}
+     * @return {ScopeContext} the current {@link ScopeContext}
+     */
+    static getScope(): ScopeContext {
+        return ScopeContextManager.get();
     }
 
 }
