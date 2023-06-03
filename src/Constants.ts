@@ -17,6 +17,7 @@ import ESIntegration from './integrations/ESIntegration';
 import AMQPLIBIntegration from './integrations/AmqplibIntegration';
 import GoogleCloudPubSubIntegration from './integrations/GoogleCloudPubSubIntegration';
 import GoogleCloudCommonIntegration from './integrations/GoogleCloudCommonIntegration';
+import SequelizeIntegration from './integrations/SequelizeIntegration';
 import FilteringSpanListener from './listeners/FilteringSpanListener';
 import ErrorInjectorSpanListener from './listeners/ErrorInjectorSpanListener';
 import LatencyInjectorSpanListener from './listeners/LatencyInjectorSpanListener';
@@ -671,6 +672,7 @@ export const INTEGRATIONS: any = {
     moduleVersion: '>=0.5'},
     'googlecloud.pubsub': {class: GoogleCloudPubSubIntegration, moduleNames: ['@google-cloud/pubsub'], moduleVersion: '>=1.2'},
     'googlecloud.common': {class: GoogleCloudCommonIntegration, moduleNames: ['@google-cloud/common'], moduleVersion: '>=3.0'},
+    sequelize: {class: SequelizeIntegration, moduleNames: ['sequelize'], moduleVersion: '>=4'},
 };
 
 export const WRAPPERS: any = {
