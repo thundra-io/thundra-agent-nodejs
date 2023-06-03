@@ -21,7 +21,7 @@ const INTEGRATION_NAME = 'sequelize';
 
 /**
  * {@link Integration} implementation for database integration
- * through {@code sequalize} ORM library
+ * through {@code sequelize} ORM library
  */
 class SequelizeIntegration implements Integration {
 
@@ -103,7 +103,7 @@ class SequelizeIntegration implements Integration {
                         if (Array.isArray(options?.tableNames) && options.tableNames.length > 0) {
                             tableName = options?.tableNames.sort().join(',');
                         } else {
-                            tableName = this.extractTableFromQuery(statement);
+                            tableName = SequelizeIntegration.extractTableFromQuery(statement);
                         }
                     }
 

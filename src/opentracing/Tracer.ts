@@ -123,6 +123,14 @@ class ThundraTracer extends Tracer {
     }
 
     /**
+     * Resets the tracer
+     */
+    reset(): void {
+        this.recorder.clear();
+        this.activeSpans.clear();
+    }
+
+    /**
      * Destroys the tracer
      */
     destroy(): void {

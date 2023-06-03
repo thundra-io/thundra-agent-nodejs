@@ -136,6 +136,15 @@ class ThundraRecorder {
     }
 
     /**
+     * Clears recorder
+     */
+    clear() {
+        this.activeSpanStack.clear();
+        this.spanList = [];
+        this.spanOrder = 1;
+    }
+
+    /**
      * Destroys recorder
      */
     destroy() {
